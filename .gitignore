@@ -1,0 +1,5 @@
+*~
+*#
+build
+third-party
+python/pybind11
