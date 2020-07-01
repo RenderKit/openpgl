@@ -4,7 +4,7 @@
 #pragma once
 
 #include "../rkguide.h"
-#include "vmm.h"
+#include "VMM.h"
 
 
 namespace rkguide
@@ -16,7 +16,7 @@ struct VonMisesFisherFactory
     VonMisesFisherFactory();
     typedef VonMisesFisherMixture<VecSize, maxComponents> VMM;
 
-    void InitUniformVMM( VMM &vmm, const int &numComponents, const float &kappa);
+    void InitUniformVMM( VMM &vmm, const int &numComponents, const float &kappa) const;
 
 private:
     void _initUniformDirections();
@@ -33,7 +33,7 @@ VonMisesFisherFactory<VecSize, maxComponents>::VonMisesFisherFactory( )
 }
 
 template<int VecSize, int maxComponents>
-void VonMisesFisherFactory<VecSize, maxComponents>::InitUniformVMM( VMM &vmm, const int &numComponents, const float &kappa)
+void VonMisesFisherFactory<VecSize, maxComponents>::InitUniformVMM( VMM &vmm, const int &numComponents, const float &kappa) const
 {
     vmm._numComponents = numComponents;
     const size_t nComp = vmm._numComponents;

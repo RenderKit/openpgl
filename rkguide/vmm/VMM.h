@@ -31,7 +31,16 @@ private:
 
 public:
 
-    float _numComponents{maxComponents};
+    struct SoftAssignment{
+        vfloat<VecSize> assignments[NumVectors::value];
+        size_t size;
+        float pdf;
+    };
+
+
+public:
+
+    size_t _numComponents{maxComponents};
 
     vfloat<VecSize> _weights[NumVectors::value];
     vfloat<VecSize> _kappas[NumVectors::value];
@@ -43,6 +52,8 @@ public:
 
     void uniformInit( float kappa );
     float pdf( Vec3<float> direction ) const;
+
+    bool softAssignment( Vec3<float> direction, SoftAssignment &assignment ) const;
 
     Vec3<float> sample( const Vec2<float> sample ) const;
 
@@ -57,6 +68,7 @@ public:
 
     void _calculateMeanCosines();
 };
+
 
 template<int VecSize, int maxComponents>
 void VonMisesFisherMixture<VecSize, maxComponents>::switchComponents( const size_t &idx0, const size_t &idx1 )
@@ -82,7 +94,7 @@ void VonMisesFisherMixture<VecSize, maxComponents>::switchComponents( const size
 
 /*
 template<int VecSize, int maxComponents>
-void VonMisesFisherMixture<VecSize, maxComponents>::mergeComponents( const size_t &idx0, const size_t &idx1 ) 
+void VonMisesFisherMixture<VecSize, maxComponents>::mergeComponents( const size_t &idx0, const size_t &idx1 )
 {
     const div_t tmpIdx0 = div( idx0, VecSize);
     const div_t tmpIdx1 = div( idx1, VecSize);
@@ -128,7 +140,6 @@ float VonMisesFisherMixture<VecSize, maxComponents>::pdf( Vec3<float> direction 
     vfloat<VecSize> pdf = {0.0f};
     Vec3< vfloat<VecSize> > vec3Direction(direction[0], direction[1], direction[2]);
 
-
     const vfloat<VecSize> ones(1.0f);
     const vfloat<VecSize> zeros(0.0f);
 
@@ -139,15 +150,47 @@ float VonMisesFisherMixture<VecSize, maxComponents>::pdf( Vec3<float> direction 
         const vfloat<VecSize> eval = _normalization[k] * embree::fastapprox::exp< vfloat<VecSize> >( _kappas[k] * cosThetaMinusOne );
         pdf += _weights[k] * eval;
     }
-    /*
-    float t =0.0f;
-    for (int i=0; i < VecSize; i++)
-    {
-        t += pdf[i];
-    }
-    */
+
     return reduce_add(pdf);
 }
+
+template<int VecSize, int maxComponents>
+bool VonMisesFisherMixture<VecSize, maxComponents>::softAssignment( Vec3<float> direction, typename VonMisesFisherMixture<VecSize, maxComponents>::SoftAssignment &softAssign ) const{
+
+    const int cnt = (_numComponents+VecSize-1) / VecSize;
+
+    vfloat<VecSize> pdf = {0.0f};
+    Vec3< vfloat<VecSize> > vec3Direction(direction[0], direction[1], direction[2]);
+
+    const vfloat<VecSize> ones(1.0f);
+    const vfloat<VecSize> zeros(0.0f);
+
+    for(int k = 0; k < cnt;k++)
+    {
+        const vfloat<VecSize> cosTheta = embree::dot(vec3Direction, _meanDirections[k]);
+        const vfloat<VecSize> cosThetaMinusOne = embree::min(cosTheta - ones, zeros);
+        const vfloat<VecSize> eval = _normalization[k] * embree::fastapprox::exp< vfloat<VecSize> >( _kappas[k] * cosThetaMinusOne );
+        softAssign.assignments[k] =  _weights[k] * eval;
+        pdf += softAssign.assignments[k];
+    }
+
+    softAssign.pdf = reduce_add(pdf);
+    softAssign.size = _numComponents;
+
+    if ( softAssign.pdf <= 0.0f)
+    {
+        return false;
+    }
+
+    vfloat<VecSize> inv_pdf = rcp(softAssign.pdf);
+    for(int k = 0; k < cnt;k++)
+    {
+        softAssign.assignments[k] *= inv_pdf;
+    }
+
+    return true;
+}
+
 
 template<int VecSize, int maxComponents>
 Vec3<float> VonMisesFisherMixture<VecSize, maxComponents>::sample( const Vec2<float> sample ) const{
@@ -229,6 +272,7 @@ std::string VonMisesFisherMixture<VecSize, maxComponents>::toString() const{
     ss << "numVectors: " << NumVectors::value << std::endl;
     ss << "---------------------- "  << std::endl;
     ss << "numComponents: " << _numComponents << std::endl;
+    float sumWeights = 0.0f;
     for ( int k = 0; k < maxComponents; k++)
     {
         const div_t tmp = div(k, static_cast<int>(VecSize));
@@ -238,7 +282,9 @@ std::string VonMisesFisherMixture<VecSize, maxComponents>::toString() const{
         ss << "\t normalization: " <<  _normalization[tmp.quot][tmp.rem];
         ss << "\t eMinus2Kappa: " <<  _eMinus2Kappa[tmp.quot][tmp.rem];
         ss << std::endl;
+        sumWeights += _weights[tmp.quot][tmp.rem];
     }
+    ss << "sumWeights: " << sumWeights << std::endl;
     return ss.str();
 }
 
@@ -267,6 +313,26 @@ void VonMisesFisherMixture<VecSize, maxComponents>::_calculateMeanCosines( ) {
         _eMinus2Kappa[k] = embree::fastapprox::exp< vfloat<VecSize> >(minusTwo*_kappas[k]);
         _normalization[k] = select(_kappas[k] > 0.f, norm, zeroKappaNorm);
     }
+}
+
+
+template<typename Type>
+inline Type KappaToMeanCosine(const Type &kappa)
+{
+    const Type ones( 1.0f);
+    const Type zeros( 0.0f);
+    Type meanCosine = ones / embree::tanh( kappa) - ones / kappa;
+    return select( kappa > 0.f, meanCosine, zeros);
+}
+
+
+template<typename Type>
+inline Type MeanCosineToKappa(const Type &meanCosine)
+{
+    const Type ones( 1.0f);
+    const Type dim( 3.0f);
+    const Type meanCosine2 = meanCosine * meanCosine;
+    return ( meanCosine * dim - meanCosine * meanCosine2) / ( ones - meanCosine2 );
 }
 
 }

@@ -5,6 +5,9 @@
 
 #include "../rkguide.h"
 
+
+#include <iostream>
+#include <fstream>
 #include <sstream>
 
 namespace rkguide
@@ -21,14 +24,14 @@ struct DirectionalSampleData
     const std::string toString() const
     {
         std::stringstream ss;
-        oss << "DirectionalSampleData[" << endl
-            << "weight = " << weight << endl
-            << "position = [" << position[0] << "\t" << position[1] << "\t" << position[2] << "]" << endl
-            << "direction = [" << direction[0] << "\t" << direction[1] << "\t" << direction[2] << "]" << endl
-            << "distance = " << distance << endl
-            << "pdf = " << pdf << endl
-            << "]";
-        return oss.str();
+        ss << "DirectionalSampleData[" << std::endl
+            << "weight = " << weight << std::endl
+            << "position = [" << position[0] << "\t" << position[1] << "\t" << position[2] << "]" << std::endl
+            << "direction = [" << direction[0] << "\t" << direction[1] << "\t" << direction[2] << "]" << std::endl
+            << "distance = " << distance << std::endl
+            << "pdf = " << pdf << std::endl
+            << "]" << std::endl;
+        return ss.str();
     }
 
     bool operator==( const DirectionalSampleData &comp ) const
@@ -54,5 +57,31 @@ struct DirectionalSampleData
     }
 
 };
+
+
+DirectionalSampleData *LoadDirectionalSampleData(const std::string fileName, size_t &numData){
+
+    std::ifstream file;
+    file.open(fileName, std::ios::binary);
+
+    //size_t numData;
+    file.read((char*)&numData, sizeof(size_t));
+
+    DirectionalSampleData *data = new DirectionalSampleData[numData];
+    file.read((char*)data, numData*sizeof(DirectionalSampleData));
+    file.close();
+
+    return data;
+}
+
+void StoreDirectionalSampleData(const std::string fileName, const DirectionalSampleData *data, const size_t &numData){
+    std::ofstream file;
+    file.open(fileName, std::ios::binary);
+
+    file.write((char*)&numData, sizeof(size_t));
+    file.write((char*)&data, numData * sizeof(DirectionalSampleData));
+    file.close();
+}
+
 
 }
