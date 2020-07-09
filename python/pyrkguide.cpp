@@ -6,6 +6,8 @@
 #include <rkguide/vmm/VMM.h>
 #include <rkguide/vmm/VMMFactory.h>
 #include <rkguide/vmm/WeightedEMVMMFactory.h>
+#include <rkguide/vmm/VMMChiSquareComponentMerger.h>
+#include <rkguide/vmm/VMMChiSquareComponentSplitter.h>
 
 namespace py = pybind11;
 
@@ -34,14 +36,64 @@ static py::list DirectionalSampleData_loadDirectionalSampleData(const std::strin
 }
 
 template< typename WeightedEMVMMFactory, typename VMM>
-static void  WeightedEMVMMFactory_fit( WeightedEMVMMFactory *vmmFactory, VMM &model, const size_t &K, const py::list &listParticles, typename WeightedEMVMMFactory::Configuration &cfg)
+static void  WeightedEMVMMFactory_fit( WeightedEMVMMFactory *vmmFactory, VMM &model, const size_t &K, typename WeightedEMVMMFactory::SufficientStatisitcs &stats, const py::list &listParticles, typename WeightedEMVMMFactory::Configuration &cfg)
 {
     std::vector<rkguide::DirectionalSampleData> dataPoints = listParticles.cast<std::vector<rkguide::DirectionalSampleData>>();
 	//rkguide::StoreDirectionalSampleData(fileName, dataPoints.data(), dataPoints.size());
-    vmmFactory->fitMixture(model, K, dataPoints.data(), dataPoints.size(), cfg);
+    vmmFactory->fitMixture(model, K, stats, dataPoints.data(), dataPoints.size(), cfg);
 }
 
 
+template< typename WeightedEMVMMFactory, typename VMM>
+static void  WeightedEMVMMFactory_update( WeightedEMVMMFactory *vmmFactory, VMM &model, typename WeightedEMVMMFactory::SufficientStatisitcs &stats, const py::list &listParticles, typename WeightedEMVMMFactory::Configuration &cfg)
+{
+    std::vector<rkguide::DirectionalSampleData> dataPoints = listParticles.cast<std::vector<rkguide::DirectionalSampleData>>();
+	//rkguide::StoreDirectionalSampleData(fileName, dataPoints.data(), dataPoints.size());
+    vmmFactory->updateMixture(model, stats, dataPoints.data(), dataPoints.size(), cfg);
+}
+
+template< typename VMMChiSquareComponentSplitter, typename VMM>
+static void  VMMChiSquareComponentSplitter_CalculateSplitStatistics( VMMChiSquareComponentSplitter *vmmSplitter, VMM &model, typename VMMChiSquareComponentSplitter::ComponentSplitStatistics &splitStats, const py::list &listParticles)
+{
+    std::vector<rkguide::DirectionalSampleData> dataPoints = listParticles.cast<std::vector<rkguide::DirectionalSampleData>>();
+    float mcEstimate = 0.0f;
+    for (size_t n = 0; n < dataPoints.size(); n++)
+    {
+        mcEstimate += dataPoints[n].weight;
+    }
+    mcEstimate /= (float) dataPoints.size();
+
+	//rkguide::StoreDirectionalSampleData(fileName, dataPoints.data(), dataPoints.size());
+    vmmSplitter->CalculateSplitStatistics(model, splitStats, mcEstimate, dataPoints.data(), dataPoints.size());
+}
+
+template< typename VMMChiSquareComponentSplitter, typename VMM>
+static void  VMMChiSquareComponentSplitter_UpdateSplitStatistics( VMMChiSquareComponentSplitter *vmmSplitter, VMM &model, typename VMMChiSquareComponentSplitter::ComponentSplitStatistics &splitStats, const py::list &listParticles)
+{
+    std::vector<rkguide::DirectionalSampleData> dataPoints = listParticles.cast<std::vector<rkguide::DirectionalSampleData>>();
+    float mcEstimate = 0.0f;
+    for (size_t n = 0; n < dataPoints.size(); n++)
+    {
+        mcEstimate += dataPoints[n].weight;
+    }
+    mcEstimate /= (float) dataPoints.size();
+
+	//rkguide::StoreDirectionalSampleData(fileName, dataPoints.data(), dataPoints.size());
+    vmmSplitter->UpdateSplitStatistics(model, splitStats, mcEstimate, dataPoints.data(), dataPoints.size());
+}
+
+template< typename VMM>
+static float  VMM_product( VMM *model, const float &weight, embree::Vec3<float> &meanDirection, const float &kappa)
+{
+    return model->product(weight, meanDirection, kappa);
+}
+
+template< typename VMM>
+static VMM VMM_copy( VMM *model)
+{
+    VMM vmmCopy (*model);
+    return vmmCopy;
+}
 
 float Vector2_get (embree::Vec2<float> &v, int index) { return v[index]; }
 void Vector2_set (embree::Vec2<float> &v, int index, float value) { v[index] = value; }
@@ -61,7 +113,7 @@ const std::string Vector3_toString (embree::Vec3<float>& v){
 }
 
 void test(){
-    rkguide::VonMisesFisherMixture<4,8> vmm;
+    rkguide::VonMisesFisherMixture<4,32> vmm;
     std::cout << vmm.toString() << std::endl;
 }
 
@@ -123,14 +175,19 @@ py::class_< rkguide::DirectionalSampleData >(m, "DirectionalSampleData")
     .def("__repr__", &rkguide::DirectionalSampleData::toString);
 
 
-py::class_< rkguide::VonMisesFisherMixture<4,8> >(m, "VMM32v4")
+py::class_< rkguide::VonMisesFisherMixture<4,32> >(m, "VMM32v4")
     .def(py::init<>())
-    .def("pdf", &rkguide::VonMisesFisherMixture<4,8>::pdf)
-    .def("sample", &rkguide::VonMisesFisherMixture<4,8>::sample)
-    .def("uniformInit", &rkguide::VonMisesFisherMixture<4,8>::uniformInit)
-    .def("__repr__", &rkguide::VonMisesFisherMixture<4,8>::toString);
-/*
+    .def(py::init< rkguide::VonMisesFisherMixture<4,32> >())
+    .def("pdf", &rkguide::VonMisesFisherMixture<4,32>::pdf)
+    .def("sample", &rkguide::VonMisesFisherMixture<4,32>::sample)
+    .def("mergeComponents", &rkguide::VonMisesFisherMixture<4,32>::mergeComponents)
+    .def("swapComponents", &rkguide::VonMisesFisherMixture<4,32>::swapComponents)
+    .def("product", &VMM_product< rkguide::VonMisesFisherMixture<4,32> >)
+    .def("uniformInit", &rkguide::VonMisesFisherMixture<4,32>::uniformInit)
+    .def("copy", &VMM_copy< rkguide::VonMisesFisherMixture<4,32> >)
+    .def("__repr__", &rkguide::VonMisesFisherMixture<4,32>::toString);
 
+/*
 py::class_< rkguide::VonMisesFisherMixture<8,32> >(m, "VMM32v8")
     .def(py::init<>())
     .def("__repr__", &rkguide::VonMisesFisherMixture<8,32>::toString);
@@ -139,32 +196,50 @@ py::class_< rkguide::VonMisesFisherMixture<16,32> >(m, "VMM32v16")
     .def(py::init<>())
     .def("__repr__", &rkguide::VonMisesFisherMixture<16,32>::toString);
 */
-py::class_< rkguide::VonMisesFisherFactory<4,8> >(m, "VMMFactory32v4")
-    .def(py::init<>())
-    .def("InitUniformVMM", &rkguide::VonMisesFisherFactory<4,8>::InitUniformVMM);
 
-auto WEMVMMFactory32v4 = py::class_< rkguide::WeightedEMVonMisesFisherFactory<4,8> >(m, "WEMVMMFactory32v4")
+py::class_< rkguide::VonMisesFisherFactory<4,32> >(m, "VMMFactory32v4")
     .def(py::init<>())
-    .def("fit", &WeightedEMVMMFactory_fit< rkguide::WeightedEMVonMisesFisherFactory<4,8>, rkguide::VonMisesFisherMixture<4,8> >)
-    .def("update", &rkguide::WeightedEMVonMisesFisherFactory<4,8>::updateMixture);
+    .def("InitUniformVMM", &rkguide::VonMisesFisherFactory<4,32>::InitUniformVMM);
 
-py::class_< rkguide::WeightedEMVonMisesFisherFactory<4,8>::Configuration >(WEMVMMFactory32v4, "Configuration")
+auto WEMVMMFactory32v4 = py::class_< rkguide::WeightedEMVonMisesFisherFactory<4,32> >(m, "WEMVMMFactory32v4")
     .def(py::init<>())
-    .def_readwrite("maK", &rkguide::WeightedEMVonMisesFisherFactory<4,8>::Configuration::maK)
-    .def_readwrite("maxEMIterrations", &rkguide::WeightedEMVonMisesFisherFactory<4,8>::Configuration::maxEMIterrations)
-    .def_readwrite("maxKappa", &rkguide::WeightedEMVonMisesFisherFactory<4,8>::Configuration::maxKappa)
-    .def_readonly("maxMeanCosine", &rkguide::WeightedEMVonMisesFisherFactory<4,8>::Configuration::maxMeanCosine)
-    .def_readwrite("convergenceThreshold", &rkguide::WeightedEMVonMisesFisherFactory<4,8>::Configuration::convergenceThreshold)
-    .def_readwrite("weightPrior", &rkguide::WeightedEMVonMisesFisherFactory<4,8>::Configuration::weightPrior)
-    .def_readwrite("meanCosinePriorStrength", &rkguide::WeightedEMVonMisesFisherFactory<4,8>::Configuration::meanCosinePriorStrength)
-    .def_readwrite("meanCosinePrior", &rkguide::WeightedEMVonMisesFisherFactory<4,8>::Configuration::meanCosinePrior)
-    .def("init", &rkguide::WeightedEMVonMisesFisherFactory<4,8>::Configuration::init)
-    .def("__repr__", &rkguide::WeightedEMVonMisesFisherFactory<4,8>::Configuration::toString);
+    .def("fit", &WeightedEMVMMFactory_fit< rkguide::WeightedEMVonMisesFisherFactory<4,32>, rkguide::VonMisesFisherMixture<4,32> >)
+    .def("update", &WeightedEMVMMFactory_update< rkguide::WeightedEMVonMisesFisherFactory<4,32>, rkguide::VonMisesFisherMixture<4,32> >);
 
-py::class_< rkguide::WeightedEMVonMisesFisherFactory<4,8>::SufficientStatisitcs >(WEMVMMFactory32v4, "SufficientStatisitcs")
+py::class_< rkguide::WeightedEMVonMisesFisherFactory<4,32>::Configuration >(WEMVMMFactory32v4, "Configuration")
     .def(py::init<>())
-    .def("__repr__", &rkguide::WeightedEMVonMisesFisherFactory<4,8>::SufficientStatisitcs::toString);
-    //.def("update", &rkguide::WeightedEMVonMisesFisherFactory<4,8>::update);
+    .def_readwrite("maK", &rkguide::WeightedEMVonMisesFisherFactory<4,32>::Configuration::maK)
+    .def_readwrite("maxEMIterrations", &rkguide::WeightedEMVonMisesFisherFactory<4,32>::Configuration::maxEMIterrations)
+    .def_readwrite("maxKappa", &rkguide::WeightedEMVonMisesFisherFactory<4,32>::Configuration::maxKappa)
+    .def_readonly("maxMeanCosine", &rkguide::WeightedEMVonMisesFisherFactory<4,32>::Configuration::maxMeanCosine)
+    .def_readwrite("convergenceThreshold", &rkguide::WeightedEMVonMisesFisherFactory<4,32>::Configuration::convergenceThreshold)
+    .def_readwrite("weightPrior", &rkguide::WeightedEMVonMisesFisherFactory<4,32>::Configuration::weightPrior)
+    .def_readwrite("meanCosinePriorStrength", &rkguide::WeightedEMVonMisesFisherFactory<4,32>::Configuration::meanCosinePriorStrength)
+    .def_readwrite("meanCosinePrior", &rkguide::WeightedEMVonMisesFisherFactory<4,32>::Configuration::meanCosinePrior)
+    .def("init", &rkguide::WeightedEMVonMisesFisherFactory<4,32>::Configuration::init)
+    .def("__repr__", &rkguide::WeightedEMVonMisesFisherFactory<4,32>::Configuration::toString);
+
+py::class_< rkguide::WeightedEMVonMisesFisherFactory<4,32>::SufficientStatisitcs >(WEMVMMFactory32v4, "SufficientStatisitcs")
+    .def(py::init<>())
+    .def("__repr__", &rkguide::WeightedEMVonMisesFisherFactory<4,32>::SufficientStatisitcs::toString);
+    //.def("update", &rkguide::WeightedEMVonMisesFisherFactory<4,32>::update);
+
+
+py::class_< rkguide::VonMisesFisherChiSquareComponentMerger<4,32> >(m, "VMMChiSquareComponentMerger32v4")
+    .def(py::init<>())
+    .def("MergeNext", &rkguide::VonMisesFisherChiSquareComponentMerger<4,32>::MergeNext)
+    .def("CalculateMergeCost", &rkguide::VonMisesFisherChiSquareComponentMerger<4,32>::CalculateMergeCost);
+
+
+auto VMMChiSquareComponentSplitter32v4 = py::class_< rkguide::VonMisesFisherChiSquareComponentSplitter<4,32> >(m, "VMMChiSquareComponentSplitter32v4")
+    .def(py::init<>())
+    .def("CalculateSplitStatistics", &VMMChiSquareComponentSplitter_CalculateSplitStatistics< rkguide::VonMisesFisherChiSquareComponentSplitter<4,32>, rkguide::VonMisesFisherMixture<4,32> >)
+    .def("UpdateSplitStatistics", &VMMChiSquareComponentSplitter_UpdateSplitStatistics< rkguide::VonMisesFisherChiSquareComponentSplitter<4,32>, rkguide::VonMisesFisherMixture<4,32> >);
+
+
+py::class_< rkguide::VonMisesFisherChiSquareComponentSplitter<4,32>::ComponentSplitStatistics >(VMMChiSquareComponentSplitter32v4, "ComponentSplitStatistics")
+    .def(py::init<>())
+    .def("__repr__", &rkguide::VonMisesFisherChiSquareComponentSplitter<4,32>::ComponentSplitStatistics::toString);
 
 #ifdef VERSION_INFO
     m.attr("__version__") = VERSION_INFO;

@@ -12,6 +12,8 @@
 #include <embree/common/math/linearspace3.h>
 #include <embree/common/math/transcendental.h>
 
+#include <math.h>
+
 #include <algorithm>
 #include <sstream>
 
@@ -19,6 +21,12 @@ using namespace embree;
 
 namespace rkguide
 {
+
+template<typename Type>
+Type MeanCosineToKappa(const Type &meanCosine);
+
+template<typename Type>
+Type KappaToMeanCosine(const Type &kappa);
 
 template<int VecSize, int maxComponents>
 struct VonMisesFisherMixture
@@ -40,15 +48,18 @@ public:
 
 public:
 
-    size_t _numComponents{maxComponents};
+    VonMisesFisherMixture() = default;
+    VonMisesFisherMixture( const VonMisesFisherMixture &a);
 
     vfloat<VecSize> _weights[NumVectors::value];
     vfloat<VecSize> _kappas[NumVectors::value];
     Vec3<vfloat<VecSize> > _meanDirections[NumVectors::value];
 
-    vfloat<VecSize> _normalization[NumVectors::value];
+    vfloat<VecSize> _normalizations[NumVectors::value];
     vfloat<VecSize> _eMinus2Kappa[NumVectors::value];
     vfloat<VecSize> _meanCosines[NumVectors::value];
+
+    size_t _numComponents{maxComponents};
 
     void uniformInit( float kappa );
     float pdf( Vec3<float> direction ) const;
@@ -60,18 +71,154 @@ public:
     std::string toString() const;
 
 
-    void switchComponents(const size_t &idx0, const size_t &idx1);
+    void swapComponents(const size_t &idx0, const size_t &idx1);
 
     void mergeComponents(const size_t &idx0, const size_t &idx1);
+
+    void clearComponent(const size_t &idx);
+
+    void convole(const float &meanCosine);
+
+    float product(const float &weight, const Vector3 &meanDirection, const float &kappa);
+
+    float product(const float &weight, const Vector3 &meanDirection, const float &kappa, const float &normalization);
+
 //private:
     void _calculateNormalization();
 
     void _calculateMeanCosines();
 };
 
+template<int VecSize, int maxComponents>
+void VonMisesFisherMixture<VecSize, maxComponents>::convole(const float &_meanCosine)
+{
+    const int cnt = (_numComponents+VecSize-1) / VecSize;
+    const vfloat<VecSize> meanCosine = _meanCosine;
+
+    for(int k = 0; k < cnt;k++)
+    {
+        _meanCosines[k] *= meanCosine;
+        _kappas[k] = MeanCosineToKappa< vfloat<VecSize> >(meanCosine);
+    }
+    _calculateNormalization();
+}
 
 template<int VecSize, int maxComponents>
-void VonMisesFisherMixture<VecSize, maxComponents>::switchComponents( const size_t &idx0, const size_t &idx1 )
+float VonMisesFisherMixture<VecSize, maxComponents>::product(const float &_weight, const Vector3 &_meanDirection, const float &_kappa)
+{
+
+    float _normalization = 1.0f / (4.0f*M_PI);
+    //float _eMinus2Kappa = embree::fastapprox::exp< float >(-2.0f * _kappa);
+    // TODO: use faster exp
+    float _eMinus2Kappa = std::exp(-2.0f * _kappa);
+
+    if ( _kappa > 0.0f)
+    {
+        _normalization = _kappa/(2.0f*M_PI*(1.0f-_eMinus2Kappa));
+    }
+    return this->product(_weight, _meanDirection, _kappa, _normalization);
+}
+
+template<int VecSize, int maxComponents>
+float VonMisesFisherMixture<VecSize, maxComponents>::product(const float &_weight, const Vector3 &_meanDirection, const float &_kappa, const float &_normalization)
+{
+    const vfloat<VecSize> twoPi(2.0f*M_PI);
+    const vfloat<VecSize> ones(1.0f);
+    const vfloat<VecSize> minusTwos(-2.0f);
+    const vfloat<VecSize> zeros(0.0f);
+    const vfloat<VecSize> zeroKappaNorm(1.0f/(4.0f*M_PI));
+
+    const int cnt = (_numComponents+VecSize-1) / VecSize;
+    const vfloat<VecSize> weight = _weight;
+    const vfloat<VecSize> kappa = _kappa;
+    const vfloat<VecSize> normalization = _normalization;
+
+    const Vec3<vfloat<VecSize> > meanDirection = _meanDirection;
+
+    vfloat<VecSize> productIntegralVec(0.f);
+
+    for(int k = 0; k < cnt;k++)
+    {
+        Vec3<vfloat<VecSize> > newMeanDirection = _kappas[k] * _meanDirections[k] + kappa * meanDirection;
+        vfloat<VecSize> newKappa = embree::sqrt(embree::dot( newMeanDirection, newMeanDirection));
+        auto checkNewKappa = (newKappa > 1e-3f);
+        newKappa = select( checkNewKappa,  newKappa, zeros);
+
+        // TODO: update meanCosine
+        newMeanDirection.x = select( checkNewKappa,  newMeanDirection.x / newKappa,  _meanDirections[k].x);
+        newMeanDirection.y = select( checkNewKappa,  newMeanDirection.y / newKappa,  _meanDirections[k].y);
+        newMeanDirection.z = select( checkNewKappa,  newMeanDirection.z / newKappa,  _meanDirections[k].z);
+
+        vfloat<VecSize> newEMinus2Kappa = embree::fastapprox::exp(minusTwos * newKappa);
+        vfloat<VecSize> newNormalization = newKappa / (twoPi * ( ones - newEMinus2Kappa ));
+        newNormalization = select( checkNewKappa, newNormalization, zeroKappaNorm);
+
+        vfloat<VecSize> scale = ( _normalizations[k] * normalization ) / newNormalization;
+
+        vfloat<VecSize> cosTheta0 = embree::dot( _meanDirections[k], newMeanDirection );
+        vfloat<VecSize> cosTheta1 = embree::dot( meanDirection, newMeanDirection );
+
+        //std::cout << "cosTheta0: " << cosTheta0 <<"\tcosTheta1: " << cosTheta1 << std::endl;
+        //std::cout << "_kappas[k]: " << _kappas[k] <<"\tkappa: " << kappa << std::endl;
+        //std::cout << "tmp: " <<  _kappas[k] * (cosTheta0 - ones) + kappa * (cosTheta1 - ones) << std::endl;
+        vfloat<VecSize> eval = embree::fastapprox::exp( _kappas[k] * (cosTheta0 - ones) + kappa * (cosTheta1 - ones) );
+        //std::cout << "scale: " << scale <<"\teval: " << eval << std::endl;
+        scale *= eval;
+        scale *= _weights[k] * weight;
+
+        _weights[k] = scale;
+        _kappas[k] = newKappa;
+        _meanDirections[k] = newMeanDirection;
+        _normalizations[k] = newNormalization;
+        _eMinus2Kappa[k] = newEMinus2Kappa;
+
+        productIntegralVec += _weights[k];
+    }
+
+    float productIntegral = reduce_add(productIntegralVec);
+    for(int k = 0; k < cnt;k++)
+    {
+        _weights[k] /= productIntegral;
+    }
+    return productIntegral;
+    //_normalizeWeights();
+}
+
+
+template<int VecSize, int maxComponents>
+VonMisesFisherMixture<VecSize, maxComponents>::VonMisesFisherMixture( const VonMisesFisherMixture &a)
+{
+    for (size_t k = 0; k < NumVectors::value; k++)
+    {
+        _weights[k]= a._weights[k];
+        _kappas[k]=  a._kappas[k];
+        _eMinus2Kappa[k]=  a._eMinus2Kappa[k];
+        _meanCosines[k] =  a._meanCosines[k];
+        _normalizations[k] =  a._normalizations[k];
+
+        _meanDirections[k] =  a._meanDirections[k];
+
+    }
+}
+
+template<int VecSize, int maxComponents>
+void VonMisesFisherMixture<VecSize, maxComponents>::clearComponent( const size_t &idx )
+{
+    const div_t tmpIdx = div( idx, VecSize);
+
+    _weights[tmpIdx.quot][tmpIdx.rem]= 0.f;
+    _kappas[tmpIdx.quot][tmpIdx.rem] = 0.f;
+    _eMinus2Kappa[tmpIdx.quot][tmpIdx.rem] = 0.f;
+    _meanCosines[tmpIdx.quot][tmpIdx.rem] = 0.f;
+    _normalizations[tmpIdx.quot][tmpIdx.rem] = 0.f;
+
+    _meanDirections[tmpIdx.quot].x[tmpIdx.rem] = 0.f;
+    _meanDirections[tmpIdx.quot].y[tmpIdx.rem] = 0.f;
+    _meanDirections[tmpIdx.quot].z[tmpIdx.rem] = 1.f;
+}
+
+template<int VecSize, int maxComponents>
+void VonMisesFisherMixture<VecSize, maxComponents>::swapComponents( const size_t &idx0, const size_t &idx1 )
 {
     const div_t tmpIdx0 = div( idx0, VecSize);
     const div_t tmpIdx1 = div( idx1, VecSize);
@@ -82,17 +229,14 @@ void VonMisesFisherMixture<VecSize, maxComponents>::switchComponents( const size
         std::swap(_kappas[tmpIdx0.quot][tmpIdx0.rem], _kappas[tmpIdx1.quot][tmpIdx1.rem]);
         std::swap(_eMinus2Kappa[tmpIdx0.quot][tmpIdx0.rem], _eMinus2Kappa[tmpIdx1.quot][tmpIdx1.rem]);
         std::swap(_meanCosines[tmpIdx0.quot][tmpIdx0.rem], _meanCosines[tmpIdx1.quot][tmpIdx1.rem]);
-        std::swap(_normalization[tmpIdx0.quot][tmpIdx0.rem], _normalization[tmpIdx1.quot][tmpIdx1.rem]);
+        std::swap(_normalizations[tmpIdx0.quot][tmpIdx0.rem], _normalizations[tmpIdx1.quot][tmpIdx1.rem]);
 
         std::swap(_meanDirections[tmpIdx0.quot].x[tmpIdx0.rem], _meanDirections[tmpIdx1.quot].x[tmpIdx1.rem]);
         std::swap(_meanDirections[tmpIdx0.quot].y[tmpIdx0.rem], _meanDirections[tmpIdx1.quot].y[tmpIdx1.rem]);
         std::swap(_meanDirections[tmpIdx0.quot].z[tmpIdx0.rem], _meanDirections[tmpIdx1.quot].z[tmpIdx1.rem]);
-
     }
 }
 
-
-/*
 template<int VecSize, int maxComponents>
 void VonMisesFisherMixture<VecSize, maxComponents>::mergeComponents( const size_t &idx0, const size_t &idx1 )
 {
@@ -101,25 +245,77 @@ void VonMisesFisherMixture<VecSize, maxComponents>::mergeComponents( const size_
 
     if (idx0 != idx1)
     {
-        const float weigth0 = _weights[tmpIdx0.quot][tmpIdx0.rem];
-        const float weigth1 = _weights[tmpIdx1.quot][tmpIdx1.rem];
+        const float weight0 = _weights[tmpIdx0.quot][tmpIdx0.rem];
+        const float weight1 = _weights[tmpIdx1.quot][tmpIdx1.rem];
 
-        const meanCosine0 = _meanCosines[tmpIdx0.quot][tmpIdx0.rem];
-        const meanCosine1 = _meanCosines[tmpIdx1.quot][tmpIdx1.rem];
+        const float meanCosine0 = _meanCosines[tmpIdx0.quot][tmpIdx0.rem];
+        const float meanCosine1 = _meanCosines[tmpIdx1.quot][tmpIdx1.rem];
 
+
+        float kappa = 0.0f;
+        float norm = 1.0f/(4.0f*M_PI);
+        float eMin2Kappa = 1.0f;
+
+        float weight = weight0 + weight1;
+
+        float meanDirectionX = weight0 * meanCosine0 * _meanDirections[tmpIdx0.quot].x[tmpIdx0.rem]
+            + weight1 * meanCosine1 * _meanDirections[tmpIdx1.quot].x[tmpIdx1.rem];
+        float meanDirectionY = weight0 * meanCosine0 * _meanDirections[tmpIdx0.quot].y[tmpIdx0.rem]
+            + weight1 * meanCosine1 * _meanDirections[tmpIdx1.quot].y[tmpIdx1.rem];
+        float meanDirectionZ = weight0 * meanCosine0 * _meanDirections[tmpIdx0.quot].z[tmpIdx0.rem]
+            + weight1 * meanCosine1 * _meanDirections[tmpIdx1.quot].z[tmpIdx1.rem];
+
+
+        std::cout << "mergeComponents: cosTheta: " << _meanDirections[tmpIdx0.quot].x[tmpIdx0.rem] *_meanDirections[tmpIdx1.quot].x[tmpIdx1.rem] +
+                                                        _meanDirections[tmpIdx0.quot].y[tmpIdx0.rem] *_meanDirections[tmpIdx1.quot].y[tmpIdx1.rem] +
+                                                        _meanDirections[tmpIdx0.quot].z[tmpIdx0.rem] *_meanDirections[tmpIdx1.quot].z[tmpIdx1.rem] << std::endl;
+
+        meanDirectionX /= weight;
+        meanDirectionY /= weight;
+        meanDirectionZ /= weight;
+
+        float meanCosine = meanDirectionX * meanDirectionX + meanDirectionY * meanDirectionY
+            + meanDirectionZ * meanDirectionZ;
 
         if ( meanCosine > 0.0f )
         {
             meanCosine = std::sqrt(meanCosine);
+
+            kappa = MeanCosineToKappa<float>(meanCosine);
+            kappa = kappa < 1e-3f ? 0.f : kappa;
+            //eMin2Kappa = math::fastexp( -2.0f * kappa );
+            eMin2Kappa = embree::exp( -2.0f * kappa );
+            norm = kappa / ( 2.0f * M_PI * ( 1.0f - eMin2Kappa ) );
+
+            meanDirectionX /= meanCosine;
+            meanDirectionY /= meanCosine;
+            meanDirectionZ /= meanCosine;
+        }
+        else
+        {
+            meanDirectionX = _meanDirections[tmpIdx0.quot].x[tmpIdx0.rem];
+            meanDirectionY = _meanDirections[tmpIdx0.quot].y[tmpIdx0.rem];
+            meanDirectionZ = _meanDirections[tmpIdx0.quot].z[tmpIdx0.rem];
         }
 
+        _weights[tmpIdx0.quot][tmpIdx0.rem] = weight;
+        _meanCosines[tmpIdx0.quot][tmpIdx0.rem] = meanCosine;
+        _kappas[tmpIdx0.quot][tmpIdx0.rem] = kappa;
 
-        switchComponents( idx1, _numComponents -1 );
+        _normalizations[tmpIdx0.quot][tmpIdx0.rem] = norm;
+        _eMinus2Kappa[tmpIdx0.quot][tmpIdx0.rem] = eMin2Kappa;
+
+        _meanDirections[tmpIdx0.quot].x[tmpIdx0.rem] = meanDirectionX;
+        _meanDirections[tmpIdx0.quot].y[tmpIdx0.rem] = meanDirectionY;
+        _meanDirections[tmpIdx0.quot].z[tmpIdx0.rem] = meanDirectionZ;
+
+        std::cout << "mergeComponents: weight: " << weight << "\tkappa: " << kappa << "\tmeanDirection: " << meanDirectionX << "\t" << meanDirectionY << "\t" << meanDirectionZ << std::endl;
+        swapComponents( idx1, _numComponents -1 );
+        clearComponent( _numComponents -1 );
         _numComponents -= 1;
     }
 }
 
-*/
 
 template<int VecSize, int maxComponents>
 void VonMisesFisherMixture<VecSize, maxComponents>::uniformInit(float kappa){
@@ -131,6 +327,7 @@ void VonMisesFisherMixture<VecSize, maxComponents>::uniformInit(float kappa){
         _meanDirections[k] = Vec3< vfloat<VecSize> >(0.0, 0.0, 1.0);
     }
     _calculateNormalization();
+    _calculateMeanCosines();
 }
 
 template<int VecSize, int maxComponents>
@@ -147,7 +344,7 @@ float VonMisesFisherMixture<VecSize, maxComponents>::pdf( Vec3<float> direction 
     {
         const vfloat<VecSize> cosTheta = embree::dot(vec3Direction, _meanDirections[k]);
         const vfloat<VecSize> cosThetaMinusOne = embree::min(cosTheta - ones, zeros);
-        const vfloat<VecSize> eval = _normalization[k] * embree::fastapprox::exp< vfloat<VecSize> >( _kappas[k] * cosThetaMinusOne );
+        const vfloat<VecSize> eval = _normalizations[k] * embree::fastapprox::exp< vfloat<VecSize> >( _kappas[k] * cosThetaMinusOne );
         pdf += _weights[k] * eval;
     }
 
@@ -169,7 +366,7 @@ bool VonMisesFisherMixture<VecSize, maxComponents>::softAssignment( Vec3<float> 
     {
         const vfloat<VecSize> cosTheta = embree::dot(vec3Direction, _meanDirections[k]);
         const vfloat<VecSize> cosThetaMinusOne = embree::min(cosTheta - ones, zeros);
-        const vfloat<VecSize> eval = _normalization[k] * embree::fastapprox::exp< vfloat<VecSize> >( _kappas[k] * cosThetaMinusOne );
+        const vfloat<VecSize> eval = _normalizations[k] * embree::fastapprox::exp< vfloat<VecSize> >( _kappas[k] * cosThetaMinusOne );
         softAssign.assignments[k] =  _weights[k] * eval;
         pdf += softAssign.assignments[k];
     }
@@ -273,14 +470,15 @@ std::string VonMisesFisherMixture<VecSize, maxComponents>::toString() const{
     ss << "---------------------- "  << std::endl;
     ss << "numComponents: " << _numComponents << std::endl;
     float sumWeights = 0.0f;
-    for ( int k = 0; k < maxComponents; k++)
+    for ( int k = 0; k < _numComponents; k++)
     {
         const div_t tmp = div(k, static_cast<int>(VecSize));
         ss << "vmm[" << k << "]: " << "weight: " << _weights[tmp.quot][tmp.rem];
         ss << "\t kappa: " <<  _kappas[tmp.quot][tmp.rem];
         ss << "\t meanDirection: [" <<  _meanDirections[tmp.quot].x[tmp.rem] << "\t" <<  _meanDirections[tmp.quot].y[tmp.rem] << "\t" <<  _meanDirections[tmp.quot].z[tmp.rem] << "]";
-        ss << "\t normalization: " <<  _normalization[tmp.quot][tmp.rem];
+        ss << "\t normalization: " <<  _normalizations[tmp.quot][tmp.rem];
         ss << "\t eMinus2Kappa: " <<  _eMinus2Kappa[tmp.quot][tmp.rem];
+        ss << "\t meanCosine: " <<  _meanCosines[tmp.quot][tmp.rem];
         ss << std::endl;
         sumWeights += _weights[tmp.quot][tmp.rem];
     }
@@ -295,23 +493,24 @@ void VonMisesFisherMixture<VecSize, maxComponents>::_calculateNormalization( ) {
     const int cnt = (_numComponents+VecSize-1) / VecSize;
     const vfloat<VecSize> minusTwo(-2.0f);
     for(int k = 0; k < cnt;k++){
-        const vfloat<VecSize> norm = _kappas[k]/(2.0f*M_PI*(1.0f-_eMinus2Kappa[k]));
         _eMinus2Kappa[k] = embree::fastapprox::exp< vfloat<VecSize> >(minusTwo*_kappas[k]);
-        _normalization[k] = select(_kappas[k] > 0.f, norm, zeroKappaNorm);
+        const vfloat<VecSize> norm = _kappas[k]/(2.0f*M_PI*(1.0f-_eMinus2Kappa[k]));
+        _normalizations[k] = select(_kappas[k] > 0.f, norm, zeroKappaNorm);
     }
 
 }
 
 template<int VecSize, int maxComponents>
 void VonMisesFisherMixture<VecSize, maxComponents>::_calculateMeanCosines( ) {
-    const vfloat<VecSize> zeroKappaNorm(1.0f/(4.0f*M_PI));
 
     const int cnt = (_numComponents+VecSize-1) / VecSize;
-    const vfloat<VecSize> minusTwo(-2.0f);
+    const vfloat<VecSize> zeros(0.0f);
+    const vfloat<VecSize> ones(1.0f);
     for(int k = 0; k < cnt;k++){
-        const vfloat<VecSize> norm = _kappas[k]/(2.0f*M_PI*(1.0f-_eMinus2Kappa[k]));
-        _eMinus2Kappa[k] = embree::fastapprox::exp< vfloat<VecSize> >(minusTwo*_kappas[k]);
-        _normalization[k] = select(_kappas[k] > 0.f, norm, zeroKappaNorm);
+        vfloat<VecSize>  tanh = ones - 2.0f / ( embree::fastapprox::exp( 2.0f * _kappas[k] ) - ones );
+        vfloat<VecSize>  meanCosine = ones /tanh - ones / _kappas[k];
+        //std::cout << "meanCosine: " << meanCosine << std::endl;
+        _meanCosines[k] = select(_kappas[k] > 0.f, meanCosine, zeros);
     }
 }
 
@@ -321,6 +520,7 @@ inline Type KappaToMeanCosine(const Type &kappa)
 {
     const Type ones( 1.0f);
     const Type zeros( 0.0f);
+
     Type meanCosine = ones / embree::tanh( kappa) - ones / kappa;
     return select( kappa > 0.f, meanCosine, zeros);
 }

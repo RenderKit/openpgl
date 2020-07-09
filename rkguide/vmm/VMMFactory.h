@@ -60,6 +60,7 @@ void VonMisesFisherFactory<VecSize, maxComponents>::InitUniformVMM( VMM &vmm, co
     }
 
     vmm._calculateNormalization();
+    vmm._calculateMeanCosines();
 
 }
 
