@@ -23,8 +23,8 @@ struct WeightedEMVonMisesFisherFactory: public VonMisesFisherFactory< VecSize, m
         size_t maK {maxComponents};
         size_t maxEMIterrations {100};
 
-        float maxKappa {10000.0f};
-        float maxMeanCosine { KappaToMeanCosine<float>(10000.0f)};
+        float maxKappa {1000000.0f};
+        float maxMeanCosine { KappaToMeanCosine<float>(1000000.0f)};
         float convergenceThreshold {0.1f};
 
         // MAP prior parameters
@@ -43,13 +43,17 @@ struct WeightedEMVonMisesFisherFactory: public VonMisesFisherFactory< VecSize, m
 
     struct SufficientStatisitcs
     {
+        SufficientStatisitcs() = default;
+        SufficientStatisitcs( const SufficientStatisitcs &a);
+
         embree::Vec3< vfloat<VecSize> > sumOfWeightedDirections[NumVectors::value];
         vfloat<VecSize> sumOfWeightedStats[NumVectors::value];
 
         float sumWeights {0.f};
         float numSamples {0};
+        float overallNumSamples {0};
         size_t numComponents {maxComponents};
-
+        bool isNormalized {false};
         //SufficientStatisitcs operator+(const SufficientStatisitcs &stats);
         SufficientStatisitcs& operator+=(const SufficientStatisitcs &stats);
 
@@ -60,6 +64,7 @@ struct WeightedEMVonMisesFisherFactory: public VonMisesFisherFactory< VecSize, m
 
         void normalize( const float &_numSamples );
 
+        void swapComponentStats(const size_t &idx0, const size_t &idx1);
         std::string toString() const;
 
     };
@@ -150,6 +155,36 @@ std::string WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::Configurat
 }
 
 template<int VecSize, int maxComponents>
+WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::SufficientStatisitcs::SufficientStatisitcs(const SufficientStatisitcs &a)
+{
+    for (size_t k = 0; k < ( (maxComponents + (VecSize -1)) / VecSize); k++)
+    {
+        sumOfWeightedDirections[k]= a.sumOfWeightedDirections[k];
+        sumOfWeightedStats[k]=  a.sumOfWeightedStats[k];
+    }
+    sumWeights = a.sumWeights;
+    numSamples = a.numSamples;
+    numComponents = a.numComponents;
+    isNormalized = a.isNormalized;
+    overallNumSamples = a.overallNumSamples;
+}
+
+
+template<int VecSize, int maxComponents>
+void WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::SufficientStatisitcs::swapComponentStats(const size_t &idx0, const size_t &idx1)
+{
+    const div_t tmpIdx0 = div( idx0, VecSize);
+    const div_t tmpIdx1 = div( idx1, VecSize);
+
+    std::swap(sumOfWeightedDirections[tmpIdx0.quot].x[tmpIdx0.rem], sumOfWeightedDirections[tmpIdx1.quot].x[tmpIdx1.rem]);
+    std::swap(sumOfWeightedDirections[tmpIdx0.quot].y[tmpIdx0.rem], sumOfWeightedDirections[tmpIdx1.quot].y[tmpIdx1.rem]);
+    std::swap(sumOfWeightedDirections[tmpIdx0.quot].z[tmpIdx0.rem], sumOfWeightedDirections[tmpIdx1.quot].z[tmpIdx1.rem]);
+    std::swap(sumOfWeightedStats[tmpIdx0.quot][tmpIdx0.rem], sumOfWeightedStats[tmpIdx1.quot][tmpIdx1.rem]);
+
+}
+
+
+template<int VecSize, int maxComponents>
 void WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::SufficientStatisitcs::clear(size_t _numComponents)
 {
     const embree::Vec3< vfloat<VecSize> > vecZeros(0.0f);
@@ -166,6 +201,7 @@ void WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::SufficientStatisi
 
     //sumWeights = 0.0f;
     numSamples = 0;
+    isNormalized = false;
 }
 
 template<int VecSize, int maxComponents>
@@ -193,6 +229,7 @@ void WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::SufficientStatisi
         sumOfWeightedDirections[k] *= norm;
         sumOfWeightedStats[k] *= norm;
     }
+    isNormalized = true;
 }
 
 template<int VecSize, int maxComponents>
@@ -201,6 +238,7 @@ typename WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::SufficientSta
     const int cnt = (numComponents+VecSize-1) / VecSize;
 
     this->numSamples += stats.numSamples;
+    this->overallNumSamples += stats.numSamples;
     for(int k = 0; k < cnt;k++)
     {
         this->sumOfWeightedDirections[k] += stats.sumOfWeightedDirections[k];
@@ -217,7 +255,9 @@ std::string WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::Sufficient
     ss << "SufficientStatisitcs:" << std::endl;
     //ss << "\tsumWeights:" << sumWeights << std::endl;
     ss << "\tnumSamples:" << numSamples << std::endl;
+    ss << "\toverallNumSamples:" << overallNumSamples << std::endl;
     ss << "\tnumComponents:" << numComponents << std::endl;
+    ss << "\tisNormalized:" << isNormalized << std::endl;
     for (size_t k = 0; k < numComponents ; k++)
     {
         int i = k / VecSize;
@@ -286,6 +326,7 @@ void WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::estimateMAPWeight
     const vfloat<VecSize> weightPrior(_weightPrior);
 
     const vfloat<VecSize> numSamples = currentStats.numSamples + previousStats.numSamples;
+    //const vfloat<VecSize> numSamples = currentStats.numSamples + previousStats.overallNumSamples;
 
     for ( size_t k = 0; k < cnt; k ++ )
     {
@@ -316,6 +357,8 @@ void WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::estimateMAPMeanDi
     const vfloat<VecSize> currentNumSamples = currentStats.numSamples;
     const vfloat<VecSize> previousNumSamples = previousStats.numSamples;
     const vfloat<VecSize> numSamples = currentNumSamples + previousNumSamples;
+    const vfloat<VecSize> overallNumSamples = currentStats.numSamples + previousStats.overallNumSamples;
+
 
     const vfloat<VecSize> currentEstimationWeight = currentNumSamples / numSamples;
     const vfloat<VecSize> previousEstimationWeight = 1.0f - currentEstimationWeight;
@@ -328,7 +371,8 @@ void WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::estimateMAPMeanDi
 
     for (size_t k = 0; k < cnt; k ++)
     {
-        const vfloat<VecSize> partialNumSamples = vmm._weights[k] * numSamples;
+        //const vfloat<VecSize> partialNumSamples = vmm._weights[k] * numSamples;
+        const vfloat<VecSize> partialNumSamples = vmm._weights[k] * overallNumSamples;
         embree::Vec3< vfloat<VecSize> > currentMeanDirection;
         currentMeanDirection.x = select(currentStats.sumOfWeightedStats[k] > 0.0f, currentStats.sumOfWeightedDirections[k].x / currentStats.sumOfWeightedStats[k], 0.0f);
         currentMeanDirection.y = select(currentStats.sumOfWeightedStats[k] > 0.0f, currentStats.sumOfWeightedDirections[k].y / currentStats.sumOfWeightedStats[k], 0.0f);
@@ -350,6 +394,7 @@ void WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::estimateMAPMeanDi
         vmm._meanDirections[k].z = select(meanCosine > 0.0f, meanDirection.z / meanCosine, vmm._meanDirections[k].z);
 
         meanCosine = ( meanCosinePrior * meanCosinePriorStrength + meanCosine * partialNumSamples ) / ( meanCosinePriorStrength + partialNumSamples );
+
         meanCosine = embree::min( maxMeanCosine, meanCosine );
         vmm._meanCosines[k] = meanCosine;
         vmm._kappas[k] = MeanCosineToKappa< vfloat<VecSize> >( meanCosine );

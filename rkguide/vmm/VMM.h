@@ -43,6 +43,9 @@ public:
         vfloat<VecSize> assignments[NumVectors::value];
         size_t size;
         float pdf;
+
+        std::string toString() const;
+
     };
 
 
@@ -83,11 +86,69 @@ public:
 
     float product(const float &weight, const Vector3 &meanDirection, const float &kappa, const float &normalization);
 
+
+    void setComponentWeight(const size_t idx, const float &weight);
+
+    void setComponentKappa(const size_t idx, const float &kappa);
+
+    void setComponentMeanDirection(const size_t idx, const Vector3 &meanDirection);
+
 //private:
     void _calculateNormalization();
 
     void _calculateMeanCosines();
+
+    void _normalizeWeights();
 };
+
+template<int VecSize, int maxComponents>
+std::string VonMisesFisherMixture<VecSize, maxComponents>::SoftAssignment::toString() const{
+    std::stringstream ss;
+    ss << "SoftAssignment:" << std::endl;
+    ss << "size: " << size << std::endl;
+    ss << "pdf: " << pdf << std::endl;
+    float sumWeights = 0.0f;
+    for ( int k = 0; k < size; k++)
+    {
+        const div_t tmp = div(k, static_cast<int>(VecSize));
+        ss << "assign[" << k << "]: " << assignments[tmp.quot][tmp.rem];
+        ss << std::endl;
+    }
+    //ss << "sumWeights: " << sumWeights << std::endl;
+    return ss.str();
+}
+
+
+
+template<int VecSize, int maxComponents>
+void VonMisesFisherMixture<VecSize, maxComponents>::setComponentWeight(const size_t idx, const float &weight)
+{
+    const div_t tmpIdx = div( idx, VecSize);
+
+    _weights[tmpIdx.quot][tmpIdx.rem]= weight;
+}
+
+template<int VecSize, int maxComponents>
+void VonMisesFisherMixture<VecSize, maxComponents>::setComponentKappa(const size_t idx, const float &kappa)
+{
+    const div_t tmpIdx = div( idx, VecSize);
+
+    _kappas[tmpIdx.quot][tmpIdx.rem]= kappa;
+    _calculateNormalization();
+    _calculateMeanCosines();
+}
+
+template<int VecSize, int maxComponents>
+void VonMisesFisherMixture<VecSize, maxComponents>::setComponentMeanDirection(const size_t idx, const Vector3 &meanDirection)
+{
+    const div_t tmpIdx = div( idx, VecSize);
+
+    _meanDirections[tmpIdx.quot].x[tmpIdx.rem] = meanDirection.x;
+    _meanDirections[tmpIdx.quot].y[tmpIdx.rem] = meanDirection.y;
+    _meanDirections[tmpIdx.quot].z[tmpIdx.rem] = meanDirection.z;
+}
+
+
 
 template<int VecSize, int maxComponents>
 void VonMisesFisherMixture<VecSize, maxComponents>::convole(const float &_meanCosine)
@@ -199,6 +260,7 @@ VonMisesFisherMixture<VecSize, maxComponents>::VonMisesFisherMixture( const VonM
         _meanDirections[k] =  a._meanDirections[k];
 
     }
+    _numComponents = a._numComponents;
 }
 
 template<int VecSize, int maxComponents>
@@ -484,6 +546,22 @@ std::string VonMisesFisherMixture<VecSize, maxComponents>::toString() const{
     }
     ss << "sumWeights: " << sumWeights << std::endl;
     return ss.str();
+}
+
+template<int VecSize, int maxComponents>
+void VonMisesFisherMixture<VecSize, maxComponents>::_normalizeWeights( ) {
+
+    const int cnt = (_numComponents+VecSize-1) / VecSize;
+    vfloat<VecSize> sumWeights = 0.0f;
+    for(int k = 0; k < cnt;k++){
+        sumWeights += _weights[k];
+    }
+
+    vfloat<VecSize> inv_sumWeights = 1.0f / reduce_add(sumWeights);
+    for(int k = 0; k < cnt;k++){
+        _weights[k] *= inv_sumWeights;
+    }
+
 }
 
 template<int VecSize, int maxComponents>
