@@ -45,6 +45,14 @@ static void  WeightedEMVMMFactory_fit( WeightedEMVMMFactory *vmmFactory, VMM &mo
 
 
 template< typename WeightedEMVMMFactory, typename VMM>
+static void  WeightedEMVMMFactory_partialUpdate( WeightedEMVMMFactory *vmmFactory, VMM &model, const typename WeightedEMVMMFactory::PartialFittingMask &mask, typename WeightedEMVMMFactory::SufficientStatisitcs &stats, const py::list &listParticles, typename WeightedEMVMMFactory::Configuration &cfg)
+{
+    std::vector<rkguide::DirectionalSampleData> dataPoints = listParticles.cast<std::vector<rkguide::DirectionalSampleData>>();
+	//rkguide::StoreDirectionalSampleData(fileName, dataPoints.data(), dataPoints.size());
+    vmmFactory->partialUpdateMixture(model, mask, stats, dataPoints.data(), dataPoints.size(), cfg);
+}
+
+template< typename WeightedEMVMMFactory, typename VMM>
 static void  WeightedEMVMMFactory_update( WeightedEMVMMFactory *vmmFactory, VMM &model, typename WeightedEMVMMFactory::SufficientStatisitcs &stats, const py::list &listParticles, typename WeightedEMVMMFactory::Configuration &cfg)
 {
     std::vector<rkguide::DirectionalSampleData> dataPoints = listParticles.cast<std::vector<rkguide::DirectionalSampleData>>();
@@ -107,6 +115,21 @@ static py::list VMMChiSquareComponentSplitter_GetProjectedLocalDirections( VMMCh
     resultList.append(cmpSplit);
     resultList.append(list);
     return resultList;
+
+}
+
+template< typename VMMChiSquareComponentSplitter, typename VMM>
+static void  VMMChiSquareComponentSplitter_performSplitting( VMMChiSquareComponentSplitter *vmmSplitter, VMM &vmm, const float &splitThreshold, const py::list &listParticles, typename VMMChiSquareComponentSplitter::VMMFactory::Configuration &cfg)
+{
+    std::vector<rkguide::DirectionalSampleData> dataPoints = listParticles.cast<std::vector<rkguide::DirectionalSampleData>>();
+    float mcEstimate = 0.0f;
+    for (size_t n = 0; n < dataPoints.size(); n++)
+    {
+        mcEstimate += dataPoints[n].weight;
+    }
+    mcEstimate /= (float) dataPoints.size();
+
+    vmmSplitter->PerformSplitting(vmm, splitThreshold, mcEstimate, dataPoints.data(), dataPoints.size(), cfg);
 
 }
 
@@ -288,7 +311,9 @@ py::class_< rkguide::VonMisesFisherFactory<4,32> >(m, "VMMFactory32v4")
 auto WEMVMMFactory32v4 = py::class_< rkguide::WeightedEMVonMisesFisherFactory<4,32> >(m, "WEMVMMFactory32v4")
     .def(py::init<>())
     .def("fit", &WeightedEMVMMFactory_fit< rkguide::WeightedEMVonMisesFisherFactory<4,32>, rkguide::VonMisesFisherMixture<4,32> >)
-    .def("update", &WeightedEMVMMFactory_update< rkguide::WeightedEMVonMisesFisherFactory<4,32>, rkguide::VonMisesFisherMixture<4,32> >);
+    .def("update", &WeightedEMVMMFactory_update< rkguide::WeightedEMVonMisesFisherFactory<4,32>, rkguide::VonMisesFisherMixture<4,32> >)
+    .def("partialUpdate", &WeightedEMVMMFactory_partialUpdate< rkguide::WeightedEMVonMisesFisherFactory<4,32>, rkguide::VonMisesFisherMixture<4,32> >);
+
 
 py::class_< rkguide::WeightedEMVonMisesFisherFactory<4,32>::Configuration >(WEMVMMFactory32v4, "Configuration")
     .def(py::init<>())
@@ -311,6 +336,18 @@ py::class_< rkguide::WeightedEMVonMisesFisherFactory<4,32>::SufficientStatisitcs
     //.def("update", &rkguide::WeightedEMVonMisesFisherFactory<4,32>::update);
 
 
+py::class_< rkguide::WeightedEMVonMisesFisherFactory<4,32>::PartialFittingMask >(WEMVMMFactory32v4, "PartialFittingMask")
+    .def(py::init<>())
+    .def(py::init< rkguide::WeightedEMVonMisesFisherFactory<4,32>::PartialFittingMask >())
+    .def("resetToFalse", &rkguide::WeightedEMVonMisesFisherFactory<4,32>::PartialFittingMask::resetToFalse)
+    .def("resetToTrue", &rkguide::WeightedEMVonMisesFisherFactory<4,32>::PartialFittingMask::resetToTrue)
+    .def("setToTrue", &rkguide::WeightedEMVonMisesFisherFactory<4,32>::PartialFittingMask::setToTrue)
+    .def("setToFalse", &rkguide::WeightedEMVonMisesFisherFactory<4,32>::PartialFittingMask::setToFalse)
+    .def("__repr__", &rkguide::WeightedEMVonMisesFisherFactory<4,32>::PartialFittingMask::toString);
+    //.def("update", &rkguide::WeightedEMVonMisesFisherFactory<4,32>::update);
+
+
+
 py::class_< rkguide::VonMisesFisherChiSquareComponentMerger<4,32> >(m, "VMMChiSquareComponentMerger32v4")
     .def(py::init<>())
     .def("MergeNext", &rkguide::VonMisesFisherChiSquareComponentMerger<4,32>::MergeNext)
@@ -322,6 +359,7 @@ auto VMMChiSquareComponentSplitter32v4 = py::class_< rkguide::VonMisesFisherChiS
     .def("CalculateSplitStatistics", &VMMChiSquareComponentSplitter_CalculateSplitStatistics< rkguide::VonMisesFisherChiSquareComponentSplitter<4,32>, rkguide::VonMisesFisherMixture<4,32> >)
     .def("UpdateSplitStatistics", &VMMChiSquareComponentSplitter_UpdateSplitStatistics< rkguide::VonMisesFisherChiSquareComponentSplitter<4,32>, rkguide::VonMisesFisherMixture<4,32> >)
     .def("GetProjectedLocalDirections", &VMMChiSquareComponentSplitter_GetProjectedLocalDirections< rkguide::VonMisesFisherChiSquareComponentSplitter<4,32>, rkguide::VonMisesFisherMixture<4,32> >)
+    .def("PerformSplitting", &VMMChiSquareComponentSplitter_performSplitting< rkguide::VonMisesFisherChiSquareComponentSplitter<4,32>, rkguide::VonMisesFisherMixture<4,32> >)
     .def("SplitComponent", &rkguide::VonMisesFisherChiSquareComponentSplitter<4,32>::SplitComponent);
 
 
@@ -331,6 +369,7 @@ py::class_< rkguide::VonMisesFisherChiSquareComponentSplitter<4,32>::ComponentSp
     .def_readonly("mcEstimate", &rkguide::VonMisesFisherChiSquareComponentSplitter<4,32>::ComponentSplitStatistics::mcEstimate)
     .def_readonly("numSamples", &rkguide::VonMisesFisherChiSquareComponentSplitter<4,32>::ComponentSplitStatistics::numSamples)
     .def("getSumChiSquareEst", &rkguide::VonMisesFisherChiSquareComponentSplitter<4,32>::ComponentSplitStatistics::getSumChiSquareEst)
+    .def("getChiSquareEst", &rkguide::VonMisesFisherChiSquareComponentSplitter<4,32>::ComponentSplitStatistics::getChiSquareEst)
     .def("getHighestChiSquareIdx", &rkguide::VonMisesFisherChiSquareComponentSplitter<4,32>::ComponentSplitStatistics::getHighestChiSquareIdx)
     .def("__repr__", &rkguide::VonMisesFisherChiSquareComponentSplitter<4,32>::ComponentSplitStatistics::toString);
 
