@@ -69,6 +69,20 @@ struct WeightedEMVonMisesFisherFactory: public VonMisesFisherFactory< VecSize, m
 
     };
 
+
+    struct PartialFittingMask
+    {
+        vbool<VecSize> mask[NumVectors::value];
+
+        PartialFittingMask() = default;
+
+        void resetToFalse();
+        void resetToTrue(const size_t &numComponents);
+        void setToTrue(const size_t &idx);
+        void setToFalse(const size_t &idx);
+        std::string toString() const;
+    };
+
 public:
 
     typedef VonMisesFisherMixture<VecSize, maxComponents> VMM;
@@ -78,6 +92,9 @@ public:
     void fitMixture(VMM &vmm, size_t numComponents, SufficientStatisitcs &stats, const DirectionalSampleData* samples, const size_t numSamples, const Configuration &cfg) const;
 
     void updateMixture(VMM &vmm, SufficientStatisitcs &previousStats, const DirectionalSampleData* samples, const size_t numSamples, const Configuration &cfg) const;
+
+    void partialUpdateMixture(VMM &vmm, const PartialFittingMask &mask, SufficientStatisitcs &previousStats, const DirectionalSampleData* samples, const size_t numSamples, const Configuration &cfg) const;
+
 
 private:
 
@@ -90,6 +107,14 @@ private:
     void estimateMAPWeights( VMM &vmm, SufficientStatisitcs &currentStats, SufficientStatisitcs &previousStats, const float &_weightPrior ) const;
 
     void estimateMAPMeanDirectionAndConcentration( VMM &vmm, SufficientStatisitcs &currentStats, SufficientStatisitcs &previousStats, const Configuration &cfg) const;
+
+    void partialWeightedMaximumAPosteriorStep(VMM &vmm, const PartialFittingMask &mask, SufficientStatisitcs &previousStats,
+        SufficientStatisitcs &currentStats,
+        const Configuration &cfg) const;
+
+    void estimatePartialMAPWeights( VMM &vmm, const PartialFittingMask &mask, SufficientStatisitcs &currentStats, SufficientStatisitcs &previousStats, const float &_weightPrior ) const;
+
+    void estimatePartialMAPMeanDirectionAndConcentration( VMM &vmm, const PartialFittingMask &mask, SufficientStatisitcs &currentStats, SufficientStatisitcs &previousStats, const Configuration &cfg) const;
 
 
 };
@@ -133,6 +158,25 @@ void WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::updateMixture(VMM
 }
 
 template<int VecSize, int maxComponents>
+void WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::partialUpdateMixture(VMM &vmm, const PartialFittingMask &mask, SufficientStatisitcs &previousStats, const DirectionalSampleData* samples, const size_t numSamples, const Configuration &cfg) const
+{
+    SufficientStatisitcs currentStats;
+    //stats.clear();
+    size_t currentEMIteration = 0;
+    bool converged = false;
+    float logLikelihood;
+    while ( !converged  && currentEMIteration < cfg.maxEMIterrations )
+    {
+        logLikelihood = weightedExpectationStep( vmm, currentStats, samples, numSamples);
+        partialWeightedMaximumAPosteriorStep( vmm, mask, currentStats, previousStats, cfg);
+        currentEMIteration++;
+        // TODO: Add convergence check
+    }
+    previousStats += currentStats;
+}
+
+
+template<int VecSize, int maxComponents>
 void WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::Configuration::init()
 {
     maxMeanCosine  = KappaToMeanCosine<float>(maxKappa);
@@ -151,6 +195,65 @@ std::string WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::Configurat
     ss << "\tweightPrior:" << weightPrior << std::endl;
     ss << "\tmeanCosinePriorStrength:" << meanCosinePriorStrength << std::endl;
     ss << "\tmeanCosinePrior:" << meanCosinePrior << std::endl;
+    return ss.str();
+}
+
+template<int VecSize, int maxComponents>
+void WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::PartialFittingMask::resetToFalse()
+{
+    const vbool<VecSize> vFalse(false);
+    for (size_t k = 0; k < ( (maxComponents + (VecSize -1)) / VecSize); k++)
+    {
+        mask[k] = vFalse;
+    }
+}
+
+template<int VecSize, int maxComponents>
+void WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::PartialFittingMask::resetToTrue(const size_t &numComponents)
+{
+    const vbool<VecSize> vTrue(true);
+    const int cnt = (numComponents+VecSize-1) / VecSize;
+    for (size_t k = 0; k < cnt; k++)
+    {
+        mask[k] = vTrue;
+    }
+
+    const div_t tmp = div( numComponents, VecSize);
+    for (size_t k = tmp.rem; k < VecSize; k++)
+    {
+        clear(mask[tmp.quot], k);
+    }
+}
+
+template<int VecSize, int maxComponents>
+void WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::PartialFittingMask::setToTrue(const size_t &idx)
+{
+    //std::cout << "setToTrue: " << idx << std::endl;
+    const div_t tmp = div( idx, VecSize);
+    set(mask[tmp.quot], tmp.rem);
+    //std::cout << mask[tmp.quot]<< "\t"<< tmp.quot << "\t"<< tmp.rem <<  std::endl;
+}
+
+template<int VecSize, int maxComponents>
+void WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::PartialFittingMask::setToFalse(const size_t &idx)
+{
+    //std::cout << "setToFalse: " << idx << std::endl;
+    const div_t tmp = div( idx, VecSize);
+    clear(mask[tmp.quot], tmp.rem);
+    //std::cout << mask[tmp.quot]<< "\t"<< tmp.quot << "\t"<< tmp.rem <<  std::endl;
+}
+
+
+template<int VecSize, int maxComponents>
+std::string WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::PartialFittingMask::toString() const
+{
+    std::stringstream ss;
+        ss << "PartialFittingMask:" << std::endl;
+        for (size_t k = 0; k < maxComponents; k++)
+        {
+            const div_t tmp = div( k, VecSize);
+            ss << "mask[" << k << "]: " << mask[tmp.quot][tmp.rem] << std::endl;
+        }
     return ss.str();
 }
 
@@ -430,6 +533,140 @@ void WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::weightedMaximumAP
     estimateMAPMeanDirectionAndConcentration( vmm, currentStats, previousStats, cfg);
 }
 
+template<int VecSize, int maxComponents>
+void WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::partialWeightedMaximumAPosteriorStep(VMM &vmm,
+        const PartialFittingMask &mask,
+        SufficientStatisitcs &currentStats,
+        SufficientStatisitcs &previousStats,
+        const Configuration &cfg) const
+{
+    // Estimating components weights
+    estimatePartialMAPWeights( vmm, mask, currentStats, previousStats, cfg.weightPrior );
 
+    // Estimating mean and concentration
+    estimatePartialMAPMeanDirectionAndConcentration( vmm, mask, currentStats, previousStats, cfg);
+}
+
+
+template<int VecSize, int maxComponents>
+void WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::estimatePartialMAPWeights( VMM &vmm,
+        const PartialFittingMask &mask,
+        SufficientStatisitcs &currentStats,
+        SufficientStatisitcs &previousStats,
+        const float &_weightPrior ) const
+{
+    const vfloat<VecSize> zeros(0.0f);
+    const int cnt = (vmm._numComponents+VecSize-1) / VecSize;
+
+    const size_t numComponents = vmm._numComponents;
+
+    const vfloat<VecSize> weightPrior(_weightPrior);
+
+    const vfloat<VecSize> numSamples = currentStats.numSamples + previousStats.numSamples;
+    //const vfloat<VecSize> numSamples = currentStats.numSamples + previousStats.overallNumSamples;
+
+    vfloat<VecSize> sumWeights(0.0f);
+    vfloat<VecSize> sumPartialWeights(0.0f);
+
+    for ( size_t k = 0; k < cnt; k ++ )
+    {
+        //_sumWeights += currentStats.sumOfWeightedStats[k];
+        vfloat<VecSize>  weight = ( currentStats.sumOfWeightedStats[k] + previousStats.sumOfWeightedStats[k] ) ;
+        weight = ( weightPrior + ( weight ) ) / (( weightPrior * numComponents ) + numSamples );
+        //vfloat<VecSize>  weight = ( currentStats.sumOfWeightedStats[k]/* + previousStats.sumOfWeightedStats[k]*/ ) / ( sumWeights );
+        //weight = ( weightPrior + ( weight * numSamples ) ) / (( weightPrior * numComponents ) + numSamples );
+
+        sumPartialWeights += select(mask.mask[k], weight, zeros);
+        sumWeights += select(mask.mask[k], zeros, vmm._weights[k]);
+
+        vmm._weights[k] =select(mask.mask[k], weight,  vmm._weights[k]);
+    }
+
+    vfloat<VecSize> inv_sumPartialWeights = 1.0f / reduce_add(sumPartialWeights);
+    inv_sumPartialWeights *= 1.0f - reduce_add(sumWeights);
+    for ( size_t k = 0; k < cnt; k ++ )
+    {
+        vmm._weights[k] =select(mask.mask[k], vmm._weights[k] * inv_sumPartialWeights,  vmm._weights[k]);
+    }
+
+    // TODO: find better more efficient way
+    if ( vmm._numComponents % VecSize > 0 )
+    {
+            for (size_t i = vmm._numComponents % VecSize; i < VecSize; i++ )
+            {
+                vmm._weights[cnt-1][i] = 0.0f;
+            }
+    }
+}
+
+template<int VecSize, int maxComponents>
+void WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::estimatePartialMAPMeanDirectionAndConcentration( VMM &vmm,
+        const PartialFittingMask &mask,
+        SufficientStatisitcs &currentStats,
+        SufficientStatisitcs &previousStats ,
+        const Configuration &cfg) const
+{
+    const vfloat<VecSize> currentNumSamples = currentStats.numSamples;
+    const vfloat<VecSize> previousNumSamples = previousStats.numSamples;
+    const vfloat<VecSize> numSamples = currentNumSamples + previousNumSamples;
+    const vfloat<VecSize> overallNumSamples = currentStats.numSamples + previousStats.overallNumSamples;
+
+
+    const vfloat<VecSize> currentEstimationWeight = currentNumSamples / numSamples;
+    const vfloat<VecSize> previousEstimationWeight = 1.0f - currentEstimationWeight;
+
+    const vfloat<VecSize> meanCosinePrior = cfg.meanCosinePrior;
+    const vfloat<VecSize> meanCosinePriorStrength = cfg.meanCosinePriorStrength;
+    const vfloat<VecSize> maxMeanCosine = cfg.maxMeanCosine;
+    const int cnt = (vmm._numComponents+VecSize-1) / VecSize;
+    const int rem = vmm._numComponents % VecSize;
+
+    for (size_t k = 0; k < cnt; k ++)
+    {
+        //const vfloat<VecSize> partialNumSamples = vmm._weights[k] * numSamples;
+        const vfloat<VecSize> partialNumSamples = vmm._weights[k] * overallNumSamples;
+        embree::Vec3< vfloat<VecSize> > currentMeanDirection;
+        currentMeanDirection.x = select(currentStats.sumOfWeightedStats[k] > 0.0f, currentStats.sumOfWeightedDirections[k].x / currentStats.sumOfWeightedStats[k], 0.0f);
+        currentMeanDirection.y = select(currentStats.sumOfWeightedStats[k] > 0.0f, currentStats.sumOfWeightedDirections[k].y / currentStats.sumOfWeightedStats[k], 0.0f);
+        currentMeanDirection.z = select(currentStats.sumOfWeightedStats[k] > 0.0f, currentStats.sumOfWeightedDirections[k].z / currentStats.sumOfWeightedStats[k], 0.0f);
+
+        // TODO: find a better design to precompute the previousMeanDirection
+        embree::Vec3< vfloat<VecSize> > previousMeanDirection;
+        previousMeanDirection.x = select(previousStats.sumOfWeightedStats[k] > 0.0f, previousStats.sumOfWeightedDirections[k].x / previousStats.sumOfWeightedStats[k], 0.0f);
+        previousMeanDirection.y = select(previousStats.sumOfWeightedStats[k] > 0.0f, previousStats.sumOfWeightedDirections[k].y / previousStats.sumOfWeightedStats[k], 0.0f);
+        previousMeanDirection.z = select(previousStats.sumOfWeightedStats[k] > 0.0f, previousStats.sumOfWeightedDirections[k].z / previousStats.sumOfWeightedStats[k], 0.0f);
+
+        embree::Vec3< vfloat<VecSize> > meanDirection =  currentMeanDirection * currentEstimationWeight
+            + previousMeanDirection * previousEstimationWeight;
+
+        vfloat<VecSize> meanCosine = length(meanDirection);
+
+        vmm._meanDirections[k].x = select( mask.mask[k], select(meanCosine > 0.0f, meanDirection.x / meanCosine, vmm._meanDirections[k].x) , vmm._meanDirections[k].x);
+        vmm._meanDirections[k].y = select( mask.mask[k], select(meanCosine > 0.0f, meanDirection.y / meanCosine, vmm._meanDirections[k].y), vmm._meanDirections[k].y);
+        vmm._meanDirections[k].z = select( mask.mask[k], select(meanCosine > 0.0f, meanDirection.z / meanCosine, vmm._meanDirections[k].z), vmm._meanDirections[k].z);
+
+        meanCosine = ( meanCosinePrior * meanCosinePriorStrength + meanCosine * partialNumSamples ) / ( meanCosinePriorStrength + partialNumSamples );
+
+        meanCosine = embree::min( maxMeanCosine, meanCosine );
+        vmm._meanCosines[k] = select( mask.mask[k], meanCosine, vmm._meanCosines[k]);
+        vmm._kappas[k] = select( mask.mask[k], MeanCosineToKappa< vfloat<VecSize> >( meanCosine ), vmm._kappas[k]);
+    }
+
+    // TODO: find better more efficient way
+    if ( rem > 0 )
+    {
+        for ( size_t i = rem; i < VecSize; i++)
+        {
+            vmm._meanDirections[cnt-1].x[i] = 0.0f;
+            vmm._meanDirections[cnt-1].y[i] = 0.0f;
+            vmm._meanDirections[cnt-1].z[i] = 1.0f;
+
+            vmm._meanCosines[cnt-1][i] = 0.0f;
+            vmm._kappas[cnt-1][i] = 0.0;
+        }
+    }
+
+    vmm._calculateNormalization();
+}
 
 }
