@@ -80,13 +80,13 @@ struct ComponentSplitStatistics
 };
 
 
-void PerformSplitting(VMM &vmm, const float &splitThreshold, const float &mcEstimate, const DirectionalSampleData *data, const size_t &numData, const typename VMMFactory::Configuration factoryCfg ) const;
+void PerformSplitting(VMM &vmm, const float &splitThreshold, const float &mcEstimate, const DirectionalSampleData *data, const size_t &numData, const typename VMMFactory::Configuration factoryCfg, const bool &doPartialRefit, const int &maxSplittingItr = -1) const;
 
 void CalculateSplitStatistics(const VMM &vmm, ComponentSplitStatistics &splitStats, const float &mcEstimate, const DirectionalSampleData *data, const size_t &numData) const;
 
 void UpdateSplitStatistics(const VMM &vmm, ComponentSplitStatistics &splitStats, const float &mcEstimate, const DirectionalSampleData *data, const size_t &numData) const;
 
-void SplitComponent(VMM &vmm, ComponentSplitStatistics &splitStats, SufficientStatisitcs &suffStats, const size_t idx) const;
+bool SplitComponent(VMM &vmm, ComponentSplitStatistics &splitStats, SufficientStatisitcs &suffStats, const size_t idx) const;
 
 ComponentSplitinfo GetProjectedLocalDirections(const VMM &vmm, const size_t &idx, const DirectionalSampleData *data, const size_t &numData, Vector3 *local2D) const;
 
@@ -130,7 +130,7 @@ void VonMisesFisherChiSquareComponentSplitter<VecSize, maxComponents>::Calculate
 }
 
 template<int VecSize, int maxComponents>
-void VonMisesFisherChiSquareComponentSplitter<VecSize, maxComponents>::PerformSplitting(VMM &vmm, const float &splitThreshold, const float &mcEstimate, const DirectionalSampleData *data, const size_t &numData, const typename VMMFactory::Configuration factoryCfg ) const
+void VonMisesFisherChiSquareComponentSplitter<VecSize, maxComponents>::PerformSplitting(VMM &vmm, const float &splitThreshold, const float &mcEstimate, const DirectionalSampleData *data, const size_t &numData, const typename VMMFactory::Configuration factoryCfg, const bool &doPartialRefit, const int &maxSplittingItr) const
 {
     PartialFittingMask mask;
     ComponentSplitStatistics splitStatistics;
@@ -142,6 +142,8 @@ void VonMisesFisherChiSquareComponentSplitter<VecSize, maxComponents>::PerformSp
 
     VMMFactory vmmFactory;
 
+    //std::cout << "vmm: " << vmm.toString() << std::endl;
+
     while ( vmm._numComponents < maxComponents && !stopSplitting)
     //for (size_t j =0; j<1; j++)
     {
@@ -151,6 +153,7 @@ void VonMisesFisherChiSquareComponentSplitter<VecSize, maxComponents>::PerformSp
 
         std::vector<SplitCandidate> splitComps = splitStatistics.getSplitCandidates();
 
+        //std::cout << "splitStatistics: " << splitStatistics.toString() << std::endl;
         //std::cout << "split iterration: " << splitItr << std::endl;
         //std::cout << "vmm: " << vmm.toString() << std::endl;
 /*
@@ -163,14 +166,17 @@ void VonMisesFisherChiSquareComponentSplitter<VecSize, maxComponents>::PerformSp
         const size_t numComp = vmm._numComponents;
         for (size_t k = 0; k < numComp; k++)
         {
-            if (splitComps[k].chiSquareEst > splitThreshold && vmm._numComponents + 1 < maxComponents)
+            if (splitComps[k].chiSquareEst > splitThreshold && vmm._numComponents  < maxComponents)
             {
                 //std::cout << "split[" << k << "]: idx:" << splitComps[k].componentIndex << "\t chi2: " << splitComps[k].chiSquareEst << std::endl;
 
-                SplitComponent(vmm, splitStatistics, suffStatistics, splitComps[k].componentIndex);
+                bool splitSucess = SplitComponent(vmm, splitStatistics, suffStatistics, splitComps[k].componentIndex);
                 mask.setToTrue(splitComps[k].componentIndex);
                 mask.setToTrue(vmm._numComponents-1);
-                stopSplitting = false;
+                if (splitSucess)
+                {
+                    stopSplitting = false;
+                }
             }
             else
             {
@@ -182,9 +188,21 @@ void VonMisesFisherChiSquareComponentSplitter<VecSize, maxComponents>::PerformSp
         //std::cout << "vmmSplit: " << vmm.toString() << std::endl;
         //std::cout << "factoryCfg: " << factoryCfg.toString() << std::endl;
         //std::cout << "suffStatistics: " << suffStatistics.toString() << std::endl;
-        vmmFactory.partialUpdateMixture(vmm, mask, suffStatistics, data, numData, factoryCfg);
-       // std::cout << "vmmpartialUpdate: " << vmm.toString() << std::endl;
-        splitItr++;
+        if (doPartialRefit)
+        {
+            vmmFactory.partialUpdateMixture(vmm, mask, suffStatistics, data, numData, factoryCfg);
+            //std::cout << "vmmpartialUpdate: " << vmm.toString() << std::endl;
+            splitItr++;
+        }
+        else
+        {
+            stopSplitting = true;
+        }
+
+        if (splitItr >= maxSplittingItr)
+        {
+            stopSplitting = true;
+        }
     }
 }
 
@@ -338,7 +356,7 @@ void VonMisesFisherChiSquareComponentSplitter<VecSize, maxComponents>::UpdateSpl
 }
 
 template<int VecSize, int maxComponents>
-void VonMisesFisherChiSquareComponentSplitter<VecSize, maxComponents>::SplitComponent(VMM &vmm, ComponentSplitStatistics &splitStats, SufficientStatisitcs &suffStats, const size_t idx) const
+bool VonMisesFisherChiSquareComponentSplitter<VecSize, maxComponents>::SplitComponent(VMM &vmm, ComponentSplitStatistics &splitStats, SufficientStatisitcs &suffStats, const size_t idx) const
 {
     ComponentSplitinfo splitInfo;
     const div_t tmpK = div(idx, static_cast<int>(VecSize));
@@ -366,7 +384,16 @@ void VonMisesFisherChiSquareComponentSplitter<VecSize, maxComponents>::SplitComp
 
     splitInfo.eigenVector0 /= embree::sqrt(splitInfo.eigenVector0.x * splitInfo.eigenVector0.x + splitInfo.eigenVector0.y * splitInfo.eigenVector0.y);
     splitInfo.eigenVector1 /= embree::sqrt(splitInfo.eigenVector1.x * splitInfo.eigenVector1.x + splitInfo.eigenVector1.y * splitInfo.eigenVector1.y);
+/*
+    std::cout << "D: " << D << std::endl;
+    std::cout << "sumWeights: " << splitStats.sumWeights[tmpK.quot][tmpK.rem] << "\t inSumWeights: " << inv_sumWeights << std::endl;
+    std::cout << "splitMean: " << splitInfo.mean << "\t splitCovariance: " << splitInfo.covariance << std::endl;
 
+    std::cout << "splitCovariancesRaw: " << splitStats.splitCovariances[tmpK.quot].x[tmpK.rem] << "\t" << splitStats.splitCovariances[tmpK.quot].y[tmpK.rem] << "\t" << splitStats.splitCovariances[tmpK.quot].z[tmpK.rem] << std::endl;
+    
+    std::cout << "eigenValue0: " << splitInfo.eigenValue0 << "\t eigenVector0: " << splitInfo.eigenVector0 << std::endl;
+    std::cout << "eigenValue1: " << splitInfo.eigenValue1 << "\t eigenVector1: " << splitInfo.eigenVector1 << std::endl;
+*/
 
     float sumStatsWeight = suffStats.sumOfWeightedStats[tmpK.quot][tmpK.rem];
     float weight = vmm._weights[tmpK.quot][tmpK.rem];
@@ -375,19 +402,38 @@ void VonMisesFisherChiSquareComponentSplitter<VecSize, maxComponents>::SplitComp
                                     vmm._meanDirections[tmpK.quot].y[tmpK.rem],
                                     vmm._meanDirections[tmpK.quot].z[tmpK.rem]);
 
-    float newWeight = weight * 0.5f;
+    float newWeight0 = weight * 0.5f;
+    float newWeight1 = newWeight0;
 
-    Vector2 meanDir2D0 = /*splitInfo.mean + */ (splitInfo.eigenVector0 * splitInfo.eigenValue0 * 0.5);
-    Vector3 meanDirection0 =  embree::frame(meanDirection) * Map2DTo3D<Vector3, Vector2>(meanDir2D0);
-    float newMeanCosine = meanCosine / dot(meanDirection, meanDirection0);
-    float newKkappa = MeanCosineToKappa<float> (newMeanCosine);
+    Vector3 meanDirection0 = meanDirection;
+    Vector3 meanDirection1 = meanDirection;
 
-    //float weight1 = weight * 0.5f;
-    Vector2 meanDir2D1 = /*splitInfo.mean + */ - (splitInfo.eigenVector0 * splitInfo.eigenValue0 * 0.5);
-    Vector3 meanDirection1 = embree::frame(meanDirection) * Map2DTo3D<Vector3, Vector2>(meanDir2D1);
-    //float meanCosine1 = meanCosine / meanDirection0.z;
-    //float kappa1 = MeanCosineToKappa<float> (meanCosine1);
+    float newMeanCosine0 = meanCosine;
+    float newMeanCosine1 = meanCosine*meanCosine;
 
+    float newKkappa0 = MeanCosineToKappa<float> (newMeanCosine0);
+    float newKkappa1 = MeanCosineToKappa<float> (newMeanCosine1);
+
+    if (D > 1e-8f)
+    {
+        Vector2 meanDir2D0 = /*splitInfo.mean + */ (splitInfo.eigenVector0 * splitInfo.eigenValue0 * 0.5);
+        meanDirection0 =  embree::frame(meanDirection) * Map2DTo3D<Vector3, Vector2>(meanDir2D0);
+        newMeanCosine0 = meanCosine / dot(meanDirection, meanDirection0);
+        newMeanCosine1 = newMeanCosine0;
+        newKkappa0 = MeanCosineToKappa<float> (newMeanCosine0);
+        newKkappa1 = newKkappa0;
+
+        Vector2 meanDir2D1 = /*splitInfo.mean + */ - (splitInfo.eigenVector0 * splitInfo.eigenValue0 * 0.5);
+        meanDirection1 = embree::frame(meanDirection) * Map2DTo3D<Vector3, Vector2>(meanDir2D1);
+        //float meanCosine1 = meanCosine / meanDirection0.z;
+        //float kappa1 = MeanCosineToKappa<float> (meanCosine1);
+    }
+    else
+    {
+        std::cout << "!!!!   D: " << D << "\t idx: " << idx <<std::endl;
+        std::cout << "weight: " << weight << "\t meanCosine: " << meanCosine <<std::endl;
+        //return false;
+    }
     size_t K = vmm._numComponents;
     //vmm.swapComponents(K-1, idx);
     //suffStats.swapComponentStats(K-1, idx);
@@ -395,16 +441,16 @@ void VonMisesFisherChiSquareComponentSplitter<VecSize, maxComponents>::SplitComp
     const div_t tmpI = tmpK;
     const div_t tmpJ = div(K, static_cast<int>(VecSize));
 
-    vmm._weights[tmpI.quot][tmpI.rem] = newWeight;
-    vmm._meanCosines[tmpI.quot][tmpI.rem] = newMeanCosine;
-    vmm._kappas[tmpI.quot][tmpI.rem] = newKkappa;
+    vmm._weights[tmpI.quot][tmpI.rem] = newWeight0;
+    vmm._meanCosines[tmpI.quot][tmpI.rem] = newMeanCosine0;
+    vmm._kappas[tmpI.quot][tmpI.rem] = newKkappa0;
     vmm._meanDirections[tmpI.quot].x[tmpI.rem] = meanDirection0.x;
     vmm._meanDirections[tmpI.quot].y[tmpI.rem] = meanDirection0.y;
     vmm._meanDirections[tmpI.quot].z[tmpI.rem] = meanDirection0.z;
 
-    vmm._weights[tmpJ.quot][tmpJ.rem] = newWeight;
-    vmm._meanCosines[tmpJ.quot][tmpJ.rem] = newMeanCosine;
-    vmm._kappas[tmpJ.quot][tmpJ.rem] = newKkappa;
+    vmm._weights[tmpJ.quot][tmpJ.rem] = newWeight1;
+    vmm._meanCosines[tmpJ.quot][tmpJ.rem] = newMeanCosine1;
+    vmm._kappas[tmpJ.quot][tmpJ.rem] = newKkappa1;
     vmm._meanDirections[tmpJ.quot].x[tmpJ.rem] = meanDirection1.x;
     vmm._meanDirections[tmpJ.quot].y[tmpJ.rem] = meanDirection1.y;
     vmm._meanDirections[tmpJ.quot].z[tmpJ.rem] = meanDirection1.z;
@@ -415,16 +461,17 @@ void VonMisesFisherChiSquareComponentSplitter<VecSize, maxComponents>::SplitComp
     sumStatsWeight /= 2.0f;
 
     suffStats.sumOfWeightedStats[tmpI.quot][tmpI.rem] = sumStatsWeight;
-    suffStats.sumOfWeightedDirections[tmpI.quot].x[tmpI.rem] = meanDirection0.x * newMeanCosine * sumStatsWeight;
-    suffStats.sumOfWeightedDirections[tmpI.quot].y[tmpI.rem] = meanDirection0.y * newMeanCosine * sumStatsWeight;
-    suffStats.sumOfWeightedDirections[tmpI.quot].z[tmpI.rem] = meanDirection0.z * newMeanCosine * sumStatsWeight;
+    suffStats.sumOfWeightedDirections[tmpI.quot].x[tmpI.rem] = meanDirection0.x * newMeanCosine0 * sumStatsWeight;
+    suffStats.sumOfWeightedDirections[tmpI.quot].y[tmpI.rem] = meanDirection0.y * newMeanCosine0 * sumStatsWeight;
+    suffStats.sumOfWeightedDirections[tmpI.quot].z[tmpI.rem] = meanDirection0.z * newMeanCosine0 * sumStatsWeight;
 
     suffStats.sumOfWeightedStats[tmpJ.quot][tmpJ.rem] = sumStatsWeight;
-    suffStats.sumOfWeightedDirections[tmpJ.quot].x[tmpJ.rem] = meanDirection1.x * newMeanCosine * sumStatsWeight;
-    suffStats.sumOfWeightedDirections[tmpJ.quot].y[tmpJ.rem] = meanDirection1.y * newMeanCosine * sumStatsWeight;
-    suffStats.sumOfWeightedDirections[tmpJ.quot].z[tmpJ.rem] = meanDirection1.z * newMeanCosine * sumStatsWeight;
+    suffStats.sumOfWeightedDirections[tmpJ.quot].x[tmpJ.rem] = meanDirection1.x * newMeanCosine1 * sumStatsWeight;
+    suffStats.sumOfWeightedDirections[tmpJ.quot].y[tmpJ.rem] = meanDirection1.y * newMeanCosine1 * sumStatsWeight;
+    suffStats.sumOfWeightedDirections[tmpJ.quot].z[tmpJ.rem] = meanDirection1.z * newMeanCosine1 * sumStatsWeight;
     suffStats.numComponents = K + 1;
 
+    return true;
 }
 
 template<int VecSize, int maxComponents>

@@ -302,6 +302,8 @@ void VonMisesFisherMixture<VecSize, maxComponents>::swapComponents( const size_t
 template<int VecSize, int maxComponents>
 void VonMisesFisherMixture<VecSize, maxComponents>::mergeComponents( const size_t &idx0, const size_t &idx1 )
 {
+    //std::cout << "mergeComponents: i: " << idx0 << "\tj: " << idx1 << std::endl;
+
     const div_t tmpIdx0 = div( idx0, VecSize);
     const div_t tmpIdx1 = div( idx1, VecSize);
 
@@ -328,9 +330,9 @@ void VonMisesFisherMixture<VecSize, maxComponents>::mergeComponents( const size_
             + weight1 * meanCosine1 * _meanDirections[tmpIdx1.quot].z[tmpIdx1.rem];
 
 
-        std::cout << "mergeComponents: cosTheta: " << _meanDirections[tmpIdx0.quot].x[tmpIdx0.rem] *_meanDirections[tmpIdx1.quot].x[tmpIdx1.rem] +
-                                                        _meanDirections[tmpIdx0.quot].y[tmpIdx0.rem] *_meanDirections[tmpIdx1.quot].y[tmpIdx1.rem] +
-                                                        _meanDirections[tmpIdx0.quot].z[tmpIdx0.rem] *_meanDirections[tmpIdx1.quot].z[tmpIdx1.rem] << std::endl;
+        //std::cout << "mergeComponents: cosTheta: " << _meanDirections[tmpIdx0.quot].x[tmpIdx0.rem] *_meanDirections[tmpIdx1.quot].x[tmpIdx1.rem] +
+        //                                                _meanDirections[tmpIdx0.quot].y[tmpIdx0.rem] *_meanDirections[tmpIdx1.quot].y[tmpIdx1.rem] +
+        //                                                _meanDirections[tmpIdx0.quot].z[tmpIdx0.rem] *_meanDirections[tmpIdx1.quot].z[tmpIdx1.rem] << std::endl;
 
         meanDirectionX /= weight;
         meanDirectionY /= weight;
@@ -361,8 +363,8 @@ void VonMisesFisherMixture<VecSize, maxComponents>::mergeComponents( const size_
         }
 
         _weights[tmpIdx0.quot][tmpIdx0.rem] = weight;
-        _meanCosines[tmpIdx0.quot][tmpIdx0.rem] = meanCosine;
         _kappas[tmpIdx0.quot][tmpIdx0.rem] = kappa;
+        _meanCosines[tmpIdx0.quot][tmpIdx0.rem] = meanCosine;
 
         _normalizations[tmpIdx0.quot][tmpIdx0.rem] = norm;
         _eMinus2Kappa[tmpIdx0.quot][tmpIdx0.rem] = eMin2Kappa;
@@ -371,7 +373,7 @@ void VonMisesFisherMixture<VecSize, maxComponents>::mergeComponents( const size_
         _meanDirections[tmpIdx0.quot].y[tmpIdx0.rem] = meanDirectionY;
         _meanDirections[tmpIdx0.quot].z[tmpIdx0.rem] = meanDirectionZ;
 
-        std::cout << "mergeComponents: weight: " << weight << "\tkappa: " << kappa << "\tmeanDirection: " << meanDirectionX << "\t" << meanDirectionY << "\t" << meanDirectionZ << std::endl;
+        //std::cout << "mergeComponents: weight: " << weight << "\tkappa: " << kappa << "\tmeanDirection: " << meanDirectionX << "\t" << meanDirectionY << "\t" << meanDirectionZ << std::endl;
         swapComponents( idx1, _numComponents -1 );
         clearComponent( _numComponents -1 );
         _numComponents -= 1;
