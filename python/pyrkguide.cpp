@@ -8,6 +8,7 @@
 #include <rkguide/vmm/WeightedEMVMMFactory.h>
 #include <rkguide/vmm/VMMChiSquareComponentMerger.h>
 #include <rkguide/vmm/VMMChiSquareComponentSplitter.h>
+#include <rkguide/vmm/AdaptiveSplitandMergeFactory.h>
 
 namespace py = pybind11;
 
@@ -20,6 +21,7 @@ typedef rkguide::VonMisesFisherFactory<4,PYGUIDE_MAX_COMPONENTS> VMMFactory;
 typedef rkguide::WeightedEMVonMisesFisherFactory<4,PYGUIDE_MAX_COMPONENTS>  VMMWEMFactory;
 typedef rkguide::VonMisesFisherChiSquareComponentMerger<4,PYGUIDE_MAX_COMPONENTS> VMMChiSquareComponentMerger;
 typedef rkguide::VonMisesFisherChiSquareComponentSplitter<4,PYGUIDE_MAX_COMPONENTS> VMMChiSquareComponentSplitter;
+typedef rkguide::AdaptiveSplitAndMergeFactory<4,PYGUIDE_MAX_COMPONENTS> VMMAdaptiveSplitAndMergeFactory;
 }
 
 template <typename... Args>
@@ -45,6 +47,21 @@ static py::list DirectionalSampleData_loadDirectionalSampleData(const std::strin
 	py::list list = py::cast(dataPoints);
 	return list;
 }
+
+static void  AdaptiveSplitAndMergeFactory_fit( rkguide::VMMAdaptiveSplitAndMergeFactory *asmFactory, rkguide::VMM &model, const size_t &K, rkguide::VMMAdaptiveSplitAndMergeFactory::ASMStatistics &stats, const py::list &listParticles, rkguide::VMMAdaptiveSplitAndMergeFactory::ASMConfiguration &cfg)
+{
+    std::vector<rkguide::DirectionalSampleData> dataPoints = listParticles.cast<std::vector<rkguide::DirectionalSampleData>>();
+	//rkguide::StoreDirectionalSampleData(fileName, dataPoints.data(), dataPoints.size());
+    asmFactory->fit(model, K, stats, dataPoints.data(), dataPoints.size(), cfg);
+}
+
+static void  AdaptiveSplitAndMergeFactory_update( rkguide::VMMAdaptiveSplitAndMergeFactory *asmFactory, rkguide::VMM &model, rkguide::VMMAdaptiveSplitAndMergeFactory::ASMStatistics &stats, const py::list &listParticles, rkguide::VMMAdaptiveSplitAndMergeFactory::ASMConfiguration &cfg)
+{
+    std::vector<rkguide::DirectionalSampleData> dataPoints = listParticles.cast<std::vector<rkguide::DirectionalSampleData>>();
+	//rkguide::StoreDirectionalSampleData(fileName, dataPoints.data(), dataPoints.size());
+    asmFactory->update(model, stats, dataPoints.data(), dataPoints.size(), cfg);
+}
+
 
 template< typename WeightedEMVMMFactory, typename VMM>
 static void  WeightedEMVMMFactory_fit( WeightedEMVMMFactory *vmmFactory, VMM &model, const size_t &K, typename WeightedEMVMMFactory::SufficientStatisitcs &stats, const py::list &listParticles, typename WeightedEMVMMFactory::Configuration &cfg)
@@ -188,6 +205,25 @@ static py::list VMM_getWeights( VMM *model)
 
 }
 
+
+template< typename VMM, int VecSize>
+static void VMM_setWeights( VMM *model, const py::list &listWeights)
+{   
+
+    std::cout << "VMM_setWeights: " <<model->_numComponents << std::endl;
+    //std::vector<rkguide::DirectionalSampleData> dataPoints = listParticles.cast<std::vector<rkguide::DirectionalSampleData>>();
+    std::vector<double> weights = listWeights.cast<std::vector<double>>();
+    for ( size_t k = 0; k < model->_numComponents; k++ )
+    {
+        const div_t tmp = div(k, static_cast<int>(VecSize));
+        //weights.push_back(model->_weights[tmp.quot][tmp.rem]);
+        std::cout << "w["<<k<<"]" << weights[k] << std::endl;
+        model->_weights[tmp.quot][tmp.rem] = weights[k];
+    }
+    //return py::cast(weights);
+
+}
+
 template< typename VMM>
 static VMM VMM_copy( VMM *model)
 {
@@ -307,6 +343,7 @@ py::class_< rkguide::VMM >(m, "VMM")
     .def("uniformInit", &rkguide::VMM::uniformInit)
     .def("softAssignment", &VMM_softAssignment<rkguide::VMM, 4 >)
     .def("getWeights", &VMM_getWeights<rkguide::VMM, 4 >)
+    .def("setWeights", &VMM_setWeights<rkguide::VMM, 4 >)
     .def("setComponentWeight", &rkguide::VMM::setComponentWeight)
     .def("setComponentMeanDirection", &rkguide::VMM::setComponentMeanDirection)
     .def("setComponentKappa", &rkguide::VMM::setComponentKappa)
@@ -322,7 +359,8 @@ auto VMMWEMFactory = py::class_< rkguide::VMMWEMFactory >(m, "VMMWEMFactory")
     .def(py::init<>())
     .def("fit", &WeightedEMVMMFactory_fit< rkguide::VMMWEMFactory, rkguide::VMM >)
     .def("update", &WeightedEMVMMFactory_update< rkguide::VMMWEMFactory, rkguide::VMM >)
-    .def("partialUpdate", &WeightedEMVMMFactory_partialUpdate< rkguide::VMMWEMFactory, rkguide::VMM >);
+    .def("partialUpdate", &WeightedEMVMMFactory_partialUpdate< rkguide::VMMWEMFactory, rkguide::VMM >)
+    .def("VMMfromSufficientStatisitcs", &rkguide::VMMWEMFactory::VMMfromSufficientStatisitcs);
 
 
 py::class_< rkguide::VMMWEMFactory::Configuration >(VMMWEMFactory, "Configuration")
@@ -342,6 +380,7 @@ py::class_< rkguide::VMMWEMFactory::SufficientStatisitcs >(VMMWEMFactory, "Suffi
     .def(py::init<>())
     .def(py::init< rkguide::VMMWEMFactory::SufficientStatisitcs >())
     .def("clear", &rkguide::VMMWEMFactory::SufficientStatisitcs::clear)
+    .def("decay", &rkguide::VMMWEMFactory::SufficientStatisitcs::decay)
     .def("__repr__", &rkguide::VMMWEMFactory::SufficientStatisitcs::toString);
     //.def("update", &rkguide::WEMVMMFactory::update);
 
@@ -361,7 +400,9 @@ py::class_< rkguide::VMMWEMFactory::PartialFittingMask >(VMMWEMFactory, "Partial
 py::class_< rkguide::VMMChiSquareComponentMerger >(m, "VMMChiSquareComponentMerger")
     .def(py::init<>())
     .def("MergeNext", &rkguide::VMMChiSquareComponentMerger::MergeNext)
-    .def("PerformMerging", &rkguide::VMMChiSquareComponentMerger::PerformMerging)
+    //.def("PerformMerging", &rkguide::VMMChiSquareComponentMerger::PerformMerging)
+    .def("PerformMerging", (void (rkguide::VMMChiSquareComponentMerger::*)(rkguide::VMM &, const float &) const) &rkguide::VMMChiSquareComponentMerger::PerformMerging)
+    .def("PerformMerging", (void (rkguide::VMMChiSquareComponentMerger::*)(rkguide::VMM &, const float &, rkguide::VMMWEMFactory::SufficientStatisitcs &, rkguide::VMMChiSquareComponentSplitter::ComponentSplitStatistics &) const) &rkguide::VMMChiSquareComponentMerger::PerformMerging)
     .def("CalculateMergeCost", &rkguide::VMMChiSquareComponentMerger::CalculateMergeCost);
 
 
@@ -383,6 +424,31 @@ py::class_< rkguide::VMMChiSquareComponentSplitter::ComponentSplitStatistics >(V
     .def("getChiSquareEst", &rkguide::VMMChiSquareComponentSplitter::ComponentSplitStatistics::getChiSquareEst)
     .def("getHighestChiSquareIdx", &rkguide::VMMChiSquareComponentSplitter::ComponentSplitStatistics::getHighestChiSquareIdx)
     .def("__repr__", &rkguide::VMMChiSquareComponentSplitter::ComponentSplitStatistics::toString);
+
+
+auto AdaptiveSplitAndMergeFactory = py::class_< rkguide::VMMAdaptiveSplitAndMergeFactory >(m, "VMMAdaptiveSplitAndMergeFactory")
+    .def(py::init<>())
+    .def("fit", &AdaptiveSplitAndMergeFactory_fit)
+    .def("update", &AdaptiveSplitAndMergeFactory_update);
+
+
+py::class_< rkguide::VMMAdaptiveSplitAndMergeFactory::ASMConfiguration >(AdaptiveSplitAndMergeFactory, "ASMConfiguration")
+    .def(py::init<>())
+    .def_readwrite("weightedEMCfg", &rkguide::VMMAdaptiveSplitAndMergeFactory::ASMConfiguration::weightedEMCfg)
+    .def_readwrite("splittingThreshold", &rkguide::VMMAdaptiveSplitAndMergeFactory::ASMConfiguration::splittingThreshold)
+    .def_readwrite("mergingThreshold", &rkguide::VMMAdaptiveSplitAndMergeFactory::ASMConfiguration::mergingThreshold)
+    .def_readwrite("partialReFit", &rkguide::VMMAdaptiveSplitAndMergeFactory::ASMConfiguration::partialReFit)
+    .def_readwrite("maxSplitItr", &rkguide::VMMAdaptiveSplitAndMergeFactory::ASMConfiguration::maxSplitItr)
+    .def("__repr__", &rkguide::VMMAdaptiveSplitAndMergeFactory::ASMConfiguration::toString);
+
+py::class_< rkguide::VMMAdaptiveSplitAndMergeFactory::ASMStatistics >(AdaptiveSplitAndMergeFactory, "ASMStatistics")
+    .def(py::init<>())
+    .def_readwrite("sufficientStatistics", &rkguide::VMMAdaptiveSplitAndMergeFactory::ASMStatistics::sufficientStatistics)
+    .def_readwrite("splittingStatistics", &rkguide::VMMAdaptiveSplitAndMergeFactory::ASMStatistics::splittingStatistics)
+    //.def_readwrite("clear", &rkguide::VMMAdaptiveSplitAndMergeFactory::ASMStatistics::clear)
+    //.def_readwrite("clearAll", &rkguide::VMMAdaptiveSplitAndMergeFactory::ASMStatistics::clearAll)
+    .def("__repr__", &rkguide::VMMAdaptiveSplitAndMergeFactory::ASMStatistics::toString);
+
 
 #ifdef VERSION_INFO
     m.attr("__version__") = VERSION_INFO;

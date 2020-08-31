@@ -6,6 +6,9 @@
 #include "../rkguide.h"
 #include "VMM.h"
 
+#include "WeightedEMVMMFactory.h"
+#include "VMMChiSquareComponentSplitter.h"
+
 namespace rkguide
 {
 
@@ -14,15 +17,24 @@ struct VonMisesFisherChiSquareComponentMerger
 {
 public:
     typedef VonMisesFisherMixture<VecSize, maxComponents> VMM;
+    typedef typename WeightedEMVonMisesFisherFactory<VecSize, maxComponents>::SufficientStatisitcs SufficientStatisitcs;
+    typedef typename VonMisesFisherChiSquareComponentSplitter<VecSize, maxComponents>::ComponentSplitStatistics ComponentSplitStatistics;
     typedef std::integral_constant<size_t, (maxComponents + (VecSize -1)) / VecSize> NumVectors;
+
+
+
 
     float MergeNext (VMM &vmm) const;
 
     bool ThresholdedMergeNext (VMM &vmm, const float &mergeThreshold, float &mergeCost) const;
 
+    bool ThresholdedMergeNext (VMM &vmm, const float &mergeThreshold, float &mergeCost, SufficientStatisitcs &suffStats, ComponentSplitStatistics &splitStats) const;
+
     float CalculateMergeCost (const VMM &vmm, const size_t &idx0, const size_t &idx1) const;
 
     void PerformMerging(VMM &vmm, const float &mergeThreshold) const;
+
+    void PerformMerging(VMM &vmm, const float &mergeThreshold, SufficientStatisitcs &suffStats, ComponentSplitStatistics &splitStats) const;
 
 private:
     inline float _IntegratedProduct(const Vector3 &meanDirection0, const float &kappa0, const float &normalization0, const Vector3 &meanDirection1, const float &kappa1, const float &normalization1) const;
@@ -51,6 +63,28 @@ void VonMisesFisherChiSquareComponentMerger< VecSize, maxComponents>::PerformMer
     }
 
 }
+
+template<int VecSize, int maxComponents>
+void VonMisesFisherChiSquareComponentMerger< VecSize, maxComponents>::PerformMerging(VMM &vmm, const float &mergeThreshold, SufficientStatisitcs &suffStats, ComponentSplitStatistics &splitStats) const
+{
+    bool stopMerging = false;
+    size_t totalMergeCount = 0;
+    while (vmm._numComponents > 1 && !stopMerging)
+    {
+        float mergeCost = 0.0f;
+        stopMerging = true;
+        bool mergedComponents = ThresholdedMergeNext(vmm, mergeThreshold,mergeCost, suffStats, splitStats);
+
+        stopMerging = !mergedComponents;
+        //std::cout << "merge: " << "\tmergedComponents: " << mergedComponents << "\tmergeCost: " << mergeCost << std::endl;
+        if (mergedComponents)
+        {
+            totalMergeCount++;
+        }
+    }
+    std::cout << "PerformMerging: totalMergeCount = " << totalMergeCount << "\t mergeThreshold: " << mergeThreshold<< std::endl;
+}
+
 
 template<int VecSize, int maxComponents>
 float VonMisesFisherChiSquareComponentMerger< VecSize, maxComponents>::CalculateMergeCost (const VMM &vmm, const size_t &idx0, const size_t &idx1) const
@@ -166,6 +200,41 @@ bool VonMisesFisherChiSquareComponentMerger< VecSize, maxComponents>::Thresholde
     if (foundMergeCandidates)
     {
         vmm.mergeComponents(mergeCandidateI, mergeCandidateJ);
+        mergeCost = minMergeCost;
+    }
+    return foundMergeCandidates;
+
+}
+
+
+template<int VecSize, int maxComponents>
+bool VonMisesFisherChiSquareComponentMerger< VecSize, maxComponents>::ThresholdedMergeNext (VMM &vmm, const float &mergeThreshold, float &mergeCost, SufficientStatisitcs &suffStats, ComponentSplitStatistics &splitStats) const
+{
+    int K = vmm._numComponents;
+    int mergeCandidateI = 0;
+    int mergeCandidateJ = 0;
+    float minMergeCost = std::numeric_limits<float>::max();
+
+    bool foundMergeCandidates = false;
+    for (size_t i = 0; i < K-1; i++)
+    {
+        for (size_t j = i+1; j < K; j++ )
+        {
+            float mergeCost = CalculateMergeCost(vmm, i,j);
+            if (mergeCost < mergeThreshold && mergeCost < minMergeCost)
+            {
+                mergeCandidateI = i;
+                mergeCandidateJ = j;
+                minMergeCost = mergeCost;
+                foundMergeCandidates = true;
+            }
+        }
+    }
+
+    if (foundMergeCandidates)
+    {
+        vmm.mergeComponents(mergeCandidateI, mergeCandidateJ);
+        suffStats.mergeComponentStats(mergeCandidateI, mergeCandidateJ);
         mergeCost = minMergeCost;
     }
     return foundMergeCandidates;

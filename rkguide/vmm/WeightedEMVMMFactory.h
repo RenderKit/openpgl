@@ -41,6 +41,19 @@ struct WeightedEMVonMisesFisherFactory: public VonMisesFisherFactory< VecSize, m
 
     };
 
+    struct PartialFittingMask
+    {
+        vbool<VecSize> mask[NumVectors::value];
+
+        PartialFittingMask() = default;
+
+        void resetToFalse();
+        void resetToTrue(const size_t &numComponents);
+        void setToTrue(const size_t &idx);
+        void setToFalse(const size_t &idx);
+        std::string toString() const;
+    };
+
     struct SufficientStatisitcs
     {
         SufficientStatisitcs() = default;
@@ -64,24 +77,20 @@ struct WeightedEMVonMisesFisherFactory: public VonMisesFisherFactory< VecSize, m
 
         void normalize( const float &_numSamples );
 
+        void mergeComponentStats(const size_t &idx0, const size_t &idx1);
+
         void swapComponentStats(const size_t &idx0, const size_t &idx1);
+
+        void maskedReplace(const PartialFittingMask &mask, const SufficientStatisitcs &stats);
+
+        void decay(const float &alpha);
+
         std::string toString() const;
 
     };
 
 
-    struct PartialFittingMask
-    {
-        vbool<VecSize> mask[NumVectors::value];
 
-        PartialFittingMask() = default;
-
-        void resetToFalse();
-        void resetToTrue(const size_t &numComponents);
-        void setToTrue(const size_t &idx);
-        void setToFalse(const size_t &idx);
-        std::string toString() const;
-    };
 
 public:
 
@@ -95,18 +104,19 @@ public:
 
     void partialUpdateMixture(VMM &vmm, const PartialFittingMask &mask, SufficientStatisitcs &previousStats, const DirectionalSampleData* samples, const size_t numSamples, const Configuration &cfg) const;
 
+    VMM VMMfromSufficientStatisitcs(const SufficientStatisitcs &suffStats, const Configuration &cfg) const;
 
 private:
 
     float weightedExpectationStep(VMM &vmm, SufficientStatisitcs &stats, const DirectionalSampleData* samples, const size_t numSamples) const;
 
-    void weightedMaximumAPosteriorStep(VMM &vmm, SufficientStatisitcs &previousStats,
-        SufficientStatisitcs &currentStats,
+    void weightedMaximumAPosteriorStep(VMM &vmm, const SufficientStatisitcs &previousStats,
+        const SufficientStatisitcs &currentStats,
         const Configuration &cfg) const;
 
-    void estimateMAPWeights( VMM &vmm, SufficientStatisitcs &currentStats, SufficientStatisitcs &previousStats, const float &_weightPrior ) const;
+    void estimateMAPWeights( VMM &vmm, const SufficientStatisitcs &currentStats, const SufficientStatisitcs &previousStats, const float &_weightPrior ) const;
 
-    void estimateMAPMeanDirectionAndConcentration( VMM &vmm, SufficientStatisitcs &currentStats, SufficientStatisitcs &previousStats, const Configuration &cfg) const;
+    void estimateMAPMeanDirectionAndConcentration( VMM &vmm, const SufficientStatisitcs &currentStats, const SufficientStatisitcs &previousStats, const Configuration &cfg) const;
 
     void partialWeightedMaximumAPosteriorStep(VMM &vmm, const PartialFittingMask &mask, SufficientStatisitcs &previousStats,
         SufficientStatisitcs &currentStats,
@@ -126,6 +136,19 @@ WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::WeightedEMVonMisesFish
     typename VonMisesFisherFactory<VecSize, maxComponents>::VonMisesFisherFactory( );
 }
 
+template<int VecSize, int maxComponents>
+typename WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::VMM WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::VMMfromSufficientStatisitcs(const SufficientStatisitcs &suffStats, const Configuration &cfg) const
+{
+
+    SufficientStatisitcs previousStats;
+    previousStats.clear(suffStats.numComponents);
+    VMM vmm;
+    vmm._numComponents = suffStats.numComponents;
+    weightedMaximumAPosteriorStep(vmm, previousStats, suffStats, cfg);
+
+    return vmm;
+}
+
 
 template<int VecSize, int maxComponents>
 void WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::fitMixture(VMM &vmm, size_t numComponents, SufficientStatisitcs &stats, const DirectionalSampleData* samples, const size_t numSamples, const Configuration &cfg) const
@@ -134,6 +157,7 @@ void WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::fitMixture(VMM &v
     this->InitUniformVMM( vmm, numComponents, 5.0f);
     //SufficientStatisitcs stats;
     stats.clear(numComponents);
+    stats.isNormalized = true;
     //stats.clearAll();
     updateMixture(vmm, stats, samples, numSamples, cfg);
 
@@ -257,6 +281,44 @@ std::string WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::PartialFit
     return ss.str();
 }
 
+
+template<int VecSize, int maxComponents>
+void WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::SufficientStatisitcs::decay(const float &alpha)
+{
+    for (size_t k = 0; k < ( (maxComponents + (VecSize -1)) / VecSize); k++)
+    {
+        sumOfWeightedDirections[k].x *= alpha;
+        sumOfWeightedDirections[k].y *= alpha;
+        sumOfWeightedDirections[k].z *= alpha;
+        sumOfWeightedStats[k] *= alpha;
+    }
+
+    numSamples *= alpha;
+    sumWeights *= alpha;
+
+}
+template<int VecSize, int maxComponents>
+void WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::SufficientStatisitcs::maskedReplace(const PartialFittingMask &mask, const SufficientStatisitcs &stats){
+
+    vfloat<VecSize> newSumWeights {0.0f};
+
+    for (size_t k = 0; k < ( (maxComponents + (VecSize -1)) / VecSize); k++)
+    {
+        sumOfWeightedDirections[k] = select(mask.mask[k], stats.sumOfWeightedDirections[k], sumOfWeightedDirections[k]);
+        sumOfWeightedStats[k] =  select(mask.mask[k], stats.sumOfWeightedStats[k], sumOfWeightedStats[k]);
+        newSumWeights += sumOfWeightedStats[k];
+    }
+    if (isNormalized)
+    {
+        numSamples = reduce_add(newSumWeights);
+    }
+    else
+    {
+        sumWeights = reduce_add(newSumWeights);
+    }
+}
+
+
 template<int VecSize, int maxComponents>
 WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::SufficientStatisitcs::SufficientStatisitcs(const SufficientStatisitcs &a)
 {
@@ -286,6 +348,33 @@ void WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::SufficientStatisi
 
 }
 
+template<int VecSize, int maxComponents>
+void WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::SufficientStatisitcs::mergeComponentStats(const size_t &idx0, const size_t &idx1)
+{
+    const div_t tmpIdx0 = div( idx0, VecSize);
+    const div_t tmpIdx1 = div( idx1, VecSize);
+    const div_t tmpIdx2 = div( numComponents-1, VecSize);
+
+    // merging the statistics of the component 0 and 1
+    sumOfWeightedDirections[tmpIdx0.quot].x[tmpIdx0.rem] += sumOfWeightedDirections[tmpIdx1.quot].x[tmpIdx1.rem];
+    sumOfWeightedDirections[tmpIdx0.quot].y[tmpIdx0.rem] += sumOfWeightedDirections[tmpIdx1.quot].y[tmpIdx1.rem];
+    sumOfWeightedDirections[tmpIdx0.quot].z[tmpIdx0.rem] += sumOfWeightedDirections[tmpIdx1.quot].z[tmpIdx1.rem];
+    sumOfWeightedStats[tmpIdx0.quot][tmpIdx0.rem] += sumOfWeightedStats[tmpIdx1.quot][tmpIdx1.rem];
+
+    // copying the statistics of the last component to the position of component 1
+    sumOfWeightedDirections[tmpIdx1.quot].x[tmpIdx1.rem] = sumOfWeightedDirections[tmpIdx2.quot].x[tmpIdx2.rem];
+    sumOfWeightedDirections[tmpIdx1.quot].y[tmpIdx1.rem] = sumOfWeightedDirections[tmpIdx2.quot].y[tmpIdx2.rem];
+    sumOfWeightedDirections[tmpIdx1.quot].z[tmpIdx1.rem] = sumOfWeightedDirections[tmpIdx2.quot].z[tmpIdx2.rem];
+    sumOfWeightedStats[tmpIdx1.quot][tmpIdx1.rem] = sumOfWeightedStats[tmpIdx2.quot][tmpIdx2.rem];
+
+    // reseting the statistics of the last component
+    sumOfWeightedDirections[tmpIdx2.quot].x[tmpIdx2.rem] = 0.0f;
+    sumOfWeightedDirections[tmpIdx2.quot].y[tmpIdx2.rem] = 0.0f;
+    sumOfWeightedDirections[tmpIdx2.quot].z[tmpIdx2.rem] = 0.0f;
+    sumOfWeightedStats[tmpIdx2.quot][tmpIdx2.rem] = 0.0f;
+
+    numComponents--;
+}
 
 template<int VecSize, int maxComponents>
 void WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::SufficientStatisitcs::clear(size_t _numComponents)
@@ -324,7 +413,7 @@ void WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::SufficientStatisi
     {
         sumWeightedStatsVec += sumOfWeightedStats[k];
     }
-    float sumWeights = reduce_add(sumWeightedStatsVec);
+    sumWeights = reduce_add(sumWeightedStatsVec);
     vfloat<VecSize> norm ( _numSamples / sumWeights );
 
     for(int k = 0; k < cnt;k++)
@@ -338,8 +427,12 @@ void WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::SufficientStatisi
 template<int VecSize, int maxComponents>
 typename WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::SufficientStatisitcs& WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::SufficientStatisitcs::operator+=(const WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::SufficientStatisitcs &stats)
 {
+
+    // TODO: chaeck for normalization
+
     const int cnt = (numComponents+VecSize-1) / VecSize;
 
+    this->sumWeights += stats.sumWeights;
     this->numSamples += stats.numSamples;
     this->overallNumSamples += stats.numSamples;
     for(int k = 0; k < cnt;k++)
@@ -356,7 +449,7 @@ std::string WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::Sufficient
 {
     std::stringstream ss;
     ss << "SufficientStatisitcs:" << std::endl;
-    //ss << "\tsumWeights:" << sumWeights << std::endl;
+    ss << "\tsumWeights:" << sumWeights << std::endl;
     ss << "\tnumSamples:" << numSamples << std::endl;
     ss << "\toverallNumSamples:" << overallNumSamples << std::endl;
     ss << "\tnumComponents:" << numComponents << std::endl;
@@ -418,8 +511,8 @@ float WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::weightedExpectat
 
 template<int VecSize, int maxComponents>
 void WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::estimateMAPWeights( VMM &vmm,
-        SufficientStatisitcs &currentStats,
-        SufficientStatisitcs &previousStats,
+        const SufficientStatisitcs &currentStats,
+        const SufficientStatisitcs &previousStats,
         const float &_weightPrior ) const
 {
     const int cnt = (vmm._numComponents+VecSize-1) / VecSize;
@@ -453,8 +546,8 @@ void WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::estimateMAPWeight
 
 template<int VecSize, int maxComponents>
 void WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::estimateMAPMeanDirectionAndConcentration( VMM &vmm,
-        SufficientStatisitcs &currentStats,
-        SufficientStatisitcs &previousStats ,
+        const SufficientStatisitcs &currentStats,
+        const SufficientStatisitcs &previousStats ,
         const Configuration &cfg) const
 {
     const vfloat<VecSize> currentNumSamples = currentStats.numSamples;
@@ -522,8 +615,8 @@ void WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::estimateMAPMeanDi
 
 template<int VecSize, int maxComponents>
 void WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::weightedMaximumAPosteriorStep(VMM &vmm,
-        SufficientStatisitcs &currentStats,
-        SufficientStatisitcs &previousStats,
+        const SufficientStatisitcs &currentStats,
+        const SufficientStatisitcs &previousStats,
         const Configuration &cfg) const
 {
     // Estimating components weights
