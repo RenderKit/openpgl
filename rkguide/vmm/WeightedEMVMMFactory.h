@@ -9,6 +9,10 @@
 
 #include "VMMFactory.h"
 
+
+//#define RKGUIDE_MAX_KAPPA 1000000.0f
+#define RKGUIDE_MAX_KAPPA 32000.0f
+
 namespace rkguide
 {
 
@@ -23,9 +27,9 @@ struct WeightedEMVonMisesFisherFactory: public VonMisesFisherFactory< VecSize, m
         size_t maK {maxComponents};
         size_t maxEMIterrations {100};
 
-        float maxKappa {1000000.0f};
-        float maxMeanCosine { KappaToMeanCosine<float>(1000000.0f)};
-        float convergenceThreshold {0.1f};
+        float maxKappa {RKGUIDE_MAX_KAPPA};
+        float maxMeanCosine { KappaToMeanCosine<float>(RKGUIDE_MAX_KAPPA)};
+        float convergenceThreshold {0.0025f};
 
         // MAP prior parameters
         // weight prior
@@ -167,16 +171,31 @@ template<int VecSize, int maxComponents>
 void WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::updateMixture(VMM &vmm, SufficientStatisitcs &previousStats, const DirectionalSampleData* samples, const size_t numSamples, const Configuration &cfg) const
 {
     SufficientStatisitcs currentStats;
-    //stats.clear();
+    // clear will be called in weightedExpectationStep
+    //currentStats.clear(vmm._numComponents);
     size_t currentEMIteration = 0;
     bool converged = false;
-    float logLikelihood;
+    float previousLogLikelihood = 0.0f;
+    float inv_previousLogLikelihood = 1.0f;
     while ( !converged  && currentEMIteration < cfg.maxEMIterrations )
     {
-        logLikelihood = weightedExpectationStep( vmm, currentStats, samples, numSamples);
+        float logLikelihood = weightedExpectationStep( vmm, currentStats, samples, numSamples);
         weightedMaximumAPosteriorStep( vmm, currentStats, previousStats, cfg);
         currentEMIteration++;
+
         // TODO: Add convergence check
+        if (currentEMIteration >1)
+        {
+            float relLogLikelihoodDifference = std::fabs(logLikelihood - previousLogLikelihood) * inv_previousLogLikelihood;
+            if(relLogLikelihoodDifference < cfg.convergenceThreshold)
+            {
+                converged = true;
+                std::cout << "converged:" <<  currentEMIteration << std::endl;
+            }
+            std::cout << "logLikelihood:" <<  logLikelihood << "\t previousLogLikelihood: "<< previousLogLikelihood  << "\t relLogLikelihoodDifference: " << relLogLikelihoodDifference << std::endl;
+            previousLogLikelihood = logLikelihood;
+            inv_previousLogLikelihood = 1.0f / std::fabs(logLikelihood);
+        }
     }
     previousStats += currentStats;
 }
@@ -185,16 +204,30 @@ template<int VecSize, int maxComponents>
 void WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::partialUpdateMixture(VMM &vmm, const PartialFittingMask &mask, SufficientStatisitcs &previousStats, const DirectionalSampleData* samples, const size_t numSamples, const Configuration &cfg) const
 {
     SufficientStatisitcs currentStats;
-    //stats.clear();
+    // clear will be called in weightedExpectationStep
+    //currentStats.clear(vmm._numComponents);
     size_t currentEMIteration = 0;
     bool converged = false;
-    float logLikelihood;
+    float previousLogLikelihood = 0.0f;
+    float inv_previousLogLikelihood = 1.0f;
     while ( !converged  && currentEMIteration < cfg.maxEMIterrations )
     {
-        logLikelihood = weightedExpectationStep( vmm, currentStats, samples, numSamples);
+        float logLikelihood = weightedExpectationStep( vmm, currentStats, samples, numSamples);
         partialWeightedMaximumAPosteriorStep( vmm, mask, currentStats, previousStats, cfg);
         currentEMIteration++;
         // TODO: Add convergence check
+        if (currentEMIteration >1)
+        {
+            float relLogLikelihoodDifference = std::fabs(logLikelihood - previousLogLikelihood) * inv_previousLogLikelihood;
+            if(relLogLikelihoodDifference < cfg.convergenceThreshold)
+            {
+                converged = true;
+                std::cout << "converged:" <<  currentEMIteration << std::endl;
+            }
+            std::cout << "logLikelihood:" <<  logLikelihood << "\t previousLogLikelihood: "<< previousLogLikelihood  << "\t relLogLikelihoodDifference: " << relLogLikelihoodDifference << std::endl;
+            previousLogLikelihood = logLikelihood;
+            inv_previousLogLikelihood = 1.0f / std::fabs(logLikelihood);
+        }
     }
     previousStats += currentStats;
 }
@@ -391,7 +424,7 @@ void WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::SufficientStatisi
         sumOfWeightedStats[k] = zeros;
     }
 
-    //sumWeights = 0.0f;
+    sumWeights = 0.0f;
     numSamples = 0;
     isNormalized = false;
 }
@@ -479,7 +512,7 @@ float WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::weightedExpectat
 
     const int cnt = (stats.numComponents+VecSize-1) / VecSize;
 
-    float summedLogLikelihood {0.f};
+    float summedWeightedLogLikelihood {0.f};
 
     typename VMM::SoftAssignment softAssign;
 
@@ -495,7 +528,7 @@ float WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::weightedExpectat
             continue;
         }
 
-        summedLogLikelihood += embree::log( softAssign.pdf );
+        summedWeightedLogLikelihood += sampleData.weight * embree::log( softAssign.pdf );
 
         for (size_t k =0; k < cnt; k++)
         {
@@ -506,7 +539,7 @@ float WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::weightedExpectat
     }
 
     stats.normalize(numSamples);
-    return summedLogLikelihood;
+    return summedWeightedLogLikelihood;
 }
 
 template<int VecSize, int maxComponents>
