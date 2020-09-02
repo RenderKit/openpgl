@@ -7,6 +7,17 @@
 #include <embree/common/math/vec2.h>
 #include <embree/common/math/vec3.h>
 
+//#define RKGUIDE_DISABLE_ASSERTS
+
+#ifndef RKGUIDE_DISABLE_ASSERTS
+#include <assert.h>
+#define RKGUIDE_ASSERT(cond) assert(cond);
+//#define RKGUIDE_ASSERT_MSG(cond, msg) SAssertEx(cond, msg);
+#else
+#define RKGUIDE_ASSERT(cond)
+//#define RKGUIDE_ASSERT_MSG(cond, msg)
+#endif
+
 namespace rkguide
 {
 

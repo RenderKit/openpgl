@@ -64,6 +64,8 @@ public:
 
     size_t _numComponents{maxComponents};
 
+    bool isValid() const;
+
     void uniformInit( float kappa );
     float pdf( Vec3<float> direction ) const;
 
@@ -118,6 +120,42 @@ std::string VonMisesFisherMixture<VecSize, maxComponents>::SoftAssignment::toStr
     return ss.str();
 }
 
+
+template<int VecSize, int maxComponents>
+bool VonMisesFisherMixture<VecSize, maxComponents>::isValid() const
+{
+    vbool<VecSize> valid(true);
+    vfloat<VecSize> zeros(0.0f);
+    const int cnt = (_numComponents+VecSize-1) / VecSize;
+    vfloat<VecSize> sumWeights = 0.0f;
+    for(int k = 0; k < cnt;k++){
+        sumWeights += _weights[k];
+
+        valid &= isvalid(_weights[k]);
+        valid &= _weights[k] >= 0.0f;
+        valid &= _weights[k] <= 1.0f;
+        RKGUIDE_ASSERT(embree::any(valid));
+
+        valid &= isvalid(_kappas[k]);
+        valid &= _kappas[k] >= 0.0f;
+        RKGUIDE_ASSERT(embree::any(valid));
+
+        valid &= isvalid(_meanCosines[k]);
+        valid &= _meanCosines[k] >= 0.0f;
+        valid &= _meanCosines[k] <= 1.0f;
+        RKGUIDE_ASSERT(embree::any(valid));
+
+        valid &= isvalid(_normalizations[k]);
+        valid &= _normalizations[k] >= 0.0f;
+        RKGUIDE_ASSERT(embree::any(valid));
+
+        valid &= isvalid(_eMinus2Kappa[k]);
+        RKGUIDE_ASSERT(embree::any(valid));
+        //valid &= _normalizations[k] >= 0.0f;
+    }
+
+    return embree::any(valid);
+}
 
 
 template<int VecSize, int maxComponents>
