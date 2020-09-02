@@ -13,6 +13,8 @@
 
 
 #define RKGUIDE_USE_LOGMAP
+#define RKGUIDE_ZERO_MEAN
+
 
 namespace rkguide
 {
@@ -128,6 +130,7 @@ inline Vec2Type Map3DTo2D(const Vec3Type &vec3D)
 {
     Vec2Type vec2D(0.0f);
 
+    //RKGUIDE_ASSERT((vec3D.z <= 1.0f &&  vec3D.z >= -1.0f));
     ScalarType alpha = embree::fastapprox::acos(vec3D.z);
     ScalarType inv_sinc = alpha / embree::fastapprox::sin(alpha);
 
@@ -142,6 +145,7 @@ inline Vec3Type Map2DTo3D(const Vec2Type &vec2D)
 {
     Vec3Type vec3D = Vec3Type(0.0f);
     ScalarType length = embree::sqrt(vec2D.x*vec2D.x + vec2D.y*vec2D.y);
+    RKGUIDE_ASSERT(length < M_PI);
     ScalarType sinc = embree::fastapprox::sin(length) / length;
 
     vec3D.x = select(length > 0.0f, vec2D.x * sinc, vec3D.x);
@@ -335,10 +339,13 @@ ComponentSplitinfo VonMisesFisherChiSquareComponentSplitter<VecSize, maxComponen
             local2D[n].z = assignedWeight[tmp.rem];
 
             sumWeights += assignedWeight[tmp.rem];
-
+#ifdef RKGUIDE_ZERO_MEAN
+            mean.x += 0.0f;
+            mean.y += 0.0f;
+#else
             mean.x += assignedWeight[tmp.rem] * localDirection2D.x[tmp.rem];
             mean.y += assignedWeight[tmp.rem] * localDirection2D.y[tmp.rem];
-
+#endif
             covarianceStats.x += assignedWeight[tmp.rem] * localDirection2D.x[tmp.rem] * localDirection2D.x[tmp.rem];
             covarianceStats.y += assignedWeight[tmp.rem] * localDirection2D.y[tmp.rem] * localDirection2D.y[tmp.rem];
             covarianceStats.z += assignedWeight[tmp.rem] * localDirection2D.x[tmp.rem] * localDirection2D.y[tmp.rem];
@@ -367,8 +374,8 @@ ComponentSplitinfo VonMisesFisherChiSquareComponentSplitter<VecSize, maxComponen
     splitInfo.eigenVector0 /= embree::sqrt(splitInfo.eigenVector0.x * splitInfo.eigenVector0.x + splitInfo.eigenVector0.y * splitInfo.eigenVector0.y);
     splitInfo.eigenVector1 /= embree::sqrt(splitInfo.eigenVector1.x * splitInfo.eigenVector1.x + splitInfo.eigenVector1.y * splitInfo.eigenVector1.y);
 
-    //std::cout << "split: " << "\tmean: " << mean.x << ", \t " << mean.y<< "\t covariance: " << covariance.x << ", \t "  << covariance.y << ", \t "  << covariance.z << std::endl;
-    //std::cout << "eigen: " << "\tevalue0: " << eigenValue0 << "\teVec0: " << eigenVector0.x << ", \t " << eigenVector0.y << "\tevalue1: " << eigenValue1 << "\teVec1: " << eigenVector1.x << ", \t " << eigenVector1.y << std::endl;
+    std::cout << "split: " << "\tmean: " << splitInfo.mean.x << ", \t " << splitInfo.mean.y<< "\t covariance: " << splitInfo.covariance.x << ", \t "  << splitInfo.covariance.y << ", \t "  << splitInfo.covariance.z << std::endl;
+    std::cout << "eigen: " << "\tevalue0: " << splitInfo.eigenValue0 << "\teVec0: " << splitInfo.eigenVector0.x << ", \t " << splitInfo.eigenVector0.y << "\tevalue1: " << splitInfo.eigenValue1 << "\teVec1: " << splitInfo.eigenVector1.x << ", \t " << splitInfo.eigenVector1.y << std::endl;
 
     return splitInfo;
 }
@@ -417,7 +424,11 @@ void VonMisesFisherChiSquareComponentSplitter<VecSize, maxComponents>::UpdateSpl
                 const Vec2< vfloat<VecSize> > localDirection2D(localDirection.x, localDirection.y);
                 const vfloat<VecSize> assignedWeight = softAssign.assignments[k] * weight;
                 //const vfloat<VecSize> assignedWeight = softAssign.assignments[k] * weight * weight;
+#ifdef RKGUIDE_ZERO_MEAN
+                splitStats.splitMeans[k] += Vec2< vfloat<VecSize> >(0.0f);
+#else
                 splitStats.splitMeans[k] += localDirection2D * assignedWeight;
+#endif
                 splitStats.splitCovariances[k].x += localDirection2D.x * localDirection2D.x * assignedWeight;
                 splitStats.splitCovariances[k].y += localDirection2D.y * localDirection2D.y * assignedWeight;
                 splitStats.splitCovariances[k].z += localDirection2D.x * localDirection2D.y * assignedWeight;
@@ -482,22 +493,20 @@ bool VonMisesFisherChiSquareComponentSplitter<VecSize, maxComponents>::SplitComp
 
     splitInfo.eigenVector0 /= embree::sqrt(splitInfo.eigenVector0.x * splitInfo.eigenVector0.x + splitInfo.eigenVector0.y * splitInfo.eigenVector0.y);
     splitInfo.eigenVector1 /= embree::sqrt(splitInfo.eigenVector1.x * splitInfo.eigenVector1.x + splitInfo.eigenVector1.y * splitInfo.eigenVector1.y);
-/* 
-    std::cout << "D: " << D << std::endl;
-    std::cout << "sumWeights: " << splitStats.sumWeights[tmpK.quot][tmpK.rem] << "\t inSumWeights: " << inv_sumWeights << std::endl;
-    std::cout << "splitMean: " << splitInfo.mean << "\t splitCovariance: " << splitInfo.covariance << std::endl;
+/* */
+    //std::cout << "D: " << D << std::endl;
+    //std::cout << "sumWeights: " << splitStats.sumWeights[tmpK.quot][tmpK.rem] << "\t inSumWeights: " << inv_sumWeights << std::endl;
+    //std::cout << "splitMean: " << splitInfo.mean << "\t splitCovariance: " << splitInfo.covariance << std::endl;
 
-    std::cout << "splitCovariancesRaw: " << splitStats.splitCovariances[tmpK.quot].x[tmpK.rem] << "\t" << splitStats.splitCovariances[tmpK.quot].y[tmpK.rem] << "\t" << splitStats.splitCovariances[tmpK.quot].z[tmpK.rem] << std::endl;
-    
-    std::cout << "eigenValue0: " << splitInfo.eigenValue0 << "\t eigenVector0: " << splitInfo.eigenVector0 << std::endl;
-    std::cout << "eigenValue1: " << splitInfo.eigenValue1 << "\t eigenVector1: " << splitInfo.eigenVector1 << std::endl;
-*/
-
-    
+    //std::cout << "splitCovariancesRaw: " << splitStats.splitCovariances[tmpK.quot].x[tmpK.rem] << "\t" << splitStats.splitCovariances[tmpK.quot].y[tmpK.rem] << "\t" << splitStats.splitCovariances[tmpK.quot].z[tmpK.rem] << std::endl;
+//    std::cout << "eigenValue0: " << splitInfo.eigenValue0 << "\t eigenVector0: " << splitInfo.eigenVector0 << std::endl;
+//    std::cout << "eigenValue1: " << splitInfo.eigenValue1 << "\t eigenVector1: " << splitInfo.eigenVector1 << std::endl;
+/**/
 
     float sumStatsWeight = suffStats.sumOfWeightedStats[tmpK.quot][tmpK.rem];
     float weight = vmm._weights[tmpK.quot][tmpK.rem];
     float meanCosine = vmm._meanCosines[tmpK.quot][tmpK.rem];
+    float kappa = vmm._kappas[tmpK.quot][tmpK.rem];
     Vector3 meanDirection = Vector3(vmm._meanDirections[tmpK.quot].x[tmpK.rem],
                                     vmm._meanDirections[tmpK.quot].y[tmpK.rem],
                                     vmm._meanDirections[tmpK.quot].z[tmpK.rem]);
@@ -514,24 +523,27 @@ bool VonMisesFisherChiSquareComponentSplitter<VecSize, maxComponents>::SplitComp
     float newKkappa0 = MeanCosineToKappa<float> (newMeanCosine0);
     float newKkappa1 = MeanCosineToKappa<float> (newMeanCosine1);
 
+    //splitInfo.mean = Vector2(0.0f);
+
     if (D > 1e-8f)
     {
-        Vector2 meanDir2D0 = /*splitInfo.mean + */ (splitInfo.eigenVector0 * splitInfo.eigenValue0 * 0.5);
+        Vector2 meanDir2D0 = splitInfo.mean + (splitInfo.eigenVector0 * splitInfo.eigenValue0 * 1.0);
         meanDirection0 =  embree::frame(meanDirection) * Map2DTo3D<Vector3, Vector2, float>(meanDir2D0);
         newMeanCosine0 = meanCosine / dot(meanDirection, meanDirection0);
+        // ensure that the new mean cosine is in a valid range (i.e., < 1.0 and < the mean cosine of max kappa)
+        newMeanCosine0 = std::min(newMeanCosine0, KappaToMeanCosine<float>(RKGUIDE_MAX_KAPPA));
         newMeanCosine1 = newMeanCosine0;
         newKkappa0 = MeanCosineToKappa<float> (newMeanCosine0);
         newKkappa1 = newKkappa0;
 
-        Vector2 meanDir2D1 = /*splitInfo.mean + */ - (splitInfo.eigenVector0 * splitInfo.eigenValue0 * 0.5);
+        Vector2 meanDir2D1 = splitInfo.mean - (splitInfo.eigenVector0 * splitInfo.eigenValue0 * 1.0);
         meanDirection1 = embree::frame(meanDirection) * Map2DTo3D<Vector3, Vector2, float>(meanDir2D1);
         //float meanCosine1 = meanCosine / meanDirection0.z;
         //float kappa1 = MeanCosineToKappa<float> (meanCosine1);
-
-        //std::cout << "localMeanDirection0: " << Map2DTo3D<Vector3, Vector2, float>(meanDir2D0) << "\t meanDirection0: " << meanDirection0 << " \t costheta0: " <<  dot(meanDirection, meanDirection0) << std::endl;
-        //std::cout << "localMeanDirection1: " << Map2DTo3D<Vector3, Vector2, float>(meanDir2D1) << "\t meanDirection1: " << meanDirection1 << " \t costheta1: " <<  dot(meanDirection, meanDirection1) << std::endl;
+        //std::cout << "meanCosine: " << meanCosine << "\t kappa: " << kappa << "\t newMeanCosine: " << newMeanCosine0 << " \t newKkappa: " <<  newKkappa0 << std::endl;
+        //std::cout << "localMeanDirection0: " << Map2DTo3D<Vector3, Vector2, float>(meanDir2D0) << "\t meanDirection0: " << meanDirection0 << "\t meanCosine: " << meanCosine << " \t costheta0: " <<  dot(meanDirection, meanDirection0) << std::endl;
+        //std::cout << "localMeanDirection1: " << Map2DTo3D<Vector3, Vector2, float>(meanDir2D1) << "\t meanDirection1: " << meanDirection1 << "\t meanCosine: " << meanCosine << " \t costheta1: " <<  dot(meanDirection, meanDirection1) << std::endl;
         std::cout << "D: " << D << "\t idx: " << idx << " \t assignedSamples: " << numAssignedSamples <<std::endl;
-        
     }
     else
     {
