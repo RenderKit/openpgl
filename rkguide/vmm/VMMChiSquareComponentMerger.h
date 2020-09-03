@@ -21,9 +21,6 @@ public:
     typedef typename VonMisesFisherChiSquareComponentSplitter<VecSize, maxComponents>::ComponentSplitStatistics ComponentSplitStatistics;
     typedef std::integral_constant<size_t, (maxComponents + (VecSize -1)) / VecSize> NumVectors;
 
-
-
-
     float MergeNext (VMM &vmm) const;
 
     bool ThresholdedMergeNext (VMM &vmm, const float &mergeThreshold, float &mergeCost) const;
@@ -205,7 +202,6 @@ bool VonMisesFisherChiSquareComponentMerger< VecSize, maxComponents>::Thresholde
 
     if (foundMergeCandidates)
     {
-        
         vmm.mergeComponents(mergeCandidateI, mergeCandidateJ);
         mergeCost = minMergeCost;
         std::cout << "merge: " << "\tidx0: " << mergeCandidateI << "\tidx1: " << mergeCandidateJ << "\tK: " << vmm._numComponents <<std::endl;
@@ -222,8 +218,6 @@ bool VonMisesFisherChiSquareComponentMerger< VecSize, maxComponents>::Thresholde
     int mergeCandidateI = 0;
     int mergeCandidateJ = 0;
     float minMergeCost = std::numeric_limits<float>::max();
-
-    //std::cout  << vmm.toString()<<std::endl;
 
     bool foundMergeCandidates = false;
     for (size_t i = 0; i < K-1; i++)
