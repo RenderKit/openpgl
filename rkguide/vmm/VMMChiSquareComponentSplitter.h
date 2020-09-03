@@ -13,7 +13,7 @@
 
 
 #define RKGUIDE_USE_LOGMAP
-#define RKGUIDE_ZERO_MEAN
+//#define RKGUIDE_ZERO_MEAN
 
 
 namespace rkguide
@@ -63,16 +63,22 @@ struct SplitCandidate
 
 struct ComponentSplitStatistics
 {
-    vfloat<VecSize> chiSquareMCEstimates[NumVectors::value];
-    Vec2<vfloat<VecSize> > splitMeans[NumVectors::value];
-    Vec3<vfloat<VecSize> > splitCovariances[NumVectors::value];
+    //vfloat<VecSize> chiSquareMCEstimates[NumVectors::value];
+    //Vec2<vfloat<VecSize> > splitMeans[NumVectors::value];
+    //Vec3<vfloat<VecSize> > splitCovariances[NumVectors::value];
+
+    vfloat<VecSize> chiSquareMCEstimatesV2[NumVectors::value];
+    Vec2<vfloat<VecSize> > splitMeansV2[NumVectors::value];
+    Vec3<vfloat<VecSize> > splitWeightedSampleCovariancesV2[NumVectors::value];
+
+    vfloat<VecSize> numSamples[NumVectors::value];
     vfloat<VecSize> sumWeights[NumVectors::value];
 
     vfloat<VecSize> sumAssignedSamples[NumVectors::value];
 
     size_t numComponents{0};
     float mcEstimate{0.0f};
-    float numSamples{0.0f};
+    float numSamplesOld{0.0f};
 
     void clear(const size_t &_numComponents);
     void clearAll();
@@ -416,29 +422,55 @@ void VonMisesFisherChiSquareComponentSplitter<VecSize, maxComponents>::UpdateSpl
                 chiSquareEst += vmfPDF;
                 chiSquareEst /= samplePDF;
 
+                chiSquareEst = select(softAssign.assignments[k] > 0.f , chiSquareEst, zeros);
+
                 splitStats.sumAssignedSamples[k] += softAssign.assignments[k];
-                //chiSquareEst *=vmm._weights[k];
-                splitStats.chiSquareMCEstimates[k] += select(softAssign.assignments[k] > 0.f , chiSquareEst, zeros);
+                //splitStats.chiSquareMCEstimates[k] += chiSquareEst;
+                splitStats.numSamples[k] += 1.0f;
+                splitStats.chiSquareMCEstimatesV2[k] += (chiSquareEst - splitStats.chiSquareMCEstimatesV2[k]) / splitStats.numSamples[k];
 
                 const Vec3< vfloat<VecSize> > localDirection = embree::frame( vmm._meanDirections[k] ).inverse() * Vec3< vfloat<VecSize> > (sample.direction);
                 const Vec2< vfloat<VecSize> > localDirection2D(localDirection.x, localDirection.y);
                 const vfloat<VecSize> assignedWeight = softAssign.assignments[k] * weight;
                 //const vfloat<VecSize> assignedWeight = softAssign.assignments[k] * weight * weight;
+
+                splitStats.sumWeights[k] += assignedWeight;
+                const vfloat<VecSize> incWeight = select(splitStats.sumWeights[k] > 0.0f, assignedWeight / splitStats.sumWeights[k], zeros);
 #ifdef RKGUIDE_ZERO_MEAN
                 splitStats.splitMeans[k] += Vec2< vfloat<VecSize> >(0.0f);
+                splitStats.splitMeansV2[k] += Vec2< vfloat<VecSize> >(0.0f);
 #else
-                splitStats.splitMeans[k] += localDirection2D * assignedWeight;
+                const Vec2< vfloat<VecSize> > previousSplitMeans = splitStats.splitMeansV2[k];
+                //splitStats.splitMeans[k] += localDirection2D * assignedWeight;
+                splitStats.splitMeansV2[k] += incWeight * ( localDirection2D - splitStats.splitMeansV2[k]);
 #endif
-                splitStats.splitCovariances[k].x += localDirection2D.x * localDirection2D.x * assignedWeight;
-                splitStats.splitCovariances[k].y += localDirection2D.y * localDirection2D.y * assignedWeight;
-                splitStats.splitCovariances[k].z += localDirection2D.x * localDirection2D.y * assignedWeight;
-                splitStats.sumWeights[k] += assignedWeight;
+                //splitStats.splitCovariances[k].x += localDirection2D.x * localDirection2D.x * assignedWeight;
+                //splitStats.splitCovariances[k].y += localDirection2D.y * localDirection2D.y * assignedWeight;
+                //splitStats.splitCovariances[k].z += localDirection2D.x * localDirection2D.y * assignedWeight;
+
+#ifdef RKGUIDE_ZERO_MEAN
+                //splitStats.splitCovariancesV2[k].x += assignedWeight * (localDirection2D.x * localDirection2D.x - splitStats.splitCovariancesV2[k].x);
+                //splitStats.splitCovariancesV2[k].y += assignedWeight * (localDirection2D.y * localDirection2D.y - splitStats.splitCovariancesV2[k].y);
+                //splitStats.splitCovariancesV2[k].z += assignedWeight * (localDirection2D.x * localDirection2D.y - splitStats.splitCovariancesV2[k].z);
+                splitStats.splitWeightedSampleCovariancesV2[k].x += assignedWeight * (localDirection2D.x * localDirection2D.x);
+                splitStats.splitWeightedSampleCovariancesV2[k].y += assignedWeight * (localDirection2D.y * localDirection2D.y);
+                splitStats.splitWeightedSampleCovariancesV2[k].z += assignedWeight * (localDirection2D.x * localDirection2D.y);
+#else
+                //splitStats.splitWeightedSampleCovariancesV2[k].x += assignedWeight * ((localDirection2D.x - previousSplitMeans.x) * (localDirection2D.x - splitStats.splitMeansV2[k].x) - splitStats.splitWeightedSampleCovariancesV2[k].x);
+                //splitStats.splitWeightedSampleCovariancesV2[k].y += assignedWeight * ((localDirection2D.y - previousSplitMeans.y) * (localDirection2D.y - splitStats.splitMeansV2[k].y) - splitStats.splitWeightedSampleCovariancesV2[k].y);
+                //splitStats.splitWeightedSampleCovariancesV2[k].z += assignedWeight * ((localDirection2D.x - previousSplitMeans.x) * (localDirection2D.y - splitStats.splitMeansV2[k].y) - splitStats.splitWeightedSampleCovariancesV2[k].z);
+                splitStats.splitWeightedSampleCovariancesV2[k].x += assignedWeight * ((localDirection2D.x - previousSplitMeans.x) * (localDirection2D.x - splitStats.splitMeansV2[k].x));
+                splitStats.splitWeightedSampleCovariancesV2[k].y += assignedWeight * ((localDirection2D.y - previousSplitMeans.y) * (localDirection2D.y - splitStats.splitMeansV2[k].y));
+                splitStats.splitWeightedSampleCovariancesV2[k].z += assignedWeight * ((localDirection2D.x - previousSplitMeans.x) * (localDirection2D.y - splitStats.splitMeansV2[k].y));
+
+#endif
+                //splitStats.sumWeights[k] += assignedWeight;
             }
             validDataCount++;
             //std::cout << std::endl;
         }
     }
-    splitStats.numSamples += validDataCount;
+    splitStats.numSamplesOld += validDataCount;
     splitStats.mcEstimate += mcEstimate;
 /*
     size_t ccount = 0;
@@ -462,6 +494,7 @@ void VonMisesFisherChiSquareComponentSplitter<VecSize, maxComponents>::UpdateSpl
 */
 }
 
+
 template<int VecSize, int maxComponents>
 bool VonMisesFisherChiSquareComponentSplitter<VecSize, maxComponents>::SplitComponent(VMM &vmm, ComponentSplitStatistics &splitStats, SufficientStatisitcs &suffStats, const size_t idx) const
 {
@@ -472,12 +505,19 @@ bool VonMisesFisherChiSquareComponentSplitter<VecSize, maxComponents>::SplitComp
     float numAssignedSamples = splitStats.sumAssignedSamples[tmpK.quot][tmpK.rem];
 
     float inv_sumWeights = rcp(splitStats.sumWeights[tmpK.quot][tmpK.rem]);
-    splitInfo.mean = Vector2(splitStats.splitMeans[tmpK.quot].x[tmpK.rem], splitStats.splitMeans[tmpK.quot].y[tmpK.rem]);
-    splitInfo.mean *= inv_sumWeights;
+    splitInfo.mean = Vector2(splitStats.splitMeansV2[tmpK.quot].x[tmpK.rem], splitStats.splitMeansV2[tmpK.quot].y[tmpK.rem]);
+    //splitInfo.mean = Vector2(splitStats.splitMeans[tmpK.quot].x[tmpK.rem], splitStats.splitMeans[tmpK.quot].y[tmpK.rem]);
+    //splitInfo.mean *= inv_sumWeights;
 
-    splitInfo.covariance.x = splitStats.splitCovariances[tmpK.quot].x[tmpK.rem] * inv_sumWeights - splitInfo.mean.x*splitInfo.mean.x;
-    splitInfo.covariance.y = splitStats.splitCovariances[tmpK.quot].y[tmpK.rem] * inv_sumWeights - splitInfo.mean.y*splitInfo.mean.y;
-    splitInfo.covariance.z = splitStats.splitCovariances[tmpK.quot].z[tmpK.rem] * inv_sumWeights - splitInfo.mean.x*splitInfo.mean.y;
+    //splitInfo.covariance.x = splitStats.splitCovariances[tmpK.quot].x[tmpK.rem] * inv_sumWeights - splitInfo.mean.x*splitInfo.mean.x;
+    //splitInfo.covariance.y = splitStats.splitCovariances[tmpK.quot].y[tmpK.rem] * inv_sumWeights - splitInfo.mean.y*splitInfo.mean.y;
+    //splitInfo.covariance.z = splitStats.splitCovariances[tmpK.quot].z[tmpK.rem] * inv_sumWeights - splitInfo.mean.x*splitInfo.mean.y;
+
+    splitInfo.covariance.x = splitStats.splitWeightedSampleCovariancesV2[tmpK.quot].x[tmpK.rem] * inv_sumWeights;
+    splitInfo.covariance.y = splitStats.splitWeightedSampleCovariancesV2[tmpK.quot].y[tmpK.rem] * inv_sumWeights;
+    splitInfo.covariance.z = splitStats.splitWeightedSampleCovariancesV2[tmpK.quot].z[tmpK.rem] * inv_sumWeights;
+
+
 
     float D = embree::sqrt((splitInfo.covariance.x - splitInfo.covariance.y) * (splitInfo.covariance.x - splitInfo.covariance.y) + (splitInfo.covariance.z * splitInfo.covariance.z *4.0f)) * 0.5f;
     splitInfo.eigenValue0 = (splitInfo.covariance.x + splitInfo.covariance.y) * 0.5;
@@ -611,7 +651,8 @@ std::vector<typename VonMisesFisherChiSquareComponentSplitter<VecSize, maxCompon
     {
         const div_t tmp = div(k, static_cast<int>(VecSize));
         SplitCandidate sc;
-        sc.chiSquareEst = chiSquareMCEstimates[tmp.quot][tmp.rem] / (float) numSamples;
+        //sc.chiSquareEst = chiSquareMCEstimates[tmp.quot][tmp.rem] / (float) numSamplesOld;
+        sc.chiSquareEst = chiSquareMCEstimatesV2[tmp.quot][tmp.rem];
         sc.componentIndex = k;
         splitCandidates.push_back(sc);
     }
@@ -630,20 +671,30 @@ void VonMisesFisherChiSquareComponentSplitter<VecSize, maxComponents>::Component
 
     for (size_t k =0; k < cnt; k++)
     {
-        chiSquareMCEstimates[k] = zeros;
-        splitCovariances[k].x = zeros;
-        splitCovariances[k].y = zeros;
-        splitCovariances[k].z = zeros;
+        //chiSquareMCEstimates[k] = zeros;
+        //splitCovariances[k].x = zeros;
+        //splitCovariances[k].y = zeros;
+        //splitCovariances[k].z = zeros;
 
-        splitMeans[k].x = zeros;
-        splitMeans[k].y = zeros;
+        //splitMeans[k].x = zeros;
+        //splitMeans[k].y = zeros;
 
+
+        chiSquareMCEstimatesV2[k] = zeros;
+        splitWeightedSampleCovariancesV2[k].x = zeros;
+        splitWeightedSampleCovariancesV2[k].y = zeros;
+        splitWeightedSampleCovariancesV2[k].z = zeros;
+
+        splitMeansV2[k].x = zeros;
+        splitMeansV2[k].y = zeros;
+
+        numSamples[k] = zeros;
         sumWeights[k] = zeros;
         sumAssignedSamples[k] = zeros;
     }
 
     mcEstimate = 0.0f;
-    numSamples = 0.0f;
+    numSamplesOld = 0.0f;
 }
 
 
@@ -651,13 +702,13 @@ template<int VecSize, int maxComponents>
 size_t VonMisesFisherChiSquareComponentSplitter<VecSize, maxComponents>::ComponentSplitStatistics::getHighestChiSquareIdx() const
 {
     size_t maxIdx = 0;
-    float maxChiSquareValue = chiSquareMCEstimates[0][0];
+    float maxChiSquareValue = chiSquareMCEstimatesV2[0][0];
     for (size_t k = 1; k < numComponents; k++)
     {
         const div_t tmp = div(k, static_cast<int>(VecSize));
-        if (chiSquareMCEstimates[tmp.quot][tmp.rem] > maxChiSquareValue)
+        if (chiSquareMCEstimatesV2[tmp.quot][tmp.rem] > maxChiSquareValue)
         {
-            maxChiSquareValue = chiSquareMCEstimates[tmp.quot][tmp.rem];
+            maxChiSquareValue = chiSquareMCEstimatesV2[tmp.quot][tmp.rem];
             maxIdx = k;
         }
     }
@@ -674,7 +725,8 @@ template<int VecSize, int maxComponents>
 float VonMisesFisherChiSquareComponentSplitter<VecSize, maxComponents>::ComponentSplitStatistics::getChiSquareEst(const size_t &idx) const
 {
     const div_t tmp = div(idx, static_cast<int>(VecSize));
-    return chiSquareMCEstimates[tmp.quot][tmp.rem] / (float) numSamples;
+    //return chiSquareMCEstimates[tmp.quot][tmp.rem] / (float) numSamplesOld;
+    return chiSquareMCEstimatesV2[tmp.quot][tmp.rem];
 }
 
 template<int VecSize, int maxComponents>
@@ -685,9 +737,10 @@ float VonMisesFisherChiSquareComponentSplitter<VecSize, maxComponents>::Componen
     for ( int k = 0; k < numComponents; k++)
     {
         const div_t tmp = div(k, static_cast<int>(VecSize));
-        sumChiSquareEst += chiSquareMCEstimates[tmp.quot][tmp.rem];
+        sumChiSquareEst += chiSquareMCEstimatesV2[tmp.quot][tmp.rem];
     }
-    return sumChiSquareEst  / (float) numSamples;
+    //return sumChiSquareEst  / (float) numSamplesOld;
+    return sumChiSquareEst;
 }
 
 template<int VecSize, int maxComponents>
@@ -700,7 +753,8 @@ std::string VonMisesFisherChiSquareComponentSplitter<VecSize, maxComponents>::Co
     for ( int k = 0; k < numComponents; k++)
     {
         const div_t tmp = div(k, static_cast<int>(VecSize));
-        ss << "\t stats[" << k << "]: " << "chiSquareEst: " << chiSquareMCEstimates[tmp.quot][tmp.rem] / (float) numSamples;
+        //ss << "\t stats[" << k << "]: " << "chiSquareEst: " << chiSquareMCEstimates[tmp.quot][tmp.rem] / (float) numSamplesOld << "\t chiSquareEstV2: " << chiSquareMCEstimatesV2[tmp.quot][tmp.rem];
+        ss << "\t stats[" << k << "]: " << "chiSquareEst: " << chiSquareMCEstimatesV2[tmp.quot][tmp.rem];
         /*
         ss << "\t kappa: " <<  _kappas[tmp.quot][tmp.rem];
         ss << "\t meanDirection: [" <<  _meanDirections[tmp.quot].x[tmp.rem] << "\t" <<  _meanDirections[tmp.quot].y[tmp.rem] << "\t" <<  _meanDirections[tmp.quot].z[tmp.rem] << "]";
@@ -709,11 +763,41 @@ std::string VonMisesFisherChiSquareComponentSplitter<VecSize, maxComponents>::Co
         ss << "\t meanCosine: " <<  _meanCosines[tmp.quot][tmp.rem];
         */
         ss << std::endl;
-        sumChiSquareEst += chiSquareMCEstimates[tmp.quot][tmp.rem];
+
+        //ss << "\t" << "mean: [" << splitMeans[tmp.quot].x[tmp.rem]/ sumWeights[tmp.quot][tmp.rem] << ",\t" << splitMeans[tmp.quot].y[tmp.rem] / sumWeights[tmp.quot][tmp.rem] << "]"<< "\t meanV2: [" << splitMeansV2[tmp.quot].x[tmp.rem] << ",\t" << splitMeansV2[tmp.quot].y[tmp.rem] << "]";
+        ss << "\t" << "mean: ["  << splitMeansV2[tmp.quot].x[tmp.rem] << ",\t" << splitMeansV2[tmp.quot].y[tmp.rem] << "]";
+        
+        ss << std::endl;
+#ifdef RKGUIDE_ZERO_MEAN
+        ss << "\t" << "covar: [" << splitCovariances[tmp.quot].x[tmp.rem] / sumWeights[tmp.quot][tmp.rem] << ",\t" << splitCovariances[tmp.quot].y[tmp.rem] / sumWeights[tmp.quot][tmp.rem]<< ",\t" << splitCovariances[tmp.quot].z[tmp.rem] / sumWeights[tmp.quot][tmp.rem] << "]";
+#else
+/*
+        float inv_sumWeights = rcp(sumWeights[tmp.quot][tmp.rem]);
+        //Vector2 mean( splitMeans[tmp.quot].x[tmp.rem], splitMeans[tmp.quot].y[tmp.rem]);
+        //mean *= inv_sumWeights;
+        Vector2 mean( splitMeansV2[tmp.quot].x[tmp.rem], splitMeansV2[tmp.quot].y[tmp.rem]);
+
+
+        Vector3 covariance(splitCovariances[tmp.quot].x[tmp.rem], splitCovariances[tmp.quot].y[tmp.rem] ,splitCovariances[tmp.quot].z[tmp.rem]);
+        covariance *= inv_sumWeights;
+        covariance.x -= mean.x*mean.x;
+        covariance.y -= mean.y*mean.y;
+        covariance.z -= mean.x*mean.y;
+        ss << "\t" << "covar: [" << covariance.x << ",\t" << covariance.y << ",\t" << covariance.z << "]";
+*/
+#endif
+        ss << "\t covar: [" << splitWeightedSampleCovariancesV2[tmp.quot].x[tmp.rem] / sumWeights[tmp.quot][tmp.rem] << ",\t" << splitWeightedSampleCovariancesV2[tmp.quot].y[tmp.rem]  / sumWeights[tmp.quot][tmp.rem]<< ",\t" << splitWeightedSampleCovariancesV2[tmp.quot].z[tmp.rem]  / sumWeights[tmp.quot][tmp.rem] << "]";
+        ss << std::endl;
+
+        ss << "\t" << "numSamples: " << numSamples[tmp.quot][tmp.rem] << "\t sumWeights: " << sumWeights[tmp.quot][tmp.rem] << "\t sumAssignedSamples: " << sumAssignedSamples[tmp.quot][tmp.rem];
+        ss << std::endl;
+
+        sumChiSquareEst += chiSquareMCEstimatesV2[tmp.quot][tmp.rem];
     }
-    ss << "sumChiSquareEst: " << sumChiSquareEst  / (float) numSamples << std::endl;
+    //ss << "sumChiSquareEst: " << sumChiSquareEst  / (float) numSamplesOld << std::endl;
+    ss << "sumChiSquareEst: " << sumChiSquareEst << std::endl;
     ss << "mcEstimate: " << mcEstimate << std::endl;
-    ss << "numSamples: " << numSamples << std::endl;
+    ss << "numSamples: " << numSamplesOld << std::endl;
     return ss.str();
 }
 

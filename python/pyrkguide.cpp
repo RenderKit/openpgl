@@ -438,7 +438,7 @@ py::class_< rkguide::VMMChiSquareComponentSplitter::ComponentSplitStatistics >(V
     .def(py::init<>())
     .def_readonly("numComponents", &rkguide::VMMChiSquareComponentSplitter::ComponentSplitStatistics::numComponents)
     .def_readonly("mcEstimate", &rkguide::VMMChiSquareComponentSplitter::ComponentSplitStatistics::mcEstimate)
-    .def_readonly("numSamples", &rkguide::VMMChiSquareComponentSplitter::ComponentSplitStatistics::numSamples)
+    .def_readonly("numSamples", &rkguide::VMMChiSquareComponentSplitter::ComponentSplitStatistics::numSamplesOld)
     .def("getSumChiSquareEst", &rkguide::VMMChiSquareComponentSplitter::ComponentSplitStatistics::getSumChiSquareEst)
     .def("getChiSquareEst", &rkguide::VMMChiSquareComponentSplitter::ComponentSplitStatistics::getChiSquareEst)
     .def("getHighestChiSquareIdx", &rkguide::VMMChiSquareComponentSplitter::ComponentSplitStatistics::getHighestChiSquareIdx)
