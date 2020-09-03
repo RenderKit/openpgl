@@ -32,9 +32,9 @@ public:
 
     float CalculateMergeCost (const VMM &vmm, const size_t &idx0, const size_t &idx1) const;
 
-    void PerformMerging(VMM &vmm, const float &mergeThreshold) const;
+    size_t PerformMerging(VMM &vmm, const float &mergeThreshold) const;
 
-    void PerformMerging(VMM &vmm, const float &mergeThreshold, SufficientStatisitcs &suffStats, ComponentSplitStatistics &splitStats) const;
+    size_t PerformMerging(VMM &vmm, const float &mergeThreshold, SufficientStatisitcs &suffStats, ComponentSplitStatistics &splitStats) const;
 
 private:
     inline float _IntegratedProduct(const Vector3 &meanDirection0, const float &kappa0, const float &normalization0, const Vector3 &meanDirection1, const float &kappa1, const float &normalization1) const;
@@ -48,11 +48,11 @@ private:
 };
 
 template<int VecSize, int maxComponents>
-void VonMisesFisherChiSquareComponentMerger< VecSize, maxComponents>::PerformMerging(VMM &vmm, const float &mergeThreshold) const
+size_t VonMisesFisherChiSquareComponentMerger< VecSize, maxComponents>::PerformMerging(VMM &vmm, const float &mergeThreshold) const
 {
 
     bool stopMerging = false;
-
+    size_t totalMergeCount = 0;
     while (vmm._numComponents > 1 && !stopMerging)
     {
         float mergeCost = 0.0f;
@@ -60,12 +60,16 @@ void VonMisesFisherChiSquareComponentMerger< VecSize, maxComponents>::PerformMer
         bool mergedComponents = ThresholdedMergeNext(vmm, mergeThreshold,mergeCost);
         stopMerging = !mergedComponents;
         //std::cout << "merge: " << "\tmergedComponents: " << mergedComponents << "\tmergeCost: " << mergeCost << std::endl;
+        if (mergedComponents)
+        {
+            totalMergeCount++;
+        }
     }
-
+    return totalMergeCount;
 }
 
 template<int VecSize, int maxComponents>
-void VonMisesFisherChiSquareComponentMerger< VecSize, maxComponents>::PerformMerging(VMM &vmm, const float &mergeThreshold, SufficientStatisitcs &suffStats, ComponentSplitStatistics &splitStats) const
+size_t VonMisesFisherChiSquareComponentMerger< VecSize, maxComponents>::PerformMerging(VMM &vmm, const float &mergeThreshold, SufficientStatisitcs &suffStats, ComponentSplitStatistics &splitStats) const
 {
     bool stopMerging = false;
     size_t totalMergeCount = 0;
@@ -83,6 +87,7 @@ void VonMisesFisherChiSquareComponentMerger< VecSize, maxComponents>::PerformMer
         }
     }
     std::cout << "PerformMerging: totalMergeCount = " << totalMergeCount << "\t mergeThreshold: " << mergeThreshold<< std::endl;
+    return totalMergeCount;
 }
 
 
@@ -176,6 +181,7 @@ float VonMisesFisherChiSquareComponentMerger< VecSize, maxComponents>::Calculate
 template<int VecSize, int maxComponents>
 bool VonMisesFisherChiSquareComponentMerger< VecSize, maxComponents>::ThresholdedMergeNext (VMM &vmm, const float &mergeThreshold, float &mergeCost) const
 {
+    //std::cout  << vmm.toString()<<std::endl;
     int K = vmm._numComponents;
     int mergeCandidateI = 0;
     int mergeCandidateJ = 0;
@@ -199,8 +205,10 @@ bool VonMisesFisherChiSquareComponentMerger< VecSize, maxComponents>::Thresholde
 
     if (foundMergeCandidates)
     {
+        
         vmm.mergeComponents(mergeCandidateI, mergeCandidateJ);
         mergeCost = minMergeCost;
+        std::cout << "merge: " << "\tidx0: " << mergeCandidateI << "\tidx1: " << mergeCandidateJ << "\tK: " << vmm._numComponents <<std::endl;
     }
     return foundMergeCandidates;
 
@@ -215,6 +223,8 @@ bool VonMisesFisherChiSquareComponentMerger< VecSize, maxComponents>::Thresholde
     int mergeCandidateJ = 0;
     float minMergeCost = std::numeric_limits<float>::max();
 
+    //std::cout  << vmm.toString()<<std::endl;
+
     bool foundMergeCandidates = false;
     for (size_t i = 0; i < K-1; i++)
     {
@@ -233,6 +243,7 @@ bool VonMisesFisherChiSquareComponentMerger< VecSize, maxComponents>::Thresholde
 
     if (foundMergeCandidates)
     {
+        std::cout << "merge: " << "\tidx0: " << mergeCandidateI << "\tidx1: " << mergeCandidateJ << "\tK: " << vmm._numComponents <<std::endl;
         vmm.mergeComponents(mergeCandidateI, mergeCandidateJ);
         suffStats.mergeComponentStats(mergeCandidateI, mergeCandidateJ);
         mergeCost = minMergeCost;

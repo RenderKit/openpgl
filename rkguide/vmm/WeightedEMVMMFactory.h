@@ -45,6 +45,13 @@ struct WeightedEMVonMisesFisherFactory: public VonMisesFisherFactory< VecSize, m
 
     };
 
+    struct FittingStatistics
+    {
+        size_t numSamples {0};
+        size_t numIterations {0};
+        float summedWeightedLogLikelihood {0.0};
+    };
+
     struct PartialFittingMask
     {
         vbool<VecSize> mask[NumVectors::value];
@@ -102,11 +109,11 @@ public:
 
     WeightedEMVonMisesFisherFactory();
 
-    void fitMixture(VMM &vmm, size_t numComponents, SufficientStatisitcs &stats, const DirectionalSampleData* samples, const size_t numSamples, const Configuration &cfg) const;
+    void fitMixture(VMM &vmm, size_t numComponents, SufficientStatisitcs &stats, const DirectionalSampleData* samples, const size_t numSamples, const Configuration &cfg, FittingStatistics &fitStats) const;
 
-    void updateMixture(VMM &vmm, SufficientStatisitcs &previousStats, const DirectionalSampleData* samples, const size_t numSamples, const Configuration &cfg) const;
+    void updateMixture(VMM &vmm, SufficientStatisitcs &previousStats, const DirectionalSampleData* samples, const size_t numSamples, const Configuration &cfg, FittingStatistics &fitStats) const;
 
-    void partialUpdateMixture(VMM &vmm, const PartialFittingMask &mask, SufficientStatisitcs &previousStats, const DirectionalSampleData* samples, const size_t numSamples, const Configuration &cfg) const;
+    void partialUpdateMixture(VMM &vmm, const PartialFittingMask &mask, SufficientStatisitcs &previousStats, const DirectionalSampleData* samples, const size_t numSamples, const Configuration &cfg, FittingStatistics &fitStats) const;
 
     VMM VMMfromSufficientStatisitcs(const SufficientStatisitcs &suffStats, const Configuration &cfg) const;
 
@@ -155,7 +162,7 @@ typename WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::VMM WeightedE
 
 
 template<int VecSize, int maxComponents>
-void WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::fitMixture(VMM &vmm, size_t numComponents, SufficientStatisitcs &stats, const DirectionalSampleData* samples, const size_t numSamples, const Configuration &cfg) const
+void WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::fitMixture(VMM &vmm, size_t numComponents, SufficientStatisitcs &stats, const DirectionalSampleData* samples, const size_t numSamples, const Configuration &cfg, FittingStatistics &fitStats) const
 {
     //VonMisesFisherFactory< VecSize, maxComponents>::InitUniformVMM( vmm, numComponents, 5.0f);
     this->InitUniformVMM( vmm, numComponents, 5.0f);
@@ -163,12 +170,12 @@ void WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::fitMixture(VMM &v
     stats.clear(numComponents);
     stats.isNormalized = true;
     //stats.clearAll();
-    updateMixture(vmm, stats, samples, numSamples, cfg);
+    updateMixture(vmm, stats, samples, numSamples, cfg, fitStats);
 
 }
 
 template<int VecSize, int maxComponents>
-void WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::updateMixture(VMM &vmm, SufficientStatisitcs &previousStats, const DirectionalSampleData* samples, const size_t numSamples, const Configuration &cfg) const
+void WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::updateMixture(VMM &vmm, SufficientStatisitcs &previousStats, const DirectionalSampleData* samples, const size_t numSamples, const Configuration &cfg, FittingStatistics &fitStats) const
 {
     SufficientStatisitcs currentStats;
     // clear will be called in weightedExpectationStep
@@ -198,10 +205,14 @@ void WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::updateMixture(VMM
         }
     }
     previousStats += currentStats;
+
+    fitStats.numSamples = numSamples;
+    fitStats.numIterations = currentEMIteration;
+    fitStats.summedWeightedLogLikelihood = previousLogLikelihood;
 }
 
 template<int VecSize, int maxComponents>
-void WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::partialUpdateMixture(VMM &vmm, const PartialFittingMask &mask, SufficientStatisitcs &previousStats, const DirectionalSampleData* samples, const size_t numSamples, const Configuration &cfg) const
+void WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::partialUpdateMixture(VMM &vmm, const PartialFittingMask &mask, SufficientStatisitcs &previousStats, const DirectionalSampleData* samples, const size_t numSamples, const Configuration &cfg, FittingStatistics &fitStats) const
 {
     SufficientStatisitcs currentStats;
     // clear will be called in weightedExpectationStep
@@ -222,7 +233,6 @@ void WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::partialUpdateMixt
             if(relLogLikelihoodDifference < cfg.convergenceThreshold)
             {
                 converged = true;
-                std::cout << "converged:" <<  currentEMIteration << std::endl;
             }
             std::cout << "logLikelihood:" <<  logLikelihood << "\t previousLogLikelihood: "<< previousLogLikelihood  << "\t relLogLikelihoodDifference: " << relLogLikelihoodDifference << std::endl;
             previousLogLikelihood = logLikelihood;
@@ -230,6 +240,11 @@ void WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::partialUpdateMixt
         }
     }
     previousStats += currentStats;
+
+    fitStats.numSamples = numSamples;
+    fitStats.numIterations = currentEMIteration;
+    fitStats.summedWeightedLogLikelihood = previousLogLikelihood;
+    std::cout << "converged:" <<  currentEMIteration << std::endl;
 }
 
 

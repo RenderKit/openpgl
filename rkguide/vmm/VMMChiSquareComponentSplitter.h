@@ -191,7 +191,7 @@ void VonMisesFisherChiSquareComponentSplitter<VecSize, maxComponents>::PerformSp
     size_t splitItr = 0;
 
     VMMFactory vmmFactory;
-
+    typename VMMFactory::FittingStatistics vmmFitStats;
     //std::cout << "vmm: " << vmm.toString() << std::endl;
 
     while ( vmm._numComponents < maxComponents && !stopSplitting)
@@ -231,7 +231,7 @@ void VonMisesFisherChiSquareComponentSplitter<VecSize, maxComponents>::PerformSp
         //std::cout << "suffStatistics: " << suffStatistics.toString() << std::endl;
         if (doPartialRefit)
         {
-            vmmFactory.partialUpdateMixture(vmm, mask, suffStatistics, data, numData, factoryCfg);
+            vmmFactory.partialUpdateMixture(vmm, mask, suffStatistics, data, numData, factoryCfg, vmmFitStats);
             //std::cout << "vmmpartialUpdate: " << vmm.toString() << std::endl;
             splitItr++;
         }
@@ -259,7 +259,7 @@ void VonMisesFisherChiSquareComponentSplitter<VecSize, maxComponents>::PerformRe
     size_t splitItr = 0;
 
     VMMFactory vmmFactory;
-
+    typename VMMFactory::FittingStatistics vmmFitStats;
     //std::cout << "vmm: " << vmm.toString() << std::endl;
     int numSplits = -1;
     while ( vmm._numComponents < maxComponents && numSplits != 0)
@@ -293,7 +293,7 @@ void VonMisesFisherChiSquareComponentSplitter<VecSize, maxComponents>::PerformRe
         if (numSplits > 0)
         {
             tempSuffStatistics.clear(vmm._numComponents);
-            vmmFactory.partialUpdateMixture(vmm, mask, tempSuffStatistics, data, numData, factoryCfg);
+            vmmFactory.partialUpdateMixture(vmm, mask, tempSuffStatistics, data, numData, factoryCfg, vmmFitStats);
             //std::cout << "tempSuffStatistics" << std::endl << tempSuffStatistics.toString() << std::endl;
             suffStatistics.numComponents = vmm._numComponents;
             suffStatistics.maskedReplace(mask, tempSuffStatistics);
@@ -468,6 +468,7 @@ bool VonMisesFisherChiSquareComponentSplitter<VecSize, maxComponents>::SplitComp
     ComponentSplitinfo splitInfo;
     const div_t tmpK = div(idx, static_cast<int>(VecSize));
 
+
     float numAssignedSamples = splitStats.sumAssignedSamples[tmpK.quot][tmpK.rem];
 
     float inv_sumWeights = rcp(splitStats.sumWeights[tmpK.quot][tmpK.rem]);
@@ -507,6 +508,12 @@ bool VonMisesFisherChiSquareComponentSplitter<VecSize, maxComponents>::SplitComp
     float weight = vmm._weights[tmpK.quot][tmpK.rem];
     float meanCosine = vmm._meanCosines[tmpK.quot][tmpK.rem];
     float kappa = vmm._kappas[tmpK.quot][tmpK.rem];
+
+    if (kappa >= RKGUIDE_MAX_KAPPA * 0.9)
+    {
+        return false;
+    }
+
     Vector3 meanDirection = Vector3(vmm._meanDirections[tmpK.quot].x[tmpK.rem],
                                     vmm._meanDirections[tmpK.quot].y[tmpK.rem],
                                     vmm._meanDirections[tmpK.quot].z[tmpK.rem]);
@@ -527,7 +534,7 @@ bool VonMisesFisherChiSquareComponentSplitter<VecSize, maxComponents>::SplitComp
 
     if (D > 1e-8f)
     {
-        Vector2 meanDir2D0 = splitInfo.mean + (splitInfo.eigenVector0 * splitInfo.eigenValue0 * 1.0);
+        Vector2 meanDir2D0 = splitInfo.mean + (splitInfo.eigenVector0 * splitInfo.eigenValue0 * 0.5f);
         meanDirection0 =  embree::frame(meanDirection) * Map2DTo3D<Vector3, Vector2, float>(meanDir2D0);
         newMeanCosine0 = meanCosine / dot(meanDirection, meanDirection0);
         // ensure that the new mean cosine is in a valid range (i.e., < 1.0 and < the mean cosine of max kappa)
@@ -536,13 +543,15 @@ bool VonMisesFisherChiSquareComponentSplitter<VecSize, maxComponents>::SplitComp
         newKkappa0 = MeanCosineToKappa<float> (newMeanCosine0);
         newKkappa1 = newKkappa0;
 
-        Vector2 meanDir2D1 = splitInfo.mean - (splitInfo.eigenVector0 * splitInfo.eigenValue0 * 1.0);
+        Vector2 meanDir2D1 = splitInfo.mean - (splitInfo.eigenVector0 * splitInfo.eigenValue0 * 0.5f);
         meanDirection1 = embree::frame(meanDirection) * Map2DTo3D<Vector3, Vector2, float>(meanDir2D1);
         //float meanCosine1 = meanCosine / meanDirection0.z;
         //float kappa1 = MeanCosineToKappa<float> (meanCosine1);
-        //std::cout << "meanCosine: " << meanCosine << "\t kappa: " << kappa << "\t newMeanCosine: " << newMeanCosine0 << " \t newKkappa: " <<  newKkappa0 << std::endl;
-        //std::cout << "localMeanDirection0: " << Map2DTo3D<Vector3, Vector2, float>(meanDir2D0) << "\t meanDirection0: " << meanDirection0 << "\t meanCosine: " << meanCosine << " \t costheta0: " <<  dot(meanDirection, meanDirection0) << std::endl;
-        //std::cout << "localMeanDirection1: " << Map2DTo3D<Vector3, Vector2, float>(meanDir2D1) << "\t meanDirection1: " << meanDirection1 << "\t meanCosine: " << meanCosine << " \t costheta1: " <<  dot(meanDirection, meanDirection1) << std::endl;
+        std::cout << "meanCosine: " << meanCosine << "\t kappa: " << kappa << "\t newMeanCosine: " << newMeanCosine0 << " \t newKkappa: " <<  newKkappa0 << std::endl;
+        std::cout << "localMeanDirection0: " << Map2DTo3D<Vector3, Vector2, float>(meanDir2D0) << "\t meanDirection0: " << meanDirection0 << "\t meanCosine: " << meanCosine << " \t costheta0: " <<  dot(meanDirection, meanDirection0) << std::endl;
+        std::cout << "localMeanDirection1: " << Map2DTo3D<Vector3, Vector2, float>(meanDir2D1) << "\t meanDirection1: " << meanDirection1 << "\t meanCosine: " << meanCosine << " \t costheta1: " <<  dot(meanDirection, meanDirection1) << std::endl;
+        std::cout << "eigenValue0: " << splitInfo.eigenValue0 << "\t eigenVector0: " << splitInfo.eigenVector0 << std::endl;
+        std::cout << "eigenValue1: " << splitInfo.eigenValue1 << "\t eigenVector1: " << splitInfo.eigenVector1 << std::endl;
         std::cout << "D: " << D << "\t idx: " << idx << " \t assignedSamples: " << numAssignedSamples <<std::endl;
     }
     else
