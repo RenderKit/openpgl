@@ -222,10 +222,14 @@ bool VonMisesFisherChiSquareComponentMerger< VecSize, maxComponents>::Thresholde
     bool foundMergeCandidates = false;
     for (size_t i = 0; i < K-1; i++)
     {
+        const div_t tmpI = div(i, static_cast<int>(VecSize));
         for (size_t j = i+1; j < K; j++ )
         {
+            const div_t tmpJ = div(j, static_cast<int>(VecSize));
             float mergeCost = CalculateMergeCost(vmm, i,j);
-            if (mergeCost < mergeThreshold && mergeCost < minMergeCost)
+            if (mergeCost < mergeThreshold && mergeCost < minMergeCost
+                && splitStats.numSamples[tmpI.quot][tmpI.rem] > 0.0f
+                && splitStats.numSamples[tmpJ.quot][tmpJ.rem] > 0.0f)
             {
                 mergeCandidateI = i;
                 mergeCandidateJ = j;
@@ -238,9 +242,28 @@ bool VonMisesFisherChiSquareComponentMerger< VecSize, maxComponents>::Thresholde
     if (foundMergeCandidates)
     {
         std::cout << "merge: " << "\tidx0: " << mergeCandidateI << "\tidx1: " << mergeCandidateJ << "\tK: " << vmm._numComponents <<std::endl;
+        std::cout << "\tweightI: " << vmm.getComponentWeight(mergeCandidateI) << "\tweightJ: " << vmm.getComponentWeight(mergeCandidateJ) << "\tkappaI: " << vmm.getComponentKappa(mergeCandidateI)<< "\tkappaJ: " << vmm.getComponentKappa(mergeCandidateJ) << std::endl;
+
+        // get old (before merge) mean directions and weights
+        Vector3 meanDirectionI = vmm.getComponentMeanDirection(mergeCandidateI);
+        float weightI = vmm.getComponentWeight(mergeCandidateI);
+        Vector3 meanDirectionJ = vmm.getComponentMeanDirection(mergeCandidateJ);
+        float weightJ = vmm.getComponentWeight(mergeCandidateJ);
+
         vmm.mergeComponents(mergeCandidateI, mergeCandidateJ);
+
+        // get the merged mean direction and weight
+        Vector3 meanDirectionK = vmm.getComponentMeanDirection(mergeCandidateI);
+        float weightK = vmm.getComponentWeight(mergeCandidateI);
+        RKGUIDE_ASSERT(splitStats.isValid());
+        splitStats.mergeComponentStats(mergeCandidateI, mergeCandidateJ, weightI, meanDirectionI, weightJ, meanDirectionJ, weightK, meanDirectionK);
+        RKGUIDE_ASSERT(splitStats.isValid());
         suffStats.mergeComponentStats(mergeCandidateI, mergeCandidateJ);
         mergeCost = minMergeCost;
+
+        RKGUIDE_ASSERT(vmm._numComponents == suffStats.numComponents);
+        RKGUIDE_ASSERT(vmm._numComponents == splitStats.numComponents);
+
     }
     return foundMergeCandidates;
 

@@ -151,14 +151,17 @@ void AdaptiveSplitAndMergeFactory<VecSize, maxComponents>::fit(VMM &vmm, size_t 
     Splitter splitter = Splitter();
     splitter.PerformRecursiveSplitting(vmm, stats.sufficientStatistics, cfg.splittingThreshold, mcEstimate, samples, numSamples, cfg.weightedEMCfg);
 
-    //splitter.CalculateSplitStatistics(vmm, stats.splittingStatistics, mcEstimate, samples, numSamples);
+    splitter.CalculateSplitStatistics(vmm, stats.splittingStatistics, mcEstimate, samples, numSamples);
 
     //std::cout << stats.sufficientStatistics.toString() << std::endl;
+
+    RKGUIDE_ASSERT(vmm._numComponents == stats.sufficientStatistics.numComponents);
+    RKGUIDE_ASSERT(vmm._numComponents == stats.splittingStatistics.numComponents);
 
     Merger merger = Merger();
     merger.PerformMerging(vmm, cfg.mergingThreshold, stats.sufficientStatistics, stats.splittingStatistics);
 
-    stats.splittingStatistics.clear(vmm._numComponents);
+    //stats.splittingStatistics.clear(vmm._numComponents);
     stats.numSamplesAfterLastSplit = 0.0f;
     stats.numSamplesAfterLastMerge = 0.0f;
 }
@@ -189,7 +192,7 @@ void AdaptiveSplitAndMergeFactory<VecSize, maxComponents>::update(VMM &vmm, ASMS
 
     //stats.splittingStatistics.clear(vmm._numComponents);
 
-/*
+/* 
     if (stats.numSamplesAfterLastMerge >= cfg.minSamplesForMerging)
     //if(stats.numSamplesAfterLastMerge % 4 == 5)
     {
@@ -207,7 +210,9 @@ void AdaptiveSplitAndMergeFactory<VecSize, maxComponents>::update(VMM &vmm, ASMS
 
     Splitter splitter = Splitter();
     //stats.splittingStatistics.clear(vmm._numComponents);
+    RKGUIDE_ASSERT(stats.splittingStatistics.isValid());
     splitter.UpdateSplitStatistics(vmm, stats.splittingStatistics, mcEstimate, samples, numSamples);
+    RKGUIDE_ASSERT(stats.splittingStatistics.isValid());
     //splitter.CalculateSplitStatistics(vmm, stats.splittingStatistics, mcEstimate, samples, numSamples);
 
     if (stats.numSamplesAfterLastSplit >= cfg.minSamplesForSplitting)
@@ -232,12 +237,16 @@ void AdaptiveSplitAndMergeFactory<VecSize, maxComponents>::update(VMM &vmm, ASMS
             }
         }
 
+        RKGUIDE_ASSERT(stats.splittingStatistics.isValid());
+        RKGUIDE_ASSERT(vmm._numComponents == stats.sufficientStatistics.numComponents);
+        RKGUIDE_ASSERT(vmm._numComponents == stats.splittingStatistics.numComponents);
+
         if (totalSplitCount > 0)
         {
             //std::cout << "Before Partial FIT" << std::endl;
             //std::cout << vmm.toString() << std::endl;
             RKGUIDE_ASSERT(vmm.isValid());
-            
+
             typename WeightedEMFactory::SufficientStatisitcs tempSuffStatistics;
             tempSuffStatistics.clear(vmm._numComponents);
             factory.partialUpdateMixture(vmm, mask, tempSuffStatistics, samples, numSamples, cfg.weightedEMCfg, wemFitStats);
@@ -248,7 +257,9 @@ void AdaptiveSplitAndMergeFactory<VecSize, maxComponents>::update(VMM &vmm, ASMS
             //std::cout << "After Partial FIT" << std::endl;
             //std::cout << vmm.toString() << std::endl;
             RKGUIDE_ASSERT(vmm.isValid());
+
         }
+
         fitStats.numSplits = totalSplitCount;
 
 
@@ -257,24 +268,26 @@ void AdaptiveSplitAndMergeFactory<VecSize, maxComponents>::update(VMM &vmm, ASMS
         std::cout << "update: totalSplitCount = " << totalSplitCount << "\t splitThreshold: " << cfg.splittingThreshold<< std::endl;
 
         stats.numSamplesAfterLastSplit = 0.0f;
-        stats.numSamplesAfterLastMerge = numSamples;
-        //stats.numSamplesAfterLastMerge++;
+        //stats.numSamplesAfterLastMerge = numSamples;
+        stats.numSamplesAfterLastMerge++;
 
 //    factory.updateMixture(vmm, stats.sufficientStatistics, samples, numSamples, cfg.weightedEMCfg);
         //stats.splittingStatistics.clear(vmm._numComponents);
     }
-/*
+/* */
+    RKGUIDE_ASSERT(stats.splittingStatistics.isValid());
     if (stats.numSamplesAfterLastMerge >= cfg.minSamplesForMerging)
-    //if(stats.numSamplesAfterLastMerge % 4 == 5)
+    //if(stats.numSamplesAfterLastMerge % 4 == 0)
     {
         Merger merger = Merger();
         size_t numMerges = merger.PerformMerging(vmm, cfg.mergingThreshold, stats.sufficientStatistics, stats.splittingStatistics);
         fitStats.numMerges = numMerges;
         stats.numSamplesAfterLastSplit = 0.0f;
         stats.numSamplesAfterLastMerge = 0.0f;
-        stats.splittingStatistics.clear(vmm._numComponents);
+        //stats.splittingStatistics.clear(vmm._numComponents);
+        RKGUIDE_ASSERT(stats.splittingStatistics.isValid());
     }
-*/
+/* */
     /*
     stats.numSamplesAfterLastSplit += numSamples;
     stats.numSamplesAfterLastMerge += numSamples;

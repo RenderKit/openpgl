@@ -197,9 +197,8 @@ void WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::updateMixture(VMM
             if(relLogLikelihoodDifference < cfg.convergenceThreshold)
             {
                 converged = true;
-                std::cout << "converged:" <<  currentEMIteration << std::endl;
             }
-            std::cout << "logLikelihood:" <<  logLikelihood << "\t previousLogLikelihood: "<< previousLogLikelihood  << "\t relLogLikelihoodDifference: " << relLogLikelihoodDifference << std::endl;
+            //std::cout << "logLikelihood:" <<  logLikelihood << "\t previousLogLikelihood: "<< previousLogLikelihood  << "\t relLogLikelihoodDifference: " << relLogLikelihoodDifference << std::endl;
             previousLogLikelihood = logLikelihood;
             inv_previousLogLikelihood = 1.0f / std::fabs(logLikelihood);
         }
@@ -209,6 +208,7 @@ void WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::updateMixture(VMM
     fitStats.numSamples = numSamples;
     fitStats.numIterations = currentEMIteration;
     fitStats.summedWeightedLogLikelihood = previousLogLikelihood;
+    //td::cout << "converged:" <<  currentEMIteration << std::endl;
 }
 
 template<int VecSize, int maxComponents>
@@ -234,7 +234,7 @@ void WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::partialUpdateMixt
             {
                 converged = true;
             }
-            std::cout << "logLikelihood:" <<  logLikelihood << "\t previousLogLikelihood: "<< previousLogLikelihood  << "\t relLogLikelihoodDifference: " << relLogLikelihoodDifference << std::endl;
+            //std::cout << "logLikelihood:" <<  logLikelihood << "\t previousLogLikelihood: "<< previousLogLikelihood  << "\t relLogLikelihoodDifference: " << relLogLikelihoodDifference << std::endl;
             previousLogLikelihood = logLikelihood;
             inv_previousLogLikelihood = 1.0f / std::fabs(logLikelihood);
         }
@@ -244,7 +244,7 @@ void WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::partialUpdateMixt
     fitStats.numSamples = numSamples;
     fitStats.numIterations = currentEMIteration;
     fitStats.summedWeightedLogLikelihood = previousLogLikelihood;
-    std::cout << "converged:" <<  currentEMIteration << std::endl;
+    //std::cout << "converged:" <<  currentEMIteration << std::endl;
 }
 
 

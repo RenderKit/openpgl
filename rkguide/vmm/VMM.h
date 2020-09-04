@@ -75,6 +75,11 @@ public:
 
     std::string toString() const;
 
+    Vector3 getComponentMeanDirection(const size_t &idx) const;
+
+    float getComponentWeight(const size_t &idx) const;
+
+    float getComponentKappa(const size_t &idx) const;
 
     void swapComponents(const size_t &idx0, const size_t &idx1);
 
@@ -186,6 +191,26 @@ void VonMisesFisherMixture<VecSize, maxComponents>::setComponentMeanDirection(co
     _meanDirections[tmpIdx.quot].z[tmpIdx.rem] = meanDirection.z;
 }
 
+template<int VecSize, int maxComponents>
+Vector3 VonMisesFisherMixture<VecSize, maxComponents>::getComponentMeanDirection(const size_t &idx) const
+{
+    const div_t tmpIdx = div( idx, VecSize);
+    return Vector3( _meanDirections[tmpIdx.quot].x[tmpIdx.rem],  _meanDirections[tmpIdx.quot].y[tmpIdx.rem],  _meanDirections[tmpIdx.quot].z[tmpIdx.rem]);
+}
+
+template<int VecSize, int maxComponents>
+float VonMisesFisherMixture<VecSize, maxComponents>::getComponentWeight(const size_t &idx) const
+{
+    const div_t tmpIdx = div( idx, VecSize);
+    return _weights[tmpIdx.quot][tmpIdx.rem];
+}
+
+template<int VecSize, int maxComponents>
+float VonMisesFisherMixture<VecSize, maxComponents>::getComponentKappa(const size_t &idx) const
+{
+    const div_t tmpIdx = div( idx, VecSize);
+    return _kappas[tmpIdx.quot][tmpIdx.rem];
+}
 
 
 template<int VecSize, int maxComponents>

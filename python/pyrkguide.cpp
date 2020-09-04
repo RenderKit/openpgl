@@ -357,6 +357,9 @@ py::class_< rkguide::VMM >(m, "VMM")
     .def("setComponentWeight", &rkguide::VMM::setComponentWeight)
     .def("setComponentMeanDirection", &rkguide::VMM::setComponentMeanDirection)
     .def("setComponentKappa", &rkguide::VMM::setComponentKappa)
+    .def("getComponentWeight", &rkguide::VMM::getComponentWeight)
+    .def("getComponentMeanDirection", &rkguide::VMM::getComponentMeanDirection)
+    .def("getComponentKappa", &rkguide::VMM::getComponentKappa)
     .def("normalizeWeights", &rkguide::VMM::_normalizeWeights)
     .def("copy", &VMM_copy< rkguide::VMM >)
     .def("__repr__", &rkguide::VMM::toString);
@@ -437,11 +440,15 @@ auto VMMChiSquareComponentSplitter = py::class_< rkguide::VMMChiSquareComponentS
 py::class_< rkguide::VMMChiSquareComponentSplitter::ComponentSplitStatistics >(VMMChiSquareComponentSplitter, "ComponentSplitStatistics")
     .def(py::init<>())
     .def_readonly("numComponents", &rkguide::VMMChiSquareComponentSplitter::ComponentSplitStatistics::numComponents)
-    .def_readonly("mcEstimate", &rkguide::VMMChiSquareComponentSplitter::ComponentSplitStatistics::mcEstimate)
-    .def_readonly("numSamples", &rkguide::VMMChiSquareComponentSplitter::ComponentSplitStatistics::numSamplesOld)
+    //.def_readonly("mcEstimate", &rkguide::VMMChiSquareComponentSplitter::ComponentSplitStatistics::mcEstimate)
+    //.def_readonly("numSamples", &rkguide::VMMChiSquareComponentSplitter::ComponentSplitStatistics::numSamplesOld)
     .def("getSumChiSquareEst", &rkguide::VMMChiSquareComponentSplitter::ComponentSplitStatistics::getSumChiSquareEst)
     .def("getChiSquareEst", &rkguide::VMMChiSquareComponentSplitter::ComponentSplitStatistics::getChiSquareEst)
     .def("getHighestChiSquareIdx", &rkguide::VMMChiSquareComponentSplitter::ComponentSplitStatistics::getHighestChiSquareIdx)
+    .def("decay", &rkguide::VMMChiSquareComponentSplitter::ComponentSplitStatistics::decay)
+    .def("mergeComponentStats", &rkguide::VMMChiSquareComponentSplitter::ComponentSplitStatistics::mergeComponentStats)
+    .def("getSplitMean", &rkguide::VMMChiSquareComponentSplitter::ComponentSplitStatistics::getSplitMean)
+    .def("getSplitCovariance", &rkguide::VMMChiSquareComponentSplitter::ComponentSplitStatistics::getSplitCovariance)
     .def("__repr__", &rkguide::VMMChiSquareComponentSplitter::ComponentSplitStatistics::toString);
 
 
@@ -464,6 +471,7 @@ py::class_< rkguide::VMMAdaptiveSplitAndMergeFactory::ASMStatistics >(AdaptiveSp
     .def(py::init<>())
     .def_readwrite("sufficientStatistics", &rkguide::VMMAdaptiveSplitAndMergeFactory::ASMStatistics::sufficientStatistics)
     .def_readwrite("splittingStatistics", &rkguide::VMMAdaptiveSplitAndMergeFactory::ASMStatistics::splittingStatistics)
+    .def("decay", &rkguide::VMMAdaptiveSplitAndMergeFactory::ASMStatistics::decay)
     //.def_readwrite("clear", &rkguide::VMMAdaptiveSplitAndMergeFactory::ASMStatistics::clear)
     //.def_readwrite("clearAll", &rkguide::VMMAdaptiveSplitAndMergeFactory::ASMStatistics::clearAll)
     .def("__repr__", &rkguide::VMMAdaptiveSplitAndMergeFactory::ASMStatistics::toString);
