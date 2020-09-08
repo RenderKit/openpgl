@@ -242,7 +242,9 @@ bool VonMisesFisherChiSquareComponentMerger< VecSize, maxComponents>::Thresholde
     if (foundMergeCandidates)
     {
         std::cout << "merge: " << "\tidx0: " << mergeCandidateI << "\tidx1: " << mergeCandidateJ << "\tK: " << vmm._numComponents <<std::endl;
-        std::cout << "\tweightI: " << vmm.getComponentWeight(mergeCandidateI) << "\tweightJ: " << vmm.getComponentWeight(mergeCandidateJ) << "\tkappaI: " << vmm.getComponentKappa(mergeCandidateI)<< "\tkappaJ: " << vmm.getComponentKappa(mergeCandidateJ) << std::endl;
+        std::cout << "\tweightI: " << vmm.getComponentWeight(mergeCandidateI) << "\tweightJ: " << vmm.getComponentWeight(mergeCandidateJ);
+        std::cout << "\tkappaI: " << vmm.getComponentKappa(mergeCandidateI)<< "\tkappaJ: " << vmm.getComponentKappa(mergeCandidateJ);
+        std::cout << "\t angle: " << std::acos(dot(vmm.getComponentMeanDirection(mergeCandidateI), vmm.getComponentMeanDirection(mergeCandidateJ))) * 180.0f / M_PI << std::endl;
 
         // get old (before merge) mean directions and weights
         Vector3 meanDirectionI = vmm.getComponentMeanDirection(mergeCandidateI);
