@@ -10,3 +10,6 @@
 	path = third-party/pybind11
 	url = https://github.com/pybind/pybind11.git
 	branch = master
+[submodule "notebooks"]
+	path = notebooks
+	url = git@gitlab.com:sdvis/rkguide-notebooks.git
