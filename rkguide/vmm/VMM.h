@@ -94,6 +94,8 @@ public:
     float product(const float &weight, const Vector3 &meanDirection, const float &kappa, const float &normalization);
 
 
+    void setNumComponents(const size_t &numComponents);
+
     void setComponentWeight(const size_t idx, const float &weight);
 
     void setComponentKappa(const size_t idx, const float &kappa);
@@ -107,6 +109,12 @@ public:
 
     void _normalizeWeights();
 };
+
+template<int VecSize, int maxComponents>
+void VonMisesFisherMixture<VecSize, maxComponents>::setNumComponents(const size_t &numComponents)
+{
+    _numComponents = numComponents;
+}
 
 template<int VecSize, int maxComponents>
 std::string VonMisesFisherMixture<VecSize, maxComponents>::SoftAssignment::toString() const{

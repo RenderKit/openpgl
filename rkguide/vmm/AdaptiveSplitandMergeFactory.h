@@ -54,7 +54,6 @@ public:
 
         size_t numSamplesAfterLastSplit {0};
         size_t numSamplesAfterLastMerge {0};
-
         void clear(const size_t &_numComponents);
         void clearAll();
 
@@ -70,6 +69,8 @@ public:
         size_t numSamples {0};
         size_t numSplits {0};
         size_t numMerges {0};
+
+        size_t numComponents {0};
 
         size_t numUpdateWEMIterations {0};
         size_t numPartialUpdateWEMIterations {0};
@@ -105,6 +106,7 @@ std::string AdaptiveSplitAndMergeFactory<VecSize, maxComponents>::ASMFittingStat
     ss << "\tnumSamples:" << numSamples << std::endl;
     ss << "\tnumSplits:" << numSplits << std::endl;
     ss << "\tnumMerges:" << numMerges << std::endl;
+    ss << "\tnumComponents:" << numComponents << std::endl;
     ss << "\tnumUpdateWEMIterations:" << numUpdateWEMIterations << std::endl;
     ss << "\tnumPartialUpdateWEMIterations:" << numPartialUpdateWEMIterations << std::endl;
     return ss.str();
@@ -287,6 +289,8 @@ void AdaptiveSplitAndMergeFactory<VecSize, maxComponents>::update(VMM &vmm, ASMS
         //stats.splittingStatistics.clear(vmm._numComponents);
         RKGUIDE_ASSERT(stats.splittingStatistics.isValid());
     }
+
+    fitStats.numComponents = vmm._numComponents;
 /* */
     /*
     stats.numSamplesAfterLastSplit += numSamples;
