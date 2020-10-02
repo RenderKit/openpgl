@@ -17,6 +17,9 @@
 #include <algorithm>
 #include <sstream>
 
+#include <fstream>
+#include <iostream>
+
 using namespace embree;
 
 namespace rkguide
@@ -33,6 +36,7 @@ struct VonMisesFisherMixture
 {
 
 public:
+    typedef std::integral_constant<size_t, maxComponents> MaxComponents;
     typedef std::integral_constant<size_t, (maxComponents + (VecSize -1)) / VecSize> NumVectors;
 private:
     //const static int numVectors {(maxComponents+VecSize-1)/VecSize};
@@ -64,14 +68,18 @@ public:
 
     size_t _numComponents{maxComponents};
 
-    bool isValid() const;
+    virtual void serialize(std::ostream& stream) const;
+
+    virtual void deserialize(std::istream& stream);
+
+    virtual bool isValid() const;
 
     void uniformInit( float kappa );
-    float pdf( Vec3<float> direction ) const;
+    float pdf( Vector3 direction ) const;
 
-    bool softAssignment( Vec3<float> direction, SoftAssignment &assignment ) const;
+    bool softAssignment( Vector3 direction, SoftAssignment &assignment ) const;
 
-    Vec3<float> sample( const Vec2<float> sample ) const;
+    Vector3 sample( const Vector2 sample ) const;
 
     std::string toString() const;
 
@@ -133,6 +141,35 @@ std::string VonMisesFisherMixture<VecSize, maxComponents>::SoftAssignment::toStr
     return ss.str();
 }
 
+template<int VecSize, int maxComponents>
+void VonMisesFisherMixture<VecSize, maxComponents>::serialize(std::ostream& stream) const
+{
+    for(uint32_t k=0;k<NumVectors::value;k++){
+        stream.write(reinterpret_cast<const char*>(&_weights[k]), sizeof(vfloat<VecSize>));
+        stream.write(reinterpret_cast<const char*>(&_kappas[k]), sizeof(vfloat<VecSize>));
+        stream.write(reinterpret_cast<const char*>(&_meanDirections[k]), sizeof(Vec3<vfloat<VecSize> >));
+
+        stream.write(reinterpret_cast<const char*>(&_normalizations[k]), sizeof(vfloat<VecSize>));
+        stream.write(reinterpret_cast<const char*>(&_eMinus2Kappa[k]), sizeof(vfloat<VecSize>));
+        stream.write(reinterpret_cast<const char*>(&_meanCosines[k]), sizeof(vfloat<VecSize>));
+    }
+    stream.write(reinterpret_cast<const char*>(&_numComponents), sizeof(_numComponents));
+}
+
+template<int VecSize, int maxComponents>
+void VonMisesFisherMixture<VecSize, maxComponents>::deserialize(std::istream& stream)
+{
+    for(uint32_t k=0;k<NumVectors::value;k++){
+        stream.read(reinterpret_cast<char*>(&_weights[k]), sizeof(vfloat<VecSize>));
+        stream.read(reinterpret_cast<char*>(&_kappas[k]), sizeof(vfloat<VecSize>));
+        stream.read(reinterpret_cast<char*>(&_meanDirections[k]), sizeof(Vec3<vfloat<VecSize> >));
+
+        stream.read(reinterpret_cast<char*>(&_normalizations[k]), sizeof(vfloat<VecSize>));
+        stream.read(reinterpret_cast<char*>(&_eMinus2Kappa[k]), sizeof(vfloat<VecSize>));
+        stream.read(reinterpret_cast<char*>(&_meanCosines[k]), sizeof(vfloat<VecSize>));
+    }
+    stream.read(reinterpret_cast<char*>(&_numComponents), sizeof(_numComponents));
+}
 
 template<int VecSize, int maxComponents>
 bool VonMisesFisherMixture<VecSize, maxComponents>::isValid() const
@@ -466,7 +503,7 @@ void VonMisesFisherMixture<VecSize, maxComponents>::uniformInit(float kappa){
 }
 
 template<int VecSize, int maxComponents>
-float VonMisesFisherMixture<VecSize, maxComponents>::pdf( Vec3<float> direction ) const{
+float VonMisesFisherMixture<VecSize, maxComponents>::pdf( Vector3 direction ) const{
     const int cnt = (_numComponents+VecSize-1) / VecSize;
 
     vfloat<VecSize> pdf = {0.0f};
@@ -487,7 +524,7 @@ float VonMisesFisherMixture<VecSize, maxComponents>::pdf( Vec3<float> direction 
 }
 
 template<int VecSize, int maxComponents>
-bool VonMisesFisherMixture<VecSize, maxComponents>::softAssignment( Vec3<float> direction, typename VonMisesFisherMixture<VecSize, maxComponents>::SoftAssignment &softAssign ) const{
+bool VonMisesFisherMixture<VecSize, maxComponents>::softAssignment( Vector3 direction, typename VonMisesFisherMixture<VecSize, maxComponents>::SoftAssignment &softAssign ) const{
 
     const int cnt = (_numComponents+VecSize-1) / VecSize;
 
@@ -525,7 +562,7 @@ bool VonMisesFisherMixture<VecSize, maxComponents>::softAssignment( Vec3<float> 
 
 
 template<int VecSize, int maxComponents>
-Vec3<float> VonMisesFisherMixture<VecSize, maxComponents>::sample( const Vec2<float> sample ) const{
+Vector3 VonMisesFisherMixture<VecSize, maxComponents>::sample( const Vector2 sample ) const{
 
     uint32_t selectedVector {0};
     uint32_t selectedComponent {0};

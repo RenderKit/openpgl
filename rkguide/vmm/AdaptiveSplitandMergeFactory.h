@@ -11,6 +11,9 @@
 #include "VMMChiSquareComponentSplitter.h"
 #include "VMMChiSquareComponentMerger.h"
 
+#include <fstream>
+#include <iostream>
+
 namespace rkguide
 {
 
@@ -43,6 +46,10 @@ public:
         //int minSamplesForSplitting { 4096 };
         //int minSamplesForMerging { 4096 * 4 };
 
+        void serialize(std::ostream& stream) const;
+
+        void deserialize(std::istream& stream);
+
         std::string toString() const;
     };
 
@@ -58,6 +65,10 @@ public:
         void clearAll();
 
         void decay(const float &alpha);
+
+        void serialize(std::ostream& stream) const;
+
+        void deserialize(std::istream& stream);
 
         std::string toString() const;
 
@@ -84,6 +95,27 @@ public:
     void update(VMM &vmm, ASMStatistics &stats, const DirectionalSampleData* samples, const size_t numSamples, const ASMConfiguration &cfg, ASMFittingStatistics &fitStats) const;
 
 };
+
+
+template<int VecSize, int maxComponents>
+void AdaptiveSplitAndMergeFactory<VecSize, maxComponents>::ASMStatistics::serialize(std::ostream& stream) const
+{
+    sufficientStatistics.serialize(stream);
+    splittingStatistics.serialize(stream);
+
+    stream.write(reinterpret_cast<const char*>(&numSamplesAfterLastSplit), sizeof(size_t));
+    stream.write(reinterpret_cast<const char*>(&numSamplesAfterLastMerge), sizeof(size_t));
+}
+
+template<int VecSize, int maxComponents>
+void AdaptiveSplitAndMergeFactory<VecSize, maxComponents>::ASMStatistics::deserialize(std::istream& stream)
+{
+    sufficientStatistics.deserialize(stream);
+    splittingStatistics.deserialize(stream);
+
+    stream.read(reinterpret_cast<char*>(&numSamplesAfterLastSplit), sizeof(size_t));
+    stream.read(reinterpret_cast<char*>(&numSamplesAfterLastMerge), sizeof(size_t));
+}
 
 template<int VecSize, int maxComponents>
 void AdaptiveSplitAndMergeFactory<VecSize, maxComponents>::ASMStatistics::decay(const float &alpha)
@@ -129,6 +161,36 @@ void AdaptiveSplitAndMergeFactory<VecSize, maxComponents>::ASMStatistics::clearA
 }
 
 template<int VecSize, int maxComponents>
+void AdaptiveSplitAndMergeFactory<VecSize, maxComponents>::ASMConfiguration::serialize(std::ostream& stream) const
+{
+    weightedEMCfg.serialize(stream);
+
+    stream.write(reinterpret_cast<const char*>(&splittingThreshold), sizeof(float));
+    stream.write(reinterpret_cast<const char*>(&mergingThreshold), sizeof(float));
+
+    stream.write(reinterpret_cast<const char*>(&partialReFit), sizeof(bool));
+    stream.write(reinterpret_cast<const char*>(&maxSplitItr), sizeof(int));
+
+    stream.write(reinterpret_cast<const char*>(&minSamplesForSplitting), sizeof(int));
+    stream.write(reinterpret_cast<const char*>(&minSamplesForMerging), sizeof(int));
+}
+
+template<int VecSize, int maxComponents>
+void AdaptiveSplitAndMergeFactory<VecSize, maxComponents>::ASMConfiguration::deserialize(std::istream& stream)
+{
+    weightedEMCfg.deserialize(stream);
+
+    stream.read(reinterpret_cast<char*>(&splittingThreshold), sizeof(float));
+    stream.read(reinterpret_cast<char*>(&mergingThreshold), sizeof(float));
+
+    stream.read(reinterpret_cast<char*>(&partialReFit), sizeof(bool));
+    stream.read(reinterpret_cast<char*>(&maxSplitItr), sizeof(int));
+
+    stream.read(reinterpret_cast<char*>(&minSamplesForSplitting), sizeof(int));
+    stream.read(reinterpret_cast<char*>(&minSamplesForMerging), sizeof(int));
+}
+
+template<int VecSize, int maxComponents>
 std::string AdaptiveSplitAndMergeFactory<VecSize, maxComponents>::ASMConfiguration::toString() const
 {
     return "";
@@ -147,15 +209,15 @@ void AdaptiveSplitAndMergeFactory<VecSize, maxComponents>::fit(VMM &vmm, size_t 
 
     // split the fitted components of the inital fit to match
     // the observed samples
-
+#ifdef RKGUIDE_SHOW_PRINT_OUTS
     std::cout << stats.sufficientStatistics.toString() << std::endl;
-
+#endif
     Splitter splitter = Splitter();
     splitter.PerformRecursiveSplitting(vmm, stats.sufficientStatistics, cfg.splittingThreshold, mcEstimate, samples, numSamples, cfg.weightedEMCfg);
 
     splitter.CalculateSplitStatistics(vmm, stats.splittingStatistics, mcEstimate, samples, numSamples);
 
-    //std::cout << stats.sufficientStatistics.toString() << std::endl;
+    //std::cout << "fit: numComponents: " << vmm._numComponents << std::endl;
 
     RKGUIDE_ASSERT(vmm._numComponents == stats.sufficientStatistics.numComponents);
     RKGUIDE_ASSERT(vmm._numComponents == stats.splittingStatistics.numComponents);
@@ -163,6 +225,7 @@ void AdaptiveSplitAndMergeFactory<VecSize, maxComponents>::fit(VMM &vmm, size_t 
     Merger merger = Merger();
     merger.PerformMerging(vmm, cfg.mergingThreshold, stats.sufficientStatistics, stats.splittingStatistics);
 
+    //std::cout << "fit: numComponents: " << vmm._numComponents << std::endl;
     //stats.splittingStatistics.clear(vmm._numComponents);
     stats.numSamplesAfterLastSplit = 0.0f;
     stats.numSamplesAfterLastMerge = 0.0f;
@@ -267,8 +330,9 @@ void AdaptiveSplitAndMergeFactory<VecSize, maxComponents>::update(VMM &vmm, ASMS
 
 
         //stats.splittingStatistics.clearAll();
+#ifdef RKGUIDE_SHOW_PRINT_OUTS
         std::cout << "update: totalSplitCount = " << totalSplitCount << "\t splitThreshold: " << cfg.splittingThreshold<< std::endl;
-
+#endif
         stats.numSamplesAfterLastSplit = 0.0f;
         //stats.numSamplesAfterLastMerge = numSamples;
         stats.numSamplesAfterLastMerge++;

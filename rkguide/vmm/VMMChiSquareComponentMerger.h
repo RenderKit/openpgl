@@ -83,7 +83,9 @@ size_t VonMisesFisherChiSquareComponentMerger< VecSize, maxComponents>::PerformM
             totalMergeCount++;
         }
     }
+#ifdef RKGUIDE_SHOW_PRINT_OUTS
     std::cout << "PerformMerging: totalMergeCount = " << totalMergeCount << "\t mergeThreshold: " << mergeThreshold<< std::endl;
+#endif
     return totalMergeCount;
 }
 
@@ -204,7 +206,9 @@ bool VonMisesFisherChiSquareComponentMerger< VecSize, maxComponents>::Thresholde
     {
         vmm.mergeComponents(mergeCandidateI, mergeCandidateJ);
         mergeCost = minMergeCost;
+#ifdef RKGUIDE_SHOW_PRINT_OUTS
         std::cout << "merge: " << "\tidx0: " << mergeCandidateI << "\tidx1: " << mergeCandidateJ << "\tK: " << vmm._numComponents <<std::endl;
+#endif
     }
     return foundMergeCandidates;
 
@@ -241,11 +245,12 @@ bool VonMisesFisherChiSquareComponentMerger< VecSize, maxComponents>::Thresholde
 
     if (foundMergeCandidates)
     {
+#ifdef RKGUIDE_SHOW_PRINT_OUTS
         std::cout << "merge: " << "\tidx0: " << mergeCandidateI << "\tidx1: " << mergeCandidateJ << "\tK: " << vmm._numComponents <<std::endl;
         std::cout << "\tweightI: " << vmm.getComponentWeight(mergeCandidateI) << "\tweightJ: " << vmm.getComponentWeight(mergeCandidateJ);
         std::cout << "\tkappaI: " << vmm.getComponentKappa(mergeCandidateI)<< "\tkappaJ: " << vmm.getComponentKappa(mergeCandidateJ);
         std::cout << "\t angle: " << std::acos(dot(vmm.getComponentMeanDirection(mergeCandidateI), vmm.getComponentMeanDirection(mergeCandidateJ))) * 180.0f / M_PI << std::endl;
-
+#endif
         // get old (before merge) mean directions and weights
         Vector3 meanDirectionI = vmm.getComponentMeanDirection(mergeCandidateI);
         float weightI = vmm.getComponentWeight(mergeCandidateI);
@@ -303,7 +308,7 @@ float VonMisesFisherChiSquareComponentMerger< VecSize, maxComponents>::_Integrat
 {
     Vector3 productMeanDirection = kappa0 * meanDirection0 + kappa1 * meanDirection1;
 
-    float productKappa = embree::sqrt( embree::dot( productMeanDirection, productMeanDirection));
+    float productKappa = embree::sqrt( dot( productMeanDirection, productMeanDirection));
 
     float productNormalization = 1.0f / (4.0f * M_PI);
     float productEMinus2Kappa = 1.0f;
@@ -320,8 +325,8 @@ float VonMisesFisherChiSquareComponentMerger< VecSize, maxComponents>::_Integrat
     }
 
     float scale = ( normalization0 * normalization1 ) / productNormalization;
-    float cosTheta0 = embree::dot( meanDirection0, productMeanDirection);
-    float cosTheta1 = embree::dot( meanDirection1, productMeanDirection);
+    float cosTheta0 = dot( meanDirection0, productMeanDirection);
+    float cosTheta1 = dot( meanDirection1, productMeanDirection);
     scale *= std::exp( kappa0 * ( cosTheta0 - 1.0f ) + kappa1 * ( cosTheta1 - 1.0f ) );
 
     return scale;
@@ -332,7 +337,7 @@ float VonMisesFisherChiSquareComponentMerger< VecSize, maxComponents>::_Integrat
 {
     Vector3 productMeanDirection = kappa0 * meanDirection0 + kappa1 * meanDirection1;
 
-    float productKappa = embree::sqrt( embree::dot( productMeanDirection, productMeanDirection));
+    float productKappa = embree::sqrt( dot( productMeanDirection, productMeanDirection));
 
     float productNormalization = 1.0f / (4.0f * M_PI);
     float productEMinus2Kappa = 1.0f;
@@ -349,8 +354,8 @@ float VonMisesFisherChiSquareComponentMerger< VecSize, maxComponents>::_Integrat
     }
 
     float scale = ( normalization0 * normalization1 ) / productNormalization;
-    float cosTheta0 = embree::dot( meanDirection0, productMeanDirection);
-    float cosTheta1 = embree::dot( meanDirection1, productMeanDirection);
+    float cosTheta0 = dot( meanDirection0, productMeanDirection);
+    float cosTheta1 = dot( meanDirection1, productMeanDirection);
     scale *= (4.0f * M_PI * M_PI * ( 1.0f - eMinus2Kappa1) ) / (kappa1 * kappa1);
     scale *= std::exp( (kappa0 * ( cosTheta0 - 1.0f ) + kappa1 * ( cosTheta1 - 1.0f )) + (2.0f * kappa1) );
 
@@ -363,7 +368,7 @@ float VonMisesFisherChiSquareComponentMerger< VecSize, maxComponents>::_Product(
                         Vector3 &productMeanDirection, float &productKappa, float &productNormalization) const
 {
     productMeanDirection = kappa0 * meanDirection0 + kappa1 * meanDirection1;
-    productKappa = embree::sqrt( embree::dot( productMeanDirection, productMeanDirection));
+    productKappa = embree::sqrt( dot( productMeanDirection, productMeanDirection));
 
     productNormalization = 1.0f / (4.0f * M_PI);
     float productEMinus2Kappa = 1.0f;
@@ -380,8 +385,8 @@ float VonMisesFisherChiSquareComponentMerger< VecSize, maxComponents>::_Product(
     }
 
     float scale = ( normalization0 * normalization1 ) / productNormalization;
-    float cosTheta0 = embree::dot( meanDirection0, productMeanDirection);
-    float cosTheta1 = embree::dot( meanDirection1, productMeanDirection);
+    float cosTheta0 = dot( meanDirection0, productMeanDirection);
+    float cosTheta1 = dot( meanDirection1, productMeanDirection);
 
     scale *= std::exp( kappa0 * ( cosTheta0 - 1.0f ) + kappa1 * ( cosTheta1 - 1.0f ) );
 

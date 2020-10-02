@@ -9,6 +9,8 @@
 
 #include "VMMFactory.h"
 
+#include <fstream>
+#include <iostream>
 
 //#define RKGUIDE_MAX_KAPPA 1000000.0f
 #define RKGUIDE_MAX_KAPPA 32000.0f
@@ -40,6 +42,10 @@ struct WeightedEMVonMisesFisherFactory: public VonMisesFisherFactory< VecSize, m
         float meanCosinePrior {0.0f};
 
         void init();
+
+        void serialize(std::ostream& stream) const;
+
+        void deserialize(std::istream& stream);
 
         std::string toString() const;
 
@@ -81,6 +87,9 @@ struct WeightedEMVonMisesFisherFactory: public VonMisesFisherFactory< VecSize, m
         //SufficientStatisitcs operator+(const SufficientStatisitcs &stats);
         SufficientStatisitcs& operator+=(const SufficientStatisitcs &stats);
 
+        void serialize(std::ostream& stream) const;
+
+        void deserialize(std::istream& stream);
 
         void clear(size_t _numComponents);
 
@@ -249,6 +258,38 @@ void WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::partialUpdateMixt
 
 
 template<int VecSize, int maxComponents>
+void WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::Configuration::serialize(std::ostream& stream) const
+{
+    stream.write(reinterpret_cast<const char*>(&maK), sizeof(size_t));
+    stream.write(reinterpret_cast<const char*>(&maxEMIterrations), sizeof(size_t));
+
+    stream.write(reinterpret_cast<const char*>(&maxKappa), sizeof(float));
+    stream.write(reinterpret_cast<const char*>(&maxMeanCosine), sizeof(float));
+    stream.write(reinterpret_cast<const char*>(&convergenceThreshold), sizeof(float));
+
+    stream.write(reinterpret_cast<const char*>(&weightPrior), sizeof(float));
+
+    stream.write(reinterpret_cast<const char*>(&meanCosinePriorStrength), sizeof(float));
+    stream.write(reinterpret_cast<const char*>(&meanCosinePrior), sizeof(float));
+}
+
+template<int VecSize, int maxComponents>
+void WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::Configuration::deserialize(std::istream& stream)
+{
+    stream.read(reinterpret_cast<char*>(&maK), sizeof(size_t));
+    stream.read(reinterpret_cast<char*>(&maxEMIterrations), sizeof(size_t));
+
+    stream.read(reinterpret_cast<char*>(&maxKappa), sizeof(float));
+    stream.read(reinterpret_cast<char*>(&maxMeanCosine), sizeof(float));
+    stream.read(reinterpret_cast<char*>(&convergenceThreshold), sizeof(float));
+
+    stream.read(reinterpret_cast<char*>(&weightPrior), sizeof(float));
+
+    stream.read(reinterpret_cast<char*>(&meanCosinePriorStrength), sizeof(float));
+    stream.read(reinterpret_cast<char*>(&meanCosinePrior), sizeof(float));
+}
+
+template<int VecSize, int maxComponents>
 void WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::Configuration::init()
 {
     maxMeanCosine  = KappaToMeanCosine<float>(maxKappa);
@@ -382,6 +423,33 @@ WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::SufficientStatisitcs::
     overallNumSamples = a.overallNumSamples;
 }
 
+template<int VecSize, int maxComponents>
+void WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::SufficientStatisitcs::serialize(std::ostream& stream) const
+{
+    for(uint32_t k=0;k<NumVectors::value;k++){
+        stream.write(reinterpret_cast<const char*>(&sumOfWeightedDirections[k]), sizeof(embree::Vec3< vfloat<VecSize> >));
+        stream.write(reinterpret_cast<const char*>(&sumOfWeightedStats[k]), sizeof(vfloat<VecSize>));
+    }
+    stream.write(reinterpret_cast<const char*>(&numSamples), sizeof(float));
+    stream.write(reinterpret_cast<const char*>(&numSamples), sizeof(float));
+    stream.write(reinterpret_cast<const char*>(&overallNumSamples), sizeof(float));
+    stream.write(reinterpret_cast<const char*>(&numComponents), sizeof(size_t));
+    stream.write(reinterpret_cast<const char*>(&isNormalized), sizeof(bool));
+}
+
+template<int VecSize, int maxComponents>
+void WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::SufficientStatisitcs::deserialize(std::istream& stream)
+{
+    for(uint32_t k=0;k<NumVectors::value;k++){
+        stream.read(reinterpret_cast<char*>(&sumOfWeightedDirections[k]), sizeof(embree::Vec3< vfloat<VecSize> >));
+        stream.read(reinterpret_cast<char*>(&sumOfWeightedStats[k]), sizeof(vfloat<VecSize>));
+    }
+    stream.read(reinterpret_cast<char*>(&numSamples), sizeof(float));
+    stream.read(reinterpret_cast<char*>(&numSamples), sizeof(float));
+    stream.read(reinterpret_cast<char*>(&overallNumSamples), sizeof(float));
+    stream.read(reinterpret_cast<char*>(&numComponents), sizeof(size_t));
+    stream.read(reinterpret_cast<char*>(&isNormalized), sizeof(bool));
+}
 
 template<int VecSize, int maxComponents>
 void WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::SufficientStatisitcs::swapComponentStats(const size_t &idx0, const size_t &idx1)

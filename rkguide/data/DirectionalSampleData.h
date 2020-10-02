@@ -15,11 +15,12 @@ namespace rkguide
 
 struct DirectionalSampleData
 {
-    Vector3 position;
+    Point3 position;
     Vector3 direction;
     float weight;
     float pdf;
     float distance;
+    uint32_t flags;
 
     const std::string toString() const
     {

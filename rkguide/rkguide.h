@@ -4,9 +4,50 @@
 #pragma once
 
 
+//#define RKGUIDE_SHOW_PRINT_OUTS
+
 #include <embree/common/math/vec2.h>
 #include <embree/common/math/vec3.h>
+/* */
+namespace rkguide
+{
+    typedef embree::Vec2<float> Vector2;
+    typedef embree::Vec3<float> Vector3;
+    typedef embree::Vec3<float> Point3;
 
+    inline float dot(Vector2 &a, Vector2 &b)
+    {
+        return embree::dot(a, b);
+    }
+
+    inline float dot(Vector3 &a, Vector3 &b)
+    {
+        return embree::dot(a, b);
+    }
+}
+/* */
+
+/*
+#include <mitsuba/mitsuba.h>
+//#include <mitsuba/vec3.h>
+
+namespace rkguide
+{
+    typedef mitsuba::Vector2 Vector2;
+    typedef mitsuba::Vector3 Vector3;
+    typedef mitsuba::Point3 Point3;
+
+    inline float dot(Vector2 &a, Vector2 &b)
+    {
+        return mitsuba::dot(a, b);
+    }
+
+    inline float dot(Vector3 &a, Vector3 &b)
+    {
+        return mitsuba::dot(a, b);
+    }
+}
+*/
 //#define RKGUIDE_DISABLE_ASSERTS
 
 #ifndef RKGUIDE_DISABLE_ASSERTS
@@ -20,10 +61,6 @@
 
 namespace rkguide
 {
-
-    typedef embree::Vec2<float> Vector2;
-    typedef embree::Vec3<float> Vector3;
-
     template <int VecSize>
     inline float sum( const embree::vfloat<VecSize> &v)
     {

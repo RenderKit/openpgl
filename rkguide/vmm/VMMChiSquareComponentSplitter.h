@@ -11,6 +11,8 @@
 #include <algorithm>
 #include <vector>
 
+#include <fstream>
+#include <iostream>
 
 #define RKGUIDE_USE_LOGMAP
 //#define RKGUIDE_ZERO_MEAN
@@ -95,6 +97,10 @@ struct ComponentSplitStatistics
 
     bool isValid() const;
 
+    void serialize(std::ostream& stream) const;
+
+    void deserialize(std::istream& stream);
+
     std::string toString() const;
 };
 
@@ -176,12 +182,12 @@ std::string ComponentSplitinfo::toString() const
 {
     std::stringstream ss;
     ss << "ComponentSplitinfo:" << std::endl;
-    ss << "mean: " << mean << std::endl;
-    ss << "covariance: " << covariance << std::endl;
+    //ss << "mean: " << mean << std::endl;
+    //ss << "covariance: " << covariance << std::endl;
     ss << "eigenValue0: " << eigenValue0 << std::endl;
     ss << "eigenValue1: " << eigenValue1 << std::endl;
-    ss << "eigenVector0: " << eigenVector0 << std::endl;
-    ss << "eigenVector1: " << eigenVector1 << std::endl;
+    //ss << "eigenVector0: " << eigenVector0 << std::endl;
+    //ss << "eigenVector1: " << eigenVector1 << std::endl;
     return ss.str();
 }
 
@@ -407,10 +413,10 @@ ComponentSplitinfo VonMisesFisherChiSquareComponentSplitter<VecSize, maxComponen
 
     splitInfo.eigenVector0 /= embree::sqrt(splitInfo.eigenVector0.x * splitInfo.eigenVector0.x + splitInfo.eigenVector0.y * splitInfo.eigenVector0.y);
     splitInfo.eigenVector1 /= embree::sqrt(splitInfo.eigenVector1.x * splitInfo.eigenVector1.x + splitInfo.eigenVector1.y * splitInfo.eigenVector1.y);
-
+#ifdef RKGUIDE_SHOW_PRINT_OUTS
     std::cout << "split: " << "\tmean: " << splitInfo.mean.x << ", \t " << splitInfo.mean.y<< "\t covariance: " << splitInfo.covariance.x << ", \t "  << splitInfo.covariance.y << ", \t "  << splitInfo.covariance.z << std::endl;
     std::cout << "eigen: " << "\tevalue0: " << splitInfo.eigenValue0 << "\teVec0: " << splitInfo.eigenVector0.x << ", \t " << splitInfo.eigenVector0.y << "\tevalue1: " << splitInfo.eigenValue1 << "\teVec1: " << splitInfo.eigenVector1.x << ", \t " << splitInfo.eigenVector1.y << std::endl;
-
+#endif
     return splitInfo;
 }
 
@@ -584,6 +590,7 @@ bool VonMisesFisherChiSquareComponentSplitter<VecSize, maxComponents>::SplitComp
         meanDirection1 = embree::frame(meanDirection) * Map2DTo3D<Vector3, Vector2, float>(meanDir2D1);
         //float meanCosine1 = meanCosine / meanDirection0.z;
         //float kappa1 = MeanCosineToKappa<float> (meanCosine1);
+#ifdef RKGUIDE_SHOW_PRINT_OUTS
         //std::cout << "meanCosine: " << meanCosine << "\t kappa: " << kappa << "\t newMeanCosine: " << newMeanCosine0 << " \t newKkappa: " <<  newKkappa0 << std::endl;
         //std::cout << "localMeanDirection0: " << Map2DTo3D<Vector3, Vector2, float>(meanDir2D0) << "\t meanDirection0: " << meanDirection0 << "\t meanCosine: " << meanCosine << " \t costheta0: " <<  dot(meanDirection, meanDirection0) << std::endl;
         //std::cout << "localMeanDirection1: " << Map2DTo3D<Vector3, Vector2, float>(meanDir2D1) << "\t meanDirection1: " << meanDirection1 << "\t meanCosine: " << meanCosine << " \t costheta1: " <<  dot(meanDirection, meanDirection1) << std::endl;
@@ -591,14 +598,17 @@ bool VonMisesFisherChiSquareComponentSplitter<VecSize, maxComponents>::SplitComp
         //std::cout << "eigenValue1: " << splitInfo.eigenValue1 << "\t eigenVector1: " << splitInfo.eigenVector1 << std::endl;
         std::cout << "D: " << D << "\t idx: " << idx << " \t assignedSamples: " << numAssignedSamples <<std::endl;
         std::cout << "kappa: " << kappa <<  " \t newKkappa: " <<  newKkappa0  << " \t costheta0: " <<  dot(meanDirection, meanDirection0) << "\t angle: " << std::acos(dot(meanDirection, meanDirection0)) * 180.0f / M_PI<< std::endl;
+#endif
     }
     else
     {
+#ifdef RKGUIDE_SHOW_PRINT_OUTS
         std::cout << "!!!!   D: " << D << "\t idx: " << idx << " \t assignedSamples: " << numAssignedSamples <<std::endl;
 
         std::cout << "sampleCovariance: [" << splitStats.splitWeightedSampleCovariances[tmpK.quot].x[tmpK.rem] << ",\t" << splitStats.splitWeightedSampleCovariances[tmpK.quot].y[tmpK.rem] << ",\t" << splitStats.splitWeightedSampleCovariances[tmpK.quot].z[tmpK.rem] << "]"<<std::endl;
         std::cout << "sumWeights: " << splitStats.sumWeights[tmpK.quot][tmpK.rem] <<std::endl;
         std::cout << "weight: " << weight << "\t meanCosine: " << meanCosine <<std::endl;
+#endif
         if( numAssignedSamples <2.0f)
         {
             return false;
@@ -754,6 +764,7 @@ bool VonMisesFisherChiSquareComponentSplitter<VecSize, maxComponents>::SplitComp
         meanDirection1 = embree::frame(meanDirection) * Map2DTo3D<Vector3, Vector2, float>(meanDir2D1);
         //float meanCosine1 = meanCosine / meanDirection0.z;
         //float kappa1 = MeanCosineToKappa<float> (meanCosine1);
+#ifdef RKGUIDE_SHOW_PRINT_OUTS
         //std::cout << "meanCosine: " << meanCosine << "\t kappa: " << kappa << "\t newMeanCosine: " << newMeanCosine0 << " \t newKkappa: " <<  newKkappa0 << std::endl;
         //std::cout << "localMeanDirection0: " << Map2DTo3D<Vector3, Vector2, float>(meanDir2D0) << "\t meanDirection0: " << meanDirection0 << "\t meanCosine: " << meanCosine << " \t costheta0: " <<  dot(meanDirection, meanDirection0) << std::endl;
         //std::cout << "localMeanDirection1: " << Map2DTo3D<Vector3, Vector2, float>(meanDir2D1) << "\t meanDirection1: " << meanDirection1 << "\t meanCosine: " << meanCosine << " \t costheta1: " <<  dot(meanDirection, meanDirection1) << std::endl;
@@ -761,14 +772,17 @@ bool VonMisesFisherChiSquareComponentSplitter<VecSize, maxComponents>::SplitComp
         //std::cout << "eigenValue1: " << splitInfo.eigenValue1 << "\t eigenVector1: " << splitInfo.eigenVector1 << std::endl;
         std::cout << "D: " << D << "\t idx: " << idx << " \t assignedSamples: " << numAssignedSamples <<std::endl;
         std::cout << "kappa: " << kappa <<  " \t newKkappa: " <<  newKkappa0  << " \t costheta0: " <<  dot(meanDirection, meanDirection0) << "\t angle: " << std::acos(dot(meanDirection, meanDirection0)) * 180.0f / M_PI<< std::endl;
+#endif
     }
     else
     {
+#ifdef RKGUIDE_SHOW_PRINT_OUTS
         std::cout << "!!!!   D: " << D << "\t idx: " << idx << " \t assignedSamples: " << numAssignedSamples <<std::endl;
 
         std::cout << "sampleCovariance: [" << splitStats.splitWeightedSampleCovariances[tmpK.quot].x[tmpK.rem] << ",\t" << splitStats.splitWeightedSampleCovariances[tmpK.quot].y[tmpK.rem] << ",\t" << splitStats.splitWeightedSampleCovariances[tmpK.quot].z[tmpK.rem] << "]"<<std::endl;
         std::cout << "sumWeights: " << splitStats.sumWeights[tmpK.quot][tmpK.rem] <<std::endl;
         std::cout << "weight: " << weight << "\t meanCosine: " << meanCosine <<std::endl;
+#endif
         if( numAssignedSamples <2.0f)
         {
             return false;
@@ -863,6 +877,39 @@ bool VonMisesFisherChiSquareComponentSplitter<VecSize, maxComponents>::SplitComp
     splitStats.numComponents = K + 2;
 
     return true;
+}
+
+
+template<int VecSize, int maxComponents>
+void VonMisesFisherChiSquareComponentSplitter<VecSize, maxComponents>::ComponentSplitStatistics::serialize(std::ostream& stream) const
+{
+    for(uint32_t k=0;k<NumVectors::value;k++){
+        stream.write(reinterpret_cast<const char*>(&chiSquareMCEstimates[k]), sizeof(vfloat<VecSize>));
+        stream.write(reinterpret_cast<const char*>(&splitMeans[k]), sizeof(Vec2<vfloat<VecSize> >));
+        stream.write(reinterpret_cast<const char*>(&splitWeightedSampleCovariances[k]), sizeof(Vec3<vfloat<VecSize> >));
+
+        stream.write(reinterpret_cast<const char*>(&numSamples[k]), sizeof(vfloat<VecSize>));
+        stream.write(reinterpret_cast<const char*>(&sumWeights[k]), sizeof(vfloat<VecSize>));
+
+        stream.write(reinterpret_cast<const char*>(&sumAssignedSamples[k]), sizeof(vfloat<VecSize>));
+    }
+    stream.write(reinterpret_cast<const char*>(&numComponents), sizeof(size_t));
+}
+
+template<int VecSize, int maxComponents>
+void VonMisesFisherChiSquareComponentSplitter<VecSize, maxComponents>::ComponentSplitStatistics::deserialize(std::istream& stream)
+{
+    for(uint32_t k=0;k<NumVectors::value;k++){
+        stream.read(reinterpret_cast<char*>(&chiSquareMCEstimates[k]), sizeof(vfloat<VecSize>));
+        stream.read(reinterpret_cast<char*>(&splitMeans[k]), sizeof(Vec2<vfloat<VecSize> >));
+        stream.read(reinterpret_cast<char*>(&splitWeightedSampleCovariances[k]), sizeof(Vec3<vfloat<VecSize> >));
+
+        stream.read(reinterpret_cast<char*>(&numSamples[k]), sizeof(vfloat<VecSize>));
+        stream.read(reinterpret_cast<char*>(&sumWeights[k]), sizeof(vfloat<VecSize>));
+
+        stream.read(reinterpret_cast<char*>(&sumAssignedSamples[k]), sizeof(vfloat<VecSize>));
+    }
+    stream.read(reinterpret_cast<char*>(&numComponents), sizeof(size_t));
 }
 
 template<int VecSize, int maxComponents>
