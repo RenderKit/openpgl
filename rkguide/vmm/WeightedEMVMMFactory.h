@@ -18,15 +18,19 @@
 namespace rkguide
 {
 
-template<int VecSize, int maxComponents>
-struct WeightedEMVonMisesFisherFactory: public VonMisesFisherFactory< VecSize, maxComponents>
+template<class TVMMDistribution>
+struct WeightedEMVonMisesFisherFactory: public VonMisesFisherFactory< TVMMDistribution>
 {
     public:
-    typedef std::integral_constant<size_t, (maxComponents + (VecSize -1)) / VecSize> NumVectors;
+    //typedef std::integral_constant<size_t, (maxComponents + (VMM::VectorSize -1)) / VMM::VectorSize> NumVectors;
+    typedef TVMMDistribution Distribution;
+    using VMM = TVMMDistribution;
 
     struct Configuration
     {
-        size_t maK {maxComponents};
+        size_t initK {VMM::VectorSize};
+
+        size_t maxK {VMM::MaxComponents};
         size_t maxEMIterrations {100};
 
         float maxKappa {RKGUIDE_MAX_KAPPA};
@@ -60,7 +64,7 @@ struct WeightedEMVonMisesFisherFactory: public VonMisesFisherFactory< VecSize, m
 
     struct PartialFittingMask
     {
-        vbool<VecSize> mask[NumVectors::value];
+        vbool<VMM::VectorSize> mask[VMM::NumVectors];
 
         PartialFittingMask() = default;
 
@@ -76,55 +80,87 @@ struct WeightedEMVonMisesFisherFactory: public VonMisesFisherFactory< VecSize, m
         SufficientStatisitcs() = default;
         SufficientStatisitcs( const SufficientStatisitcs &a);
 
-        embree::Vec3< vfloat<VecSize> > sumOfWeightedDirections[NumVectors::value];
-        vfloat<VecSize> sumOfWeightedStats[NumVectors::value];
+        embree::Vec3< vfloat<VMM::VectorSize> > sumOfWeightedDirections[VMM::NumVectors];
+        vfloat<VMM::VectorSize> sumOfWeightedStats[VMM::NumVectors];
 
         float sumWeights {0.f};
         float numSamples {0};
         float overallNumSamples {0};
-        size_t numComponents {maxComponents};
+        size_t numComponents {VMM::MaxComponents};
         bool isNormalized {false};
         //SufficientStatisitcs operator+(const SufficientStatisitcs &stats);
-        SufficientStatisitcs& operator+=(const SufficientStatisitcs &stats);
+        virtual SufficientStatisitcs& operator+=(const SufficientStatisitcs &stats);
 
-        void serialize(std::ostream& stream) const;
+        virtual void serialize(std::ostream& stream) const;
 
-        void deserialize(std::istream& stream);
+        virtual void deserialize(std::istream& stream);
 
-        void clear(size_t _numComponents);
+        virtual void clear(size_t _numComponents);
 
-        void clearAll();
+        virtual void clearAll();
 
-        void normalize( const float &_numSamples );
+        virtual void normalize( const float &_numSamples );
 
-        void mergeComponentStats(const size_t &idx0, const size_t &idx1);
+        virtual void mergeComponentStats(const size_t &idx0, const size_t &idx1);
 
-        void swapComponentStats(const size_t &idx0, const size_t &idx1);
+        virtual void splitComponentsStats(const size_t &idx0, const size_t &idx1,
+                const Vector3 &meanDirection0, const Vector3 &meanDirection1,
+                const float &meanCosine0, const float &meanCosine1);
 
-        void maskedReplace(const PartialFittingMask &mask, const SufficientStatisitcs &stats);
+        virtual void swapComponentStats(const size_t &idx0, const size_t &idx1);
 
-        void decay(const float &alpha);
+        virtual void maskedReplace(const PartialFittingMask &mask, const SufficientStatisitcs &stats);
 
-        std::string toString() const;
+        virtual void decay(const float &alpha);
+
+        virtual std::string toString() const;
+
+        inline float getNumSamples() const
+        {
+            return numSamples;
+        }
+
+        inline float getSumWeights() const
+        {
+            return sumWeights;
+        }
+
+        inline void setNumComponents( const size_t &numComponents)
+        {
+            this->numComponents = numComponents;
+        }
+
+        inline size_t getNumComponents( ) const
+        {
+            return this->numComponents;
+        }
+
+        bool isValid() const;
 
     };
 
 
 
 
+
 public:
 
-    typedef VonMisesFisherMixture<VecSize, maxComponents> VMM;
+    //typedef TVMMDistribution VMM;
 
     WeightedEMVonMisesFisherFactory();
 
-    void fitMixture(VMM &vmm, size_t numComponents, SufficientStatisitcs &stats, const DirectionalSampleData* samples, const size_t numSamples, const Configuration &cfg, FittingStatistics &fitStats) const;
+    virtual void fitMixture(VMM &vmm, size_t numComponents, SufficientStatisitcs &stats, const DirectionalSampleData* samples, const size_t numSamples, const Configuration &cfg, FittingStatistics &fitStats) const;
 
-    void updateMixture(VMM &vmm, SufficientStatisitcs &previousStats, const DirectionalSampleData* samples, const size_t numSamples, const Configuration &cfg, FittingStatistics &fitStats) const;
+    virtual void updateMixture(VMM &vmm, SufficientStatisitcs &previousStats, const DirectionalSampleData* samples, const size_t numSamples, const Configuration &cfg, FittingStatistics &fitStats) const;
 
-    void partialUpdateMixture(VMM &vmm, const PartialFittingMask &mask, SufficientStatisitcs &previousStats, const DirectionalSampleData* samples, const size_t numSamples, const Configuration &cfg, FittingStatistics &fitStats) const;
+    virtual void partialUpdateMixture(VMM &vmm, const PartialFittingMask &mask, SufficientStatisitcs &previousStats, const DirectionalSampleData* samples, const size_t numSamples, const Configuration &cfg, FittingStatistics &fitStats) const;
 
-    VMM VMMfromSufficientStatisitcs(const SufficientStatisitcs &suffStats, const Configuration &cfg) const;
+    virtual VMM VMMfromSufficientStatisitcs(const SufficientStatisitcs &suffStats, const Configuration &cfg) const;
+
+    std::string toString() const
+    {
+        return "WeightedEMVonMisesFisherFactory";
+    };
 
 private:
 
@@ -150,14 +186,14 @@ private:
 };
 
 
-template<int VecSize, int maxComponents>
-WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::WeightedEMVonMisesFisherFactory()
+template<class TVMMDistribution>
+WeightedEMVonMisesFisherFactory< TVMMDistribution>::WeightedEMVonMisesFisherFactory()
 {
-    typename VonMisesFisherFactory<VecSize, maxComponents>::VonMisesFisherFactory( );
+    typename VonMisesFisherFactory<TVMMDistribution>::VonMisesFisherFactory( );
 }
 
-template<int VecSize, int maxComponents>
-typename WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::VMM WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::VMMfromSufficientStatisitcs(const SufficientStatisitcs &suffStats, const Configuration &cfg) const
+template<class TVMMDistribution>
+typename WeightedEMVonMisesFisherFactory< TVMMDistribution>::VMM WeightedEMVonMisesFisherFactory< TVMMDistribution>::VMMfromSufficientStatisitcs(const SufficientStatisitcs &suffStats, const Configuration &cfg) const
 {
 
     SufficientStatisitcs previousStats;
@@ -170,11 +206,12 @@ typename WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::VMM WeightedE
 }
 
 
-template<int VecSize, int maxComponents>
-void WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::fitMixture(VMM &vmm, size_t numComponents, SufficientStatisitcs &stats, const DirectionalSampleData* samples, const size_t numSamples, const Configuration &cfg, FittingStatistics &fitStats) const
+template<class TVMMDistribution>
+void WeightedEMVonMisesFisherFactory< TVMMDistribution>::fitMixture(VMM &vmm, size_t numComponents, SufficientStatisitcs &stats, const DirectionalSampleData* samples, const size_t numSamples, const Configuration &cfg, FittingStatistics &fitStats) const
 {
-    //VonMisesFisherFactory< VecSize, maxComponents>::InitUniformVMM( vmm, numComponents, 5.0f);
+    //VonMisesFisherFactory< TVMMDistribution>::InitUniformVMM( vmm, numComponents, 5.0f);
     this->InitUniformVMM( vmm, numComponents, 5.0f);
+    //RKGUIDE_ASSERT(vmm.isValid());
     //SufficientStatisitcs stats;
     stats.clear(numComponents);
     stats.isNormalized = true;
@@ -183,8 +220,8 @@ void WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::fitMixture(VMM &v
 
 }
 
-template<int VecSize, int maxComponents>
-void WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::updateMixture(VMM &vmm, SufficientStatisitcs &previousStats, const DirectionalSampleData* samples, const size_t numSamples, const Configuration &cfg, FittingStatistics &fitStats) const
+template<class TVMMDistribution>
+void WeightedEMVonMisesFisherFactory< TVMMDistribution>::updateMixture(VMM &vmm, SufficientStatisitcs &previousStats, const DirectionalSampleData* samples, const size_t numSamples, const Configuration &cfg, FittingStatistics &fitStats) const
 {
     SufficientStatisitcs currentStats;
     // clear will be called in weightedExpectationStep
@@ -220,8 +257,8 @@ void WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::updateMixture(VMM
     //td::cout << "converged:" <<  currentEMIteration << std::endl;
 }
 
-template<int VecSize, int maxComponents>
-void WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::partialUpdateMixture(VMM &vmm, const PartialFittingMask &mask, SufficientStatisitcs &previousStats, const DirectionalSampleData* samples, const size_t numSamples, const Configuration &cfg, FittingStatistics &fitStats) const
+template<class TVMMDistribution>
+void WeightedEMVonMisesFisherFactory< TVMMDistribution>::partialUpdateMixture(VMM &vmm, const PartialFittingMask &mask, SufficientStatisitcs &previousStats, const DirectionalSampleData* samples, const size_t numSamples, const Configuration &cfg, FittingStatistics &fitStats) const
 {
     SufficientStatisitcs currentStats;
     // clear will be called in weightedExpectationStep
@@ -257,10 +294,11 @@ void WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::partialUpdateMixt
 }
 
 
-template<int VecSize, int maxComponents>
-void WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::Configuration::serialize(std::ostream& stream) const
+template<class TVMMDistribution>
+void WeightedEMVonMisesFisherFactory< TVMMDistribution>::Configuration::serialize(std::ostream& stream) const
 {
-    stream.write(reinterpret_cast<const char*>(&maK), sizeof(size_t));
+    stream.write(reinterpret_cast<const char*>(&initK), sizeof(size_t));
+    stream.write(reinterpret_cast<const char*>(&maxK), sizeof(size_t));
     stream.write(reinterpret_cast<const char*>(&maxEMIterrations), sizeof(size_t));
 
     stream.write(reinterpret_cast<const char*>(&maxKappa), sizeof(float));
@@ -273,10 +311,11 @@ void WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::Configuration::se
     stream.write(reinterpret_cast<const char*>(&meanCosinePrior), sizeof(float));
 }
 
-template<int VecSize, int maxComponents>
-void WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::Configuration::deserialize(std::istream& stream)
+template<class TVMMDistribution>
+void WeightedEMVonMisesFisherFactory< TVMMDistribution>::Configuration::deserialize(std::istream& stream)
 {
-    stream.read(reinterpret_cast<char*>(&maK), sizeof(size_t));
+    stream.read(reinterpret_cast<char*>(&initK), sizeof(size_t));
+    stream.read(reinterpret_cast<char*>(&maxK), sizeof(size_t));
     stream.read(reinterpret_cast<char*>(&maxEMIterrations), sizeof(size_t));
 
     stream.read(reinterpret_cast<char*>(&maxKappa), sizeof(float));
@@ -289,92 +328,130 @@ void WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::Configuration::de
     stream.read(reinterpret_cast<char*>(&meanCosinePrior), sizeof(float));
 }
 
-template<int VecSize, int maxComponents>
-void WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::Configuration::init()
+template<class TVMMDistribution>
+void WeightedEMVonMisesFisherFactory< TVMMDistribution>::Configuration::init()
 {
     maxMeanCosine  = KappaToMeanCosine<float>(maxKappa);
 }
 
-template<int VecSize, int maxComponents>
-std::string WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::Configuration::toString() const
+template<class TVMMDistribution>
+std::string WeightedEMVonMisesFisherFactory< TVMMDistribution>::Configuration::toString() const
 {
     std::stringstream ss;
     ss << "Configuration:" << std::endl;
-    ss << "\tmaxComponents:" << maxComponents << std::endl;
-    ss << "\tmaxEMIterrations:" << maxEMIterrations << std::endl;
-    ss << "\tmaxKappa:" << maxKappa << std::endl;
-    ss << "\tmaxMeanCosine:" << maxMeanCosine << std::endl;
-    ss << "\tconvergenceThreshold:" << convergenceThreshold << std::endl;
-    ss << "\tweightPrior:" << weightPrior << std::endl;
-    ss << "\tmeanCosinePriorStrength:" << meanCosinePriorStrength << std::endl;
-    ss << "\tmeanCosinePrior:" << meanCosinePrior << std::endl;
+    ss << "\tinitComponent = " << initK << std::endl;
+    ss << "\tmaxComponents = " << maxK << std::endl;
+    ss << "\tinitNumComponents = " << initK << std::endl;
+    ss << "\tmaxEMIterrations = " << maxEMIterrations << std::endl;
+    ss << "\tmaxKappa = " << maxKappa << std::endl;
+    ss << "\tmaxMeanCosine = " << maxMeanCosine << std::endl;
+    ss << "\tconvergenceThreshold = " << convergenceThreshold << std::endl;
+    ss << "\tweightPrior = " << weightPrior << std::endl;
+    ss << "\tmeanCosinePriorStrength = " << meanCosinePriorStrength << std::endl;
+    ss << "\tmeanCosinePrior = " << meanCosinePrior << std::endl;
     return ss.str();
-}
+ }
 
-template<int VecSize, int maxComponents>
-void WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::PartialFittingMask::resetToFalse()
+template<class TVMMDistribution>
+void WeightedEMVonMisesFisherFactory< TVMMDistribution>::PartialFittingMask::resetToFalse()
 {
-    const vbool<VecSize> vFalse(false);
-    for (size_t k = 0; k < ( (maxComponents + (VecSize -1)) / VecSize); k++)
+    const vbool<VMM::VectorSize> vFalse(false);
+    for (size_t k = 0; k < ( (VMM::MaxComponents + (VMM::VectorSize -1)) / VMM::VectorSize); k++)
     {
         mask[k] = vFalse;
     }
 }
 
-template<int VecSize, int maxComponents>
-void WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::PartialFittingMask::resetToTrue(const size_t &numComponents)
+template<class TVMMDistribution>
+void WeightedEMVonMisesFisherFactory< TVMMDistribution>::PartialFittingMask::resetToTrue(const size_t &numComponents)
 {
-    const vbool<VecSize> vTrue(true);
-    const int cnt = (numComponents+VecSize-1) / VecSize;
+    const vbool<VMM::VectorSize> vTrue(true);
+    const int cnt = (numComponents+VMM::VectorSize-1) / VMM::VectorSize;
     for (size_t k = 0; k < cnt; k++)
     {
         mask[k] = vTrue;
     }
 
-    const div_t tmp = div( numComponents, VecSize);
-    for (size_t k = tmp.rem; k < VecSize; k++)
+    const div_t tmp = div( numComponents, VMM::VectorSize);
+    for (size_t k = tmp.rem; k < VMM::VectorSize; k++)
     {
         clear(mask[tmp.quot], k);
     }
 }
 
-template<int VecSize, int maxComponents>
-void WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::PartialFittingMask::setToTrue(const size_t &idx)
+template<class TVMMDistribution>
+void WeightedEMVonMisesFisherFactory< TVMMDistribution>::PartialFittingMask::setToTrue(const size_t &idx)
 {
     //std::cout << "setToTrue: " << idx << std::endl;
-    const div_t tmp = div( idx, VecSize);
+    const div_t tmp = div( idx, VMM::VectorSize);
     set(mask[tmp.quot], tmp.rem);
     //std::cout << mask[tmp.quot]<< "\t"<< tmp.quot << "\t"<< tmp.rem <<  std::endl;
 }
 
-template<int VecSize, int maxComponents>
-void WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::PartialFittingMask::setToFalse(const size_t &idx)
+template<class TVMMDistribution>
+void WeightedEMVonMisesFisherFactory< TVMMDistribution>::PartialFittingMask::setToFalse(const size_t &idx)
 {
     //std::cout << "setToFalse: " << idx << std::endl;
-    const div_t tmp = div( idx, VecSize);
+    const div_t tmp = div( idx, VMM::VectorSize);
     clear(mask[tmp.quot], tmp.rem);
     //std::cout << mask[tmp.quot]<< "\t"<< tmp.quot << "\t"<< tmp.rem <<  std::endl;
 }
 
 
-template<int VecSize, int maxComponents>
-std::string WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::PartialFittingMask::toString() const
+template<class TVMMDistribution>
+std::string WeightedEMVonMisesFisherFactory< TVMMDistribution>::PartialFittingMask::toString() const
 {
     std::stringstream ss;
         ss << "PartialFittingMask:" << std::endl;
-        for (size_t k = 0; k < maxComponents; k++)
+        for (size_t k = 0; k < VMM::MaxComponents; k++)
         {
-            const div_t tmp = div( k, VecSize);
+            const div_t tmp = div( k, VMM::VectorSize);
             ss << "mask[" << k << "]: " << mask[tmp.quot][tmp.rem] << std::endl;
         }
     return ss.str();
 }
 
 
-template<int VecSize, int maxComponents>
-void WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::SufficientStatisitcs::decay(const float &alpha)
+template<class TVMMDistribution>
+bool WeightedEMVonMisesFisherFactory< TVMMDistribution>::SufficientStatisitcs::isValid() const
 {
-    for (size_t k = 0; k < ( (maxComponents + (VecSize -1)) / VecSize); k++)
+
+    bool valid = true;
+    for(size_t k = 0; k < numComponents; k++)
+    {
+        const div_t tmpK = div( k, VMM::VectorSize );
+        valid &= isvalid(sumOfWeightedDirections[tmpK.quot].x[tmpK.rem]);
+        //valid &= sumOfWeightedDirections[tmpK.quot][tmpK.rem] >= 0.0f;
+        RKGUIDE_ASSERT(valid);
+
+        valid &= isvalid(sumOfWeightedDirections[tmpK.quot].y[tmpK.rem]);
+        //valid &= sumOfWeightedDirections[tmpK.quot][tmpK.rem] >= 0.0f;
+        RKGUIDE_ASSERT(valid);
+
+        valid &= isvalid(sumOfWeightedDirections[tmpK.quot].z[tmpK.rem]);
+        //valid &= sumOfWeightedDirections[tmpK.quot][tmpK.rem] >= 0.0f;
+        RKGUIDE_ASSERT(valid);
+
+        valid &= isvalid(sumOfWeightedStats[tmpK.quot][tmpK.rem]);
+        valid &= sumOfWeightedStats[tmpK.quot][tmpK.rem] >= 0.0f;
+        RKGUIDE_ASSERT(valid);
+    }
+
+    valid &= isvalid(numSamples);
+    valid &= numSamples >= 0.0f;
+    RKGUIDE_ASSERT(valid);
+
+    valid &= isvalid(sumWeights);
+    valid &= sumWeights >= 0.0f;
+    RKGUIDE_ASSERT(valid);
+
+    return valid;
+}
+
+template<class TVMMDistribution>
+void WeightedEMVonMisesFisherFactory< TVMMDistribution>::SufficientStatisitcs::decay(const float &alpha)
+{
+    for (size_t k = 0; k < ( (VMM::MaxComponents + (VMM::VectorSize -1)) / VMM::VectorSize); k++)
     {
         sumOfWeightedDirections[k].x *= alpha;
         sumOfWeightedDirections[k].y *= alpha;
@@ -386,12 +463,12 @@ void WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::SufficientStatisi
     sumWeights *= alpha;
 
 }
-template<int VecSize, int maxComponents>
-void WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::SufficientStatisitcs::maskedReplace(const PartialFittingMask &mask, const SufficientStatisitcs &stats){
+template<class TVMMDistribution>
+void WeightedEMVonMisesFisherFactory< TVMMDistribution>::SufficientStatisitcs::maskedReplace(const PartialFittingMask &mask, const SufficientStatisitcs &stats){
 
-    vfloat<VecSize> newSumWeights {0.0f};
+    vfloat<VMM::VectorSize> newSumWeights {0.0f};
 
-    for (size_t k = 0; k < ( (maxComponents + (VecSize -1)) / VecSize); k++)
+    for (size_t k = 0; k < ( (VMM::MaxComponents + (VMM::VectorSize -1)) / VMM::VectorSize); k++)
     {
         sumOfWeightedDirections[k] = select(mask.mask[k], stats.sumOfWeightedDirections[k], sumOfWeightedDirections[k]);
         sumOfWeightedStats[k] =  select(mask.mask[k], stats.sumOfWeightedStats[k], sumOfWeightedStats[k]);
@@ -408,10 +485,10 @@ void WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::SufficientStatisi
 }
 
 
-template<int VecSize, int maxComponents>
-WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::SufficientStatisitcs::SufficientStatisitcs(const SufficientStatisitcs &a)
+template<class TVMMDistribution>
+WeightedEMVonMisesFisherFactory< TVMMDistribution>::SufficientStatisitcs::SufficientStatisitcs(const SufficientStatisitcs &a)
 {
-    for (size_t k = 0; k < ( (maxComponents + (VecSize -1)) / VecSize); k++)
+    for (size_t k = 0; k < ( (VMM::MaxComponents + (VMM::VectorSize -1)) / VMM::VectorSize); k++)
     {
         sumOfWeightedDirections[k]= a.sumOfWeightedDirections[k];
         sumOfWeightedStats[k]=  a.sumOfWeightedStats[k];
@@ -423,12 +500,12 @@ WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::SufficientStatisitcs::
     overallNumSamples = a.overallNumSamples;
 }
 
-template<int VecSize, int maxComponents>
-void WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::SufficientStatisitcs::serialize(std::ostream& stream) const
+template<class TVMMDistribution>
+void WeightedEMVonMisesFisherFactory< TVMMDistribution>::SufficientStatisitcs::serialize(std::ostream& stream) const
 {
-    for(uint32_t k=0;k<NumVectors::value;k++){
-        stream.write(reinterpret_cast<const char*>(&sumOfWeightedDirections[k]), sizeof(embree::Vec3< vfloat<VecSize> >));
-        stream.write(reinterpret_cast<const char*>(&sumOfWeightedStats[k]), sizeof(vfloat<VecSize>));
+    for(uint32_t k=0;k<VMM::NumVectors;k++){
+        stream.write(reinterpret_cast<const char*>(&sumOfWeightedDirections[k]), sizeof(embree::Vec3< vfloat<VMM::VectorSize> >));
+        stream.write(reinterpret_cast<const char*>(&sumOfWeightedStats[k]), sizeof(vfloat<VMM::VectorSize>));
     }
     stream.write(reinterpret_cast<const char*>(&numSamples), sizeof(float));
     stream.write(reinterpret_cast<const char*>(&numSamples), sizeof(float));
@@ -437,12 +514,12 @@ void WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::SufficientStatisi
     stream.write(reinterpret_cast<const char*>(&isNormalized), sizeof(bool));
 }
 
-template<int VecSize, int maxComponents>
-void WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::SufficientStatisitcs::deserialize(std::istream& stream)
+template<class TVMMDistribution>
+void WeightedEMVonMisesFisherFactory< TVMMDistribution>::SufficientStatisitcs::deserialize(std::istream& stream)
 {
-    for(uint32_t k=0;k<NumVectors::value;k++){
-        stream.read(reinterpret_cast<char*>(&sumOfWeightedDirections[k]), sizeof(embree::Vec3< vfloat<VecSize> >));
-        stream.read(reinterpret_cast<char*>(&sumOfWeightedStats[k]), sizeof(vfloat<VecSize>));
+    for(uint32_t k=0;k<VMM::NumVectors;k++){
+        stream.read(reinterpret_cast<char*>(&sumOfWeightedDirections[k]), sizeof(embree::Vec3< vfloat<VMM::VectorSize> >));
+        stream.read(reinterpret_cast<char*>(&sumOfWeightedStats[k]), sizeof(vfloat<VMM::VectorSize>));
     }
     stream.read(reinterpret_cast<char*>(&numSamples), sizeof(float));
     stream.read(reinterpret_cast<char*>(&numSamples), sizeof(float));
@@ -451,11 +528,11 @@ void WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::SufficientStatisi
     stream.read(reinterpret_cast<char*>(&isNormalized), sizeof(bool));
 }
 
-template<int VecSize, int maxComponents>
-void WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::SufficientStatisitcs::swapComponentStats(const size_t &idx0, const size_t &idx1)
+template<class TVMMDistribution>
+void WeightedEMVonMisesFisherFactory< TVMMDistribution>::SufficientStatisitcs::swapComponentStats(const size_t &idx0, const size_t &idx1)
 {
-    const div_t tmpIdx0 = div( idx0, VecSize);
-    const div_t tmpIdx1 = div( idx1, VecSize);
+    const div_t tmpIdx0 = div( idx0, VMM::VectorSize);
+    const div_t tmpIdx1 = div( idx1, VMM::VectorSize);
 
     std::swap(sumOfWeightedDirections[tmpIdx0.quot].x[tmpIdx0.rem], sumOfWeightedDirections[tmpIdx1.quot].x[tmpIdx1.rem]);
     std::swap(sumOfWeightedDirections[tmpIdx0.quot].y[tmpIdx0.rem], sumOfWeightedDirections[tmpIdx1.quot].y[tmpIdx1.rem]);
@@ -464,12 +541,12 @@ void WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::SufficientStatisi
 
 }
 
-template<int VecSize, int maxComponents>
-void WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::SufficientStatisitcs::mergeComponentStats(const size_t &idx0, const size_t &idx1)
+template<class TVMMDistribution>
+void WeightedEMVonMisesFisherFactory< TVMMDistribution>::SufficientStatisitcs::mergeComponentStats(const size_t &idx0, const size_t &idx1)
 {
-    const div_t tmpIdx0 = div( idx0, VecSize);
-    const div_t tmpIdx1 = div( idx1, VecSize);
-    const div_t tmpIdx2 = div( numComponents-1, VecSize);
+    const div_t tmpIdx0 = div( idx0, VMM::VectorSize);
+    const div_t tmpIdx1 = div( idx1, VMM::VectorSize);
+    const div_t tmpIdx2 = div( numComponents-1, VMM::VectorSize);
 
     // merging the statistics of the component 0 and 1
     sumOfWeightedDirections[tmpIdx0.quot].x[tmpIdx0.rem] += sumOfWeightedDirections[tmpIdx1.quot].x[tmpIdx1.rem];
@@ -492,14 +569,48 @@ void WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::SufficientStatisi
     numComponents--;
 }
 
-template<int VecSize, int maxComponents>
-void WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::SufficientStatisitcs::clear(size_t _numComponents)
+template<class TVMMDistribution>
+void WeightedEMVonMisesFisherFactory< TVMMDistribution>::SufficientStatisitcs::splitComponentsStats(const size_t &idx0, const size_t &idx1,
+                const Vector3 &meanDirection0, const Vector3 &meanDirection1,
+                const float &meanCosine0, const float &meanCosine1)
 {
-    const embree::Vec3< vfloat<VecSize> > vecZeros(0.0f);
-    const vfloat<VecSize> zeros(0.0f);
+    //RKGUIDE_ASSERT(meanCosine0 > 0.f && meanCosine0 <= 1.0f);
+    //RKGUIDE_ASSERT(meanCosine1 > 0.f && meanCosine1 <= 1.0f);
+
+    const div_t tmpI = div(idx0, static_cast<int>(VMM::VectorSize));
+    const div_t tmpJ = div(idx1, static_cast<int>(VMM::VectorSize));
+
+    float sumStatsWeight = sumOfWeightedStats[tmpI.quot][tmpI.rem];
+    sumStatsWeight /= 2.0f;
+
+    RKGUIDE_ASSERT(sumStatsWeight > 0.f);
+
+    sumOfWeightedStats[tmpI.quot][tmpI.rem] = sumStatsWeight;
+    sumOfWeightedDirections[tmpI.quot].x[tmpI.rem] = meanDirection0.x * meanCosine0 * sumStatsWeight;
+    sumOfWeightedDirections[tmpI.quot].y[tmpI.rem] = meanDirection0.y * meanCosine0 * sumStatsWeight;
+    sumOfWeightedDirections[tmpI.quot].z[tmpI.rem] = meanDirection0.z * meanCosine0 * sumStatsWeight;
+
+    sumOfWeightedStats[tmpJ.quot][tmpJ.rem] = sumStatsWeight;
+    sumOfWeightedDirections[tmpJ.quot].x[tmpJ.rem] = meanDirection1.x * meanCosine1 * sumStatsWeight;
+    sumOfWeightedDirections[tmpJ.quot].y[tmpJ.rem] = meanDirection1.y * meanCosine1 * sumStatsWeight;
+    sumOfWeightedDirections[tmpJ.quot].z[tmpJ.rem] = meanDirection1.z * meanCosine1 * sumStatsWeight;
+    numComponents += 1;
+
+    RKGUIDE_ASSERT(!std::isnan(sumOfWeightedDirections[tmpI.quot].x[tmpI.rem]) && std::isfinite(sumOfWeightedDirections[tmpI.quot].x[tmpI.rem]));
+    RKGUIDE_ASSERT(!std::isnan(sumOfWeightedDirections[tmpI.quot].y[tmpI.rem]) && std::isfinite(sumOfWeightedDirections[tmpI.quot].y[tmpI.rem]));
+    RKGUIDE_ASSERT(!std::isnan(sumOfWeightedDirections[tmpI.quot].z[tmpI.rem]) && std::isfinite(sumOfWeightedDirections[tmpI.quot].z[tmpI.rem]));
+
+}
+
+
+template<class TVMMDistribution>
+void WeightedEMVonMisesFisherFactory< TVMMDistribution>::SufficientStatisitcs::clear(size_t _numComponents)
+{
+    const embree::Vec3< vfloat<VMM::VectorSize> > vecZeros(0.0f);
+    const vfloat<VMM::VectorSize> zeros(0.0f);
 
     numComponents = _numComponents;
-    const int cnt = (numComponents+VecSize-1) / VecSize;
+    const int cnt = (numComponents+VMM::VectorSize-1) / VMM::VectorSize;
 
     for(int k = 0; k < cnt;k++)
     {
@@ -512,25 +623,25 @@ void WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::SufficientStatisi
     isNormalized = false;
 }
 
-template<int VecSize, int maxComponents>
-void WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::SufficientStatisitcs::clearAll()
+template<class TVMMDistribution>
+void WeightedEMVonMisesFisherFactory< TVMMDistribution>::SufficientStatisitcs::clearAll()
 {
-     clear(maxComponents);
+     clear(VMM::MaxComponents);
 }
 
-template<int VecSize, int maxComponents>
-void WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::SufficientStatisitcs::normalize( const float &_numSamples )
+template<class TVMMDistribution>
+void WeightedEMVonMisesFisherFactory< TVMMDistribution>::SufficientStatisitcs::normalize( const float &_numSamples )
 {
-    const int cnt = (numComponents+VecSize-1) / VecSize;
+    const int cnt = (numComponents+VMM::VectorSize-1) / VMM::VectorSize;
     numSamples = _numSamples;
-    vfloat<VecSize> sumWeightedStatsVec(0.0f);
+    vfloat<VMM::VectorSize> sumWeightedStatsVec(0.0f);
 
     for(int k = 0; k < cnt;k++)
     {
         sumWeightedStatsVec += sumOfWeightedStats[k];
     }
     sumWeights = reduce_add(sumWeightedStatsVec);
-    vfloat<VecSize> norm ( _numSamples / sumWeights );
+    vfloat<VMM::VectorSize> norm ( _numSamples / sumWeights );
 
     for(int k = 0; k < cnt;k++)
     {
@@ -540,13 +651,13 @@ void WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::SufficientStatisi
     isNormalized = true;
 }
 
-template<int VecSize, int maxComponents>
-typename WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::SufficientStatisitcs& WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::SufficientStatisitcs::operator+=(const WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::SufficientStatisitcs &stats)
+template<class TVMMDistribution>
+typename WeightedEMVonMisesFisherFactory< TVMMDistribution>::SufficientStatisitcs& WeightedEMVonMisesFisherFactory< TVMMDistribution>::SufficientStatisitcs::operator+=(const WeightedEMVonMisesFisherFactory< TVMMDistribution>::SufficientStatisitcs &stats)
 {
 
     // TODO: chaeck for normalization
 
-    const int cnt = (numComponents+VecSize-1) / VecSize;
+    const int cnt = (numComponents+VMM::VectorSize-1) / VMM::VectorSize;
 
     this->sumWeights += stats.sumWeights;
     this->numSamples += stats.numSamples;
@@ -560,8 +671,8 @@ typename WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::SufficientSta
     return *this;
 }
 
-template<int VecSize, int maxComponents>
-std::string WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::SufficientStatisitcs::toString() const
+template<class TVMMDistribution>
+std::string WeightedEMVonMisesFisherFactory< TVMMDistribution>::SufficientStatisitcs::toString() const
 {
     std::stringstream ss;
     ss << "SufficientStatisitcs:" << std::endl;
@@ -572,8 +683,8 @@ std::string WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::Sufficient
     ss << "\tisNormalized:" << isNormalized << std::endl;
     for (size_t k = 0; k < numComponents ; k++)
     {
-        int i = k / VecSize;
-        int j = k % VecSize;
+        int i = k / VMM::VectorSize;
+        int j = k % VMM::VectorSize;
         ss  << "\tstat["<< k <<"]:" << "\tsumWeightedStats: " << sumOfWeightedStats[i][j]
             << "\tsumWeightedDirections: [" << sumOfWeightedDirections[i].x[j] << ",\t"
             << sumOfWeightedDirections[i].y[j] << ",\t" << sumOfWeightedDirections[i].z[j] << "]"
@@ -582,8 +693,8 @@ std::string WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::Sufficient
     return ss.str();
 }
 
-template<int VecSize, int maxComponents>
-float WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::weightedExpectationStep(VMM &vmm,
+template<class TVMMDistribution>
+float WeightedEMVonMisesFisherFactory< TVMMDistribution>::weightedExpectationStep(VMM &vmm,
         SufficientStatisitcs &stats,
         const DirectionalSampleData* samples,
         const size_t numSamples) const
@@ -593,7 +704,7 @@ float WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::weightedExpectat
     stats.numComponents = vmm._numComponents;
     stats.numSamples = numSamples;
 
-    const int cnt = (stats.numComponents+VecSize-1) / VecSize;
+    const int cnt = (stats.numComponents+VMM::VectorSize-1) / VMM::VectorSize;
 
     float summedWeightedLogLikelihood {0.f};
 
@@ -602,9 +713,10 @@ float WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::weightedExpectat
     for (size_t n = 0; n < numSamples; n++ )
     {
         const DirectionalSampleData sampleData = samples[n];
-        const vfloat<VecSize> sampleWeight = sampleData.weight;
-        const embree::Vec3< vfloat<VecSize> > sampleDirection( sampleData.direction[0], sampleData.direction[1], sampleData.direction[2] );
+        const vfloat<VMM::VectorSize> sampleWeight = sampleData.weight;
+        const embree::Vec3< vfloat<VMM::VectorSize> > sampleDirection( sampleData.direction[0], sampleData.direction[1], sampleData.direction[2] );
 
+        // check if the samples is covered by any of the components
         if ( !vmm.softAssignment( sampleData.direction, softAssign) )
         {
             std::cout << "continue" << std::endl;
@@ -625,81 +737,81 @@ float WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::weightedExpectat
     return summedWeightedLogLikelihood;
 }
 
-template<int VecSize, int maxComponents>
-void WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::estimateMAPWeights( VMM &vmm,
+template<class TVMMDistribution>
+void WeightedEMVonMisesFisherFactory< TVMMDistribution>::estimateMAPWeights( VMM &vmm,
         const SufficientStatisitcs &currentStats,
         const SufficientStatisitcs &previousStats,
         const float &_weightPrior ) const
 {
-    const int cnt = (vmm._numComponents+VecSize-1) / VecSize;
+    const int cnt = (vmm._numComponents+VMM::VectorSize-1) / VMM::VectorSize;
 
     const size_t numComponents = vmm._numComponents;
 
-    const vfloat<VecSize> weightPrior(_weightPrior);
+    const vfloat<VMM::VectorSize> weightPrior(_weightPrior);
 
-    const vfloat<VecSize> numSamples = currentStats.numSamples + previousStats.numSamples;
-    //const vfloat<VecSize> numSamples = currentStats.numSamples + previousStats.overallNumSamples;
+    const vfloat<VMM::VectorSize> numSamples = currentStats.numSamples + previousStats.numSamples;
+    //const vfloat<VMM::VectorSize> numSamples = currentStats.numSamples + previousStats.overallNumSamples;
 
     for ( size_t k = 0; k < cnt; k ++ )
     {
         //_sumWeights += currentStats.sumOfWeightedStats[k];
-        vfloat<VecSize>  weight = ( currentStats.sumOfWeightedStats[k] + previousStats.sumOfWeightedStats[k] ) ;
+        vfloat<VMM::VectorSize>  weight = ( currentStats.sumOfWeightedStats[k] + previousStats.sumOfWeightedStats[k] ) ;
         weight = ( weightPrior + ( weight ) ) / (( weightPrior * numComponents ) + numSamples );
-        //vfloat<VecSize>  weight = ( currentStats.sumOfWeightedStats[k]/* + previousStats.sumOfWeightedStats[k]*/ ) / ( sumWeights );
+        //vfloat<VMM::VectorSize>  weight = ( currentStats.sumOfWeightedStats[k]/* + previousStats.sumOfWeightedStats[k]*/ ) / ( sumWeights );
         //weight = ( weightPrior + ( weight * numSamples ) ) / (( weightPrior * numComponents ) + numSamples );
         vmm._weights[k] = weight;
     }
 
     // TODO: find better more efficient way
-    if ( vmm._numComponents % VecSize > 0 )
+    if ( vmm._numComponents % VMM::VectorSize > 0 )
     {
-            for (size_t i = vmm._numComponents % VecSize; i < VecSize; i++ )
+            for (size_t i = vmm._numComponents % VMM::VectorSize; i < VMM::VectorSize; i++ )
             {
                 vmm._weights[cnt-1][i] = 0.0f;
             }
     }
 }
 
-template<int VecSize, int maxComponents>
-void WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::estimateMAPMeanDirectionAndConcentration( VMM &vmm,
+template<class TVMMDistribution>
+void WeightedEMVonMisesFisherFactory< TVMMDistribution>::estimateMAPMeanDirectionAndConcentration( VMM &vmm,
         const SufficientStatisitcs &currentStats,
         const SufficientStatisitcs &previousStats ,
         const Configuration &cfg) const
 {
-    const vfloat<VecSize> currentNumSamples = currentStats.numSamples;
-    const vfloat<VecSize> previousNumSamples = previousStats.numSamples;
-    const vfloat<VecSize> numSamples = currentNumSamples + previousNumSamples;
-    const vfloat<VecSize> overallNumSamples = currentStats.numSamples + previousStats.overallNumSamples;
+    const vfloat<VMM::VectorSize> currentNumSamples = currentStats.numSamples;
+    const vfloat<VMM::VectorSize> previousNumSamples = previousStats.numSamples;
+    const vfloat<VMM::VectorSize> numSamples = currentNumSamples + previousNumSamples;
+    const vfloat<VMM::VectorSize> overallNumSamples = currentStats.numSamples + previousStats.overallNumSamples;
 
 
-    const vfloat<VecSize> currentEstimationWeight = currentNumSamples / numSamples;
-    const vfloat<VecSize> previousEstimationWeight = 1.0f - currentEstimationWeight;
+    const vfloat<VMM::VectorSize> currentEstimationWeight = currentNumSamples / numSamples;
+    const vfloat<VMM::VectorSize> previousEstimationWeight = 1.0f - currentEstimationWeight;
 
-    const vfloat<VecSize> meanCosinePrior = cfg.meanCosinePrior;
-    const vfloat<VecSize> meanCosinePriorStrength = cfg.meanCosinePriorStrength;
-    const vfloat<VecSize> maxMeanCosine = cfg.maxMeanCosine;
-    const int cnt = (vmm._numComponents+VecSize-1) / VecSize;
-    const int rem = vmm._numComponents % VecSize;
+    const vfloat<VMM::VectorSize> meanCosinePrior = cfg.meanCosinePrior;
+    const vfloat<VMM::VectorSize> meanCosinePriorStrength = cfg.meanCosinePriorStrength;
+    const vfloat<VMM::VectorSize> maxMeanCosine = cfg.maxMeanCosine;
+    const int cnt = (vmm._numComponents+VMM::VectorSize-1) / VMM::VectorSize;
+    const int rem = vmm._numComponents % VMM::VectorSize;
 
     for (size_t k = 0; k < cnt; k ++)
     {
-        //const vfloat<VecSize> partialNumSamples = vmm._weights[k] * numSamples;
-        const vfloat<VecSize> partialNumSamples = vmm._weights[k] * overallNumSamples;
-        embree::Vec3< vfloat<VecSize> > currentMeanDirection;
+        //const vfloat<VMM::VectorSize> partialNumSamples = vmm._weights[k] * numSamples;
+        const vfloat<VMM::VectorSize> partialNumSamples = vmm._weights[k] * overallNumSamples;
+        embree::Vec3< vfloat<VMM::VectorSize> > currentMeanDirection;
         currentMeanDirection.x = select(currentStats.sumOfWeightedStats[k] > 0.0f, currentStats.sumOfWeightedDirections[k].x / currentStats.sumOfWeightedStats[k], 0.0f);
         currentMeanDirection.y = select(currentStats.sumOfWeightedStats[k] > 0.0f, currentStats.sumOfWeightedDirections[k].y / currentStats.sumOfWeightedStats[k], 0.0f);
         currentMeanDirection.z = select(currentStats.sumOfWeightedStats[k] > 0.0f, currentStats.sumOfWeightedDirections[k].z / currentStats.sumOfWeightedStats[k], 0.0f);
 
         // TODO: find a better design to precompute the previousMeanDirection
-        embree::Vec3< vfloat<VecSize> > previousMeanDirection;
+        embree::Vec3< vfloat<VMM::VectorSize> > previousMeanDirection;
         previousMeanDirection.x = select(previousStats.sumOfWeightedStats[k] > 0.0f, previousStats.sumOfWeightedDirections[k].x / previousStats.sumOfWeightedStats[k], 0.0f);
         previousMeanDirection.y = select(previousStats.sumOfWeightedStats[k] > 0.0f, previousStats.sumOfWeightedDirections[k].y / previousStats.sumOfWeightedStats[k], 0.0f);
         previousMeanDirection.z = select(previousStats.sumOfWeightedStats[k] > 0.0f, previousStats.sumOfWeightedDirections[k].z / previousStats.sumOfWeightedStats[k], 0.0f);
 
-        embree::Vec3< vfloat<VecSize> > meanDirection =  currentMeanDirection * currentEstimationWeight
+        embree::Vec3< vfloat<VMM::VectorSize> > meanDirection =  currentMeanDirection * currentEstimationWeight
             + previousMeanDirection * previousEstimationWeight;
 
-        vfloat<VecSize> meanCosine = length(meanDirection);
+        vfloat<VMM::VectorSize> meanCosine = length(meanDirection);
 
         vmm._meanDirections[k].x = select(meanCosine > 0.0f, meanDirection.x / meanCosine, vmm._meanDirections[k].x);
         vmm._meanDirections[k].y = select(meanCosine > 0.0f, meanDirection.y / meanCosine, vmm._meanDirections[k].y);
@@ -709,28 +821,31 @@ void WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::estimateMAPMeanDi
 
         meanCosine = embree::min( maxMeanCosine, meanCosine );
         vmm._meanCosines[k] = meanCosine;
-        vmm._kappas[k] = MeanCosineToKappa< vfloat<VecSize> >( meanCosine );
+        vmm._kappas[k] = MeanCosineToKappa< vfloat<VMM::VectorSize> >( meanCosine );
     }
 
     // TODO: find better more efficient way
     if ( rem > 0 )
     {
-        for ( size_t i = rem; i < VecSize; i++)
+        for ( size_t i = rem; i < VMM::VectorSize; i++)
         {
             vmm._meanDirections[cnt-1].x[i] = 0.0f;
             vmm._meanDirections[cnt-1].y[i] = 0.0f;
             vmm._meanDirections[cnt-1].z[i] = 1.0f;
 
             vmm._meanCosines[cnt-1][i] = 0.0f;
-            vmm._kappas[cnt-1][i] = 0.0;
+            vmm._kappas[cnt-1][i] = 0.0f;
+
+            vmm._normalizations[cnt-1][i] = 1.0f/(4.0f*M_PI);
+            vmm._eMinus2Kappa[cnt-1][i] = 1.0f;
         }
     }
 
     vmm._calculateNormalization();
 }
 
-template<int VecSize, int maxComponents>
-void WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::weightedMaximumAPosteriorStep(VMM &vmm,
+template<class TVMMDistribution>
+void WeightedEMVonMisesFisherFactory< TVMMDistribution>::weightedMaximumAPosteriorStep(VMM &vmm,
         const SufficientStatisitcs &currentStats,
         const SufficientStatisitcs &previousStats,
         const Configuration &cfg) const
@@ -742,8 +857,8 @@ void WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::weightedMaximumAP
     estimateMAPMeanDirectionAndConcentration( vmm, currentStats, previousStats, cfg);
 }
 
-template<int VecSize, int maxComponents>
-void WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::partialWeightedMaximumAPosteriorStep(VMM &vmm,
+template<class TVMMDistribution>
+void WeightedEMVonMisesFisherFactory< TVMMDistribution>::partialWeightedMaximumAPosteriorStep(VMM &vmm,
         const PartialFittingMask &mask,
         SufficientStatisitcs &currentStats,
         SufficientStatisitcs &previousStats,
@@ -757,32 +872,32 @@ void WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::partialWeightedMa
 }
 
 
-template<int VecSize, int maxComponents>
-void WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::estimatePartialMAPWeights( VMM &vmm,
+template<class TVMMDistribution>
+void WeightedEMVonMisesFisherFactory< TVMMDistribution>::estimatePartialMAPWeights( VMM &vmm,
         const PartialFittingMask &mask,
         SufficientStatisitcs &currentStats,
         SufficientStatisitcs &previousStats,
         const float &_weightPrior ) const
 {
-    const vfloat<VecSize> zeros(0.0f);
-    const int cnt = (vmm._numComponents+VecSize-1) / VecSize;
+    const vfloat<VMM::VectorSize> zeros(0.0f);
+    const int cnt = (vmm._numComponents+VMM::VectorSize-1) / VMM::VectorSize;
 
     const size_t numComponents = vmm._numComponents;
 
-    const vfloat<VecSize> weightPrior(_weightPrior);
+    const vfloat<VMM::VectorSize> weightPrior(_weightPrior);
 
-    const vfloat<VecSize> numSamples = currentStats.numSamples + previousStats.numSamples;
-    //const vfloat<VecSize> numSamples = currentStats.numSamples + previousStats.overallNumSamples;
+    const vfloat<VMM::VectorSize> numSamples = currentStats.numSamples + previousStats.numSamples;
+    //const vfloat<VMM::VectorSize> numSamples = currentStats.numSamples + previousStats.overallNumSamples;
 
-    vfloat<VecSize> sumWeights(0.0f);
-    vfloat<VecSize> sumPartialWeights(0.0f);
+    vfloat<VMM::VectorSize> sumWeights(0.0f);
+    vfloat<VMM::VectorSize> sumPartialWeights(0.0f);
 
     for ( size_t k = 0; k < cnt; k ++ )
     {
         //_sumWeights += currentStats.sumOfWeightedStats[k];
-        vfloat<VecSize>  weight = ( currentStats.sumOfWeightedStats[k] + previousStats.sumOfWeightedStats[k] ) ;
+        vfloat<VMM::VectorSize>  weight = ( currentStats.sumOfWeightedStats[k] + previousStats.sumOfWeightedStats[k] ) ;
         weight = ( weightPrior + ( weight ) ) / (( weightPrior * numComponents ) + numSamples );
-        //vfloat<VecSize>  weight = ( currentStats.sumOfWeightedStats[k]/* + previousStats.sumOfWeightedStats[k]*/ ) / ( sumWeights );
+        //vfloat<VMM::VectorSize>  weight = ( currentStats.sumOfWeightedStats[k]/* + previousStats.sumOfWeightedStats[k]*/ ) / ( sumWeights );
         //weight = ( weightPrior + ( weight * numSamples ) ) / (( weightPrior * numComponents ) + numSamples );
 
         sumPartialWeights += select(mask.mask[k], weight, zeros);
@@ -791,7 +906,7 @@ void WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::estimatePartialMA
         vmm._weights[k] =select(mask.mask[k], weight,  vmm._weights[k]);
     }
 
-    vfloat<VecSize> inv_sumPartialWeights = 1.0f / reduce_add(sumPartialWeights);
+    vfloat<VMM::VectorSize> inv_sumPartialWeights = 1.0f / reduce_add(sumPartialWeights);
     inv_sumPartialWeights *= 1.0f - reduce_add(sumWeights);
     for ( size_t k = 0; k < cnt; k ++ )
     {
@@ -799,56 +914,56 @@ void WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::estimatePartialMA
     }
 
     // TODO: find better more efficient way
-    if ( vmm._numComponents % VecSize > 0 )
+    if ( vmm._numComponents % VMM::VectorSize > 0 )
     {
-            for (size_t i = vmm._numComponents % VecSize; i < VecSize; i++ )
+            for (size_t i = vmm._numComponents % VMM::VectorSize; i < VMM::VectorSize; i++ )
             {
                 vmm._weights[cnt-1][i] = 0.0f;
             }
     }
 }
 
-template<int VecSize, int maxComponents>
-void WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::estimatePartialMAPMeanDirectionAndConcentration( VMM &vmm,
+template<class TVMMDistribution>
+void WeightedEMVonMisesFisherFactory< TVMMDistribution>::estimatePartialMAPMeanDirectionAndConcentration( VMM &vmm,
         const PartialFittingMask &mask,
         SufficientStatisitcs &currentStats,
         SufficientStatisitcs &previousStats ,
         const Configuration &cfg) const
 {
-    const vfloat<VecSize> currentNumSamples = currentStats.numSamples;
-    const vfloat<VecSize> previousNumSamples = previousStats.numSamples;
-    const vfloat<VecSize> numSamples = currentNumSamples + previousNumSamples;
-    const vfloat<VecSize> overallNumSamples = currentStats.numSamples + previousStats.overallNumSamples;
+    const vfloat<VMM::VectorSize> currentNumSamples = currentStats.numSamples;
+    const vfloat<VMM::VectorSize> previousNumSamples = previousStats.numSamples;
+    const vfloat<VMM::VectorSize> numSamples = currentNumSamples + previousNumSamples;
+    const vfloat<VMM::VectorSize> overallNumSamples = currentStats.numSamples + previousStats.overallNumSamples;
 
 
-    const vfloat<VecSize> currentEstimationWeight = currentNumSamples / numSamples;
-    const vfloat<VecSize> previousEstimationWeight = 1.0f - currentEstimationWeight;
+    const vfloat<VMM::VectorSize> currentEstimationWeight = currentNumSamples / numSamples;
+    const vfloat<VMM::VectorSize> previousEstimationWeight = 1.0f - currentEstimationWeight;
 
-    const vfloat<VecSize> meanCosinePrior = cfg.meanCosinePrior;
-    const vfloat<VecSize> meanCosinePriorStrength = cfg.meanCosinePriorStrength;
-    const vfloat<VecSize> maxMeanCosine = cfg.maxMeanCosine;
-    const int cnt = (vmm._numComponents+VecSize-1) / VecSize;
-    const int rem = vmm._numComponents % VecSize;
+    const vfloat<VMM::VectorSize> meanCosinePrior = cfg.meanCosinePrior;
+    const vfloat<VMM::VectorSize> meanCosinePriorStrength = cfg.meanCosinePriorStrength;
+    const vfloat<VMM::VectorSize> maxMeanCosine = cfg.maxMeanCosine;
+    const int cnt = (vmm._numComponents+VMM::VectorSize-1) / VMM::VectorSize;
+    const int rem = vmm._numComponents % VMM::VectorSize;
 
     for (size_t k = 0; k < cnt; k ++)
     {
-        //const vfloat<VecSize> partialNumSamples = vmm._weights[k] * numSamples;
-        const vfloat<VecSize> partialNumSamples = vmm._weights[k] * overallNumSamples;
-        embree::Vec3< vfloat<VecSize> > currentMeanDirection;
+        //const vfloat<VMM::VectorSize> partialNumSamples = vmm._weights[k] * numSamples;
+        const vfloat<VMM::VectorSize> partialNumSamples = vmm._weights[k] * overallNumSamples;
+        embree::Vec3< vfloat<VMM::VectorSize> > currentMeanDirection;
         currentMeanDirection.x = select(currentStats.sumOfWeightedStats[k] > 0.0f, currentStats.sumOfWeightedDirections[k].x / currentStats.sumOfWeightedStats[k], 0.0f);
         currentMeanDirection.y = select(currentStats.sumOfWeightedStats[k] > 0.0f, currentStats.sumOfWeightedDirections[k].y / currentStats.sumOfWeightedStats[k], 0.0f);
         currentMeanDirection.z = select(currentStats.sumOfWeightedStats[k] > 0.0f, currentStats.sumOfWeightedDirections[k].z / currentStats.sumOfWeightedStats[k], 0.0f);
 
         // TODO: find a better design to precompute the previousMeanDirection
-        embree::Vec3< vfloat<VecSize> > previousMeanDirection;
+        embree::Vec3< vfloat<VMM::VectorSize> > previousMeanDirection;
         previousMeanDirection.x = select(previousStats.sumOfWeightedStats[k] > 0.0f, previousStats.sumOfWeightedDirections[k].x / previousStats.sumOfWeightedStats[k], 0.0f);
         previousMeanDirection.y = select(previousStats.sumOfWeightedStats[k] > 0.0f, previousStats.sumOfWeightedDirections[k].y / previousStats.sumOfWeightedStats[k], 0.0f);
         previousMeanDirection.z = select(previousStats.sumOfWeightedStats[k] > 0.0f, previousStats.sumOfWeightedDirections[k].z / previousStats.sumOfWeightedStats[k], 0.0f);
 
-        embree::Vec3< vfloat<VecSize> > meanDirection =  currentMeanDirection * currentEstimationWeight
+        embree::Vec3< vfloat<VMM::VectorSize> > meanDirection =  currentMeanDirection * currentEstimationWeight
             + previousMeanDirection * previousEstimationWeight;
 
-        vfloat<VecSize> meanCosine = length(meanDirection);
+        vfloat<VMM::VectorSize> meanCosine = length(meanDirection);
 
         vmm._meanDirections[k].x = select( mask.mask[k], select(meanCosine > 0.0f, meanDirection.x / meanCosine, vmm._meanDirections[k].x) , vmm._meanDirections[k].x);
         vmm._meanDirections[k].y = select( mask.mask[k], select(meanCosine > 0.0f, meanDirection.y / meanCosine, vmm._meanDirections[k].y), vmm._meanDirections[k].y);
@@ -858,13 +973,13 @@ void WeightedEMVonMisesFisherFactory< VecSize, maxComponents>::estimatePartialMA
 
         meanCosine = embree::min( maxMeanCosine, meanCosine );
         vmm._meanCosines[k] = select( mask.mask[k], meanCosine, vmm._meanCosines[k]);
-        vmm._kappas[k] = select( mask.mask[k], MeanCosineToKappa< vfloat<VecSize> >( meanCosine ), vmm._kappas[k]);
+        vmm._kappas[k] = select( mask.mask[k], MeanCosineToKappa< vfloat<VMM::VectorSize> >( meanCosine ), vmm._kappas[k]);
     }
 
     // TODO: find better more efficient way
     if ( rem > 0 )
     {
-        for ( size_t i = rem; i < VecSize; i++)
+        for ( size_t i = rem; i < VMM::VectorSize; i++)
         {
             vmm._meanDirections[cnt-1].x[i] = 0.0f;
             vmm._meanDirections[cnt-1].y[i] = 0.0f;

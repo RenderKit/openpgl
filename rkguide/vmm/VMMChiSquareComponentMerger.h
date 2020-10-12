@@ -12,14 +12,14 @@
 namespace rkguide
 {
 
-template<int VecSize, int maxComponents>
+template<class TVMMFactory>
 struct VonMisesFisherChiSquareComponentMerger
 {
 public:
-    typedef VonMisesFisherMixture<VecSize, maxComponents> VMM;
-    typedef typename WeightedEMVonMisesFisherFactory<VecSize, maxComponents>::SufficientStatisitcs SufficientStatisitcs;
-    typedef typename VonMisesFisherChiSquareComponentSplitter<VecSize, maxComponents>::ComponentSplitStatistics ComponentSplitStatistics;
-    typedef std::integral_constant<size_t, (maxComponents + (VecSize -1)) / VecSize> NumVectors;
+    typedef typename TVMMFactory::Distribution VMM;
+    typedef typename TVMMFactory::SufficientStatisitcs SufficientStatisitcs;
+    typedef typename VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::ComponentSplitStatistics ComponentSplitStatistics;
+    //typedef std::integral_constant<size_t, (maxComponents + (VecSize -1)) / VecSize> NumVectors;
 
     float MergeNext (VMM &vmm) const;
 
@@ -44,13 +44,14 @@ private:
 
 };
 
-template<int VecSize, int maxComponents>
-size_t VonMisesFisherChiSquareComponentMerger< VecSize, maxComponents>::PerformMerging(VMM &vmm, const float &mergeThreshold) const
+template<class TVMMFactory>
+size_t VonMisesFisherChiSquareComponentMerger<TVMMFactory>::PerformMerging(VMM &vmm, const float &mergeThreshold) const
 {
 
     bool stopMerging = false;
     size_t totalMergeCount = 0;
-    while (vmm._numComponents > 1 && !stopMerging)
+    //while (vmm._numComponents > 1 && !stopMerging)
+    while (vmm._numComponents > VMM::VectorSize && !stopMerging)
     {
         float mergeCost = 0.0f;
         stopMerging = true;
@@ -65,12 +66,13 @@ size_t VonMisesFisherChiSquareComponentMerger< VecSize, maxComponents>::PerformM
     return totalMergeCount;
 }
 
-template<int VecSize, int maxComponents>
-size_t VonMisesFisherChiSquareComponentMerger< VecSize, maxComponents>::PerformMerging(VMM &vmm, const float &mergeThreshold, SufficientStatisitcs &suffStats, ComponentSplitStatistics &splitStats) const
+template<class TVMMFactory>
+size_t VonMisesFisherChiSquareComponentMerger<TVMMFactory>::PerformMerging(VMM &vmm, const float &mergeThreshold, SufficientStatisitcs &suffStats, ComponentSplitStatistics &splitStats) const
 {
     bool stopMerging = false;
     size_t totalMergeCount = 0;
-    while (vmm._numComponents > 1 && !stopMerging)
+    //while (vmm._numComponents > 1 && !stopMerging)
+    while (vmm._numComponents > VMM::VectorSize && !stopMerging)
     {
         float mergeCost = 0.0f;
         stopMerging = true;
@@ -90,10 +92,10 @@ size_t VonMisesFisherChiSquareComponentMerger< VecSize, maxComponents>::PerformM
 }
 
 
-template<int VecSize, int maxComponents>
-float VonMisesFisherChiSquareComponentMerger< VecSize, maxComponents>::CalculateMergeCost (const VMM &vmm, const size_t &idx0, const size_t &idx1) const
+template<class TVMMFactory>
+float VonMisesFisherChiSquareComponentMerger<TVMMFactory>::CalculateMergeCost (const VMM &vmm, const size_t &idx0, const size_t &idx1) const
 {
-    const div_t div0 = div( idx0, VecSize);
+    const div_t div0 = div( idx0, VMM::VectorSize);
     float weight0 = vmm._weights[div0.quot][div0.rem];
     const float kappa0 = vmm._kappas[div0.quot][div0.rem];
     const Vector3 meanDirection0 = Vector3( vmm._meanDirections[div0.quot].x[div0.rem],
@@ -102,7 +104,7 @@ float VonMisesFisherChiSquareComponentMerger< VecSize, maxComponents>::Calculate
     const float meanCosine0 = vmm._meanCosines[div0.quot][div0.rem];
     const float normalization0 = vmm._normalizations[div0.quot][div0.rem];
 
-    const div_t div1 = div( idx1, VecSize);
+    const div_t div1 = div( idx1, VMM::VectorSize);
     float weight1 = vmm._weights[div1.quot][div1.rem];
     const float kappa1 = vmm._kappas[div1.quot][div1.rem];
     const Vector3 meanDirection1 = Vector3( vmm._meanDirections[div1.quot].x[div1.rem],
@@ -177,8 +179,8 @@ float VonMisesFisherChiSquareComponentMerger< VecSize, maxComponents>::Calculate
 
 }
 
-template<int VecSize, int maxComponents>
-bool VonMisesFisherChiSquareComponentMerger< VecSize, maxComponents>::ThresholdedMergeNext (VMM &vmm, const float &mergeThreshold, float &mergeCost) const
+template<class TVMMFactory>
+bool VonMisesFisherChiSquareComponentMerger<TVMMFactory>::ThresholdedMergeNext (VMM &vmm, const float &mergeThreshold, float &mergeCost) const
 {
     //std::cout  << vmm.toString()<<std::endl;
     int K = vmm._numComponents;
@@ -215,8 +217,8 @@ bool VonMisesFisherChiSquareComponentMerger< VecSize, maxComponents>::Thresholde
 }
 
 
-template<int VecSize, int maxComponents>
-bool VonMisesFisherChiSquareComponentMerger< VecSize, maxComponents>::ThresholdedMergeNext (VMM &vmm, const float &mergeThreshold, float &mergeCost, SufficientStatisitcs &suffStats, ComponentSplitStatistics &splitStats) const
+template<class TVMMFactory>
+bool VonMisesFisherChiSquareComponentMerger<TVMMFactory>::ThresholdedMergeNext (VMM &vmm, const float &mergeThreshold, float &mergeCost, SufficientStatisitcs &suffStats, ComponentSplitStatistics &splitStats) const
 {
     int K = vmm._numComponents;
     int mergeCandidateI = 0;
@@ -226,10 +228,10 @@ bool VonMisesFisherChiSquareComponentMerger< VecSize, maxComponents>::Thresholde
     bool foundMergeCandidates = false;
     for (size_t i = 0; i < K-1; i++)
     {
-        const div_t tmpI = div(i, static_cast<int>(VecSize));
+        const div_t tmpI = div(i, static_cast<int>(VMM::VectorSize));
         for (size_t j = i+1; j < K; j++ )
         {
-            const div_t tmpJ = div(j, static_cast<int>(VecSize));
+            const div_t tmpJ = div(j, static_cast<int>(VMM::VectorSize));
             float mergeCost = CalculateMergeCost(vmm, i,j);
             if (mergeCost < mergeThreshold && mergeCost < minMergeCost
                 && splitStats.numSamples[tmpI.quot][tmpI.rem] > 0.0f
@@ -268,7 +270,7 @@ bool VonMisesFisherChiSquareComponentMerger< VecSize, maxComponents>::Thresholde
         suffStats.mergeComponentStats(mergeCandidateI, mergeCandidateJ);
         mergeCost = minMergeCost;
 
-        RKGUIDE_ASSERT(vmm._numComponents == suffStats.numComponents);
+        //RKGUIDE_ASSERT(vmm._numComponents == suffStats.numComponents);
         RKGUIDE_ASSERT(vmm._numComponents == splitStats.numComponents);
 
     }
@@ -276,8 +278,8 @@ bool VonMisesFisherChiSquareComponentMerger< VecSize, maxComponents>::Thresholde
 
 }
 
-template<int VecSize, int maxComponents>
-float VonMisesFisherChiSquareComponentMerger< VecSize, maxComponents>::MergeNext (VMM &vmm) const
+template<class TVMMFactory>
+float VonMisesFisherChiSquareComponentMerger<TVMMFactory>::MergeNext (VMM &vmm) const
 {
     int K = vmm._numComponents;
     int mergeCandidateI = 0;
@@ -303,8 +305,8 @@ float VonMisesFisherChiSquareComponentMerger< VecSize, maxComponents>::MergeNext
 
 }
 
-template<int VecSize, int maxComponents>
-float VonMisesFisherChiSquareComponentMerger< VecSize, maxComponents>::_IntegratedProduct(const Vector3 &meanDirection0, const float &kappa0, const float &normalization0, const Vector3 &meanDirection1, const float &kappa1, const float &normalization1) const
+template<class TVMMFactory>
+float VonMisesFisherChiSquareComponentMerger<TVMMFactory>::_IntegratedProduct(const Vector3 &meanDirection0, const float &kappa0, const float &normalization0, const Vector3 &meanDirection1, const float &kappa1, const float &normalization1) const
 {
     Vector3 productMeanDirection = kappa0 * meanDirection0 + kappa1 * meanDirection1;
 
@@ -332,8 +334,8 @@ float VonMisesFisherChiSquareComponentMerger< VecSize, maxComponents>::_Integrat
     return scale;
 }
 
-template<int VecSize, int maxComponents>
-float VonMisesFisherChiSquareComponentMerger< VecSize, maxComponents>::_IntegratedDivision(const Vector3 &meanDirection0, const float &kappa0, const float &normalization0, const Vector3 &meanDirection1, const float &kappa1, const float &normalization1, const float &eMinus2Kappa1) const
+template<class TVMMFactory>
+float VonMisesFisherChiSquareComponentMerger<TVMMFactory>::_IntegratedDivision(const Vector3 &meanDirection0, const float &kappa0, const float &normalization0, const Vector3 &meanDirection1, const float &kappa1, const float &normalization1, const float &eMinus2Kappa1) const
 {
     Vector3 productMeanDirection = kappa0 * meanDirection0 + kappa1 * meanDirection1;
 
@@ -362,8 +364,8 @@ float VonMisesFisherChiSquareComponentMerger< VecSize, maxComponents>::_Integrat
     return scale;
 }
 
-template<int VecSize, int maxComponents>
-float VonMisesFisherChiSquareComponentMerger< VecSize, maxComponents>::_Product(const Vector3 &meanDirection0, const float &kappa0, const float &normalization0, 
+template<class TVMMFactory>
+float VonMisesFisherChiSquareComponentMerger<TVMMFactory>::_Product(const Vector3 &meanDirection0, const float &kappa0, const float &normalization0, 
                         const Vector3 &meanDirection1, const float &kappa1, const float &normalization1,
                         Vector3 &productMeanDirection, float &productKappa, float &productNormalization) const
 {

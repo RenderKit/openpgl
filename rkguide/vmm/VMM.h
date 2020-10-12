@@ -36,15 +36,17 @@ struct VonMisesFisherMixture
 {
 
 public:
-    typedef std::integral_constant<size_t, maxComponents> MaxComponents;
-    typedef std::integral_constant<size_t, (maxComponents + (VecSize -1)) / VecSize> NumVectors;
-private:
-    //const static int numVectors {(maxComponents+VecSize-1)/VecSize};
+
+    enum{
+        MaxComponents = maxComponents,
+        VectorSize = VecSize,
+        NumVectors = (maxComponents + (VecSize -1)) / VecSize
+    };
 
 public:
 
     struct SoftAssignment{
-        vfloat<VecSize> assignments[NumVectors::value];
+        vfloat<VecSize> assignments[NumVectors];
         size_t size;
         float pdf;
 
@@ -58,13 +60,13 @@ public:
     VonMisesFisherMixture() = default;
     VonMisesFisherMixture( const VonMisesFisherMixture &a);
 
-    vfloat<VecSize> _weights[NumVectors::value];
-    vfloat<VecSize> _kappas[NumVectors::value];
-    Vec3<vfloat<VecSize> > _meanDirections[NumVectors::value];
+    vfloat<VecSize> _weights[NumVectors];
+    vfloat<VecSize> _kappas[NumVectors];
+    Vec3<vfloat<VecSize> > _meanDirections[NumVectors];
 
-    vfloat<VecSize> _normalizations[NumVectors::value];
-    vfloat<VecSize> _eMinus2Kappa[NumVectors::value];
-    vfloat<VecSize> _meanCosines[NumVectors::value];
+    vfloat<VecSize> _normalizations[NumVectors];
+    vfloat<VecSize> _eMinus2Kappa[NumVectors];
+    vfloat<VecSize> _meanCosines[NumVectors];
 
     size_t _numComponents{maxComponents};
 
@@ -83,15 +85,17 @@ public:
 
     std::string toString() const;
 
+    size_t getNumComponents() const;
+
     Vector3 getComponentMeanDirection(const size_t &idx) const;
 
     float getComponentWeight(const size_t &idx) const;
-
+    
     float getComponentKappa(const size_t &idx) const;
 
     void swapComponents(const size_t &idx0, const size_t &idx1);
 
-    void mergeComponents(const size_t &idx0, const size_t &idx1);
+    virtual void mergeComponents(const size_t &idx0, const size_t &idx1);
 
     void clearComponent(const size_t &idx);
 
@@ -100,7 +104,6 @@ public:
     float product(const float &weight, const Vector3 &meanDirection, const float &kappa);
 
     float product(const float &weight, const Vector3 &meanDirection, const float &kappa, const float &normalization);
-
 
     void setNumComponents(const size_t &numComponents);
 
@@ -117,6 +120,12 @@ public:
 
     void _normalizeWeights();
 };
+
+template<int VecSize, int maxComponents>
+size_t VonMisesFisherMixture<VecSize, maxComponents>::getNumComponents() const
+{
+    return _numComponents;
+}
 
 template<int VecSize, int maxComponents>
 void VonMisesFisherMixture<VecSize, maxComponents>::setNumComponents(const size_t &numComponents)
@@ -144,7 +153,7 @@ std::string VonMisesFisherMixture<VecSize, maxComponents>::SoftAssignment::toStr
 template<int VecSize, int maxComponents>
 void VonMisesFisherMixture<VecSize, maxComponents>::serialize(std::ostream& stream) const
 {
-    for(uint32_t k=0;k<NumVectors::value;k++){
+    for(uint32_t k=0;k<NumVectors;k++){
         stream.write(reinterpret_cast<const char*>(&_weights[k]), sizeof(vfloat<VecSize>));
         stream.write(reinterpret_cast<const char*>(&_kappas[k]), sizeof(vfloat<VecSize>));
         stream.write(reinterpret_cast<const char*>(&_meanDirections[k]), sizeof(Vec3<vfloat<VecSize> >));
@@ -159,7 +168,7 @@ void VonMisesFisherMixture<VecSize, maxComponents>::serialize(std::ostream& stre
 template<int VecSize, int maxComponents>
 void VonMisesFisherMixture<VecSize, maxComponents>::deserialize(std::istream& stream)
 {
-    for(uint32_t k=0;k<NumVectors::value;k++){
+    for(uint32_t k=0;k<NumVectors;k++){
         stream.read(reinterpret_cast<char*>(&_weights[k]), sizeof(vfloat<VecSize>));
         stream.read(reinterpret_cast<char*>(&_kappas[k]), sizeof(vfloat<VecSize>));
         stream.read(reinterpret_cast<char*>(&_meanDirections[k]), sizeof(Vec3<vfloat<VecSize> >));
@@ -174,37 +183,88 @@ void VonMisesFisherMixture<VecSize, maxComponents>::deserialize(std::istream& st
 template<int VecSize, int maxComponents>
 bool VonMisesFisherMixture<VecSize, maxComponents>::isValid() const
 {
-    vbool<VecSize> valid(true);
-    vfloat<VecSize> zeros(0.0f);
-    const int cnt = (_numComponents+VecSize-1) / VecSize;
-    vfloat<VecSize> sumWeights = 0.0f;
-    for(int k = 0; k < cnt;k++){
-        sumWeights += _weights[k];
+    bool valid = true;
+    float sumWeights = 0.0f;
 
-        valid &= isvalid(_weights[k]);
-        valid &= _weights[k] >= 0.0f;
-        valid &= _weights[k] <= 1.0f;
-        RKGUIDE_ASSERT(embree::any(valid));
+    for(size_t k = 0; k < _numComponents; k++){
+        const div_t tmpK = div( k, VecSize );
+        sumWeights += _weights[tmpK.quot][tmpK.rem];
 
-        valid &= isvalid(_kappas[k]);
-        valid &= _kappas[k] >= 0.0f;
-        RKGUIDE_ASSERT(embree::any(valid));
+        valid &= isvalid(_weights[tmpK.quot][tmpK.rem]);
+        valid &= _weights[tmpK.quot][tmpK.rem] >= 0.0f;
+        valid &= _weights[tmpK.quot][tmpK.rem] <= 1.0f + 1e-5f;
+        RKGUIDE_ASSERT(valid);
 
-        valid &= isvalid(_meanCosines[k]);
-        valid &= _meanCosines[k] >= 0.0f;
-        valid &= _meanCosines[k] <= 1.0f;
-        RKGUIDE_ASSERT(embree::any(valid));
+        valid &= isvalid(_kappas[tmpK.quot][tmpK.rem]);
+        valid &= _kappas[tmpK.quot][tmpK.rem] >= 0.0f;
+        RKGUIDE_ASSERT(valid);
 
-        valid &= isvalid(_normalizations[k]);
-        valid &= _normalizations[k] >= 0.0f;
-        RKGUIDE_ASSERT(embree::any(valid));
+        valid &= isvalid(_meanCosines[tmpK.quot][tmpK.rem]);
+        valid &= _meanCosines[tmpK.quot][tmpK.rem] >= 0.0f;
+        valid &= _meanCosines[tmpK.quot][tmpK.rem] <= 1.0f;
+        RKGUIDE_ASSERT(valid);
 
-        valid &= isvalid(_eMinus2Kappa[k]);
-        RKGUIDE_ASSERT(embree::any(valid));
-        //valid &= _normalizations[k] >= 0.0f;
+        valid &= isvalid(_meanDirections[tmpK.quot].x[tmpK.rem]);
+        valid &= _meanDirections[tmpK.quot].x[tmpK.rem] >= -1.0f;
+        valid &= _meanDirections[tmpK.quot].x[tmpK.rem] <= 1.0f;
+        RKGUIDE_ASSERT(valid);
+
+        valid &= isvalid(_meanDirections[tmpK.quot].y[tmpK.rem]);
+        valid &= _meanDirections[tmpK.quot].y[tmpK.rem] >= -1.0f;
+        valid &= _meanDirections[tmpK.quot].y[tmpK.rem] <= 1.0f;
+        RKGUIDE_ASSERT(valid);
+
+        valid &= isvalid(_meanDirections[tmpK.quot].z[tmpK.rem]);
+        valid &= _meanDirections[tmpK.quot].z[tmpK.rem] >= -1.0f;
+        valid &= _meanDirections[tmpK.quot].z[tmpK.rem] <= 1.0f;
+        RKGUIDE_ASSERT(valid);
+
+        valid &= isvalid(_normalizations[tmpK.quot][tmpK.rem]);
+        valid &= _normalizations[tmpK.quot][tmpK.rem] >= 0.0f;
+        RKGUIDE_ASSERT(valid);
+
+        valid &= isvalid(_eMinus2Kappa[tmpK.quot][tmpK.rem]);
+        RKGUIDE_ASSERT(valid);
     }
 
-    return embree::any(valid);
+
+    // check unused componets
+    for(size_t k = _numComponents; k < MaxComponents; k++){
+        const div_t tmpK = div( k, VecSize );
+        valid &= isvalid(_weights[tmpK.quot][tmpK.rem]);
+        valid &= _weights[tmpK.quot][tmpK.rem] == 0.0f;
+        RKGUIDE_ASSERT(valid);
+
+        valid &= isvalid(_kappas[tmpK.quot][tmpK.rem]);
+        valid &= _kappas[tmpK.quot][tmpK.rem] == 0.0f;
+        RKGUIDE_ASSERT(valid);
+
+        valid &= isvalid(_meanDirections[tmpK.quot].x[tmpK.rem]);
+        valid &= _meanDirections[tmpK.quot].x[tmpK.rem] == 0.0f;
+        RKGUIDE_ASSERT(valid);
+
+        valid &= isvalid(_meanDirections[tmpK.quot].y[tmpK.rem]);
+        valid &= _meanDirections[tmpK.quot].y[tmpK.rem] == 0.0f;
+        RKGUIDE_ASSERT(valid);
+
+        valid &= isvalid(_meanDirections[tmpK.quot].z[tmpK.rem]);
+        valid &= _meanDirections[tmpK.quot].z[tmpK.rem] == 1.0f;
+        RKGUIDE_ASSERT(valid);
+
+        valid &= isvalid(_meanCosines[tmpK.quot][tmpK.rem]);
+        valid &= _meanCosines[tmpK.quot][tmpK.rem] == 0.0f;
+        RKGUIDE_ASSERT(valid);
+
+        valid &= isvalid(_normalizations[tmpK.quot][tmpK.rem]);
+        valid &= _normalizations[tmpK.quot][tmpK.rem] == 1.0f/(4.0f*M_PI);
+        RKGUIDE_ASSERT(valid);
+
+        valid &= isvalid(_eMinus2Kappa[tmpK.quot][tmpK.rem]);
+        valid &= _eMinus2Kappa[tmpK.quot][tmpK.rem] == 1.0f;
+        RKGUIDE_ASSERT(valid);
+    }
+
+    return valid;
 }
 
 
@@ -357,7 +417,7 @@ float VonMisesFisherMixture<VecSize, maxComponents>::product(const float &_weigh
 template<int VecSize, int maxComponents>
 VonMisesFisherMixture<VecSize, maxComponents>::VonMisesFisherMixture( const VonMisesFisherMixture &a)
 {
-    for (size_t k = 0; k < NumVectors::value; k++)
+    for (size_t k = 0; k < NumVectors; k++)
     {
         _weights[k]= a._weights[k];
         _kappas[k]=  a._kappas[k];
@@ -378,9 +438,9 @@ void VonMisesFisherMixture<VecSize, maxComponents>::clearComponent( const size_t
 
     _weights[tmpIdx.quot][tmpIdx.rem]= 0.f;
     _kappas[tmpIdx.quot][tmpIdx.rem] = 0.f;
-    _eMinus2Kappa[tmpIdx.quot][tmpIdx.rem] = 0.f;
+    _eMinus2Kappa[tmpIdx.quot][tmpIdx.rem] = 1.f;
     _meanCosines[tmpIdx.quot][tmpIdx.rem] = 0.f;
-    _normalizations[tmpIdx.quot][tmpIdx.rem] = 0.f;
+    _normalizations[tmpIdx.quot][tmpIdx.rem] = 1.0f/(4.0f*M_PI);
 
     _meanDirections[tmpIdx.quot].x[tmpIdx.rem] = 0.f;
     _meanDirections[tmpIdx.quot].y[tmpIdx.rem] = 0.f;
@@ -635,10 +695,11 @@ Vector3 VonMisesFisherMixture<VecSize, maxComponents>::sample( const Vector2 sam
 template<int VecSize, int maxComponents>
 std::string VonMisesFisherMixture<VecSize, maxComponents>::toString() const{
     std::stringstream ss;
+    ss.precision(5);
     ss << "VonMisesFisherMixture:" << std::endl;
     ss << "maxComponents: " << maxComponents << std::endl;
     ss << "VecSize: " << VecSize << std::endl;
-    ss << "numVectors: " << NumVectors::value << std::endl;
+    ss << "numVectors: " << NumVectors << std::endl;
     ss << "---------------------- "  << std::endl;
     ss << "numComponents: " << _numComponents << std::endl;
     float sumWeights = 0.0f;
