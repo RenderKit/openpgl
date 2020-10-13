@@ -21,7 +21,6 @@
 namespace rkguide
 {
 
-
 struct ComponentSplitinfo
 {
     Vector2 mean {0.0f};
@@ -102,6 +101,11 @@ struct ComponentSplitStatistics
     void serialize(std::ostream& stream) const;
 
     void deserialize(std::istream& stream);
+
+    inline size_t getNumComponents() const
+    {
+        return numComponents;
+    }
 
     std::string toString() const;
 };
@@ -214,13 +218,12 @@ void VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::PerformSplitting(VMM
 
     VMMFactory vmmFactory;
     typename VMMFactory::FittingStatistics vmmFitStats;
-    //std::cout << "vmm: " << vmm.toString() << std::endl;
+
 #ifndef RKGUIDE_USE_THREE_SPLIT
     while ( vmm._numComponents < VMM::MaxComponents && !stopSplitting)
 #else
     while ( vmm._numComponents < VMM::MaxComponents-1 && !stopSplitting)
 #endif
-    //for (size_t j =0; j<1; j++)
     {
         stopSplitting = true;
         splitStatistics.clearAll();
@@ -564,7 +567,6 @@ bool VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::SplitComponent(VMM &
                                     vmm._meanDirections[tmpK.quot].y[tmpK.rem],
                                     vmm._meanDirections[tmpK.quot].z[tmpK.rem]);
 
-    float distance = vmm._distances[tmpK.quot][tmpK.rem];
     float newWeight0 = weight * 0.5f;
     float newWeight1 = newWeight0;
 
@@ -574,9 +576,6 @@ bool VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::SplitComponent(VMM &
     float newMeanCosine0 = meanCosine;
     float newMeanCosine1 = meanCosine*meanCosine;
 
-    float newKkappa0 = MeanCosineToKappa<float> (newMeanCosine0);
-    float newKkappa1 = MeanCosineToKappa<float> (newMeanCosine1);
-
     if (D > 1e-8f)
     {
         Vector2 meanDir2D0 = splitInfo.mean + (splitInfo.eigenVector0 * splitInfo.eigenValue0 * 0.5f);
@@ -585,13 +584,10 @@ bool VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::SplitComponent(VMM &
         // ensure that the new mean cosine is in a valid range (i.e., < 1.0 and < the mean cosine of max kappa)
         newMeanCosine0 = std::min(newMeanCosine0, KappaToMeanCosine<float>(RKGUIDE_MAX_KAPPA));
         newMeanCosine1 = newMeanCosine0;
-        newKkappa0 = MeanCosineToKappa<float> (newMeanCosine0);
-        newKkappa1 = newKkappa0;
 
         Vector2 meanDir2D1 = splitInfo.mean - (splitInfo.eigenVector0 * splitInfo.eigenValue0 * 0.5f);
         meanDirection1 = embree::frame(meanDirection) * Map2DTo3D<Vector3, Vector2, float>(meanDir2D1);
-        //float meanCosine1 = meanCosine / meanDirection0.z;
-        //float kappa1 = MeanCosineToKappa<float> (meanCosine1);
+
 #ifdef RKGUIDE_SHOW_PRINT_OUTS
         //std::cout << "meanCosine: " << meanCosine << "\t kappa: " << kappa << "\t newMeanCosine: " << newMeanCosine0 << " \t newKkappa: " <<  newKkappa0 << std::endl;
         //std::cout << "localMeanDirection0: " << Map2DTo3D<Vector3, Vector2, float>(meanDir2D0) << "\t meanDirection0: " << meanDirection0 << "\t meanCosine: " << meanCosine << " \t costheta0: " <<  dot(meanDirection, meanDirection0) << std::endl;
@@ -621,49 +617,9 @@ bool VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::SplitComponent(VMM &
     const div_t tmpI = tmpK;
     const div_t tmpJ = div(K, static_cast<int>(VMM::VectorSize));
 
-    vmm._weights[tmpI.quot][tmpI.rem] = newWeight0;
-    vmm._meanCosines[tmpI.quot][tmpI.rem] = newMeanCosine0;
-    vmm._kappas[tmpI.quot][tmpI.rem] = newKkappa0;
-    vmm._meanDirections[tmpI.quot].x[tmpI.rem] = meanDirection0.x;
-    vmm._meanDirections[tmpI.quot].y[tmpI.rem] = meanDirection0.y;
-    vmm._meanDirections[tmpI.quot].z[tmpI.rem] = meanDirection0.z;
-    vmm._distances[tmpI.quot][tmpI.rem] = distance;
-
-    vmm._weights[tmpJ.quot][tmpJ.rem] = newWeight1;
-    vmm._meanCosines[tmpJ.quot][tmpJ.rem] = newMeanCosine1;
-    vmm._kappas[tmpJ.quot][tmpJ.rem] = newKkappa1;
-    vmm._meanDirections[tmpJ.quot].x[tmpJ.rem] = meanDirection1.x;
-    vmm._meanDirections[tmpJ.quot].y[tmpJ.rem] = meanDirection1.y;
-    vmm._meanDirections[tmpJ.quot].z[tmpJ.rem] = meanDirection1.z;
-    vmm._distances[tmpJ.quot][tmpJ.rem] = distance;
-
-    vmm._numComponents = K + 1;
-    vmm._calculateNormalization();
-
-    RKGUIDE_ASSERT(newMeanCosine0 > 0.0f && newMeanCosine0 <=1.0f);
-    RKGUIDE_ASSERT(newMeanCosine1 > 0.0f && newMeanCosine1 <=1.0f);
-
+    vmm.splitComponent(idx, K, newWeight0, newWeight1, meanDirection0, meanDirection1, newMeanCosine0, newMeanCosine1);
     suffStats.splitComponentsStats(idx, K, meanDirection0, meanDirection1, newMeanCosine0, newMeanCosine1);
 
-/*
-    float sumStatsWeight = suffStats.sumOfWeightedStats[tmpK.quot][tmpK.rem];
-    sumStatsWeight /= 2.0f;
-
-    suffStats.sumOfWeightedStats[tmpI.quot][tmpI.rem] = sumStatsWeight;
-    suffStats.sumOfWeightedDirections[tmpI.quot].x[tmpI.rem] = meanDirection0.x * newMeanCosine0 * sumStatsWeight;
-    suffStats.sumOfWeightedDirections[tmpI.quot].y[tmpI.rem] = meanDirection0.y * newMeanCosine0 * sumStatsWeight;
-    suffStats.sumOfWeightedDirections[tmpI.quot].z[tmpI.rem] = meanDirection0.z * newMeanCosine0 * sumStatsWeight;
-
-    suffStats.sumOfWeightedStats[tmpJ.quot][tmpJ.rem] = sumStatsWeight;
-    suffStats.sumOfWeightedDirections[tmpJ.quot].x[tmpJ.rem] = meanDirection1.x * newMeanCosine1 * sumStatsWeight;
-    suffStats.sumOfWeightedDirections[tmpJ.quot].y[tmpJ.rem] = meanDirection1.y * newMeanCosine1 * sumStatsWeight;
-    suffStats.sumOfWeightedDirections[tmpJ.quot].z[tmpJ.rem] = meanDirection1.z * newMeanCosine1 * sumStatsWeight;
-    suffStats.numComponents = K + 1;
-
-    RKGUIDE_ASSERT(!std::isnan(suffStats.sumOfWeightedDirections[tmpI.quot].x[tmpI.rem]) && std::isfinite(suffStats.sumOfWeightedDirections[tmpI.quot].x[tmpI.rem]));
-    RKGUIDE_ASSERT(!std::isnan(suffStats.sumOfWeightedDirections[tmpI.quot].y[tmpI.rem]) && std::isfinite(suffStats.sumOfWeightedDirections[tmpI.quot].y[tmpI.rem]));
-    RKGUIDE_ASSERT(!std::isnan(suffStats.sumOfWeightedDirections[tmpI.quot].z[tmpI.rem]) && std::isfinite(suffStats.sumOfWeightedDirections[tmpI.quot].z[tmpI.rem]));
-*/
     // reseting the split statistics for the two new components
     splitStats.chiSquareMCEstimates[tmpI.quot][tmpI.rem] = 0.0f;
     splitStats.sumAssignedSamples[tmpI.quot][tmpI.rem] = 0.0f;

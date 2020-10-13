@@ -44,9 +44,8 @@ public:
         int maxSplitItr { 1 };
 
         int minSamplesForSplitting { 0 };
+        int minSamplesForPartialRefitting { 0 };
         int minSamplesForMerging { 0 };
-        //int minSamplesForSplitting { 4096 };
-        //int minSamplesForMerging { 4096 * 4 };
 
         void serialize(std::ostream& stream) const;
 
@@ -60,6 +59,8 @@ public:
     {
         typename WeightedEMFactory::SufficientStatisitcs sufficientStatistics;
         typename Splitter::ComponentSplitStatistics splittingStatistics;
+
+        //size_t numComponents {0};
 
         size_t numSamplesAfterLastSplit {0};
         size_t numSamplesAfterLastMerge {0};
@@ -78,10 +79,15 @@ public:
 
         bool isValid() const;
 
+        inline size_t getNumComponents() const
+        {
+            RKGUIDE_ASSERT(sufficientStatistics.getNumComponents() == splittingStatistics.getNumComponents());
+            return sufficientStatistics.getNumComponents();
+        }
+
         std::string toString() const;
 
     };
-
 
     struct ASMFittingStatistics
     {
@@ -116,8 +122,6 @@ public:
 template<class TVMMDistribution>
 AdaptiveSplitAndMergeFactory<TVMMDistribution>::ASMStatistics::ASMStatistics(const AdaptiveSplitAndMergeFactory<TVMMDistribution>::ASMStatistics &a)
 {
-   // std::cout << "AdaptiveSplitAndMergeFactory::ASMStatistics(const ASMStatistics &a)" << std::endl;
-
     this->sufficientStatistics = a.sufficientStatistics;
     this->splittingStatistics = a.splittingStatistics;
 
@@ -131,6 +135,7 @@ void AdaptiveSplitAndMergeFactory<TVMMDistribution>::ASMStatistics::serialize(st
     sufficientStatistics.serialize(stream);
     splittingStatistics.serialize(stream);
 
+    //stream.write(reinterpret_cast<const char*>(&numComponents), sizeof(size_t));
     stream.write(reinterpret_cast<const char*>(&numSamplesAfterLastSplit), sizeof(size_t));
     stream.write(reinterpret_cast<const char*>(&numSamplesAfterLastMerge), sizeof(size_t));
 }
@@ -141,6 +146,7 @@ void AdaptiveSplitAndMergeFactory<TVMMDistribution>::ASMStatistics::deserialize(
     sufficientStatistics.deserialize(stream);
     splittingStatistics.deserialize(stream);
 
+    //stream.read(reinterpret_cast<char*>(&numComponents), sizeof(size_t));
     stream.read(reinterpret_cast<char*>(&numSamplesAfterLastSplit), sizeof(size_t));
     stream.read(reinterpret_cast<char*>(&numSamplesAfterLastMerge), sizeof(size_t));
 }
@@ -201,6 +207,7 @@ void AdaptiveSplitAndMergeFactory<TVMMDistribution>::ASMStatistics::clear(const 
     sufficientStatistics.clear(_numComponents);
     splittingStatistics.clear(_numComponents);
 
+    //numComponents = _numComponents;
     numSamplesAfterLastSplit = 0;
     numSamplesAfterLastMerge = 0;
 }
@@ -224,6 +231,7 @@ void AdaptiveSplitAndMergeFactory<TVMMDistribution>::ASMConfiguration::serialize
 
     stream.write(reinterpret_cast<const char*>(&minSamplesForSplitting), sizeof(int));
     stream.write(reinterpret_cast<const char*>(&minSamplesForMerging), sizeof(int));
+    stream.write(reinterpret_cast<const char*>(&minSamplesForPartialRefitting), sizeof(int));
 }
 
 template<class TVMMDistribution>
@@ -239,6 +247,7 @@ void AdaptiveSplitAndMergeFactory<TVMMDistribution>::ASMConfiguration::deseriali
 
     stream.read(reinterpret_cast<char*>(&minSamplesForSplitting), sizeof(int));
     stream.read(reinterpret_cast<char*>(&minSamplesForMerging), sizeof(int));
+    stream.read(reinterpret_cast<char*>(&minSamplesForPartialRefitting), sizeof(int));
 }
 
 template<class TVMMDistribution>
@@ -253,6 +262,7 @@ std::string AdaptiveSplitAndMergeFactory<TVMMDistribution>::ASMConfiguration::to
     ss << "\tpartialReFit = " << partialReFit << std::endl;
     ss << "\tmaxSplitItr = " << maxSplitItr << std::endl;
     ss << "\tminSamplesForSplitting = " << minSamplesForSplitting << std::endl;
+    ss << "\tminSamplesForPartialRefitting = " << minSamplesForPartialRefitting << std::endl;
     ss << "\tminSamplesForMerging = " << minSamplesForMerging << std::endl;
     return ss.str();
 }
@@ -266,7 +276,7 @@ void AdaptiveSplitAndMergeFactory<TVMMDistribution>::fit(VMM &vmm, size_t numCom
     factory.fitMixture(vmm, numComponents, stats.sufficientStatistics, samples, numSamples, cfg.weightedEMCfg, wemFitStats);
     factory.initComponentDistances(vmm, stats.sufficientStatistics, samples, numSamples);
     RKGUIDE_ASSERT(vmm.isValid());
-    RKGUIDE_ASSERT(vmm._numComponents == stats.sufficientStatistics.getNumComponents());
+    RKGUIDE_ASSERT(vmm.getNumComponents() == stats.sufficientStatistics.getNumComponents());
     RKGUIDE_ASSERT(stats.sufficientStatistics.isValid());
 /* */
 
@@ -289,7 +299,7 @@ void AdaptiveSplitAndMergeFactory<TVMMDistribution>::fit(VMM &vmm, size_t numCom
         //std::cout << "fit: numComponents: " << vmm._numComponents << std::endl;
 
         //RKGUIDE_ASSERT(vmm._numComponents == stats.sufficientStatistics.numComponents);
-        RKGUIDE_ASSERT(vmm._numComponents == stats.splittingStatistics.numComponents);
+        RKGUIDE_ASSERT(vmm.getNumComponents() == stats.getNumComponents());
         RKGUIDE_ASSERT(vmm.isValid());
 
         Merger merger = Merger();
@@ -312,43 +322,33 @@ void AdaptiveSplitAndMergeFactory<TVMMDistribution>::fit(VMM &vmm, size_t numCom
 template<class TVMMDistribution>
 void AdaptiveSplitAndMergeFactory<TVMMDistribution>::update(VMM &vmm, ASMStatistics &stats, const DirectionalSampleData* samples, const size_t numSamples, const ASMConfiguration &cfg, ASMFittingStatistics &fitStats) const
 {
-    //std::cout << "Before UPDATE: "<< std::endl;
-    //std::cout << vmm.toString()<< std::endl;
     RKGUIDE_ASSERT(vmm.isValid());
-    RKGUIDE_ASSERT(stats.sufficientStatistics.isValid());
-    VMM vmmBeforeUpdate(vmm);
+    RKGUIDE_ASSERT(vmm.getNumComponents() == stats.getNumComponents());
+    RKGUIDE_ASSERT(stats.isValid());
+
     // first update the mixture
     WeightedEMFactory factory = WeightedEMFactory();
     typename WeightedEMFactory::FittingStatistics wemFitStats;
     //stats.sufficientStatistics.clear(vmm._numComponents);
     factory.updateMixture(vmm, stats.sufficientStatistics, samples, numSamples, cfg.weightedEMCfg, wemFitStats);
-/* */
 
-    if(!vmm.isValid())
-    {
-        std::cout << "before update: "<< vmmBeforeUpdate.toString() << std::endl;
-        std::cout << stats.sufficientStatistics.toString() << std::endl;
-        std::cout << "after update: "<< vmm.toString() << std::endl;
-    }
+    RKGUIDE_ASSERT(vmm.isValid());
+    RKGUIDE_ASSERT(stats.sufficientStatistics.isValid());
 
     if (cfg.useSplitAndMerge)
     {
 
         float mcEstimate = stats.sufficientStatistics.getSumWeights() / stats.sufficientStatistics.getNumSamples();
-        //std::cout << "After UPDATE: "<< std::endl;
-        //std::cout << vmm.toString()<< std::endl;
-        RKGUIDE_ASSERT(vmm.isValid());
 
         fitStats.numSamples = numSamples;
         fitStats.numUpdateWEMIterations = wemFitStats.numIterations;
 
         stats.numSamplesAfterLastSplit += numSamples;
         stats.numSamplesAfterLastMerge += numSamples;
-        //stats.splittingStatistics.clear(vmm._numComponents);
 
         Splitter splitter = Splitter();
         //stats.splittingStatistics.clear(vmm._numComponents);
-        RKGUIDE_ASSERT(stats.splittingStatistics.isValid());
+        //RKGUIDE_ASSERT(stats.splittingStatistics.isValid());
         splitter.UpdateSplitStatistics(vmm, stats.splittingStatistics, mcEstimate, samples, numSamples);
         RKGUIDE_ASSERT(stats.splittingStatistics.isValid());
         //splitter.CalculateSplitStatistics(vmm, stats.splittingStatistics, mcEstimate, samples, numSamples);
@@ -360,7 +360,6 @@ void AdaptiveSplitAndMergeFactory<TVMMDistribution>::update(VMM &vmm, ASMStatist
         {
             typename WeightedEMFactory::PartialFittingMask mask;
             mask.resetToFalse();
-            //splitStatistics.clearAll();
 
             std::vector<typename Splitter::SplitCandidate> splitComps = stats.splittingStatistics.getSplitCandidates();
             int totalSplitCount = 0;
@@ -378,18 +377,12 @@ void AdaptiveSplitAndMergeFactory<TVMMDistribution>::update(VMM &vmm, ASMStatist
                 }
             }
 
-            RKGUIDE_ASSERT(stats.splittingStatistics.isValid());
-            //RKGUIDE_ASSERT(vmm._numComponents == stats.sufficientStatistics.numComponents);
-            RKGUIDE_ASSERT(vmm._numComponents == stats.splittingStatistics.numComponents);
+            RKGUIDE_ASSERT(vmm.isValid());
+            RKGUIDE_ASSERT(vmm.getNumComponents() == stats.getNumComponents());
+            RKGUIDE_ASSERT(stats.isValid());
 
-            if (totalSplitCount > 0 && numSamples > cfg.minSamplesForSplitting / 4.0)
-            //if (totalSplitCount > 0 && numSamples > cfg.minSamplesForSplitting)
-            //if (totalSplitCount > 0 )
+            if (totalSplitCount > 0 &&  cfg.partialReFit && numSamples > cfg.minSamplesForPartialRefitting)
             {
-                //std::cout << "Before Partial FIT" << std::endl;
-                //std::cout << vmm.toString() << std::endl;
-                RKGUIDE_ASSERT(vmm.isValid());
-
                 typename WeightedEMFactory::SufficientStatisitcs tempSuffStatistics = stats.sufficientStatistics;
                 tempSuffStatistics.clear(vmm._numComponents);
                 factory.partialUpdateMixture(vmm, mask, tempSuffStatistics, samples, numSamples, cfg.weightedEMCfg, wemFitStats);
@@ -397,53 +390,40 @@ void AdaptiveSplitAndMergeFactory<TVMMDistribution>::update(VMM &vmm, ASMStatist
                 stats.sufficientStatistics.maskedReplace(mask, tempSuffStatistics);
 
                 fitStats.numPartialUpdateWEMIterations = wemFitStats.numIterations;
-                //std::cout << "After Partial FIT" << std::endl;
-                //std::cout << vmm.toString() << std::endl;
                 RKGUIDE_ASSERT(vmm.isValid());
-
+                RKGUIDE_ASSERT(vmm.getNumComponents() == stats.getNumComponents());
+                RKGUIDE_ASSERT(stats.isValid());
             }
 
             fitStats.numSplits = totalSplitCount;
-
-
-            //stats.splittingStatistics.clearAll();
-    #ifdef RKGUIDE_SHOW_PRINT_OUTS
-            std::cout << "update: totalSplitCount = " << totalSplitCount << "\t splitThreshold: " << cfg.splittingThreshold<< std::endl;
-    #endif
             stats.numSamplesAfterLastSplit = 0.0f;
-            //stats.splittingStatistics.clear(vmm._numComponents);
-            RKGUIDE_ASSERT(vmm._numComponents == stats.sufficientStatistics.getNumComponents());
-            RKGUIDE_ASSERT(stats.sufficientStatistics.isValid());
-        }
-    /* */
 
-    /* */
-        //std::cout << "numSamplesAfterLastMerge: " << stats.numSamplesAfterLastMerge << "\t minSamplesForMerging: " << cfg.minSamplesForMerging << std::endl;
+#ifdef RKGUIDE_SHOW_PRINT_OUTS
+            std::cout << "update: totalSplitCount = " << totalSplitCount << "\t splitThreshold: " << cfg.splittingThreshold<< std::endl;
+#endif
+        }
+
         RKGUIDE_ASSERT(vmm.isValid());
-        RKGUIDE_ASSERT(vmm.getNumComponents() == stats.sufficientStatistics.getNumComponents());
-        RKGUIDE_ASSERT(stats.sufficientStatistics.isValid());
-        //RKGUIDE_ASSERT(vmm.getNumComponents() == stats.splittingStatistics.getNumComponents());
-        RKGUIDE_ASSERT(stats.splittingStatistics.isValid());
+        RKGUIDE_ASSERT(vmm.getNumComponents() == stats.getNumComponents());
+        RKGUIDE_ASSERT(stats.isValid());
+
         if (stats.numSamplesAfterLastMerge >= cfg.minSamplesForMerging)
-        //if(stats.numSamplesAfterLastMerge % 4 == 0)
         {
             Merger merger = Merger();
             size_t numMerges = merger.PerformMerging(vmm, cfg.mergingThreshold, stats.sufficientStatistics, stats.splittingStatistics);
             fitStats.numMerges = numMerges;
-            //stats.numSamplesAfterLastSplit = 0.0f;
             stats.numSamplesAfterLastMerge = 0.0f;
-            //stats.splittingStatistics.clear(vmm._numComponents);
 
             RKGUIDE_ASSERT(vmm.isValid());
-            RKGUIDE_ASSERT(stats.sufficientStatistics.isValid());
-            RKGUIDE_ASSERT(stats.splittingStatistics.isValid());
+            RKGUIDE_ASSERT(vmm.getNumComponents() == stats.getNumComponents());
+            RKGUIDE_ASSERT(stats.isValid());
         }
 
         fitStats.numComponents = vmm._numComponents;
-    /* */
     }
-    //factory.initComponentDistances(vmm, stats.sufficientStatistics, samples, numSamples);
+
     factory.updateComponentDistances(vmm, stats.sufficientStatistics, samples, numSamples);
+
     RKGUIDE_ASSERT(vmm.getNumComponents() == stats.sufficientStatistics.getNumComponents());
     RKGUIDE_ASSERT(vmm.isValid());
     RKGUIDE_ASSERT(stats.sufficientStatistics.isValid());

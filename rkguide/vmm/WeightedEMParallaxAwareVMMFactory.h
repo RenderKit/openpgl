@@ -117,15 +117,11 @@ public:
 template<class TVMMDistribution>
 WeightedEMParallaxAwareVonMisesFisherFactory< TVMMDistribution>::SufficientStatisitcs::SufficientStatisitcs(const SufficientStatisitcs &a)
 {
-
-
-    //std::cout << "WeightedEMParallaxAwareVonMisesFisherFactory::SufficientStatisitcs(const SufficientStatisitcs &a)" << std::endl;
     wEMSufficientStatisitcs = a.wEMSufficientStatisitcs;
     for(uint32_t k=0;k<VMM::NumVectors;k++)
     {
         sumOfDistanceWeightes[k] = a.sumOfDistanceWeightes[k];
     }
-
 }
 
 template<class TVMMDistribution>
@@ -133,7 +129,7 @@ void WeightedEMParallaxAwareVonMisesFisherFactory< TVMMDistribution>::Sufficient
 {
     const int cnt = (vmm._numComponents+VMM::VectorSize-1) / VMM::VectorSize;
     const int rem = vmm._numComponents % VMM::VectorSize;
-    
+
     for(uint32_t k=0;k<cnt;k++)
     {
         embree::Vec3< vfloat<VMM::VectorSize> > suffDirections = wEMSufficientStatisitcs.sumOfWeightedDirections[k];
@@ -146,22 +142,11 @@ void WeightedEMParallaxAwareVonMisesFisherFactory< TVMMDistribution>::Sufficient
         suffDirections *= suffMeanCosines;
         wEMSufficientStatisitcs.sumOfWeightedDirections[k] = select(vmm._distances[k] > 0.0f, suffDirections, wEMSufficientStatisitcs.sumOfWeightedDirections[k]);
     }
-    /*
-    if ( rem > 0 )
-    {
-        for ( size_t i = rem; i < VMM::VectorSize; i++)
-        {
-            wEMSufficientStatisitcs.sumOfWeightedDirections[cnt].x[i] = 0.0f;
-        }
-    }
-    */
-
 }
 
 template<class TVMMDistribution>
 bool WeightedEMParallaxAwareVonMisesFisherFactory< TVMMDistribution>::SufficientStatisitcs::isValid() const
 {
-    //std::cout << "WeightedEMParallaxAwareVonMisesFisherFactory::SufficientStatisitcs(const SufficientStatisitcs &a)" << std::endl;
     bool valid = true;
     valid = wEMSufficientStatisitcs.isValid();
 
@@ -191,7 +176,6 @@ void WeightedEMParallaxAwareVonMisesFisherFactory< TVMMDistribution>::Sufficient
     wEMSufficientStatisitcs.serialize(stream);
     for(uint32_t k=0;k<VMM::NumVectors;k++)
     {
-        //stream.write(reinterpret_cast<const char*>(&sumOfWeightedDistances[k]), sizeof(vfloat<VMM::VectorSize>));
         stream.write(reinterpret_cast<const char*>(&sumOfDistanceWeightes[k]), sizeof(vfloat<VMM::VectorSize>));
     }
 }
@@ -202,7 +186,6 @@ void WeightedEMParallaxAwareVonMisesFisherFactory< TVMMDistribution>::Sufficient
     wEMSufficientStatisitcs.deserialize(stream);
     for(uint32_t k=0;k<VMM::NumVectors;k++)
     {
-        //stream.read(reinterpret_cast<char*>(&sumOfWeightedDistances[k]), sizeof(vfloat<VMM::VectorSize>));
         stream.read(reinterpret_cast<char*>(&sumOfDistanceWeightes[k]), sizeof(vfloat<VMM::VectorSize>));
     }
 }
@@ -211,14 +194,13 @@ template<class TVMMDistribution>
 void WeightedEMParallaxAwareVonMisesFisherFactory< TVMMDistribution>::SufficientStatisitcs::clear(size_t _numComponents)
 {
     wEMSufficientStatisitcs.clear(_numComponents);
-    //numComponents = _numComponents;
+
     const vfloat<VMM::VectorSize> zeros(0.0f);
     const vfloat<VMM::VectorSize> infs(std::numeric_limits<float>::infinity());
     const int cnt = (_numComponents+VMM::VectorSize-1) / VMM::VectorSize;
 
     for(int k = 0; k < cnt;k++)
     {
-        //sumOfWeightedDistances[k] = infs;
         sumOfDistanceWeightes[k] = zeros;
     }
 }
@@ -245,19 +227,19 @@ std::string WeightedEMParallaxAwareVonMisesFisherFactory< TVMMDistribution>::Suf
 {
     std::stringstream ss;
     ss << "SufficientStatisitcs:" << std::endl;
-    ss << "\tsumWeights:" << wEMSufficientStatisitcs.sumWeights << std::endl;
-    ss << "\tnumSamples:" << wEMSufficientStatisitcs.numSamples << std::endl;
-    ss << "\toverallNumSamples:" << wEMSufficientStatisitcs.overallNumSamples << std::endl;
-    ss << "\tnumComponents:" << wEMSufficientStatisitcs.numComponents << std::endl;
-    ss << "\tisNormalized:" << wEMSufficientStatisitcs.isNormalized << std::endl;
+    ss << "\tsumWeights = " << wEMSufficientStatisitcs.sumWeights << std::endl;
+    ss << "\tnumSamples = " << wEMSufficientStatisitcs.numSamples << std::endl;
+    ss << "\toverallNumSamples = " << wEMSufficientStatisitcs.overallNumSamples << std::endl;
+    ss << "\tnumComponents = " << wEMSufficientStatisitcs.numComponents << std::endl;
+    ss << "\tisNormalized = " << wEMSufficientStatisitcs.isNormalized << std::endl;
     for (size_t k = 0; k < wEMSufficientStatisitcs.numComponents ; k++)
     {
         int i = k / VMM::VectorSize;
         int j = k % VMM::VectorSize;
-        ss  << "\tstat["<< k <<"]:" << "\tsumWeightedStats: " << wEMSufficientStatisitcs.sumOfWeightedStats[i][j]
-            << "\tsumWeightedDirections: [" << wEMSufficientStatisitcs.sumOfWeightedDirections[i].x[j] << ",\t"
+        ss  << "\tstat["<< k <<"]:" << "\tsumWeightedStats = " << wEMSufficientStatisitcs.sumOfWeightedStats[i][j]
+            << "\tsumWeightedDirections = [" << wEMSufficientStatisitcs.sumOfWeightedDirections[i].x[j] << ",\t"
             << wEMSufficientStatisitcs.sumOfWeightedDirections[i].y[j] << ",\t" << wEMSufficientStatisitcs.sumOfWeightedDirections[i].z[j] << "]"
-            << "\tsumWeightedDistanceWeights: " << sumOfDistanceWeightes[i][j]
+            << "\tsumWeightedDistanceWeights = " << sumOfDistanceWeightes[i][j]
             << std::endl;
     }
     return ss.str();
@@ -340,8 +322,8 @@ void WeightedEMParallaxAwareVonMisesFisherFactory< TVMMDistribution>::partialUpd
 template<class TVMMDistribution>
 void WeightedEMParallaxAwareVonMisesFisherFactory< TVMMDistribution>::initComponentDistances (VMM &vmm, SufficientStatisitcs &sufficientStats, const DirectionalSampleData* samples, const size_t numSamples) const
 {
-    RKGUIDE_ASSERT(vmm._numComponents == sufficientStats.wEMSufficientStatisitcs.numComponents);
-    
+    RKGUIDE_ASSERT(vmm.getNumComponents() == sufficientStats.getNumComponents());
+
     vfloat<VMM::VectorSize> batchDistances[VMM::NumVectors];
     vfloat<VMM::VectorSize> batchSumWeights[VMM::NumVectors];
 
@@ -380,11 +362,9 @@ void WeightedEMParallaxAwareVonMisesFisherFactory< TVMMDistribution>::initCompon
     for (size_t k = 0; k < cnt; k++)
     {
 #ifdef USE_HARMONIC_MEAN
-        //const vfloat<VMM::VectorSize> sumInverseDistances = batchDistances[k];
         sufficientStats.sumOfDistanceWeightes[k] = batchSumWeights[k];
         vmm._distances[k] = sufficientStats.sumOfDistanceWeightes[k] / batchDistances[k];
 #else
-        //const vfloat<VMM::VectorSize> sumInverseDistances = batchDistances[k];
         sufficientStats.sumOfDistanceWeightes[k] = batchSumWeights[k];
         vmm._distances[k] = batchDistances[k] / sufficientStats.sumOfDistanceWeightes[k];
 #endif
@@ -398,14 +378,12 @@ void WeightedEMParallaxAwareVonMisesFisherFactory< TVMMDistribution>::initCompon
             sufficientStats.sumOfDistanceWeightes[cnt-1][i] = 0.0f;
         }
     }
-
-
 }
 
 template<class TVMMDistribution>
 void WeightedEMParallaxAwareVonMisesFisherFactory< TVMMDistribution>::updateComponentDistances (VMM &vmm, SufficientStatisitcs &sufficientStats, const DirectionalSampleData* samples, const size_t numSamples) const
 {
-    RKGUIDE_ASSERT(vmm._numComponents == sufficientStats.wEMSufficientStatisitcs.numComponents)
+    RKGUIDE_ASSERT(vmm.getNumComponents() == sufficientStats.getNumComponents());
 
     vfloat<VMM::VectorSize> batchDistances[VMM::NumVectors];
     vfloat<VMM::VectorSize> batchSumWeights[VMM::NumVectors];

@@ -59,7 +59,6 @@ void VonMisesFisherFactory<TVMMDistribution>::InitUniformVMM( VMM &vmm, const in
             }
             n++;
         }
-        //vmm._weights[i] = i;
     }
 
     vmm._calculateNormalization();
@@ -73,37 +72,34 @@ void VonMisesFisherFactory<TVMMDistribution>::_initUniformDirections( )
 {
     const float gr = 1.618033988749895f;
 
-        for(uint32_t l=0; l < VMM::MaxComponents; l++){
+    for(uint32_t l=0; l < VMM::MaxComponents; l++){
 
-            /// distributes samples l+1 uniform samples over the sphere
-            /// based on "Spherical Fibonacci Point Sets for Illumination Integrals"
-            uint32_t n = 0;
-            for(uint32_t k=0; k < VMM::NumVectors; k++){
+        /// distributes samples l+1 uniform samples over the sphere
+        /// based on "Spherical Fibonacci Point Sets for Illumination Integrals"
+        uint32_t n = 0;
+        for(uint32_t k=0; k < VMM::NumVectors; k++){
 
-                for(uint32_t i=0; i< VMM::VectorSize; i++){
+            for(uint32_t i=0; i< VMM::VectorSize; i++){
 
-                    if(n<l+1){
-                        float phi = 2.0f*M_PI*((float)n / gr);
-                        float z = 1.0f - ((2.0f*n + 1.0f) / float(l+1));
-                        float theta = std::acos(z);
+                if(n<l+1){
+                    float phi = 2.0f*M_PI*((float)n / gr);
+                    float z = 1.0f - ((2.0f*n + 1.0f) / float(l+1));
+                    float theta = std::acos(z);
 
-                        Vector3 mu = sphericalDirection(theta, phi);
-                        _uniformDirections[l][k].x[i] = mu[0];
-                        _uniformDirections[l][k].y[i] = mu[1];
-                        _uniformDirections[l][k].z[i] = mu[2];
-                    }else{
-                        _uniformDirections[l][k].x[i] = 0.0f;
-                        _uniformDirections[l][k].y[i] = 0.0f;
-                        _uniformDirections[l][k].z[i] = 1.0f;
-                    }
-
-                    n++;
-
-                    //count++;
+                    Vector3 mu = sphericalDirection(theta, phi);
+                    _uniformDirections[l][k].x[i] = mu[0];
+                    _uniformDirections[l][k].y[i] = mu[1];
+                    _uniformDirections[l][k].z[i] = mu[2];
+                }else{
+                    _uniformDirections[l][k].x[i] = 0.0f;
+                    _uniformDirections[l][k].y[i] = 0.0f;
+                    _uniformDirections[l][k].z[i] = 1.0f;
                 }
-
+                n++;
             }
+
         }
+    }
 }
 
 }

@@ -31,6 +31,8 @@ public:
 
     void mergeComponents(const size_t &idx0, const size_t &idx1) override;
 
+    void splitComponent(const size_t &idx0, const size_t &idx1, const float &weight0, const float &weight1, const Vector3 &meanDirection0, const Vector3 &meanDirection1, const float &meanCosine0, const float &meanCosine1) override;
+
     void performRelativeParallaxShift( const Vector3 &shiftDirection);
 
     float getComponentDistance(const size_t &idx) const;
@@ -90,6 +92,18 @@ ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents>::ParallaxAwareVonMise
 
 
 template<int VecSize, int maxComponents>
+void ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents>::splitComponent(const size_t &idx0, const size_t &idx1, const float &weight0, const float &weight1, const Vector3 &meanDirection0, const Vector3 &meanDirection1, const float &meanCosine0, const float &meanCosine1)
+{
+    const div_t tmpIdx0 = div( idx0, VecSize);
+    const div_t tmpIdx1 = div( idx1, VecSize);
+
+    _distances[tmpIdx1.quot][tmpIdx1.rem] = _distances[tmpIdx0.quot][tmpIdx0.rem];
+
+    VonMisesFisherMixture<VecSize, maxComponents>::splitComponent(idx0, idx1, weight0, weight1, meanDirection0, meanDirection1, meanCosine0, meanCosine1);
+}
+
+
+template<int VecSize, int maxComponents>
 void ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents>::mergeComponents(const size_t &idx0, const size_t &idx1)
 {
     const div_t tmpIdx0 = div( idx0, VecSize);
@@ -138,7 +152,7 @@ template<int VecSize, int maxComponents>
 bool ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents>::isValid() const
 {
     bool valid = VonMisesFisherMixture<VecSize, maxComponents>::isValid();
-    
+
     for(size_t k = 0; k < this->_numComponents; k++){
         const div_t tmpK = div( k, VecSize );
         valid &= isvalid(_distances[tmpK.quot][tmpK.rem]);

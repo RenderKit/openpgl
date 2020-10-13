@@ -90,12 +90,14 @@ public:
     Vector3 getComponentMeanDirection(const size_t &idx) const;
 
     float getComponentWeight(const size_t &idx) const;
-    
+
     float getComponentKappa(const size_t &idx) const;
 
     void swapComponents(const size_t &idx0, const size_t &idx1);
 
     virtual void mergeComponents(const size_t &idx0, const size_t &idx1);
+
+    virtual void splitComponent(const size_t &idx0, const size_t &idx1, const float &weight0, const float &weight1, const Vector3 &meanDirection0, const Vector3 &meanDirection1, const float &meanCosine0, const float &meanCosine1);
 
     void clearComponent(const size_t &idx);
 
@@ -150,6 +152,35 @@ std::string VonMisesFisherMixture<VecSize, maxComponents>::SoftAssignment::toStr
     return ss.str();
 }
 
+
+template<int VecSize, int maxComponents>
+void VonMisesFisherMixture<VecSize, maxComponents>::splitComponent(const size_t &idx0, const size_t &idx1, const float &weight0, const float &weight1, const Vector3 &meanDirection0, const Vector3 &meanDirection1, const float &meanCosine0, const float &meanCosine1)
+{
+    RKGUIDE_ASSERT(meanCosine0 > 0.0f && meanCosine0 <=1.0f);
+    RKGUIDE_ASSERT(meanCosine1 > 0.0f && meanCosine1 <=1.0f);
+
+    const div_t tmpIdx0 = div(idx0, static_cast<int>(VectorSize));
+    const div_t tmpIdx1 = div(idx1, static_cast<int>(VectorSize));
+
+    _weights[tmpIdx0.quot][tmpIdx0.rem] = weight0;
+    _meanCosines[tmpIdx0.quot][tmpIdx0.rem] = meanCosine0;
+    _kappas[tmpIdx0.quot][tmpIdx0.rem] = MeanCosineToKappa<float> (meanCosine0);
+    _meanDirections[tmpIdx0.quot].x[tmpIdx0.rem] = meanDirection0.x;
+    _meanDirections[tmpIdx0.quot].y[tmpIdx0.rem] = meanDirection0.y;
+    _meanDirections[tmpIdx0.quot].z[tmpIdx0.rem] = meanDirection0.z;
+
+    _weights[tmpIdx1.quot][tmpIdx1.rem] = weight1;
+    _meanCosines[tmpIdx1.quot][tmpIdx1.rem] = meanCosine1;
+    _kappas[tmpIdx1.quot][tmpIdx1.rem] = MeanCosineToKappa<float> (meanCosine1);
+    _meanDirections[tmpIdx1.quot].x[tmpIdx1.rem] = meanDirection1.x;
+    _meanDirections[tmpIdx1.quot].y[tmpIdx1.rem] = meanDirection1.y;
+    _meanDirections[tmpIdx1.quot].z[tmpIdx1.rem] = meanDirection1.z;
+
+    if (idx1 == _numComponents){
+        _numComponents++;
+    }
+    _calculateNormalization();
+}
 template<int VecSize, int maxComponents>
 void VonMisesFisherMixture<VecSize, maxComponents>::serialize(std::ostream& stream) const
 {

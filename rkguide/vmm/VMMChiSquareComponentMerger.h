@@ -267,7 +267,9 @@ bool VonMisesFisherChiSquareComponentMerger<TVMMFactory>::ThresholdedMergeNext (
         RKGUIDE_ASSERT(splitStats.isValid());
         splitStats.mergeComponentStats(mergeCandidateI, mergeCandidateJ, weightI, meanDirectionI, weightJ, meanDirectionJ, weightK, meanDirectionK);
         RKGUIDE_ASSERT(splitStats.isValid());
+        RKGUIDE_ASSERT(suffStats.isValid());
         suffStats.mergeComponentStats(mergeCandidateI, mergeCandidateJ);
+        RKGUIDE_ASSERT(suffStats.isValid());
         mergeCost = minMergeCost;
 
         //RKGUIDE_ASSERT(vmm._numComponents == suffStats.numComponents);
