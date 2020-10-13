@@ -3,9 +3,11 @@
 
 #include <rkguide/rkguide.h>
 #include <rkguide/data/DirectionalSampleData.h>
+#include <rkguide/vmm/ParallaxAwareVMM.h>
 #include <rkguide/vmm/VMM.h>
 #include <rkguide/vmm/VMMFactory.h>
 #include <rkguide/vmm/WeightedEMVMMFactory.h>
+#include <rkguide/vmm/WeightedEMParallaxAwareVMMFactory.h>
 #include <rkguide/vmm/VMMChiSquareComponentMerger.h>
 #include <rkguide/vmm/VMMChiSquareComponentSplitter.h>
 #include <rkguide/vmm/AdaptiveSplitandMergeFactory.h>
@@ -16,12 +18,12 @@ namespace py = pybind11;
 
 namespace rkguide
 {
-typedef rkguide::VonMisesFisherMixture<4,PYGUIDE_MAX_COMPONENTS> VMM;
-typedef rkguide::VonMisesFisherFactory<4,PYGUIDE_MAX_COMPONENTS> VMMFactory;
-typedef rkguide::WeightedEMVonMisesFisherFactory<4,PYGUIDE_MAX_COMPONENTS>  VMMWEMFactory;
-typedef rkguide::VonMisesFisherChiSquareComponentMerger<4,PYGUIDE_MAX_COMPONENTS> VMMChiSquareComponentMerger;
-typedef rkguide::VonMisesFisherChiSquareComponentSplitter<4,PYGUIDE_MAX_COMPONENTS> VMMChiSquareComponentSplitter;
-typedef rkguide::AdaptiveSplitAndMergeFactory<4,PYGUIDE_MAX_COMPONENTS> VMMAdaptiveSplitAndMergeFactory;
+typedef rkguide::ParallaxAwareVonMisesFisherMixture<4,PYGUIDE_MAX_COMPONENTS> VMM;
+typedef rkguide::VonMisesFisherFactory<VMM> VMMFactory;
+typedef rkguide::WeightedEMParallaxAwareVonMisesFisherFactory<VMM>  VMMWEMFactory;
+typedef rkguide::VonMisesFisherChiSquareComponentMerger<VMMWEMFactory> VMMChiSquareComponentMerger;
+typedef rkguide::VonMisesFisherChiSquareComponentSplitter<VMMWEMFactory> VMMChiSquareComponentSplitter;
+typedef rkguide::AdaptiveSplitAndMergeFactory<VMM> VMMAdaptiveSplitAndMergeFactory;
 }
 
 template <typename... Args>
@@ -379,7 +381,7 @@ auto VMMWEMFactory = py::class_< rkguide::VMMWEMFactory >(m, "VMMWEMFactory")
 
 py::class_< rkguide::VMMWEMFactory::Configuration >(VMMWEMFactory, "Configuration")
     .def(py::init<>())
-    .def_readwrite("maK", &rkguide::VMMWEMFactory::Configuration::maK)
+    .def_readwrite("maK", &rkguide::VMMWEMFactory::Configuration::maxK)
     .def_readwrite("maxEMIterrations", &rkguide::VMMWEMFactory::Configuration::maxEMIterrations)
     .def_readwrite("maxKappa", &rkguide::VMMWEMFactory::Configuration::maxKappa)
     .def_readonly("maxMeanCosine", &rkguide::VMMWEMFactory::Configuration::maxMeanCosine)
@@ -393,8 +395,8 @@ py::class_< rkguide::VMMWEMFactory::Configuration >(VMMWEMFactory, "Configuratio
 py::class_< rkguide::VMMWEMFactory::SufficientStatisitcs >(VMMWEMFactory, "SufficientStatisitcs")
     .def(py::init<>())
     .def(py::init< rkguide::VMMWEMFactory::SufficientStatisitcs >())
-    .def_readwrite("sumWeights", &rkguide::VMMWEMFactory::SufficientStatisitcs::sumWeights)
-    .def_readwrite("numSamples", &rkguide::VMMWEMFactory::SufficientStatisitcs::numSamples)
+    //.def_readwrite("sumWeights", &rkguide::VMMWEMFactory::SufficientStatisitcs::sumWeights)
+    //.def_readwrite("numSamples", &rkguide::VMMWEMFactory::SufficientStatisitcs::numSamples)
     .def("clear", &rkguide::VMMWEMFactory::SufficientStatisitcs::clear)
     .def("decay", &rkguide::VMMWEMFactory::SufficientStatisitcs::decay)
     .def("__repr__", &rkguide::VMMWEMFactory::SufficientStatisitcs::toString);
@@ -466,6 +468,9 @@ py::class_< rkguide::VMMAdaptiveSplitAndMergeFactory::ASMConfiguration >(Adaptiv
     .def_readwrite("mergingThreshold", &rkguide::VMMAdaptiveSplitAndMergeFactory::ASMConfiguration::mergingThreshold)
     .def_readwrite("partialReFit", &rkguide::VMMAdaptiveSplitAndMergeFactory::ASMConfiguration::partialReFit)
     .def_readwrite("maxSplitItr", &rkguide::VMMAdaptiveSplitAndMergeFactory::ASMConfiguration::maxSplitItr)
+    .def_readwrite("minSamplesForSplitting", &rkguide::VMMAdaptiveSplitAndMergeFactory::ASMConfiguration::minSamplesForSplitting)
+    .def_readwrite("minSamplesForPartialRefitting", &rkguide::VMMAdaptiveSplitAndMergeFactory::ASMConfiguration::minSamplesForPartialRefitting)
+    .def_readwrite("minSamplesForMerging", &rkguide::VMMAdaptiveSplitAndMergeFactory::ASMConfiguration::minSamplesForMerging)
     .def("__repr__", &rkguide::VMMAdaptiveSplitAndMergeFactory::ASMConfiguration::toString);
 
 py::class_< rkguide::VMMAdaptiveSplitAndMergeFactory::ASMStatistics >(AdaptiveSplitAndMergeFactory, "ASMStatistics")

@@ -53,7 +53,7 @@ void VonMisesFisherFactory<TVMMDistribution>::InitUniformVMM( VMM &vmm, const in
             {
                 vmm._kappas[i][j] = 0.0f;
                 vmm._weights[i][j] = 0.0f;
-                vmm._normalizations[i][j] = 1.0f/(4.0f*M_PI);
+                vmm._normalizations[i][j] = ONE_OVER_FOUR_PI;
                 vmm._eMinus2Kappa[i][j] = 1.0f;
                 vmm._meanCosines[i][j] = 0.0f;
             }

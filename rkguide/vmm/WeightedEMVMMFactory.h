@@ -836,7 +836,7 @@ void WeightedEMVonMisesFisherFactory< TVMMDistribution>::estimateMAPMeanDirectio
             vmm._meanCosines[cnt-1][i] = 0.0f;
             vmm._kappas[cnt-1][i] = 0.0f;
 
-            vmm._normalizations[cnt-1][i] = 1.0f/(4.0f*M_PI);
+            vmm._normalizations[cnt-1][i] = ONE_OVER_FOUR_PI;
             vmm._eMinus2Kappa[cnt-1][i] = 1.0f;
         }
     }

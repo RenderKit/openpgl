@@ -381,7 +381,7 @@ void AdaptiveSplitAndMergeFactory<TVMMDistribution>::update(VMM &vmm, ASMStatist
             RKGUIDE_ASSERT(vmm.getNumComponents() == stats.getNumComponents());
             RKGUIDE_ASSERT(stats.isValid());
 
-            if (totalSplitCount > 0 &&  cfg.partialReFit && numSamples > cfg.minSamplesForPartialRefitting)
+            if (totalSplitCount > 0 &&  cfg.partialReFit && numSamples >= cfg.minSamplesForPartialRefitting)
             {
                 typename WeightedEMFactory::SufficientStatisitcs tempSuffStatistics = stats.sufficientStatistics;
                 tempSuffStatistics.clear(vmm._numComponents);

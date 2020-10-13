@@ -223,7 +223,7 @@ bool VonMisesFisherMixture<VecSize, maxComponents>::isValid() const
 
         valid &= isvalid(_weights[tmpK.quot][tmpK.rem]);
         valid &= _weights[tmpK.quot][tmpK.rem] >= 0.0f;
-        valid &= _weights[tmpK.quot][tmpK.rem] <= 1.0f + 1e-5f;
+        valid &= _weights[tmpK.quot][tmpK.rem] <= 1.0f + 1e-6f;
         RKGUIDE_ASSERT(valid);
 
         valid &= isvalid(_kappas[tmpK.quot][tmpK.rem]);
@@ -258,7 +258,6 @@ bool VonMisesFisherMixture<VecSize, maxComponents>::isValid() const
         RKGUIDE_ASSERT(valid);
     }
 
-
     // check unused componets
     for(size_t k = _numComponents; k < MaxComponents; k++){
         const div_t tmpK = div( k, VecSize );
@@ -287,7 +286,7 @@ bool VonMisesFisherMixture<VecSize, maxComponents>::isValid() const
         RKGUIDE_ASSERT(valid);
 
         valid &= isvalid(_normalizations[tmpK.quot][tmpK.rem]);
-        valid &= _normalizations[tmpK.quot][tmpK.rem] == 1.0f/(4.0f*M_PI);
+        valid &= std::fabs(_normalizations[tmpK.quot][tmpK.rem] - ONE_OVER_FOUR_PI) < 1e-6f;
         RKGUIDE_ASSERT(valid);
 
         valid &= isvalid(_eMinus2Kappa[tmpK.quot][tmpK.rem]);
@@ -367,7 +366,7 @@ template<int VecSize, int maxComponents>
 float VonMisesFisherMixture<VecSize, maxComponents>::product(const float &_weight, const Vector3 &_meanDirection, const float &_kappa)
 {
 
-    float _normalization = 1.0f / (4.0f*M_PI);
+    float _normalization = ONE_OVER_FOUR_PI;
     //float _eMinus2Kappa = embree::fastapprox::exp< float >(-2.0f * _kappa);
     // TODO: use faster exp
     float _eMinus2Kappa = std::exp(-2.0f * _kappa);
@@ -386,7 +385,7 @@ float VonMisesFisherMixture<VecSize, maxComponents>::product(const float &_weigh
     const vfloat<VecSize> ones(1.0f);
     const vfloat<VecSize> minusTwos(-2.0f);
     const vfloat<VecSize> zeros(0.0f);
-    const vfloat<VecSize> zeroKappaNorm(1.0f/(4.0f*M_PI));
+    const vfloat<VecSize> zeroKappaNorm(ONE_OVER_FOUR_PI);
 
     const int cnt = (_numComponents+VecSize-1) / VecSize;
     const vfloat<VecSize> weight = _weight;
@@ -471,7 +470,7 @@ void VonMisesFisherMixture<VecSize, maxComponents>::clearComponent( const size_t
     _kappas[tmpIdx.quot][tmpIdx.rem] = 0.f;
     _eMinus2Kappa[tmpIdx.quot][tmpIdx.rem] = 1.f;
     _meanCosines[tmpIdx.quot][tmpIdx.rem] = 0.f;
-    _normalizations[tmpIdx.quot][tmpIdx.rem] = 1.0f/(4.0f*M_PI);
+    _normalizations[tmpIdx.quot][tmpIdx.rem] = ONE_OVER_FOUR_PI;
 
     _meanDirections[tmpIdx.quot].x[tmpIdx.rem] = 0.f;
     _meanDirections[tmpIdx.quot].y[tmpIdx.rem] = 0.f;
@@ -516,7 +515,7 @@ void VonMisesFisherMixture<VecSize, maxComponents>::mergeComponents( const size_
 
 
         float kappa = 0.0f;
-        float norm = 1.0f/(4.0f*M_PI);
+        float norm = ONE_OVER_FOUR_PI;
         float eMin2Kappa = 1.0f;
 
         float weight = weight0 + weight1;
@@ -768,7 +767,7 @@ void VonMisesFisherMixture<VecSize, maxComponents>::_normalizeWeights( ) {
 
 template<int VecSize, int maxComponents>
 void VonMisesFisherMixture<VecSize, maxComponents>::_calculateNormalization( ) {
-    const vfloat<VecSize> zeroKappaNorm(1.0f/(4.0f*M_PI));
+    const vfloat<VecSize> zeroKappaNorm(ONE_OVER_FOUR_PI);
 
     const int cnt = (_numComponents+VecSize-1) / VecSize;
     const vfloat<VecSize> minusTwo(-2.0f);

@@ -6,6 +6,8 @@
 
 //#define RKGUIDE_SHOW_PRINT_OUTS
 
+#define ONE_OVER_FOUR_PI 0.07957747154594767
+
 #include <embree/common/math/vec2.h>
 #include <embree/common/math/vec3.h>
 /* */

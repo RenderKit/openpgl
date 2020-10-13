@@ -123,7 +123,7 @@ float VonMisesFisherChiSquareComponentMerger<TVMMFactory>::CalculateMergeCost (c
     float weight = weight0 + weight1;
     float kappa = 0.0f;
     float meanCosine = 0.0f;
-    float normalization = 1.0f/(4.0f*M_PI);
+    float normalization = ONE_OVER_FOUR_PI;
     float eMinus2Kappa = 1.0f;
 
     Vector3 meanDirection = weight0 * meanCosine0 * meanDirection0 + weight1 * meanCosine1 * meanDirection1;
