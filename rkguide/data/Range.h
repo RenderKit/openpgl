@@ -7,14 +7,15 @@
 
 namespace rkguide
 {
+    template< typename TContainer>
     struct Range
     {
-        size_t start{0};
-        size_t end{0};
+        typename TContainer::iterator start;
+        typename TContainer::iterator end;
 
         inline size_t size() const
         {
-            return (end - start) + 1;
+            return std::distance(start, end);
         }
     };
 }

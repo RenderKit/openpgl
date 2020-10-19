@@ -191,7 +191,7 @@ struct KDTree
         return m_bounds;
     }
 
-private:
+public:
     bool m_isInit { false };
 
     BBox m_bounds;
