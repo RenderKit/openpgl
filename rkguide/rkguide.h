@@ -8,14 +8,18 @@
 
 #define ONE_OVER_FOUR_PI 0.07957747154594767
 
+#include <embree/common/math/constants.h>
 #include <embree/common/math/vec2.h>
 #include <embree/common/math/vec3.h>
+#include <embree/common/math/bbox.h>
 /* */
 namespace rkguide
 {
     typedef embree::Vec2<float> Vector2;
     typedef embree::Vec3<float> Vector3;
     typedef embree::Vec3<float> Point3;
+
+    typedef embree::BBox<Vector3> BBox;
 
     inline float dot(Vector2 &a, Vector2 &b)
     {
@@ -50,7 +54,7 @@ namespace rkguide
     }
 }
 */
-//#define RKGUIDE_DISABLE_ASSERTS
+#define RKGUIDE_DISABLE_ASSERTS
 
 #ifndef RKGUIDE_DISABLE_ASSERTS
 #include <assert.h>
