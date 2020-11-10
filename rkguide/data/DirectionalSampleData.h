@@ -13,14 +13,29 @@
 namespace rkguide
 {
 
+
+
 struct DirectionalSampleData
 {
+
+    enum Flags
+    {
+        ESplatted = 1<<0 // point does not represent any real scene intersection point
+    };
     Point3 position;
     Vector3 direction;
     float weight;
     float pdf;
     float distance;
     uint32_t flags;
+
+    DirectionalSampleData() = default;
+
+    DirectionalSampleData(Point3 _pos, Vector3 _dir, float _weight, float _pdf, float _distance, uint32_t _flags):
+        position(_pos), direction(_dir), weight(_weight), pdf(_pdf), distance(_distance), flags(_flags) 
+    {
+
+    }
 
     const std::string toString() const
     {

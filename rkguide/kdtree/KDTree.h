@@ -195,7 +195,6 @@ struct KDTree
     // bounding box
     KDTree() = default;
 
-
     inline void init(const BBox &bounds, size_t numNodesReseve = 0)
     {
         m_bounds = bounds;
@@ -205,6 +204,7 @@ struct KDTree
             m_nodes.reserve(numNodesReseve);
         }
         clear();
+        m_isInit = true;
     }
 
     inline void clear()
@@ -249,7 +249,7 @@ struct KDTree
 #ifdef USE_TBB_CONCURRENT_NODES
        auto firstChildItr = m_nodes.grow_by(2);
 #else
-        auto firstChildItr = m_nodes.grow(2);
+        auto firstChildItr = m_nodes.back_insert(2, KDNode());
 #endif
        return std::distance(m_nodes.begin(), firstChildItr);
     }
@@ -259,13 +259,33 @@ struct KDTree
         return m_bounds;
     }
 
+    std::string toString() const
+    {
+        std::stringstream ss;
+        ss.precision(5);
+        ss << "KDTree" << std::endl;
 
-    uint32_t getLeafNodeIdxAtPos(const Vector3 &pos, BBox &bbox) const
+        return ss.str();
+    }
+
+    uint32_t getDataIdxAtPos(const Vector3 &pos, BBox &bbox) const
     {
         RKGUIDE_ASSERT(m_isInit);
         RKGUIDE_ASSERT(embree::inside(m_bounds, pos));
         bbox = m_bounds;
-        return -1;
+
+        uint32_t nodeIdx = 0;
+        while(!m_nodes[nodeIdx].isLeaf())
+        {
+            uint8_t splitDim = m_nodes[nodeIdx].getSplitDim();
+            float pivot = m_nodes[nodeIdx].getSplitPivot();
+            if (pos[splitDim] < pivot)
+                nodeIdx = m_nodes[nodeIdx].getLeftChildIdx();
+            else
+                nodeIdx = m_nodes[nodeIdx].getLeftChildIdx()+1;
+        }
+
+        return m_nodes[nodeIdx].getDataIdx();
     }
 
     void exportKDTreeStructureToObj(std::string objFileName) const
@@ -303,13 +323,10 @@ struct KDTree
         {
             const uint32_t leafNodeId = node.getDataIdx();
             objFile << "# KDLeafNode"<< leafNodeId << std::endl;
-            // 0
+
             objFile << "v " << bbox.lower[0] << "\t" << bbox.lower[1] << "\t" << bbox.lower[2] << std::endl;
-            // 1
             objFile << "v " << bbox.lower[0] << "\t" << bbox.upper[1] << "\t" << bbox.lower[2] << std::endl;
-            // 2
             objFile << "v " << bbox.upper[0] << "\t" << bbox.upper[1] << "\t" << bbox.lower[2] << std::endl;
-            // 3
             objFile << "v " << bbox.upper[0] << "\t" << bbox.lower[1] << "\t" << bbox.lower[2] << std::endl;
 
             objFile << "v " << bbox.lower[0] << "\t" << bbox.lower[1] << "\t" << bbox.upper[2] << std::endl;
@@ -334,7 +351,11 @@ struct KDTree
     }
 
     template<typename TRegion, typename TRange>
+#ifdef  USE_TBB
     void exportSampleBoundsToObj(std::string objFileName, const tbb::concurrent_vector< std::pair<TRegion, TRange> > &dataStorage) const
+#else
+    void exportSampleBoundsToObj(std::string objFileName, const AtomicallyGrowingVector< std::pair<TRegion, TRange> > &dataStorage) const
+#endif
     {
         std::ofstream objFile;
         objFile.open(objFileName.c_str());
@@ -347,7 +368,11 @@ struct KDTree
     }
 
     template<typename TRegion, typename TRange>
+#ifdef  USE_TBB
     void exportSampleBoundToObj(std::ofstream &objFile, const KDNode &node, BBox bbox, uint32_t &vertexIDOffset, const tbb::concurrent_vector< std::pair<TRegion, TRange> > &dataStorage) const
+#else
+    void exportSampleBoundToObj(std::ofstream &objFile, const KDNode &node, BBox bbox, uint32_t &vertexIDOffset, const AtomicallyGrowingVector< std::pair<TRegion, TRange> > &dataStorage) const
+#endif
     {
         if(!node.isLeaf())
         {
@@ -368,17 +393,14 @@ struct KDTree
         else
         {
             const uint32_t leafNodeId = node.getDataIdx();
-            
+
             const std::pair<TRegion, TRange> &regionAndRange = dataStorage[leafNodeId];
-            BBox sampleBound = regionAndRange.first.sampleStatistics.sampleBound;
+            BBox sampleBound = regionAndRange.first.sampleStatistics.sampleBounds;
             objFile << "# SampleBound"<< leafNodeId << std::endl;
-            // 0
+
             objFile << "v " << sampleBound.lower[0] << "\t" << sampleBound.lower[1] << "\t" << sampleBound.lower[2] << std::endl;
-            // 1
             objFile << "v " << sampleBound.lower[0] << "\t" << sampleBound.upper[1] << "\t" << sampleBound.lower[2] << std::endl;
-            // 2
             objFile << "v " << sampleBound.upper[0] << "\t" << sampleBound.upper[1] << "\t" << sampleBound.lower[2] << std::endl;
-            // 3
             objFile << "v " << sampleBound.upper[0] << "\t" << sampleBound.lower[1] << "\t" << sampleBound.lower[2] << std::endl;
 
             objFile << "v " << sampleBound.lower[0] << "\t" << sampleBound.lower[1] << "\t" << sampleBound.upper[2] << std::endl;

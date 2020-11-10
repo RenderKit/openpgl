@@ -13,24 +13,24 @@ namespace rkguide
         Vector3 sampleVariance {0.0f};
         size_t numSamples {0};
 
-        BBox sampleBound{rkguide::Vector3(std::numeric_limits<float>::max()), rkguide::Vector3(-std::numeric_limits<float>::max())};
+        BBox sampleBounds{rkguide::Vector3(std::numeric_limits<float>::max()), rkguide::Vector3(-std::numeric_limits<float>::max())};
 
         inline void clear()
         {
             mean = Point3(0.0f);
             sampleVariance = Vector3(0.0f);
             numSamples = 0.0f;
-            sampleBound.lower = rkguide::Vector3(std::numeric_limits<float>::max());
-            sampleBound.upper = rkguide::Vector3(-std::numeric_limits<float>::max());
+            sampleBounds.lower = rkguide::Vector3(std::numeric_limits<float>::max());
+            sampleBounds.upper = rkguide::Vector3(-std::numeric_limits<float>::max());
             //sampleBound
         }
 
         inline void addSample( const Point3 sample)
         {
             numSamples++;
-            float incWeight = rcp(float(numSamples));
+            float incWeight = embree::rcp(float(numSamples));
             RKGUIDE_ASSERT(numSamples > 0.0f);
-            RKGUIDE_ASSERT(isvalid(incWeight));
+            RKGUIDE_ASSERT(embree::isvalid(incWeight));
             RKGUIDE_ASSERT(incWeight >=0.0f);
 
             const Point3 oldMean = mean;
@@ -39,7 +39,7 @@ namespace rkguide
             //mean += sample;
             //const Point3 newMean = mean * incWeight;
             sampleVariance += ((sample - oldMean) * (sample - mean));
-            sampleBound.extend( sample );
+            sampleBounds.extend( sample );
         }
 
         inline Point3 getMean() const
@@ -77,16 +77,16 @@ namespace rkguide
                 sampleVariance[splitDim] = newVariance * numSamples;
                 if(splitLower)
                 {
-                    sampleBound.lower[splitDim] = std::max(splitPos, sampleBound.lower[splitDim]);
-                    mean[splitDim] = std::min(sampleBound.upper[splitDim], mean[splitDim] + stdDerivation / 2.0f);
-                    RKGUIDE_ASSERT(mean[splitDim] >= sampleBound.lower[splitDim]);
+                    sampleBounds.lower[splitDim] = std::max(splitPos, sampleBounds.lower[splitDim]);
+                    mean[splitDim] = std::min(sampleBounds.upper[splitDim], mean[splitDim] + stdDerivation / 2.0f);
+                    RKGUIDE_ASSERT(mean[splitDim] >= sampleBounds.lower[splitDim]);
                     //mean[splitDim] += stdDerivation / 2.0f;
                 }
                 else
                 {
-                    sampleBound.upper[splitDim] = std::min(splitPos, sampleBound.upper[splitDim]);
-                    mean[splitDim] = std::max(sampleBound.lower[splitDim], mean[splitDim] - stdDerivation / 2.0f);
-                    RKGUIDE_ASSERT(mean[splitDim] <= sampleBound.upper[splitDim]);
+                    sampleBounds.upper[splitDim] = std::min(splitPos, sampleBounds.upper[splitDim]);
+                    mean[splitDim] = std::max(sampleBounds.lower[splitDim], mean[splitDim] - stdDerivation / 2.0f);
+                    RKGUIDE_ASSERT(mean[splitDim] <= sampleBounds.upper[splitDim]);
                     //mean[splitDim] -= stdDerivation / 2.0f;
                 }
 
@@ -111,7 +111,7 @@ namespace rkguide
             mean /= float(numSamples);
 
             sampleVariance = (sampleVarianceA + numSamplesA*meanA*meanA + sampleVarianceB + numSamplesB*meanB*meanB) - numSamples * mean*mean;
-            sampleBound.extend(b.sampleBound);
+            sampleBounds.extend(b.sampleBounds);
         }
 
         inline bool isValid() const
@@ -119,13 +119,13 @@ namespace rkguide
             bool valid = true;
             valid &= numSamples >=0.0f;
 
-            valid &= isvalid(mean.x);
-            valid &= isvalid(mean.y);
-            valid &= isvalid(mean.z);
+            valid &= embree::isvalid(mean.x);
+            valid &= embree::isvalid(mean.y);
+            valid &= embree::isvalid(mean.z);
 
-            valid &= isvalid(sampleVariance.x);
-            valid &= isvalid(sampleVariance.y);
-            valid &= isvalid(sampleVariance.z);
+            valid &= embree::isvalid(sampleVariance.x);
+            valid &= embree::isvalid(sampleVariance.y);
+            valid &= embree::isvalid(sampleVariance.z);
 
             return valid;
         }
@@ -145,7 +145,7 @@ namespace rkguide
             ss << "numSamples: " << numSamples << std::endl;
             ss << "mean: " << mean[0] << ",\t"<< mean[1] << ",\t"<< mean[2]  << std::endl;
             ss << "variance: " << variance[0] << ",\t"<< variance[1] << ",\t"<< variance[2]  << std::endl;
-            ss << "sampleBound: [" << sampleBound.lower[0] << ",\t"<< sampleBound.lower[1] << ",\t"<< sampleBound.lower[2] << "] \t [" << sampleBound.upper[0] << ",\t"<< sampleBound.upper[1] << ",\t"<< sampleBound.upper[2] << "] "<< std::endl;
+            ss << "sampleBounds: [" << sampleBounds.lower[0] << ",\t"<< sampleBounds.lower[1] << ",\t"<< sampleBounds.lower[2] << "] \t [" << sampleBounds.upper[0] << ",\t"<< sampleBounds.upper[1] << ",\t"<< sampleBounds.upper[2] << "] "<< std::endl;
             //ss << "maxComponents: " << maxComponents << std::endl;
             //ss << "maxComponents: " << maxComponents << std::endl;
             return ss.str();

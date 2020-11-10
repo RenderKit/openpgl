@@ -17,6 +17,7 @@ namespace rkguide
 {
     typedef embree::Vec2<float> Vector2;
     typedef embree::Vec3<float> Vector3;
+    typedef embree::Vec2<float> Point2;
     typedef embree::Vec3<float> Point3;
 
     typedef embree::BBox<Vector3> BBox;
@@ -54,7 +55,7 @@ namespace rkguide
     }
 }
 */
-#define RKGUIDE_DISABLE_ASSERTS
+//#define RKGUIDE_DISABLE_ASSERTS
 
 #ifndef RKGUIDE_DISABLE_ASSERTS
 #include <assert.h>

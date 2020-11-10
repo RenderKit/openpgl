@@ -29,7 +29,7 @@
 namespace rkguide
 {
 
-template<typename TSamples, typename TRegion, typename TRange>
+template<typename TRegion, typename TRange>
 struct KDTreePartitionBuilder
 {
 
@@ -39,39 +39,37 @@ struct KDTreePartitionBuilder
         size_t maxSamples {32000};
         size_t maxDepth{32};
     };
+
 #ifdef  USE_TBB_CONCURRENT
-    void build(KDTree &kdTree, const BBox &bound, std::vector<TSamples> &samples, tbb::concurrent_vector< std::pair<TRegion, TRange> > &dataStorage, const Settings &buildSettings) const
+    void build(KDTree &kdTree, const BBox &bounds, typename TRange::Container &samples, tbb::concurrent_vector< std::pair<TRegion, TRange> > &dataStorage, const Settings &buildSettings, const size_t &nCores) const
 #else
-    void build(KDTree &kdTree, const BBox &bound, std::vector<TSamples> &samples, AtomicallyGrowingVector< std::pair<TRegion, TRange> > &dataStorage, const Settings &buildSettings) const
+    void build(KDTree &kdTree, const BBox &bounds, typename TRange::Container &samples, AtomicallyGrowingVector< std::pair<TRegion, TRange> > &dataStorage, const Settings &buildSettings, const size_t &nCores) const
 
 #endif
     {
 
-        kdTree.init(bound, 4096);
+        kdTree.init(bounds, 4096);
         dataStorage.resize(1);
+        dataStorage[0].first.regionBounds = bounds;
 
-        int numEstLeafs = (samples.size()*2)/buildSettings.maxSamples+32;
+        //KDNode &root kdTree.getRoot();
+        updateTree(kdTree, samples, dataStorage, buildSettings, nCores);
+    }
+#ifdef  USE_TBB_CONCURRENT
+    void updateTree(KDTree &kdTree, typename TRange::Container &samples, tbb::concurrent_vector< std::pair<TRegion, TRange> > &dataStorage, const Settings &buildSettings, const uint32_t &nCores) const
+#else
+    void updateTree(KDTree &kdTree, typename TRange::Container &samples, AtomicallyGrowingVector< std::pair<TRegion, TRange> > &dataStorage, const Settings &buildSettings, const uint32_t &nCores) const
+#endif
+    {
+        int numEstLeafs = dataStorage.size() + (samples.size()*2)/buildSettings.maxSamples+32;
         kdTree.m_nodes.reserve(4*numEstLeafs);
         dataStorage.reserve(2*numEstLeafs);
 
-        //KDNode &root kdTree.getRoot();
-        updateTree(kdTree, samples, dataStorage, buildSettings);
-    }
-#ifdef  USE_TBB_CONCURRENT
-    void updateTree(KDTree &kdTree, std::vector<TSamples> &samples, tbb::concurrent_vector< std::pair<TRegion, TRange> > &dataStorage, const Settings &buildSettings) const
-#else
-    void updateTree(KDTree &kdTree, std::vector<TSamples> &samples, AtomicallyGrowingVector< std::pair<TRegion, TRange> > &dataStorage, const Settings &buildSettings) const
-#endif
-    {
         KDNode &root = kdTree.getRoot();
         SampleStatistics sampleStats;
         sampleStats.clear();
-        //size_t numSamples = samples.size();
 
-        TRange sampleRange;
-        sampleRange.start = samples.begin();
-        sampleRange.end = samples.end();
-
+        TRange sampleRange(samples);
         size_t depth =1;
 
 
@@ -121,7 +119,7 @@ struct KDTreePartitionBuilder
         }
         //std::cout <<  std::numeric_limits<float>::max() << "\t" << sampleStats.getNumSamples() << std::endl;
 #ifdef USE_OMP_TASKS
-#pragma omp parallel num_threads(20)
+#pragma omp parallel num_threads(nCores)
 #pragma omp single nowait
 #endif
         updateTreeNode(&kdTree, root, depth, sampleRange, sampleStats, &dataStorage, buildSettings);
@@ -130,13 +128,26 @@ struct KDTreePartitionBuilder
 
 private:
 
+    inline typename TRange::Container::iterator pivotSplitSamples(typename TRange::Container::iterator begin,
+                                                                           typename TRange::Container::iterator end,
+                                                                            uint8_t splitDimension, float pivot) const
+    {
+        std::function<bool(typename TRange::DataType)> pivotSplitPredicate
+                = [splitDimension, pivot](typename TRange::DataType sample) -> bool
+        {
+            return sample.position[splitDimension] < pivot;
 
-    typename std::vector<TSamples>::iterator pivotSplitSamplesWithStats(typename std::vector<TSamples>::iterator begin,
-                                                                           typename std::vector<TSamples>::iterator end,
+        };
+        return std::partition(begin, end, pivotSplitPredicate);
+    }
+
+
+    inline typename TRange::Container::iterator pivotSplitSamplesWithStats(typename TRange::Container::iterator begin,
+                                                                           typename TRange::Container::iterator end,
                                                                             uint8_t splitDimension, float pivot, SampleStatistics &statsLeft, SampleStatistics &statsRight) const
     {
-        std::function<bool(TSamples)> pivotSplitPredicate
-                = [splitDimension, pivot, &statsLeft, &statsRight](TSamples sample) -> bool
+        std::function<bool(typename TRange::DataType)> pivotSplitPredicate
+                = [splitDimension, pivot, &statsLeft, &statsRight](typename TRange::DataType sample) -> bool
         {
             bool left = sample.position[splitDimension] < pivot;
             if(left){
@@ -150,7 +161,7 @@ private:
     }
 
 
-    void getSplitDimensionAndPosition(const SampleStatistics &sampleStats, uint8_t &splitDim, float &splitPos) const
+    inline void getSplitDimensionAndPosition(const SampleStatistics &sampleStats, uint8_t &splitDim, float &splitPos) const
     {
         const Vector3 sampleVariance = sampleStats.getVaraince();
         const Point3 sampleMean = sampleStats.getMean();
@@ -191,25 +202,16 @@ private:
 
                 //regionAndRangeData.first.onSplit();
                 auto regionAndRangeDataRight = regionAndRangeData;
-                regionAndRangeData.first.sampleStatistics.split(splitDim, splitPos, 0.5f, false);
-                regionAndRangeDataRight.first.sampleStatistics.split(splitDim, splitPos, 0.5f, true);
-/*
-                SampleStatistics sampleStatsBeforeSplit = sampleStats;
-                SampleStatistics sampleStatsSplitLeft = sampleStatsBeforeSplit;
-                SampleStatistics sampleStatsSplitRight = sampleStatsBeforeSplit;
-                sampleStatsSplitLeft.decay(0.5f);
-                sampleStatsSplitLeft.split(splitDim, splitPos, false);
-                sampleStatsSplitRight.decay(0.5f);
-                sampleStatsSplitRight.split(splitDim, splitPos, true);
 
-                SampleStatistics sampleStatsMerged = sampleStatsSplitLeft;
-                sampleStatsMerged.merge(sampleStatsSplitRight);
+                // merge split handling
+                regionAndRangeData.first.sampleStatistics.split(splitDim, splitPos, 0.25f, false);
+                regionAndRangeDataRight.first.sampleStatistics.split(splitDim, splitPos, 0.25f, true);
 
-                std::cout << "sampleStatsBeforeSplit: " << sampleStatsBeforeSplit.toString()  
-                        << "sampleStatsSplitLeft: " << sampleStatsSplitLeft.toString()
-                        << "sampleStatsSplitRight: " << sampleStatsSplitRight.toString()
-                        << "sampleStatsMerged: " << sampleStatsMerged.toString() << std::endl; 
-*/
+                regionAndRangeData.first.splitFlag = true;
+                regionAndRangeDataRight.first.splitFlag = true;
+
+                regionAndRangeData.first.regionBounds.upper[splitDim] = splitPos;
+                regionAndRangeDataRight.first.regionBounds.lower[splitDim] = splitPos;
 
 #ifdef  USE_TBB_CONCURRENT
                 auto rigthDataItr = dataStorage->push_back(regionAndRangeDataRight);
@@ -230,8 +232,6 @@ private:
             }
             else
             {
-                //std::cout << "\t\tNo Split" << std::endl;
-                //std::cout << "dataId: " << dataIdx << "\tdepth: " << depth << "\tsize: " << sampleRange.size()  << std::endl;
                 regionAndRangeData.first.sampleStatistics.merge( sampleStats );
                 regionAndRangeData.second = sampleRange;
                 return;
@@ -250,21 +250,23 @@ private:
         // TODO: update sample stats
         sampleStatsLeftRight[0].clear();
         sampleStatsLeftRight[1].clear();
-        auto rPivotItr = pivotSplitSamplesWithStats(sampleRange.start, sampleRange.end, splitDim, splitPos, sampleStatsLeftRight[0], sampleStatsLeftRight[1]);
-/*
-        SampleStatistics mergedStats = sampleStatsLeftRight[0];
-        mergedStats.merge( sampleStatsLeftRight[1]);
-        std::cout << "samplesStats: " << sampleStats.toString()  << "mergedStats: " << mergedStats.toString() << std::endl; 
-*/
-        //size_t pivotOffSet  = std::distance( samples.begin(), rPivotItr );
-        //RKGUIDE_ASSERT (pivotOffSet > 0);
-        //RKGUIDE_ASSERT (pivotOffSet > std::distance(samples.begin(), sampleRange.start));
-        //RKGUIDE_ASSERT (pivotOffSet < std::distance(samples.begin(),sampleRange.end));
-        sampleRangeLeftRight[0].start = sampleRange.start;
-        sampleRangeLeftRight[0].end = rPivotItr;
 
-        sampleRangeLeftRight[1].start = rPivotItr;
-        sampleRangeLeftRight[1].end = sampleRange.end;
+        typename TRange::Container::iterator rPivotItr;
+
+        if(kdTree->getNode(nodeIdsLeftRight[0]).isLeaf() || kdTree->getNode(nodeIdsLeftRight[1]).isLeaf() )
+        {
+            rPivotItr = pivotSplitSamplesWithStats(sampleRange.begin(), sampleRange.end(), splitDim, splitPos, sampleStatsLeftRight[0], sampleStatsLeftRight[1]);
+        }
+        else
+        {
+            rPivotItr = pivotSplitSamples(sampleRange.begin(), sampleRange.end(), splitDim, splitPos);
+        }
+
+        sampleRangeLeftRight[0].m_start = sampleRange.begin();
+        sampleRangeLeftRight[0].m_end = rPivotItr;
+
+        sampleRangeLeftRight[1].m_start = rPivotItr;
+        sampleRangeLeftRight[1].m_end = sampleRange.end();
 
         RKGUIDE_ASSERT(sampleRangeLeftRight[0].size() > 1);
         RKGUIDE_ASSERT(sampleRangeLeftRight[1].size() > 1);

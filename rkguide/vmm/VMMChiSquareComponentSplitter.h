@@ -910,36 +910,36 @@ bool VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::ComponentSplitStatis
     {
         validVec &= embree::isvalid(splitMeans[k].x);
         validVec &= embree::isvalid(splitMeans[k].y);
-        //RKGUIDE_ASSERT(embree::any(validVec));
+        RKGUIDE_ASSERT(embree::any(validVec));
 
         validVec &= embree::isvalid(splitWeightedSampleCovariances[k].x);
         validVec &= embree::isvalid(splitWeightedSampleCovariances[k].y);
         validVec &= embree::isvalid(splitWeightedSampleCovariances[k].z);
-        //RKGUIDE_ASSERT(embree::any(validVec));
+        RKGUIDE_ASSERT(embree::any(validVec));
 
         validVec &= embree::isvalid(chiSquareMCEstimates[k]);
         validVec &= chiSquareMCEstimates[k] >= 0.0f;
-        //RKGUIDE_ASSERT(embree::any(validVec));
+        RKGUIDE_ASSERT(embree::any(validVec));
 
         validVec &= embree::isvalid(sumWeights[k]);
         validVec &= sumWeights[k] >= 0.0f;
-        //RKGUIDE_ASSERT(embree::any(validVec));
+        RKGUIDE_ASSERT(embree::any(validVec));
 
         validVec &= embree::isvalid(sumAssignedSamples[k]);
         validVec &= sumAssignedSamples[k] >= 0.0f;
-        //RKGUIDE_ASSERT(embree::any(validVec));
+        RKGUIDE_ASSERT(embree::any(validVec));
 
         validVec &= embree::isvalid(numSamples[k]);
         validVec &= numSamples[k] >= 0.0f;
-        //RKGUIDE_ASSERT(embree::any(validVec));
+        RKGUIDE_ASSERT(embree::any(validVec));
 
     }
 
     valid &= embree::any(validVec);
-    //RKGUIDE_ASSERT(valid);
+    RKGUIDE_ASSERT(valid);
     valid &= numComponents > 0;
     valid &= numComponents <= VMM::MaxComponents;
-    //RKGUIDE_ASSERT(valid);
+    RKGUIDE_ASSERT(valid);
 
     return valid;
 }

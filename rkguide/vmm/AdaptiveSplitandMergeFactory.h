@@ -270,6 +270,7 @@ std::string AdaptiveSplitAndMergeFactory<TVMMDistribution>::ASMConfiguration::to
 template<class TVMMDistribution>
 void AdaptiveSplitAndMergeFactory<TVMMDistribution>::fit(VMM &vmm, size_t numComponents, ASMStatistics &stats, const DirectionalSampleData* samples, const size_t numSamples, const ASMConfiguration &cfg, ASMFittingStatistics &fitStats) const
 {
+    stats.clear(numComponents);
     // intial fit
     WeightedEMFactory factory = WeightedEMFactory();
     typename WeightedEMFactory::FittingStatistics wemFitStats;
@@ -277,7 +278,7 @@ void AdaptiveSplitAndMergeFactory<TVMMDistribution>::fit(VMM &vmm, size_t numCom
     factory.initComponentDistances(vmm, stats.sufficientStatistics, samples, numSamples);
     RKGUIDE_ASSERT(vmm.isValid());
     RKGUIDE_ASSERT(vmm.getNumComponents() == stats.sufficientStatistics.getNumComponents());
-    RKGUIDE_ASSERT(stats.sufficientStatistics.isValid());
+    RKGUIDE_ASSERT(stats.isValid());
 /* */
 
     if (cfg.useSplitAndMerge)
@@ -296,19 +297,14 @@ void AdaptiveSplitAndMergeFactory<TVMMDistribution>::fit(VMM &vmm, size_t numCom
 
         splitter.CalculateSplitStatistics(vmm, stats.splittingStatistics, mcEstimate, samples, numSamples);
 
-        //std::cout << "fit: numComponents: " << vmm._numComponents << std::endl;
-
-        //RKGUIDE_ASSERT(vmm._numComponents == stats.sufficientStatistics.numComponents);
         RKGUIDE_ASSERT(vmm.getNumComponents() == stats.getNumComponents());
         RKGUIDE_ASSERT(vmm.isValid());
 
         Merger merger = Merger();
         merger.PerformMerging(vmm, cfg.mergingThreshold, stats.sufficientStatistics, stats.splittingStatistics);
         RKGUIDE_ASSERT(vmm.isValid());
-    /* */
-        //std::cout << "fit: numComponents: " << vmm._numComponents << std::endl;
-        //stats.splittingStatistics.clear(vmm._numComponents);
     }
+
     stats.numSamplesAfterLastSplit = 0.0f;
     stats.numSamplesAfterLastMerge = 0.0f;
 
@@ -347,14 +343,9 @@ void AdaptiveSplitAndMergeFactory<TVMMDistribution>::update(VMM &vmm, ASMStatist
         stats.numSamplesAfterLastMerge += numSamples;
 
         Splitter splitter = Splitter();
-        //stats.splittingStatistics.clear(vmm._numComponents);
         //RKGUIDE_ASSERT(stats.splittingStatistics.isValid());
         splitter.UpdateSplitStatistics(vmm, stats.splittingStatistics, mcEstimate, samples, numSamples);
         RKGUIDE_ASSERT(stats.splittingStatistics.isValid());
-        //splitter.CalculateSplitStatistics(vmm, stats.splittingStatistics, mcEstimate, samples, numSamples);
-
-
-    //    std::cout << "numSamplesAfterLastSplit: " << stats.numSamplesAfterLastSplit << "\t minSamplesForSplitting: " << cfg.minSamplesForSplitting << std::endl;
 
         if (stats.numSamplesAfterLastSplit >= cfg.minSamplesForSplitting)
         {
