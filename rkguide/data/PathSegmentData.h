@@ -21,7 +21,9 @@ struct PathSegmentData
     Vector3 directionIn;
     Vector3 directionOut;
     Vector3 normal;
-    float distance {0.0f};
+    //float distance {0.0f};
+
+    bool volumeScatter{false};
 
     float pdfDirectionIn {1.0f};
     bool isDelta {false};
@@ -29,6 +31,8 @@ struct PathSegmentData
     // BSDF or phase function evaluation
     // divided by the sampling PDF
     Vector3 scatteringWeight{1.0f};
+
+    Vector3 transmittanceWeight{1.0f};
 
     // local space information
     //float cosThetaIncomming {1.0f};
@@ -50,6 +54,11 @@ struct PathSegmentData
 
     const void* regionPtr{nullptr};
 
+
+    PathSegmentData() = default;
+
+    PathSegmentData(const Point3 &_pos, const Vector3 &_normal, const Vector3 &_outDir):
+        position(_pos), directionOut(_outDir), normal(_normal){}
 };
 
 }

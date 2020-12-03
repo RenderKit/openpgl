@@ -29,6 +29,13 @@ struct PathSegmentDataStorage
     void clear()
     {
         m_segmentStorage.clear();
+        m_sampleStorage.clear();
+    }
+
+    PathSegmentData *create_back(const Point3 &pos, const Vector3 &normal, const Vector3 &outDir)
+    {
+       m_segmentStorage.emplace_back(pos, normal, outDir);
+       return &m_segmentStorage.back();
     }
 
     void push_back(const PathSegmentData &psData)
@@ -39,7 +46,7 @@ struct PathSegmentDataStorage
 
     uint32_t prepareSamples(const bool useNEEMiWeights = false)
     {
-        m_sampleStorage.clear();
+        //m_sampleStorage.clear();
         //m_regionPtrStorage.clear();
 
         const float minPDF {0.1f};
@@ -51,8 +58,8 @@ struct PathSegmentDataStorage
         for (int i=numSegments-2; i>=0; --i)
         {
             const rkguide::PathSegmentData &currentPathSegment = m_segmentStorage[i];
-
-            float distance = currentPathSegment.distance + lastDistance;
+            float currentDistance = embree::length(m_segmentStorage[i+1].position - currentPathSegment.position);
+            float distance = currentDistance + lastDistance;
             if(!currentPathSegment.isDelta && currentPathSegment.roughness >=0.3f)
             {
                 lastDistance = 0.0f;
@@ -87,6 +94,7 @@ struct PathSegmentDataStorage
                 for (size_t j = i+1; j < numSegments; ++j)
                 {
                     const rkguide::PathSegmentData &nextPathSegment = m_segmentStorage[j];
+                    throughput = throughput * nextPathSegment.transmittanceWeight;
                     rkguide::Vector3 clampedThroughput = embree::min(throughput, maxThroughput);
                     contribution += clampedThroughput * nextPathSegment.scatteredContribution;
                     if(j == i+1 && !useNEEMiWeights)
@@ -119,6 +127,11 @@ struct PathSegmentDataStorage
     const std::vector<std::pair<DirectionalSampleData, const void*>>& getSamples()const
     {
         return m_sampleStorage;
+    }
+
+    void addSample(const DirectionalSampleData &sampleData, const void *regionPtr)
+    {
+        m_sampleStorage.push_back(std::pair<DirectionalSampleData, const void*>(sampleData, regionPtr));
     }
 
 
