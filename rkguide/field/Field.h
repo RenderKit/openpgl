@@ -148,7 +148,7 @@ protected:
         if (m_useStochasticNNLookUp)
         {
             mitsuba::ref<mitsuba::Timer> embreereeTimer = new mitsuba::Timer();
-            m_kNNRegionSearchTree.buildRegionSearchTree<RegionStorageContainerType, RegionType>(m_regionStorageContainer);
+            m_regionKNNSearchTree.buildRegionSearchTree<RegionStorageContainerType, RegionType>(m_regionStorageContainer);
             //mitsuba::SLog(mitsuba::EInfo, "Embree BVH update time: %s", timeString(embreereeTimer->getSeconds(), true).c_str());
         }
     }
@@ -164,22 +164,22 @@ protected:
         if (m_useStochasticNNLookUp)
         {
             mitsuba::ref<mitsuba::Timer> embreereeTimer = new mitsuba::Timer();
-            m_kNNRegionSearchTree.buildRegionSearchTree<RegionStorageContainerType, RegionType>(m_regionStorageContainer);
+            m_regionKNNSearchTree.buildRegionSearchTree<RegionStorageContainerType, RegionType>(m_regionStorageContainer);
             //mitsuba::SLog(mitsuba::EInfo, "Embree BVH update time: %s", timeString(embreereeTimer->getSeconds(), true).c_str());
         }
     }
 
     void updateKNNRegionSearchTree()
     {
-        m_kNNRegionSearchTree.buildRegionSearchTree<RegionStorageContainerType, RegionType>(m_regionStorageContainer);
+        m_regionKNNSearchTree.buildRegionSearchTree<RegionStorageContainerType, RegionType>(m_regionStorageContainer);
     }
 
     const RegionType *getClosestRegion(const rkguide::Point3 &p, float sample) const
     {
-        RKGUIDE_ASSERT(m_kNNRegionSearchTree.isBuild());
-        RKGUIDE_ASSERT(m_kNNRegionSearchTree.numRegions() == m_regionStorageContainer.size());
+        RKGUIDE_ASSERT(m_regionKNNSearchTree.isBuild());
+        RKGUIDE_ASSERT(m_regionKNNSearchTree.numRegions() == m_regionStorageContainer.size());
 
-        const uint32_t regionIdx = m_kNNRegionSearchTree.sampleClosestRegionIdx(p, sample);
+        const uint32_t regionIdx = m_regionKNNSearchTree.sampleClosestRegionIdx(p, sample);
         if (regionIdx != -1)
         {
             return &m_regionStorageContainer[regionIdx].first;
@@ -209,10 +209,10 @@ private:
     typename SpatialSubdivBuilder::Settings spatialSubdivBuilderSettings;
     bool m_useStochasticNNLookUp {false};
     // spatial structure
-    SpatialSubdivStructure m_spatialSubdiv;
     SpatialSubdivBuilder m_spatialSubdivBuilder;
     typename SpatialSubdivBuilder::Settings m_spatialSubdivBuilderSettings;
-    KNearestRegionsSearchTree m_kNNRegionSearchTree;
+    SpatialSubdivStructure m_spatialSubdiv;
+    KNearestRegionsSearchTree m_regionKNNSearchTree;
 };
 
 
