@@ -1,0 +1,13 @@
+## Copyright 2009-2020 Intel Corporation
+## SPDX-License-Identifier: Apache-2.0
+
+stages:
+  - scan
+
+source-protex-scan:
+  stage: scan
+  tags: [docker]
+  image: amd64/openjdk:8
+  needs: []
+  script:
+    - gitlab/source_scan_protex.sh
