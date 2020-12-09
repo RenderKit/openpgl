@@ -63,6 +63,8 @@ struct FieldParallaxAwareVMM: public Field<rkguide::Region<ParallaxAwareVonMises
         m_distributionFactory.fit(regionStorage.first.distribution, m_distributionFactorySettings.weightedEMCfg.initK, regionStorage.first.trainingStatistics, dataPoints.data(), dataPoints.size(), m_distributionFactorySettings, fittingStats);
         regionStorage.first.distribution._pivotPosition = sampleMean;
         regionStorage.first.valid = regionStorage.first.distribution.isValid();
+        if(!regionStorage.first.valid)
+            std::cout << "!!!! regionStorage.first.valid !!! " << regionStorage.first.distribution.toString() << std::endl;
         regionStorage.first.splitFlag = false;
       }
 //      mitsuba::SLog(mitsuba::EInfo, "Region fitting time: %s", timeString(fittingTimer->getSeconds(), true).c_str());
@@ -109,6 +111,8 @@ struct FieldParallaxAwareVMM: public Field<rkguide::Region<ParallaxAwareVonMises
         typename DistributionFactory::ASMFittingStatistics fittingStats;
         m_distributionFactory.update(regionStorage.first.distribution, regionStorage.first.trainingStatistics, dataPoints.data(), dataPoints.size(), m_distributionFactorySettings, fittingStats);
         regionStorage.first.valid = regionStorage.first.distribution.isValid();
+        if(!regionStorage.first.valid)
+            std::cout << "!!!! regionStorage.first.valid !!! " << regionStorage.first.distribution.toString() << std::endl;
       }
 //      mitsuba::SLog(mitsuba::EInfo, "Region fitting time: %s", timeString(fittingTimer->getSeconds(), true).c_str());
     }

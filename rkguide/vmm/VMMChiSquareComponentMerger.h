@@ -220,6 +220,7 @@ bool VonMisesFisherChiSquareComponentMerger<TVMMFactory>::ThresholdedMergeNext (
 template<class TVMMFactory>
 bool VonMisesFisherChiSquareComponentMerger<TVMMFactory>::ThresholdedMergeNext (VMM &vmm, const float &mergeThreshold, float &mergeCost, SufficientStatisitcs &suffStats, ComponentSplitStatistics &splitStats) const
 {
+    RKGUIDE_ASSERT(splitStats.isValid());
     int K = vmm._numComponents;
     int mergeCandidateI = 0;
     int mergeCandidateJ = 0;
