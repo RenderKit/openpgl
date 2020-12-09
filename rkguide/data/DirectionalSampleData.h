@@ -20,8 +20,10 @@ struct DirectionalSampleData
 
     enum Flags
     {
-        ESplatted = 1<<0 // point does not represent any real scene intersection point
+        ESplatted = 1<<0, // point does not represent any real scene intersection point
+        EInsideVolume = 1<<1 // point does not represent any real scene intersection point
     };
+
     Point3 position;
     Vector3 direction;
     float weight;
@@ -32,9 +34,24 @@ struct DirectionalSampleData
     DirectionalSampleData() = default;
 
     DirectionalSampleData(Point3 _pos, Vector3 _dir, float _weight, float _pdf, float _distance, uint32_t _flags):
-        position(_pos), direction(_dir), weight(_weight), pdf(_pdf), distance(_distance), flags(_flags) 
+        position(_pos), direction(_dir), weight(_weight), pdf(_pdf), distance(_distance), flags(_flags)
     {
 
+    }
+
+    bool isInsideVolume() const
+    {
+        return (flags & EInsideVolume);
+    }
+
+    void setIsInsideVolume()
+    {
+        flags |= EInsideVolume;
+    }
+
+    void unsetIsInsideVolume()
+    {
+        flags ^= EInsideVolume;
     }
 
     const std::string toString() const

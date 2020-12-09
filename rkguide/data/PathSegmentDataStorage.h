@@ -87,7 +87,11 @@ struct PathSegmentDataStorage
                 float pdf = std::max(minPDF,currentPathSegment.pdfDirectionIn);
                 uint32_t flags{0};
                 const void* regionPtr = (const void*)currentPathSegment.regionPtr;
-
+                bool insideVolume = currentPathSegment.volumeScatter;
+                if(insideVolume)
+                {
+                    flags |= DirectionalSampleData::EInsideVolume;
+                }
                 // evalaute the incident radiance the incident
                 rkguide::Vector3 throughput {1.0f};
                 rkguide::Vector3 contribution {0.0f};
@@ -113,8 +117,16 @@ struct PathSegmentDataStorage
                 {
                     //if (considerNEE) SLog(EInfo, "Sample 2[%d]: pos: %f, %f, %f \t dir: %f, %f, %f \t pdf: %f \t distance: %f \t con: %f, %f, %f ", 
                     //    i, pos[0], pos[1], pos[2], dir[0], dir[1], dir[2], pdf, distance, contribution[0], contribution[1], contribution[2]);
-                    m_sampleStorage.emplace_back(DirectionalSampleData(pos, dir, RKGUIDE_SPECTRUM_TO_FLOAT(contribution)/pdf,
-                                            pdf, distance, flags), regionPtr);
+                    if(distance>0){
+                        RKGUIDE_ASSERT(distance > 0);
+                        RKGUIDE_ASSERT(embree::isvalid(distance));
+                        m_sampleStorage.emplace_back(DirectionalSampleData(pos, dir, RKGUIDE_SPECTRUM_TO_FLOAT(contribution)/pdf,
+                                                pdf, distance, flags), regionPtr);
+                    }
+                    else
+                    {
+                        std::cout << "PathSegmentDataStorage::prepareSamples(): !(distance>0)" << std::endl;
+                    }
                     //m_regionPtrStorage.emplace_back(regionPtr);
                 }
 
@@ -131,6 +143,8 @@ struct PathSegmentDataStorage
 
     void addSample(const DirectionalSampleData &sampleData, const void *regionPtr)
     {
+        RKGUIDE_ASSERT(sampleData.distance > 0);
+        RKGUIDE_ASSERT(embree::isvalid(sampleData.distance));
         m_sampleStorage.push_back(std::pair<DirectionalSampleData, const void*>(sampleData, regionPtr));
     }
 

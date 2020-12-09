@@ -16,7 +16,8 @@ namespace rkguide
 struct SampleDataStorage
 {
     typedef tbb::concurrent_vector<DirectionalSampleData> SampleDataContainer;
-    SampleDataContainer m_container;
+    SampleDataContainer m_surfaceContainer;
+    SampleDataContainer m_volumeContainer;
     bool m_splatSamples {false};
     BBox m_sceneBounds;
 
@@ -32,7 +33,14 @@ struct SampleDataStorage
         {
             splatSample(sample, region->getSampleBounds(), sampler->next2D());
         }
-        m_container.push_back(sample);
+        if(sample.isInsideVolume())
+        {
+            m_volumeContainer.push_back(sample);
+        }
+        else
+        {
+            m_surfaceContainer.push_back(sample);
+        }
     }
 
     template<typename TRegion>
@@ -55,24 +63,61 @@ struct SampleDataStorage
         m_container.emplace_back(std::forward<Args>(args)...);
     }
 */
-    inline void reserve(const size_t &size)
+    inline void reserveSurface(const size_t &size)
     {
-        m_container.reserve(size);
+        m_surfaceContainer.reserve(size);
     }
 
-    inline size_t size() const
+    inline size_t sizeSurface() const
     {
-        return m_container.size();
+        return m_surfaceContainer.size();
     }
 
-    inline void clear()
+    inline void clearSurface()
     {
-        m_container.clear();
+        m_surfaceContainer.clear();
     }
 
-    void sort()
+    void sortSurface()
     {
-        std::sort(m_container.begin(), m_container.end());
+        std::sort(m_surfaceContainer.begin(), m_surfaceContainer.end());
+    }
+
+    inline void reserveVolume(const size_t &size)
+    {
+        m_volumeContainer.reserve(size);
+    }
+
+    inline size_t sizeVolume() const
+    {
+        return m_volumeContainer.size();
+    }
+
+    inline void clearVolume()
+    {
+        m_volumeContainer.clear();
+    }
+
+    void sortVolume()
+    {
+        std::sort(m_volumeContainer.begin(), m_volumeContainer.end());
+    }
+
+
+    void exportSurfaceSamplesToObj(std::string objFileName, bool pointsOnly = true)
+    {
+        std::ofstream objFile;
+        objFile.open(objFileName.c_str());
+        exportSamplesToObj(objFile, m_surfaceContainer, pointsOnly);
+        objFile.close();
+    }
+
+    void exportVolumeSamplesToObj(std::string objFileName, bool pointsOnly = true)
+    {
+        std::ofstream objFile;
+        objFile.open(objFileName.c_str());
+        exportSamplesToObj(objFile, m_volumeContainer, pointsOnly);
+        objFile.close();
     }
 
     private:
@@ -108,6 +153,68 @@ struct SampleDataStorage
             sample.flags |= DirectionalSampleData::ESplatted;
         }
     }
+
+    void exportSamplesToObj(std::ofstream &objFile, const SampleDataContainer &sampleContainer, bool pointsOnly = true)
+    {
+        std::vector<DirectionalSampleData> subSampledData;
+        subSampledData.reserve(sampleContainer.size());
+        for (size_t i =0; i < sampleContainer.size(); i++)
+        {
+            //int idx = sampler->next1D() * nData;
+            subSampledData.push_back(sampleContainer[i]);
+        }
+
+/*
+            Properties props("independent");
+            props.setInteger("sampleCount", numExportedSamples);
+            ref<Sampler> sampler = static_cast<Sampler *>(PluginManager::getInstance()->createObject(MTS_CLASS(Sampler), props));
+
+            std::vector<DData> subSampledData;
+            subSampledData.reserve(numExportedSamples);
+            for (size_t i =0; i < numExportedSamples; i++)
+            {
+                int idx = sampler->next1D() * nData;
+                subSampledData.push_back(data[idx]);
+            }
+
+            std::ofstream objFile;
+            objFile.open(objFileName.c_str());
+*/
+            for (auto& sample : subSampledData)
+            {
+                objFile << "v " << sample.position[0] << "\t" << sample.position[1] << "\t"<< sample.position[2] << std::endl;
+                if (!pointsOnly)
+                {
+                    Vector3 dir = sample.direction;
+                    Point3 pos2 = sample.position + dir * sample.distance;
+                    objFile << "v " << pos2[0] << "\t" << pos2[1] << "\t"<< pos2[2] << std::endl;
+                    objFile << "v " << sample.position[0] << "\t" << sample.position[1] << "\t"<< sample.position[2] << std::endl;
+                }
+            }
+
+            for (auto& sample : subSampledData)
+            {
+                Vector3 dir = sample.direction;
+                //dir *= sample.distance;
+                objFile << "vn " << dir[0] << "\t" << dir[1] << "\t"<< dir[2] << std::endl;
+                if (!pointsOnly)
+                {
+                    objFile << "vn " << dir[0] << "\t" << dir[1] << "\t"<< dir[2] << std::endl;
+                    objFile << "vn " << dir[0] << "\t" << dir[1] << "\t"<< dir[2] << std::endl;
+                }
+            }
+
+            if (!pointsOnly)
+            {
+                for (int i = 0; i < subSampledData.size(); i++)
+                {
+                    objFile << "f " << i*3+1 << "\t" << i*3+2 << "\t"<< i*3+3 << std::endl;
+                }
+            }
+            //objFile.close();
+    }
+
+
 };
 
 }
