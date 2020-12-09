@@ -111,6 +111,7 @@ struct KNearestRegionsSearchTree
         rtcCommitGeometry(geom);
         rtcReleaseGeometry(geom);
         rtcCommitScene(embree_scene);
+        _isBuild = true;
     }
 
     uint32_t sampleClosestRegionIdx(const rkguide::Point3 &p, float sample) const
