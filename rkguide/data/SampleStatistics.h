@@ -151,6 +151,22 @@ namespace rkguide
             return ss.str();
         }
 
+        void serialize(std::ostream& stream) const
+        {
+            stream.write(reinterpret_cast<const char*>(&mean), sizeof(Point3));
+            stream.write(reinterpret_cast<const char*>(&sampleVariance), sizeof(Vector3));
+            stream.write(reinterpret_cast<const char*>(&numSamples), sizeof(size_t));
+            stream.write(reinterpret_cast<const char*>(&sampleBounds), sizeof(BBox));
+        }
+
+        void deserialize(std::istream& stream)
+        {
+            stream.read(reinterpret_cast<char*>(&mean), sizeof(Point3));
+            stream.read(reinterpret_cast<char*>(&sampleVariance), sizeof(Vector3));
+            stream.read(reinterpret_cast<char*>(&numSamples), sizeof(size_t));
+            stream.read(reinterpret_cast<char*>(&sampleBounds), sizeof(BBox));
+        }
+
     };
 
 }
