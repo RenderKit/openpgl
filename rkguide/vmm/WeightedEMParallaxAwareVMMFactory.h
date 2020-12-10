@@ -35,10 +35,6 @@ struct WeightedEMParallaxAwareVonMisesFisherFactory: public WeightedEMVonMisesFi
 
         SufficientStatisitcs() = default;
 
-        SufficientStatisitcs(const SufficientStatisitcs &a);// = delete;
-/*
-        SufficientStatisitcs& operator+=(const SufficientStatisitcs &stats) override;
-*/
         void serialize(std::ostream& stream) const;
 
         void deserialize(std::istream& stream);
@@ -113,16 +109,6 @@ public:
 ////////////////////////////////////////////////////////////
 /////////            SufficientStatisitcs
 ////////////////////////////////////////////////////////////
-
-template<class TVMMDistribution>
-WeightedEMParallaxAwareVonMisesFisherFactory< TVMMDistribution>::SufficientStatisitcs::SufficientStatisitcs(const SufficientStatisitcs &a)
-{
-    wEMSufficientStatisitcs = a.wEMSufficientStatisitcs;
-    for(uint32_t k=0;k<VMM::NumVectors;k++)
-    {
-        sumOfDistanceWeightes[k] = a.sumOfDistanceWeightes[k];
-    }
-}
 
 template<class TVMMDistribution>
 void WeightedEMParallaxAwareVonMisesFisherFactory< TVMMDistribution>::SufficientStatisitcs::applyParallaxShift(const VMM &vmm, const Vector3 shift)
@@ -232,7 +218,8 @@ std::string WeightedEMParallaxAwareVonMisesFisherFactory< TVMMDistribution>::Suf
     ss << "\toverallNumSamples = " << wEMSufficientStatisitcs.overallNumSamples << std::endl;
     ss << "\tnumComponents = " << wEMSufficientStatisitcs.numComponents << std::endl;
     ss << "\tisNormalized = " << wEMSufficientStatisitcs.isNormalized << std::endl;
-    for (size_t k = 0; k < wEMSufficientStatisitcs.numComponents ; k++)
+    //for (size_t k = 0; k < wEMSufficientStatisitcs.numComponents ; k++)
+    for (size_t k = 0; k < VMM::MaxComponents ; k++)
     {
         int i = k / VMM::VectorSize;
         int j = k % VMM::VectorSize;
@@ -403,6 +390,8 @@ void WeightedEMParallaxAwareVonMisesFisherFactory< TVMMDistribution>::updateComp
     vfloat<VMM::VectorSize> weights;
     for (size_t n = 0; n < numSamples; n++)
     {
+        RKGUIDE_ASSERT(samples[n].distance > 0);
+        RKGUIDE_ASSERT(embree::isvalid(samples[n].distance));
 #ifdef USE_HARMONIC_MEAN
         sampleDistance = rcp(samples[n].distance);
 #else

@@ -66,7 +66,6 @@ public:
         size_t numSamplesAfterLastMerge {0};
 
         ASMStatistics() = default;
-        ASMStatistics(const ASMStatistics &a); // = delete;
 
         void clear(const size_t &_numComponents);
         void clearAll();
@@ -118,16 +117,6 @@ public:
     }
 
 };
-
-template<class TVMMDistribution>
-AdaptiveSplitAndMergeFactory<TVMMDistribution>::ASMStatistics::ASMStatistics(const AdaptiveSplitAndMergeFactory<TVMMDistribution>::ASMStatistics &a)
-{
-    this->sufficientStatistics = a.sufficientStatistics;
-    this->splittingStatistics = a.splittingStatistics;
-
-    this->numSamplesAfterLastSplit = a.numSamplesAfterLastSplit;
-    this->numSamplesAfterLastMerge = a.numSamplesAfterLastMerge;
-}
 
 template<class TVMMDistribution>
 void AdaptiveSplitAndMergeFactory<TVMMDistribution>::ASMStatistics::serialize(std::ostream& stream) const
@@ -412,7 +401,7 @@ void AdaptiveSplitAndMergeFactory<TVMMDistribution>::update(VMM &vmm, ASMStatist
 
         fitStats.numComponents = vmm._numComponents;
     }
-
+    RKGUIDE_ASSERT(vmm.isValid());
     factory.updateComponentDistances(vmm, stats.sufficientStatistics, samples, numSamples);
 
     RKGUIDE_ASSERT(vmm.getNumComponents() == stats.sufficientStatistics.getNumComponents());

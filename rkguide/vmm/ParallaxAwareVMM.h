@@ -17,7 +17,6 @@ struct ParallaxAwareVonMisesFisherMixture: public VonMisesFisherMixture<VecSize,
 public:
 
     ParallaxAwareVonMisesFisherMixture() = default;
-    ParallaxAwareVonMisesFisherMixture( const ParallaxAwareVonMisesFisherMixture &a);
 
     typedef VonMisesFisherMixture<VecSize, maxComponents> VMM;
 
@@ -77,19 +76,6 @@ std::string ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents>::toString
     ss << "sumWeights: " << sumWeights << std::endl;
     return ss.str();
 }
-
-template<int VecSize, int maxComponents>
-ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents>::ParallaxAwareVonMisesFisherMixture( const ParallaxAwareVonMisesFisherMixture &a):
-    VonMisesFisherMixture<VecSize, maxComponents>(a)
-{
-
-    for (size_t k = 0; k < VMM::NumVectors; k++)
-    {
-        _distances[k]= a._distances[k];
-    }
-    _pivotPosition = a._pivotPosition;
-}
-
 
 template<int VecSize, int maxComponents>
 void ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents>::splitComponent(const size_t &idx0, const size_t &idx1, const float &weight0, const float &weight1, const Vector3 &meanDirection0, const Vector3 &meanDirection1, const float &meanCosine0, const float &meanCosine1)

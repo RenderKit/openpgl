@@ -78,7 +78,6 @@ struct WeightedEMVonMisesFisherFactory: public VonMisesFisherFactory< TVMMDistri
     struct SufficientStatisitcs
     {
         SufficientStatisitcs() = default;
-        SufficientStatisitcs( const SufficientStatisitcs &a);
 
         embree::Vec3< vfloat<VMM::VectorSize> > sumOfWeightedDirections[VMM::NumVectors];
         vfloat<VMM::VectorSize> sumOfWeightedStats[VMM::NumVectors];
@@ -482,22 +481,6 @@ void WeightedEMVonMisesFisherFactory< TVMMDistribution>::SufficientStatisitcs::m
     {
         sumWeights = reduce_add(newSumWeights);
     }
-}
-
-
-template<class TVMMDistribution>
-WeightedEMVonMisesFisherFactory< TVMMDistribution>::SufficientStatisitcs::SufficientStatisitcs(const SufficientStatisitcs &a)
-{
-    for (size_t k = 0; k < ( (VMM::MaxComponents + (VMM::VectorSize -1)) / VMM::VectorSize); k++)
-    {
-        sumOfWeightedDirections[k]= a.sumOfWeightedDirections[k];
-        sumOfWeightedStats[k]=  a.sumOfWeightedStats[k];
-    }
-    sumWeights = a.sumWeights;
-    numSamples = a.numSamples;
-    numComponents = a.numComponents;
-    isNormalized = a.isNormalized;
-    overallNumSamples = a.overallNumSamples;
 }
 
 template<class TVMMDistribution>

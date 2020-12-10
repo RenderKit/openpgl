@@ -66,7 +66,6 @@ struct ComponentSplitStatistics
 {
 
     ComponentSplitStatistics() = default;
-    ComponentSplitStatistics(const ComponentSplitStatistics &a);
 
     vfloat<VMM::VectorSize> chiSquareMCEstimates[VMM::NumVectors];
     Vec2<vfloat<VMM::VectorSize> > splitMeans[VMM::NumVectors];
@@ -850,24 +849,6 @@ bool VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::SplitComponentIntoTh
 }
 
 template<class TVMMFactory>
-VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::ComponentSplitStatistics::ComponentSplitStatistics(const VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::ComponentSplitStatistics &a)
-{
-    for(uint32_t k=0;k<VMM::NumVectors;k++)
-    {
-        this->chiSquareMCEstimates[k] = a.chiSquareMCEstimates[k];
-        this->splitMeans[k] = a.splitMeans[k];
-        this->splitWeightedSampleCovariances[k] = a.splitWeightedSampleCovariances[k];
-
-        this->numSamples[k] = a.numSamples[k];
-        this->sumWeights[k] = a.sumWeights[k];
-
-        this->sumAssignedSamples[k] = a.sumAssignedSamples[k];
-    }
-    this->numComponents = a.numComponents;
-}
-
-
-template<class TVMMFactory>
 void VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::ComponentSplitStatistics::serialize(std::ostream& stream) const
 {
     for(uint32_t k=0;k<VMM::NumVectors;k++){
@@ -1178,16 +1159,22 @@ std::string VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::ComponentSpli
     ss << "ComponentSplitStatistics:" << std::endl;
     ss << "numComponents: " << numComponents << std::endl;
     float sumChiSquareEst = 0.0f;
-    for ( int k = 0; k < numComponents; k++)
+    //for ( int k = 0; k < numComponents; k++)
+    for ( int k = 0; k < VMM::MaxComponents; k++)
     {
         const div_t tmp = div(k, static_cast<int>(VMM::VectorSize));
         ss << "\t stats[" << k << "]: " << "chiSquareEst: " << chiSquareMCEstimates[tmp.quot][tmp.rem];
-
         ss << std::endl;
         ss << "\t" << "mean: ["  << splitMeans[tmp.quot].x[tmp.rem] << ",\t" << splitMeans[tmp.quot].y[tmp.rem] << "]";
-        ss << std::endl;
-
-        ss << "\t covar: [" << splitWeightedSampleCovariances[tmp.quot].x[tmp.rem] / sumWeights[tmp.quot][tmp.rem] << ",\t" << splitWeightedSampleCovariances[tmp.quot].y[tmp.rem]  / sumWeights[tmp.quot][tmp.rem]<< ",\t" << splitWeightedSampleCovariances[tmp.quot].z[tmp.rem]  / sumWeights[tmp.quot][tmp.rem] << "]";
+        ss << "\t samplevar: [" << splitWeightedSampleCovariances[tmp.quot].x[tmp.rem] << ",\t" << splitWeightedSampleCovariances[tmp.quot].y[tmp.rem]<< ",\t" << splitWeightedSampleCovariances[tmp.quot].z[tmp.rem] << "]";
+        if(sumWeights[tmp.quot][tmp.rem] > 0.f)
+        {
+            ss << "\t covar: [" << splitWeightedSampleCovariances[tmp.quot].x[tmp.rem] / sumWeights[tmp.quot][tmp.rem] << ",\t" << splitWeightedSampleCovariances[tmp.quot].y[tmp.rem]  / sumWeights[tmp.quot][tmp.rem]<< ",\t" << splitWeightedSampleCovariances[tmp.quot].z[tmp.rem]  / sumWeights[tmp.quot][tmp.rem] << "]";
+        }
+        else
+        {
+            ss << "\t covar: [" << 0.0f << ",\t" << 0.0f << ",\t" << 0.0f << "]";
+        }
         ss << std::endl;
 
         ss << "\t" << "numSamples: " << numSamples[tmp.quot][tmp.rem] << "\t sumWeights: " << sumWeights[tmp.quot][tmp.rem] << "\t sumAssignedSamples: " << sumAssignedSamples[tmp.quot][tmp.rem];

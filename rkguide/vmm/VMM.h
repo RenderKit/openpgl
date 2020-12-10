@@ -58,7 +58,6 @@ public:
 public:
 
     VonMisesFisherMixture() = default;
-    VonMisesFisherMixture( const VonMisesFisherMixture &a);
 
     vfloat<VecSize> _weights[NumVectors];
     vfloat<VecSize> _kappas[NumVectors];
@@ -441,24 +440,6 @@ float VonMisesFisherMixture<VecSize, maxComponents>::product(const float &_weigh
     }
     return productIntegral;
     //_normalizeWeights();
-}
-
-
-template<int VecSize, int maxComponents>
-VonMisesFisherMixture<VecSize, maxComponents>::VonMisesFisherMixture( const VonMisesFisherMixture &a)
-{
-    for (size_t k = 0; k < NumVectors; k++)
-    {
-        _weights[k]= a._weights[k];
-        _kappas[k]=  a._kappas[k];
-        _eMinus2Kappa[k]=  a._eMinus2Kappa[k];
-        _meanCosines[k] =  a._meanCosines[k];
-        _normalizations[k] =  a._normalizations[k];
-
-        _meanDirections[k] =  a._meanDirections[k];
-
-    }
-    _numComponents = a._numComponents;
 }
 
 template<int VecSize, int maxComponents>
