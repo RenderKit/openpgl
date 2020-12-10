@@ -84,8 +84,8 @@ struct WeightedEMVonMisesFisherFactory: public VonMisesFisherFactory< TVMMDistri
         vfloat<VMM::VectorSize> sumOfWeightedStats[VMM::NumVectors];
 
         float sumWeights {0.f};
-        float numSamples {0};
-        float overallNumSamples {0};
+        float numSamples {0.f};
+        float overallNumSamples {0.f};
         size_t numComponents {VMM::MaxComponents};
         bool isNormalized {false};
         //SufficientStatisitcs operator+(const SufficientStatisitcs &stats);
@@ -507,7 +507,7 @@ void WeightedEMVonMisesFisherFactory< TVMMDistribution>::SufficientStatisitcs::s
         stream.write(reinterpret_cast<const char*>(&sumOfWeightedDirections[k]), sizeof(embree::Vec3< vfloat<VMM::VectorSize> >));
         stream.write(reinterpret_cast<const char*>(&sumOfWeightedStats[k]), sizeof(vfloat<VMM::VectorSize>));
     }
-    stream.write(reinterpret_cast<const char*>(&numSamples), sizeof(float));
+    stream.write(reinterpret_cast<const char*>(&sumWeights), sizeof(float));
     stream.write(reinterpret_cast<const char*>(&numSamples), sizeof(float));
     stream.write(reinterpret_cast<const char*>(&overallNumSamples), sizeof(float));
     stream.write(reinterpret_cast<const char*>(&numComponents), sizeof(size_t));
@@ -521,7 +521,7 @@ void WeightedEMVonMisesFisherFactory< TVMMDistribution>::SufficientStatisitcs::d
         stream.read(reinterpret_cast<char*>(&sumOfWeightedDirections[k]), sizeof(embree::Vec3< vfloat<VMM::VectorSize> >));
         stream.read(reinterpret_cast<char*>(&sumOfWeightedStats[k]), sizeof(vfloat<VMM::VectorSize>));
     }
-    stream.read(reinterpret_cast<char*>(&numSamples), sizeof(float));
+    stream.read(reinterpret_cast<char*>(&sumWeights), sizeof(float));
     stream.read(reinterpret_cast<char*>(&numSamples), sizeof(float));
     stream.read(reinterpret_cast<char*>(&overallNumSamples), sizeof(float));
     stream.read(reinterpret_cast<char*>(&numComponents), sizeof(size_t));
