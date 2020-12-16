@@ -39,196 +39,54 @@ struct SurfaceVolumeFieldParallaxAwareVMM: public SurfaceVolumeField<rkguide::Re
 
     void fitRegions() override
     {
-      //mitsuba::ref<mitsuba::Timer> fittingTimer = new mitsuba::Timer();
-      size_t nSurfaceGudiginRegions = this->m_regionStorageContainerSurface.size();
-      std::cout << "fitRegion: nSurfaceGudiginRegions = " << nSurfaceGudiginRegions << std::endl;
-//      mitsuba::SLog(mitsuba::EInfo, "Begin region fitting: nRegions = %d", nGudiginRegions);
-#if defined(MTS_OPENMP)
-			//SLog(EInfo, "Fit Mixtures: nCores= %d", m_nCores);
-      #pragma omp parallel for num_threads(this->m_nCores) schedule(dynamic)
-#endif
-      for (size_t n=0; n < nSurfaceGudiginRegions; n++)
-      {
-        typename ParentField::RegionStorageType &regionStorage = this->m_regionStorageContainerSurface[n];
-        rkguide::Point3 sampleMean = regionStorage.first.sampleStatistics.mean;
-        std::vector<rkguide::DirectionalSampleData> dataPoints;
-        for (auto& sample : regionStorage.second)
-        {
-            if(m_useParallaxCompensation)
-            {
-                reorientSample(sample, sampleMean);
-            }
-            dataPoints.push_back(sample);
-        }
-        if (dataPoints.size() > 0)
-        {
-            typename DistributionFactory::ASMFittingStatistics fittingStats;
-            m_distributionFactory.fit(regionStorage.first.distribution, m_distributionFactorySettings.weightedEMCfg.initK, regionStorage.first.trainingStatistics, dataPoints.data(), dataPoints.size(), m_distributionFactorySettings, fittingStats);
-            regionStorage.first.distribution._pivotPosition = sampleMean;
-            regionStorage.first.valid = regionStorage.first.distribution.isValid();
-            if(!regionStorage.first.valid)
-                std::cout << "!!!! Surface regionStorage.first.valid !!! " << regionStorage.first.distribution.toString() << std::endl;
-            regionStorage.first.splitFlag = false;
-        }
-        else
-        {
-            regionStorage.first.valid = false;
-            regionStorage.first.splitFlag = false;
-        }
-      }
-//      mitsuba::SLog(mitsuba::EInfo, "Region fitting time: %s", timeString(fittingTimer->getSeconds(), true).c_str());
-
-      size_t nVolumeGudiginRegions = this->m_regionStorageContainerVolume.size();
-      std::cout << "fitRegion: nVolumeGudiginRegions = " << nVolumeGudiginRegions << std::endl;
-//      mitsuba::SLog(mitsuba::EInfo, "Begin region fitting: nRegions = %d", nGudiginRegions);
-#if defined(MTS_OPENMP)
-			//SLog(EInfo, "Fit Mixtures: nCores= %d", m_nCores);
-      #pragma omp parallel for num_threads(this->m_nCores) schedule(dynamic)
-#endif
-      for (size_t n=0; n < nVolumeGudiginRegions; n++)
-      {
-        typename ParentField::RegionStorageType &regionStorage = this->m_regionStorageContainerVolume[n];
-        rkguide::Point3 sampleMean = regionStorage.first.sampleStatistics.mean;
-        std::vector<rkguide::DirectionalSampleData> dataPoints;
-        for (auto& sample : regionStorage.second)
-        {
-            if(m_useParallaxCompensation)
-            {
-                reorientSample(sample, sampleMean);
-            }
-            dataPoints.push_back(sample);
-        }
-        if (dataPoints.size() > 0)
-        {
-            typename DistributionFactory::ASMFittingStatistics fittingStats;
-            m_distributionFactory.fit(regionStorage.first.distribution, m_distributionFactorySettings.weightedEMCfg.initK, regionStorage.first.trainingStatistics, dataPoints.data(), dataPoints.size(), m_distributionFactorySettings, fittingStats);
-            regionStorage.first.distribution._pivotPosition = sampleMean;
-            regionStorage.first.valid = regionStorage.first.distribution.isValid();
-            if(!regionStorage.first.valid)
-                std::cout << "!!!! Volume regionStorage.first.valid !!! " << regionStorage.first.distribution.toString() << std::endl;
-            regionStorage.first.splitFlag = false;
-        }
-        else
-        {
-            regionStorage.first.valid = false;
-            regionStorage.first.splitFlag = false;
-        }
-      }
-
+        fitRegions(this->m_regionStorageContainerSurface, true);
+        fitRegions(this->m_regionStorageContainerVolume, false);
     }
 
     void updateRegions() override
     {
-      //mitsuba::ref<mitsuba::Timer> fittingTimer = new mitsuba::Timer();
-      size_t nSurfaceGudiginRegions = this->m_regionStorageContainerSurface.size();
-      std::cout << "updateRegion: nSurfaceGudiginRegions = " << nSurfaceGudiginRegions << std::endl;
-//      mitsuba::SLog(mitsuba::EInfo, "Begin region fitting: nRegions = %d", nGudiginRegions);
-#if defined(MTS_OPENMP)
-//			mitsuba::SLog(mitsuba::EInfo, "Fit Mixtures: nCores= %d", this->m_nCores);
-      #pragma omp parallel for num_threads(this->m_nCores) schedule(dynamic)
-#endif
-      for (size_t n=0; n < nSurfaceGudiginRegions; n++)
-      {
-        typename ParentField::RegionStorageType &regionStorage = this->m_regionStorageContainerSurface[n];
-//        mitsuba::SLog(mitsuba::EInfo, "Region[%d] = nSamples %d", n, regionStorage.second.size());
-        if (regionStorage.first.splitFlag)
-        {
-            //m_factory.onSpatialSplit(regionStorage.first.distribution, regionStorage.first.trainingStatistics);
-            regionStorage.first.trainingStatistics.decay(this->m_decayOnSpatialSplit);
-            regionStorage.first.splitFlag = false;
-        }
-
-        rkguide::Point3 sampleMean = regionStorage.first.sampleStatistics.mean;
-        std::vector<rkguide::DirectionalSampleData> dataPoints;
-        for (auto& sample : regionStorage.second)
-        {
-            if(m_useParallaxCompensation)
-            {
-                reorientSample(sample, sampleMean);
-            }
-            dataPoints.push_back(sample);
-        }
-        if (dataPoints.size() > 0)
-        {
-            if(m_useParallaxCompensation)
-            {
-                regionStorage.first.trainingStatistics.sufficientStatistics.applyParallaxShift(regionStorage.first.distribution, regionStorage.first.distribution._pivotPosition - sampleMean);
-                regionStorage.first.distribution.performRelativeParallaxShift(regionStorage.first.distribution._pivotPosition - sampleMean);
-                RKGUIDE_ASSERT(regionStorage.first.distribution.isValid());
-                RKGUIDE_ASSERT(regionStorage.first.trainingStatistics.sufficientStatistics.isValid());
-            }
-            typename DistributionFactory::ASMFittingStatistics fittingStats;
-            m_distributionFactory.update(regionStorage.first.distribution, regionStorage.first.trainingStatistics, dataPoints.data(), dataPoints.size(), m_distributionFactorySettings, fittingStats);
-            regionStorage.first.valid = regionStorage.first.distribution.isValid();
-            if(!regionStorage.first.valid)
-                std::cout << "!!!! Surface regionStorage.first.valid !!! " << regionStorage.first.distribution.toString() << std::endl;
-            
-        }
-        else
-        {
-            regionStorage.first.valid = false;
-            regionStorage.first.splitFlag = false;
-        }
-      }
-//      mitsuba::SLog(mitsuba::EInfo, "Region fitting time: %s", timeString(fittingTimer->getSeconds(), true).c_str());
-      size_t nVolumeGudiginRegions = this->m_regionStorageContainerVolume.size();
-      std::cout << "updateRegion: nVolumeGudiginRegions = " << nVolumeGudiginRegions << std::endl;
-//      mitsuba::SLog(mitsuba::EInfo, "Begin region fitting: nRegions = %d", nGudiginRegions);
-#if defined(MTS_OPENMP)
-//			mitsuba::SLog(mitsuba::EInfo, "Fit Mixtures: nCores= %d", this->m_nCores);
-      #pragma omp parallel for num_threads(this->m_nCores) schedule(dynamic)
-#endif
-      for (size_t n=0; n < nVolumeGudiginRegions; n++)
-      {
-        typename ParentField::RegionStorageType &regionStorage = this->m_regionStorageContainerVolume[n];
-//        mitsuba::SLog(mitsuba::EInfo, "Region[%d] = nSamples %d", n, regionStorage.second.size());
-        if (regionStorage.first.splitFlag)
-        {
-            //m_factory.onSpatialSplit(regionStorage.first.distribution, regionStorage.first.trainingStatistics);
-            regionStorage.first.trainingStatistics.decay(this->m_decayOnSpatialSplit);
-            regionStorage.first.splitFlag = false;
-        }
-
-        rkguide::Point3 sampleMean = regionStorage.first.sampleStatistics.mean;
-        std::vector<rkguide::DirectionalSampleData> dataPoints;
-        for (auto& sample : regionStorage.second)
-        {
-            if(m_useParallaxCompensation)
-            {
-                reorientSample(sample, sampleMean);
-            }
-            dataPoints.push_back(sample);
-        }
-        if (dataPoints.size() > 0)
-        {
-            if(m_useParallaxCompensation)
-            {
-                regionStorage.first.trainingStatistics.sufficientStatistics.applyParallaxShift(regionStorage.first.distribution, regionStorage.first.distribution._pivotPosition - sampleMean);
-                regionStorage.first.distribution.performRelativeParallaxShift(regionStorage.first.distribution._pivotPosition - sampleMean);
-                RKGUIDE_ASSERT(regionStorage.first.distribution.isValid());
-                RKGUIDE_ASSERT(regionStorage.first.trainingStatistics.sufficientStatistics.isValid());
-            }
-            typename DistributionFactory::ASMFittingStatistics fittingStats;
-            m_distributionFactory.update(regionStorage.first.distribution, regionStorage.first.trainingStatistics, dataPoints.data(), dataPoints.size(), m_distributionFactorySettings, fittingStats);
-            regionStorage.first.valid = regionStorage.first.distribution.isValid();
-            if(!regionStorage.first.valid)
-                std::cout << "!!!! Volume regionStorage.first.valid !!! " << regionStorage.first.distribution.toString() << std::endl;
-            
-        }
-        else
-        {
-            regionStorage.first.valid = false;
-            regionStorage.first.splitFlag = false;
-        }
-      }
+        updateRegions(this->m_regionStorageContainerSurface, true);
+        updateRegions(this->m_regionStorageContainerVolume, false);
     }
 
-    //const RegionType *getGuidingRegion( const rkguide::Point3 &p, rkguide::Sampler *sampler) const override;
+    void storeInvalidRegionData(const std::string &fileName, const typename ParentField::RegionType &regionBeforeUpdate, const std::vector<DirectionalSampleData> &samples, const DistributionFactorySettings &factorySettings)
+    {
+        std::filebuf fbDump;
+        fbDump.open (fileName,std::ios::out);
+        std::ostream dumpStream(&fbDump);
 
-    //template<typename TSampleContainer>
-    //void buildField(const BBox &bounds, TSampleContainer& samples) override;
+        factorySettings.serialize(dumpStream);
 
-    //void updateField(TSampleContainer& samples) override;
+        size_t numSamples = samples.size();
+        dumpStream.write(reinterpret_cast<const char*>(&numSamples), sizeof(size_t));
+        for (size_t i = 0; i < numSamples; i++)
+        {
+            dumpStream.write(reinterpret_cast<const char*>(&samples[i]), sizeof(rkguide::DirectionalSampleData));
+        }
+
+        regionBeforeUpdate.serialize(dumpStream);
+        fbDump.close();
+    }
+
+    void loadInvalidRegionData(const std::string &fileName, typename ParentField::RegionType &regionBeforeUpdate, std::vector<DirectionalSampleData> &samples, DistributionFactorySettings &factorySettings)
+    {
+        std::filebuf fbDumpIn;
+        fbDumpIn.open (fileName,std::ios::in);
+        std::istream dumpIStream(&fbDumpIn);
+
+        factorySettings.deserialize(dumpIStream);
+        samples.clear();
+        size_t numSamples;
+        dumpIStream.read(reinterpret_cast<char*>(&numSamples), sizeof(size_t));
+        for (size_t i = 0; i < numSamples; i++)
+        {
+            DirectionalSampleData dsd;
+            dumpIStream.read(reinterpret_cast<char*>(&dsd), sizeof(rkguide::DirectionalSampleData));
+            samples.push_back(dsd);
+        }
+        regionBeforeUpdate.deserialize(dumpIStream);
+        fbDumpIn.close();
+    }
 
     void reorientSample(rkguide::DirectionalSampleData &sample, const rkguide::Point3 &pivotPoint) const
     {
@@ -253,6 +111,101 @@ struct SurfaceVolumeFieldParallaxAwareVMM: public SurfaceVolumeField<rkguide::Re
         sample.distance = newDistance;
         sample.direction = newDirection / newDistance;
     }
+
+private:
+
+    void fitRegions(typename ParentField::RegionStorageContainerType &regionStorageContainer, const bool &isSurface)
+    {
+        size_t nGuidingRegions = regionStorageContainer.size();
+        std::cout << "fitRegion: "<< (isSurface? "surface":"volume") << "\tnGuidingRegions = " << nGuidingRegions << std::endl;
+        #if defined(MTS_OPENMP)
+        #pragma omp parallel for num_threads(this->m_nCores) schedule(dynamic)
+        #endif
+        for (size_t n=0; n < nGuidingRegions; n++)
+        {
+            typename ParentField::RegionStorageType &regionStorage = regionStorageContainer[n];
+            rkguide::Point3 sampleMean = regionStorage.first.sampleStatistics.mean;
+            std::vector<rkguide::DirectionalSampleData> dataPoints;
+            for (auto& sample : regionStorage.second)
+            {
+                if(m_useParallaxCompensation)
+                {
+                    reorientSample(sample, sampleMean);
+                }
+                dataPoints.push_back(sample);
+            }
+            if (dataPoints.size() > 0)
+            {
+                typename DistributionFactory::ASMFittingStatistics fittingStats;
+                m_distributionFactory.fit(regionStorage.first.distribution, m_distributionFactorySettings.weightedEMCfg.initK, regionStorage.first.trainingStatistics, dataPoints.data(), dataPoints.size(), m_distributionFactorySettings, fittingStats);
+                regionStorage.first.distribution._pivotPosition = sampleMean;
+                regionStorage.first.valid = regionStorage.first.distribution.isValid();
+                if(!regionStorage.first.valid)
+                    std::cout << "!!!! " << (isSurface? "Surface":"Volume") << " regionStorage.first.valid !!! " << regionStorage.first.distribution.toString() << std::endl;
+                regionStorage.first.splitFlag = false;
+            }
+            else
+            {
+                regionStorage.first.valid = false;
+                regionStorage.first.splitFlag = false;
+            }
+        }
+    }
+
+    void updateRegions(typename ParentField::RegionStorageContainerType &regionStorageContainer, const bool &isSurface)
+    {
+        size_t nGuidingRegions = regionStorageContainer.size();
+        std::cout << "updateRegion: " << (isSurface? "surface":"volume") << "\tnGuidingRegions = " << nGuidingRegions << std::endl;
+#if defined(MTS_OPENMP)
+        #pragma omp parallel for num_threads(this->m_nCores) schedule(dynamic)
+#endif
+        for (size_t n=0; n < nGuidingRegions; n++)
+        {
+            typename ParentField::RegionStorageType &regionStorage = regionStorageContainer[n];
+            if (regionStorage.first.splitFlag)
+            {
+                regionStorage.first.trainingStatistics.decay(this->m_decayOnSpatialSplit);
+                regionStorage.first.splitFlag = false;
+            }
+
+            rkguide::Point3 sampleMean = regionStorage.first.sampleStatistics.mean;
+            std::vector<rkguide::DirectionalSampleData> dataPoints;
+            for (auto& sample : regionStorage.second)
+            {
+                if(m_useParallaxCompensation)
+                {
+                    reorientSample(sample, sampleMean);
+                }
+                dataPoints.push_back(sample);
+            }
+            if (dataPoints.size() > 0)
+            {
+                typename ParentField::RegionType oldRegion = regionStorage.first;
+                if(m_useParallaxCompensation)
+                {
+                    regionStorage.first.trainingStatistics.sufficientStatistics.applyParallaxShift(regionStorage.first.distribution, regionStorage.first.distribution._pivotPosition - sampleMean);
+                    regionStorage.first.distribution.performRelativeParallaxShift(regionStorage.first.distribution._pivotPosition - sampleMean);
+                    RKGUIDE_ASSERT(regionStorage.first.distribution.isValid());
+                    RKGUIDE_ASSERT(regionStorage.first.trainingStatistics.sufficientStatistics.isValid());
+                }
+                typename DistributionFactory::ASMFittingStatistics fittingStats;
+                m_distributionFactory.update(regionStorage.first.distribution, regionStorage.first.trainingStatistics, dataPoints.data(), dataPoints.size(), m_distributionFactorySettings, fittingStats);
+                //regionStorage.first.valid = regionStorage.first.distribution.isValid();
+                regionStorage.first.valid = regionStorage.first.isValid();
+                if(!regionStorage.first.valid)
+                {
+                    std::cout << "!!!! " << (isSurface? "Surface":"Volume") << " regionStorage.first.valid !!! " << regionStorage.first.distribution.toString() << std::endl;
+                    storeInvalidRegionData("regionBeforeUpdate_"+ std::string((isSurface? "surf":"vol")) + "_itr" + std::to_string(this->m_iteration) + "_region" + std::to_string(n)+".dump", oldRegion, dataPoints, m_distributionFactorySettings);
+                }
+            }
+            else
+            {
+                regionStorage.first.valid = false;
+                regionStorage.first.splitFlag = false;
+            }
+        }
+    }
+
 
 private:
     bool m_useParallaxCompensation {true};
