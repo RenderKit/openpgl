@@ -52,6 +52,26 @@ struct SampleDataStorage
         }
     }
 
+    inline void addSample2(DirectionalSampleData sample)
+    {
+        if(sample.isInsideVolume())
+        {
+            m_volumeContainer.push_back(sample);
+        }
+        else
+        {
+            m_surfaceContainer.push_back(sample);
+        }
+    }
+
+    inline void addSamples2(const std::vector<std::pair<DirectionalSampleData, const void*> > &samples)
+    {
+        for (auto& sample : samples)
+        {
+            addSample2(sample.first);
+        }
+    }
+
 /*
     template<typename TRegion, class ... Args>
     inline void emplace_back(const TRegion *region, Sampler *sampler, Args&&... args)

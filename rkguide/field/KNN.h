@@ -10,11 +10,11 @@
 #include <functional>
 #include <queue>
 
-using namespace embree;
+//using namespace embree;
 
 #define NUM_KNN 4
 
-  void* myalignedMalloc(size_t size, size_t align)
+inline  void* myalignedMalloc(size_t size, size_t align)
   {
     if (size == 0)
       return nullptr;
@@ -28,7 +28,7 @@ using namespace embree;
     return ptr;
   }
 
-  void myalignedFree(void* ptr)
+inline  void myalignedFree(void* ptr)
   {
     if (ptr)
       _mm_free(ptr);
@@ -45,7 +45,7 @@ struct KNearestRegionsSearchTree
     struct Point
     {
         ALIGNED_STRUCT_(16)
-        Vec3fa p;                      //!< position
+        embree::Vec3fa p;                      //!< position
     };
 
     struct Neighbour

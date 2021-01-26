@@ -75,7 +75,7 @@ struct KDTreePartitionBuilder
 
         if (root.isLeaf())
         {
-            mitsuba::ref<mitsuba::Timer> statsTimer = new mitsuba::Timer();
+//            mitsuba::ref<mitsuba::Timer> statsTimer = new mitsuba::Timer();
 
             double x = 0.0f;
             double y = 0.0f;

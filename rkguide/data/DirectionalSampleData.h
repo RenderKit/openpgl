@@ -92,7 +92,7 @@ struct DirectionalSampleData
 };
 
 
-DirectionalSampleData *LoadDirectionalSampleData(const std::string fileName, size_t &numData){
+inline DirectionalSampleData *LoadDirectionalSampleData(const std::string fileName, size_t &numData){
 
     std::ifstream file;
     file.open(fileName, std::ios::binary);
@@ -107,7 +107,7 @@ DirectionalSampleData *LoadDirectionalSampleData(const std::string fileName, siz
     return data;
 }
 
-void StoreDirectionalSampleData(const std::string fileName, const DirectionalSampleData *data, const size_t &numData){
+inline void StoreDirectionalSampleData(const std::string fileName, const DirectionalSampleData *data, const size_t &numData){
     std::ofstream file;
     file.open(fileName, std::ios::binary);
 

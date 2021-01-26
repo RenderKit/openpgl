@@ -21,7 +21,7 @@ struct VonMisesFisherFactory
 private:
     void _initUniformDirections();
 
-    embree::Vec3< vfloat<VMM::VectorSize> >_uniformDirections[VMM::MaxComponents][VMM::NumVectors];
+    embree::Vec3< embree::vfloat<VMM::VectorSize> >_uniformDirections[VMM::MaxComponents][VMM::NumVectors];
 
 };
 

@@ -141,13 +141,13 @@ protected:
     void buildSpatialStructure(const BBox &bounds, TSampleContainer& samples)
     {
         //mitsuba::SLog(mitsuba::EInfo, "Begin Tree update");
-        mitsuba::ref<mitsuba::Timer> treeTimer = new mitsuba::Timer();
+//        mitsuba::ref<mitsuba::Timer> treeTimer = new mitsuba::Timer();
         m_spatialSubdivBuilder.build(m_spatialSubdiv, bounds, samples, m_regionStorageContainer, m_spatialSubdivBuilderSettings, m_nCores);
         //mitsuba::SLog(mitsuba::EInfo, "Tree building time: %s", timeString(treeTimer->getSeconds(), true).c_str());
 
         if (m_useStochasticNNLookUp)
         {
-            mitsuba::ref<mitsuba::Timer> embreereeTimer = new mitsuba::Timer();
+//            mitsuba::ref<mitsuba::Timer> embreereeTimer = new mitsuba::Timer();
             m_regionKNNSearchTree.buildRegionSearchTree<RegionStorageContainerType, RegionType>(m_regionStorageContainer);
             //mitsuba::SLog(mitsuba::EInfo, "Embree BVH update time: %s", timeString(embreereeTimer->getSeconds(), true).c_str());
         }
@@ -157,13 +157,13 @@ protected:
     void updateSpatialStructure(TSampleContainer& samples)
     {
         //mitsuba::SLog(mitsuba::EInfo, "Begin Tree update");
-        mitsuba::ref<mitsuba::Timer> treeTimer = new mitsuba::Timer();
+//        mitsuba::ref<mitsuba::Timer> treeTimer = new mitsuba::Timer();
         m_spatialSubdivBuilder.updateTree(m_spatialSubdiv, samples, m_regionStorageContainer, m_spatialSubdivBuilderSettings, m_nCores);
         //mitsuba::SLog(mitsuba::EInfo, "Tree building time: %s", timeString(treeTimer->getSeconds(), true).c_str());
 
         if (m_useStochasticNNLookUp)
         {
-            mitsuba::ref<mitsuba::Timer> embreereeTimer = new mitsuba::Timer();
+//            mitsuba::ref<mitsuba::Timer> embreereeTimer = new mitsuba::Timer();
             m_regionKNNSearchTree.buildRegionSearchTree<RegionStorageContainerType, RegionType>(m_regionStorageContainer);
             //mitsuba::SLog(mitsuba::EInfo, "Embree BVH update time: %s", timeString(embreereeTimer->getSeconds(), true).c_str());
         }

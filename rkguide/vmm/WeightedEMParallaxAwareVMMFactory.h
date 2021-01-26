@@ -7,7 +7,7 @@
 
 #define USE_HARMONIC_MEAN
 
-using namespace embree;
+//using namespace embree;
 
 namespace rkguide
 {
@@ -31,7 +31,7 @@ struct WeightedEMParallaxAwareVonMisesFisherFactory: public WeightedEMVonMisesFi
         public:
         typename WEMVMMFactory::SufficientStatisitcs wEMSufficientStatisitcs;
 
-        vfloat<VMM::VectorSize> sumOfDistanceWeightes[VMM::NumVectors];
+        embree::vfloat<VMM::VectorSize> sumOfDistanceWeightes[VMM::NumVectors];
 
         SufficientStatisitcs() = default;
 
@@ -114,15 +114,15 @@ template<class TVMMDistribution>
 void WeightedEMParallaxAwareVonMisesFisherFactory< TVMMDistribution>::SufficientStatisitcs::applyParallaxShift(const VMM &vmm, const Vector3 shift)
 {
     const int cnt = (vmm._numComponents+VMM::VectorSize-1) / VMM::VectorSize;
-    const int rem = vmm._numComponents % VMM::VectorSize;
+    //const int rem = vmm._numComponents % VMM::VectorSize;
 
     for(uint32_t k=0;k<cnt;k++)
     {
-        embree::Vec3< vfloat<VMM::VectorSize> > suffDirections = wEMSufficientStatisitcs.sumOfWeightedDirections[k];
-        vfloat<VMM::VectorSize> suffMeanCosines = embree::length(suffDirections);
+        embree::Vec3< embree::vfloat<VMM::VectorSize> > suffDirections = wEMSufficientStatisitcs.sumOfWeightedDirections[k];
+        embree::vfloat<VMM::VectorSize> suffMeanCosines = embree::length(suffDirections);
         suffDirections /= suffMeanCosines;
         suffDirections *= vmm._distances[k];
-        suffDirections += embree::Vec3< vfloat<VMM::VectorSize> >(shift);
+        suffDirections += embree::Vec3< embree::vfloat<VMM::VectorSize> >(shift);
 
         suffDirections /= embree::length(suffDirections);
         suffDirections *= suffMeanCosines;
@@ -140,7 +140,7 @@ bool WeightedEMParallaxAwareVonMisesFisherFactory< TVMMDistribution>::Sufficient
     for(size_t k = 0; k < wEMSufficientStatisitcs.numComponents; k++)
     {
         const div_t tmpK = div( k, VMM::VectorSize );
-        valid &= isvalid(sumOfDistanceWeightes[tmpK.quot][tmpK.rem]);
+        valid &= embree::isvalid(sumOfDistanceWeightes[tmpK.quot][tmpK.rem]);
         valid &= sumOfDistanceWeightes[tmpK.quot][tmpK.rem] >= 0.0f;
         RKGUIDE_ASSERT(valid);
     }
@@ -148,7 +148,7 @@ bool WeightedEMParallaxAwareVonMisesFisherFactory< TVMMDistribution>::Sufficient
     for(size_t k = wEMSufficientStatisitcs.numComponents; k < VMM::MaxComponents; k++)
     {
         const div_t tmpK = div( k, VMM::VectorSize );
-        valid &= isvalid(sumOfDistanceWeightes[tmpK.quot][tmpK.rem]);
+        valid &= embree::isvalid(sumOfDistanceWeightes[tmpK.quot][tmpK.rem]);
         valid &= sumOfDistanceWeightes[tmpK.quot][tmpK.rem] == 0.0f;
         RKGUIDE_ASSERT(valid);
     }
@@ -162,7 +162,7 @@ void WeightedEMParallaxAwareVonMisesFisherFactory< TVMMDistribution>::Sufficient
     wEMSufficientStatisitcs.serialize(stream);
     for(uint32_t k=0;k<VMM::NumVectors;k++)
     {
-        stream.write(reinterpret_cast<const char*>(&sumOfDistanceWeightes[k]), sizeof(vfloat<VMM::VectorSize>));
+        stream.write(reinterpret_cast<const char*>(&sumOfDistanceWeightes[k]), sizeof(embree::vfloat<VMM::VectorSize>));
     }
 }
 
@@ -172,7 +172,7 @@ void WeightedEMParallaxAwareVonMisesFisherFactory< TVMMDistribution>::Sufficient
     wEMSufficientStatisitcs.deserialize(stream);
     for(uint32_t k=0;k<VMM::NumVectors;k++)
     {
-        stream.read(reinterpret_cast<char*>(&sumOfDistanceWeightes[k]), sizeof(vfloat<VMM::VectorSize>));
+        stream.read(reinterpret_cast<char*>(&sumOfDistanceWeightes[k]), sizeof(embree::vfloat<VMM::VectorSize>));
     }
 }
 
@@ -181,8 +181,8 @@ void WeightedEMParallaxAwareVonMisesFisherFactory< TVMMDistribution>::Sufficient
 {
     wEMSufficientStatisitcs.clear(_numComponents);
 
-    const vfloat<VMM::VectorSize> zeros(0.0f);
-    const vfloat<VMM::VectorSize> infs(std::numeric_limits<float>::infinity());
+    const embree::vfloat<VMM::VectorSize> zeros(0.0f);
+    const embree::vfloat<VMM::VectorSize> infs(std::numeric_limits<float>::infinity());
     const int cnt = (_numComponents+VMM::VectorSize-1) / VMM::VectorSize;
 
     for(int k = 0; k < cnt;k++)
@@ -311,10 +311,10 @@ void WeightedEMParallaxAwareVonMisesFisherFactory< TVMMDistribution>::initCompon
 {
     RKGUIDE_ASSERT(vmm.getNumComponents() == sufficientStats.getNumComponents());
 
-    vfloat<VMM::VectorSize> batchDistances[VMM::NumVectors];
-    vfloat<VMM::VectorSize> batchSumWeights[VMM::NumVectors];
+    embree::vfloat<VMM::VectorSize> batchDistances[VMM::NumVectors];
+    embree::vfloat<VMM::VectorSize> batchSumWeights[VMM::NumVectors];
 
-    const vfloat<VMM::VectorSize> zeros(0.0f);
+    const embree::vfloat<VMM::VectorSize> zeros(0.0f);
 
     const int cnt = (vmm._numComponents+VMM::VectorSize-1) / VMM::VectorSize;
     const int rem = vmm._numComponents % VMM::VectorSize;
@@ -327,11 +327,11 @@ void WeightedEMParallaxAwareVonMisesFisherFactory< TVMMDistribution>::initCompon
 
     typename VMM::SoftAssignment softAssign;
     float sampleDistance;
-    vfloat<VMM::VectorSize> weights;
+    embree::vfloat<VMM::VectorSize> weights;
     for (size_t n = 0; n < numSamples; n++)
     {
 #ifdef USE_HARMONIC_MEAN
-        sampleDistance = rcp(samples[n].distance);
+        sampleDistance = embree::rcp(samples[n].distance);
 #else
         sampleDistance = samples[n].distance;
 #endif
@@ -372,10 +372,10 @@ void WeightedEMParallaxAwareVonMisesFisherFactory< TVMMDistribution>::updateComp
 {
     RKGUIDE_ASSERT(vmm.getNumComponents() == sufficientStats.getNumComponents());
 
-    vfloat<VMM::VectorSize> batchDistances[VMM::NumVectors];
-    vfloat<VMM::VectorSize> batchSumWeights[VMM::NumVectors];
+    embree::vfloat<VMM::VectorSize> batchDistances[VMM::NumVectors];
+    embree::vfloat<VMM::VectorSize> batchSumWeights[VMM::NumVectors];
 
-    const vfloat<VMM::VectorSize> zeros(0.0f);
+    const embree::vfloat<VMM::VectorSize> zeros(0.0f);
     const int cnt = (vmm._numComponents+VMM::VectorSize-1) / VMM::VectorSize;
     const int rem = vmm._numComponents % VMM::VectorSize;
 
@@ -387,13 +387,13 @@ void WeightedEMParallaxAwareVonMisesFisherFactory< TVMMDistribution>::updateComp
 
     typename VMM::SoftAssignment softAssign;
     float sampleDistance;
-    vfloat<VMM::VectorSize> weights;
+    embree::vfloat<VMM::VectorSize> weights;
     for (size_t n = 0; n < numSamples; n++)
     {
         RKGUIDE_ASSERT(samples[n].distance > 0);
         RKGUIDE_ASSERT(embree::isvalid(samples[n].distance));
 #ifdef USE_HARMONIC_MEAN
-        sampleDistance = rcp(samples[n].distance);
+        sampleDistance = embree::rcp(samples[n].distance);
 #else
         sampleDistance = samples[n].distance;
 #endif
@@ -411,7 +411,7 @@ void WeightedEMParallaxAwareVonMisesFisherFactory< TVMMDistribution>::updateComp
     for (size_t k = 0; k < cnt; k++)
     {
 #ifdef USE_HARMONIC_MEAN
-        const vfloat<VMM::VectorSize> sumInverseDistances = (sufficientStats.sumOfDistanceWeightes[k] / vmm._distances[k]) + batchDistances[k];
+        const embree::vfloat<VMM::VectorSize> sumInverseDistances = (sufficientStats.sumOfDistanceWeightes[k] / vmm._distances[k]) + batchDistances[k];
         sufficientStats.sumOfDistanceWeightes[k] += batchSumWeights[k];
         vmm._distances[k] = sufficientStats.sumOfDistanceWeightes[k] / sumInverseDistances;
 #else

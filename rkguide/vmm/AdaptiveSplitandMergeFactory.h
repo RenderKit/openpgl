@@ -156,9 +156,9 @@ bool AdaptiveSplitAndMergeFactory<TVMMDistribution>::ASMStatistics::isValid() co
     RKGUIDE_ASSERT(valid);
     valid &= splittingStatistics.isValid();
     RKGUIDE_ASSERT(valid);
-    valid &= isvalid(numSamplesAfterLastSplit);
+    valid &= embree::isvalid(numSamplesAfterLastSplit);
     RKGUIDE_ASSERT(valid);
-    valid &= isvalid(numSamplesAfterLastMerge);
+    valid &= embree::isvalid(numSamplesAfterLastMerge);
     RKGUIDE_ASSERT(valid);
 
     return valid;
@@ -348,7 +348,7 @@ void AdaptiveSplitAndMergeFactory<TVMMDistribution>::update(VMM &vmm, ASMStatist
             {
                 if (splitComps[k].chiSquareEst > cfg.splittingThreshold && vmm._numComponents  < VMM::MaxComponents)
                 {
-                    bool splitSucess = splitter.SplitComponent(vmm, stats.splittingStatistics, stats.sufficientStatistics, splitComps[k].componentIndex);
+                    //bool splitSucess = splitter.SplitComponent(vmm, stats.splittingStatistics, stats.sufficientStatistics, splitComps[k].componentIndex);
                     mask.setToTrue(splitComps[k].componentIndex);
                     mask.setToTrue(vmm._numComponents-1);
                     //std::cout << "split[" << totalSplitCount << "]: " << "\tidx0: " << splitComps[k].componentIndex << "\tidx1: " << vmm._numComponents-1 << std::endl;

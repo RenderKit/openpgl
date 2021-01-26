@@ -8,6 +8,9 @@
 #include "../data/DirectionalSampleData.h"
 #include "WeightedEMVMMFactory.h"
 
+#include <embree/common/math/vec2.h>
+#include <embree/common/math/vec3.h>
+
 #include <algorithm>
 #include <vector>
 
@@ -67,14 +70,14 @@ struct ComponentSplitStatistics
 
     ComponentSplitStatistics() = default;
 
-    vfloat<VMM::VectorSize> chiSquareMCEstimates[VMM::NumVectors];
-    Vec2<vfloat<VMM::VectorSize> > splitMeans[VMM::NumVectors];
-    Vec3<vfloat<VMM::VectorSize> > splitWeightedSampleCovariances[VMM::NumVectors];
+    embree::vfloat<VMM::VectorSize> chiSquareMCEstimates[VMM::NumVectors];
+    embree::Vec2<embree::vfloat<VMM::VectorSize> > splitMeans[VMM::NumVectors];
+    embree::Vec3<embree::vfloat<VMM::VectorSize> > splitWeightedSampleCovariances[VMM::NumVectors];
 
-    vfloat<VMM::VectorSize> numSamples[VMM::NumVectors];
-    vfloat<VMM::VectorSize> sumWeights[VMM::NumVectors];
+    embree::vfloat<VMM::VectorSize> numSamples[VMM::NumVectors];
+    embree::vfloat<VMM::VectorSize> sumWeights[VMM::NumVectors];
 
-    vfloat<VMM::VectorSize> sumAssignedSamples[VMM::NumVectors];
+    embree::vfloat<VMM::VectorSize> sumAssignedSamples[VMM::NumVectors];
 
     size_t numComponents{0};
 
@@ -159,8 +162,8 @@ inline Vec2Type Map3DTo2D(const Vec3Type &vec3D)
     ScalarType alpha = embree::fastapprox::acos(vec3D.z);
     ScalarType inv_sinc = alpha / embree::fastapprox::sin(alpha);
 
-    vec2D.x = select(alpha > 0.0f, vec3D.x * inv_sinc, vec2D.x);
-    vec2D.y = select(alpha > 0.0f, vec3D.y * inv_sinc, vec2D.y);
+    vec2D.x = embree::select(alpha > 0.0f, vec3D.x * inv_sinc, vec2D.x);
+    vec2D.y = embree::select(alpha > 0.0f, vec3D.y * inv_sinc, vec2D.y);
     return vec2D;
 }
 
@@ -173,8 +176,8 @@ inline Vec3Type Map2DTo3D(const Vec2Type &vec2D)
     RKGUIDE_ASSERT(length < M_PI);
     ScalarType sinc = embree::fastapprox::sin(length) / length;
 
-    vec3D.x = select(length > 0.0f, vec2D.x * sinc, vec3D.x);
-    vec3D.y = select(length > 0.0f, vec2D.y * sinc, vec3D.y);
+    vec3D.x = embree::select(length > 0.0f, vec2D.x * sinc, vec3D.x);
+    vec3D.y = embree::select(length > 0.0f, vec2D.y * sinc, vec3D.y);
     vec3D.z = embree::cos(length);
 
     return vec3D;
@@ -183,7 +186,7 @@ inline Vec3Type Map2DTo3D(const Vec2Type &vec2D)
 
 #endif
 
-std::string ComponentSplitinfo::toString() const
+inline std::string ComponentSplitinfo::toString() const
 {
     std::stringstream ss;
     ss << "ComponentSplitinfo:" << std::endl;
@@ -351,7 +354,7 @@ template<class TVMMFactory>
 ComponentSplitinfo VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::GetProjectedLocalDirections(const VMM &vmm, const size_t &idx, const DirectionalSampleData *data, const size_t &numData, Vector3 *local2D) const
 {
     typename VMM::SoftAssignment softAssign;
-    const vfloat<VMM::VectorSize> zeros(0.f);
+    const embree::vfloat<VMM::VectorSize> zeros(0.f);
     //const int cnt = (vmm._numComponents + VMM::VectorSize-1) / VMM::VectorSize;
     //size_t validDataCount = 0.0f;
 
@@ -368,16 +371,16 @@ ComponentSplitinfo VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::GetPro
         {
             const div_t tmp = div(idx, static_cast<int>(VMM::VectorSize));
 
-            const vfloat<VMM::VectorSize> weight = sample.weight;
-            const vfloat<VMM::VectorSize> samplePDF = sample.pdf;
+            const embree::vfloat<VMM::VectorSize> weight = sample.weight;
+            const embree::vfloat<VMM::VectorSize> samplePDF = sample.pdf;
             //const vfloat<VMM::VectorSize> value =  weight * samplePDF;
 
 
-            const Vec3< vfloat<VMM::VectorSize> > localDirection = embree::frame( vmm._meanDirections[tmp.quot] ).inverse() * Vec3< vfloat<VMM::VectorSize> > (sample.direction);
+            const embree::Vec3< embree::vfloat<VMM::VectorSize> > localDirection = embree::frame( vmm._meanDirections[tmp.quot] ).inverse() * embree::Vec3< embree::vfloat<VMM::VectorSize> > (sample.direction);
 
-            const Vec2< vfloat<VMM::VectorSize> > localDirection2D = Map3DTo2D< Vec3< vfloat<VMM::VectorSize> >,  Vec2< vfloat<VMM::VectorSize> >, vfloat<VMM::VectorSize> >(localDirection);
+            const embree::Vec2< embree::vfloat<VMM::VectorSize> > localDirection2D = Map3DTo2D< embree::Vec3< embree::vfloat<VMM::VectorSize> >,  embree::Vec2< embree::vfloat<VMM::VectorSize> >, embree::vfloat<VMM::VectorSize> >(localDirection);
 
-            const vfloat<VMM::VectorSize> assignedWeight = softAssign.assignments[tmp.quot] * weight;
+            const embree::vfloat<VMM::VectorSize> assignedWeight = softAssign.assignments[tmp.quot] * weight;
             local2D[n].x = localDirection2D.x[tmp.rem];
             local2D[n].y = localDirection2D.y[tmp.rem];
             local2D[n].z = assignedWeight[tmp.rem];
@@ -433,7 +436,7 @@ void VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::UpdateSplitStatistic
     RKGUIDE_ASSERT(vmm._numComponents == splitStats.numComponents);
 
     typename VMM::SoftAssignment softAssign;
-    const vfloat<VMM::VectorSize> zeros(0.f);
+    const embree::vfloat<VMM::VectorSize> zeros(0.f);
     const int cnt = (splitStats.numComponents + VMM::VectorSize-1) / VMM::VectorSize;
     size_t validDataCount = 0.0f;
 
@@ -442,9 +445,9 @@ void VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::UpdateSplitStatistic
         const DirectionalSampleData sample = data[n];
         if (vmm.softAssignment(sample.direction, softAssign) )
         {
-            const vfloat<VMM::VectorSize> weight = sample.weight;
-            const vfloat<VMM::VectorSize> samplePDF = sample.pdf;
-            const vfloat<VMM::VectorSize> value =  weight * samplePDF;
+            const embree::vfloat<VMM::VectorSize> weight = sample.weight;
+            const embree::vfloat<VMM::VectorSize> samplePDF = sample.pdf;
+            const embree::vfloat<VMM::VectorSize> value =  weight * samplePDF;
             //std::cout << "data[" << n << "]: " << "value: " << value << "\t samplePDF: " << samplePDF;
             for (size_t k =0; k < cnt; k++)
             {
@@ -454,14 +457,14 @@ void VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::UpdateSplitStatistic
                 RKGUIDE_ASSERT(embree::all(embree::isvalid(splitStats.splitWeightedSampleCovariances[k].y)));
                 RKGUIDE_ASSERT(embree::all(embree::isvalid(splitStats.splitWeightedSampleCovariances[k].z)));
 
-                vfloat<VMM::VectorSize> vmfPDF = softAssign.assignments[k] * softAssign.pdf;
-                vfloat<VMM::VectorSize> partialValuePDF = vmfPDF * value;
+                embree::vfloat<VMM::VectorSize> vmfPDF = softAssign.assignments[k] * softAssign.pdf;
+                embree::vfloat<VMM::VectorSize> partialValuePDF = vmfPDF * value;
                 partialValuePDF /= (mcEstimate * softAssign.pdf);
                 //partialValuePDF /= vmm._weights[k] * mcEstimate;
                 //std::cout << "\tweights: " << vmm._weights[k] << "\t assign: " << softAssign.assignments[k] << "\t pdf: " << softAssign.pdf << std::endl;
                 //std::cout << "\tpvPDF: " << partialValuePDF << "\t vmfPDF: " << vmfPDF << std::endl;
 
-                vfloat<VMM::VectorSize> chiSquareEst = value *value * vmfPDF;
+                embree::vfloat<VMM::VectorSize> chiSquareEst = value *value * vmfPDF;
                 chiSquareEst /= mcEstimate * mcEstimate * softAssign.pdf * softAssign.pdf;
                 //chiSquareEst *= chiSquareEst;
                 chiSquareEst -= 2.0f * partialValuePDF;
@@ -475,16 +478,16 @@ void VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::UpdateSplitStatistic
                 splitStats.numSamples[k] += 1.0f;
                 splitStats.chiSquareMCEstimates[k] += (chiSquareEst - splitStats.chiSquareMCEstimates[k]) / splitStats.numSamples[k];
 
-                const Vec3< vfloat<VMM::VectorSize> > localDirection = embree::frame( vmm._meanDirections[k] ).inverse() * Vec3< vfloat<VMM::VectorSize> > (sample.direction);
-                const Vec2< vfloat<VMM::VectorSize> > localDirection2D(localDirection.x, localDirection.y);
-                const vfloat<VMM::VectorSize> assignedWeight = softAssign.assignments[k] * weight;
+                const embree::Vec3< embree::vfloat<VMM::VectorSize> > localDirection = embree::frame( vmm._meanDirections[k] ).inverse() * embree::Vec3< embree::vfloat<VMM::VectorSize> > (sample.direction);
+                const embree::Vec2< embree::vfloat<VMM::VectorSize> > localDirection2D(localDirection.x, localDirection.y);
+                const embree::vfloat<VMM::VectorSize> assignedWeight = softAssign.assignments[k] * weight;
                 //const vfloat<VMM::VectorSize> assignedWeight = softAssign.assignments[k] * weight * weight;
 
                 splitStats.sumWeights[k] += assignedWeight;
-                const vfloat<VMM::VectorSize> incWeight = select(splitStats.sumWeights[k] > 0.0f, assignedWeight / splitStats.sumWeights[k], zeros);
+//                const vfloat<VMM::VectorSize> incWeight = select(splitStats.sumWeights[k] > 0.0f, assignedWeight / splitStats.sumWeights[k], zeros);
 
 #ifdef RKGUIDE_ZERO_MEAN
-                splitStats.splitMeans[k] += Vec2< vfloat<VMM::VectorSize> >(0.0f);
+                splitStats.splitMeans[k] += embree::Vec2< embree::vfloat<VMM::VectorSize> >(0.0f);
                 splitStats.splitWeightedSampleCovariances[k].x += assignedWeight * (localDirection2D.x * localDirection2D.x);
                 splitStats.splitWeightedSampleCovariances[k].y += assignedWeight * (localDirection2D.y * localDirection2D.y);
                 splitStats.splitWeightedSampleCovariances[k].z += assignedWeight * (localDirection2D.x * localDirection2D.y);
@@ -521,7 +524,7 @@ bool VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::SplitComponent(VMM &
 
     float numAssignedSamples = splitStats.sumAssignedSamples[tmpK.quot][tmpK.rem];
 
-    float inv_sumWeights = rcp(splitStats.sumWeights[tmpK.quot][tmpK.rem]);
+    float inv_sumWeights = embree::rcp(splitStats.sumWeights[tmpK.quot][tmpK.rem]);
     splitInfo.mean = Vector2(splitStats.splitMeans[tmpK.quot].x[tmpK.rem], splitStats.splitMeans[tmpK.quot].y[tmpK.rem]);
 
     splitInfo.covariance.x = splitStats.splitWeightedSampleCovariances[tmpK.quot].x[tmpK.rem] * inv_sumWeights;
@@ -701,7 +704,7 @@ bool VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::SplitComponentIntoTh
 
     float distance = vmm._distances[tmpK.quot][tmpK.rem];
 
-    float newWeight0 = weight *rcp(3.0f);
+    float newWeight0 = weight *embree::rcp(3.0f);
     float newWeight1 = newWeight0;
     float newWeight2 = newWeight0;
 
@@ -852,14 +855,14 @@ template<class TVMMFactory>
 void VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::ComponentSplitStatistics::serialize(std::ostream& stream) const
 {
     for(uint32_t k=0;k<VMM::NumVectors;k++){
-        stream.write(reinterpret_cast<const char*>(&chiSquareMCEstimates[k]), sizeof(vfloat<VMM::VectorSize>));
-        stream.write(reinterpret_cast<const char*>(&splitMeans[k]), sizeof(Vec2<vfloat<VMM::VectorSize> >));
-        stream.write(reinterpret_cast<const char*>(&splitWeightedSampleCovariances[k]), sizeof(Vec3<vfloat<VMM::VectorSize> >));
+        stream.write(reinterpret_cast<const char*>(&chiSquareMCEstimates[k]), sizeof(embree::vfloat<VMM::VectorSize>));
+        stream.write(reinterpret_cast<const char*>(&splitMeans[k]), sizeof(embree::Vec2<embree::vfloat<VMM::VectorSize> >));
+        stream.write(reinterpret_cast<const char*>(&splitWeightedSampleCovariances[k]), sizeof(embree::Vec3<embree::vfloat<VMM::VectorSize> >));
 
-        stream.write(reinterpret_cast<const char*>(&numSamples[k]), sizeof(vfloat<VMM::VectorSize>));
-        stream.write(reinterpret_cast<const char*>(&sumWeights[k]), sizeof(vfloat<VMM::VectorSize>));
+        stream.write(reinterpret_cast<const char*>(&numSamples[k]), sizeof(embree::vfloat<VMM::VectorSize>));
+        stream.write(reinterpret_cast<const char*>(&sumWeights[k]), sizeof(embree::vfloat<VMM::VectorSize>));
 
-        stream.write(reinterpret_cast<const char*>(&sumAssignedSamples[k]), sizeof(vfloat<VMM::VectorSize>));
+        stream.write(reinterpret_cast<const char*>(&sumAssignedSamples[k]), sizeof(embree::vfloat<VMM::VectorSize>));
     }
     stream.write(reinterpret_cast<const char*>(&numComponents), sizeof(size_t));
 }
@@ -868,14 +871,14 @@ template<class TVMMFactory>
 void VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::ComponentSplitStatistics::deserialize(std::istream& stream)
 {
     for(uint32_t k=0;k<VMM::NumVectors;k++){
-        stream.read(reinterpret_cast<char*>(&chiSquareMCEstimates[k]), sizeof(vfloat<VMM::VectorSize>));
-        stream.read(reinterpret_cast<char*>(&splitMeans[k]), sizeof(Vec2<vfloat<VMM::VectorSize> >));
-        stream.read(reinterpret_cast<char*>(&splitWeightedSampleCovariances[k]), sizeof(Vec3<vfloat<VMM::VectorSize> >));
+        stream.read(reinterpret_cast<char*>(&chiSquareMCEstimates[k]), sizeof(embree::vfloat<VMM::VectorSize>));
+        stream.read(reinterpret_cast<char*>(&splitMeans[k]), sizeof(embree::Vec2<embree::vfloat<VMM::VectorSize> >));
+        stream.read(reinterpret_cast<char*>(&splitWeightedSampleCovariances[k]), sizeof(embree::Vec3<embree::vfloat<VMM::VectorSize> >));
 
-        stream.read(reinterpret_cast<char*>(&numSamples[k]), sizeof(vfloat<VMM::VectorSize>));
-        stream.read(reinterpret_cast<char*>(&sumWeights[k]), sizeof(vfloat<VMM::VectorSize>));
+        stream.read(reinterpret_cast<char*>(&numSamples[k]), sizeof(embree::vfloat<VMM::VectorSize>));
+        stream.read(reinterpret_cast<char*>(&sumWeights[k]), sizeof(embree::vfloat<VMM::VectorSize>));
 
-        stream.read(reinterpret_cast<char*>(&sumAssignedSamples[k]), sizeof(vfloat<VMM::VectorSize>));
+        stream.read(reinterpret_cast<char*>(&sumAssignedSamples[k]), sizeof(embree::vfloat<VMM::VectorSize>));
     }
     stream.read(reinterpret_cast<char*>(&numComponents), sizeof(size_t));
 }
@@ -885,7 +888,7 @@ bool VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::ComponentSplitStatis
 {
     bool valid = true;
     
-    vbool<VMM::VectorSize> validVec(true);
+    embree::vbool<VMM::VectorSize> validVec(true);
     const int cnt = (VMM::MaxComponents + VMM::VectorSize-1) / VMM::VectorSize;
     for (size_t k =0; k < cnt; k++)
     {
@@ -972,7 +975,7 @@ void VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::ComponentSplitStatis
     Vector2 meanDirection2DItoK = Map3DTo2D<Vector3, Vector2, float> (inv_transformK * meanDirectionI3D);
     Vector2 meanDirection2DJtoK = Map3DTo2D<Vector3, Vector2, float> (inv_transformK * meanDirectionJ3D);
 
-    const float inv_weightK = rcp(weightK);
+    const float inv_weightK = embree::rcp(weightK);
 
     const float sumWeightsI = sumWeights[tmpI.quot][tmpI.rem];
     const float sumWeightsJ = sumWeights[tmpJ.quot][tmpJ.rem];
@@ -982,8 +985,8 @@ void VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::ComponentSplitStatis
     //std::cout << "\tnumSamplesI: " << numSamples[tmpI.quot][tmpI.rem] << "\tsumWeightsJ: " << numSamples[tmpJ.quot][tmpJ.rem] << std::endl;
 
 
-    const Vector3 covarianceI = Vector3(splitWeightedSampleCovariances[tmpI.quot].x[tmpI.rem], splitWeightedSampleCovariances[tmpI.quot].y[tmpI.rem], splitWeightedSampleCovariances[tmpI.quot].z[tmpI.rem]) * rcp(sumWeightsI);
-    const Vector3 covarianceJ = Vector3(splitWeightedSampleCovariances[tmpJ.quot].x[tmpJ.rem], splitWeightedSampleCovariances[tmpJ.quot].y[tmpJ.rem], splitWeightedSampleCovariances[tmpJ.quot].z[tmpJ.rem]) * rcp(sumWeightsJ);
+    const Vector3 covarianceI = Vector3(splitWeightedSampleCovariances[tmpI.quot].x[tmpI.rem], splitWeightedSampleCovariances[tmpI.quot].y[tmpI.rem], splitWeightedSampleCovariances[tmpI.quot].z[tmpI.rem]) * embree::rcp(sumWeightsI);
+    const Vector3 covarianceJ = Vector3(splitWeightedSampleCovariances[tmpJ.quot].x[tmpJ.rem], splitWeightedSampleCovariances[tmpJ.quot].y[tmpJ.rem], splitWeightedSampleCovariances[tmpJ.quot].z[tmpJ.rem]) * embree::rcp(sumWeightsJ);
 
 #ifdef RKGUIDE_ZERO_MEAN
     const Vector2 meanDirectionK2D(0.f);
@@ -1067,7 +1070,7 @@ std::vector<typename VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::Spli
 template<class TVMMFactory>
 void VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::ComponentSplitStatistics::clear(const size_t &_numComponents)
 {
-    const vfloat<VMM::VectorSize> zeros(0.f);
+    const embree::vfloat<VMM::VectorSize> zeros(0.f);
 
     this->numComponents = _numComponents;
     const int cnt = (this->numComponents + VMM::VectorSize-1) / VMM::VectorSize;

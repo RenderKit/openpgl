@@ -20,7 +20,7 @@
 #include <fstream>
 #include <iostream>
 
-using namespace embree;
+//using namespace embree;
 
 namespace rkguide
 {
@@ -46,7 +46,7 @@ public:
 public:
 
     struct SoftAssignment{
-        vfloat<VecSize> assignments[NumVectors];
+        embree::vfloat<VecSize> assignments[NumVectors];
         size_t size;
         float pdf;
 
@@ -59,13 +59,13 @@ public:
 
     VonMisesFisherMixture() = default;
 
-    vfloat<VecSize> _weights[NumVectors];
-    vfloat<VecSize> _kappas[NumVectors];
-    Vec3<vfloat<VecSize> > _meanDirections[NumVectors];
+    embree::vfloat<VecSize> _weights[NumVectors];
+    embree::vfloat<VecSize> _kappas[NumVectors];
+    embree::Vec3<embree::vfloat<VecSize> > _meanDirections[NumVectors];
 
-    vfloat<VecSize> _normalizations[NumVectors];
-    vfloat<VecSize> _eMinus2Kappa[NumVectors];
-    vfloat<VecSize> _meanCosines[NumVectors];
+    embree::vfloat<VecSize> _normalizations[NumVectors];
+    embree::vfloat<VecSize> _eMinus2Kappa[NumVectors];
+    embree::vfloat<VecSize> _meanCosines[NumVectors];
 
     size_t _numComponents{maxComponents};
 
@@ -184,13 +184,13 @@ template<int VecSize, int maxComponents>
 void VonMisesFisherMixture<VecSize, maxComponents>::serialize(std::ostream& stream) const
 {
     for(uint32_t k=0;k<NumVectors;k++){
-        stream.write(reinterpret_cast<const char*>(&_weights[k]), sizeof(vfloat<VecSize>));
-        stream.write(reinterpret_cast<const char*>(&_kappas[k]), sizeof(vfloat<VecSize>));
-        stream.write(reinterpret_cast<const char*>(&_meanDirections[k]), sizeof(Vec3<vfloat<VecSize> >));
+        stream.write(reinterpret_cast<const char*>(&_weights[k]), sizeof(embree::vfloat<VecSize>));
+        stream.write(reinterpret_cast<const char*>(&_kappas[k]), sizeof(embree::vfloat<VecSize>));
+        stream.write(reinterpret_cast<const char*>(&_meanDirections[k]), sizeof(embree::Vec3<embree::vfloat<VecSize> >));
 
-        stream.write(reinterpret_cast<const char*>(&_normalizations[k]), sizeof(vfloat<VecSize>));
-        stream.write(reinterpret_cast<const char*>(&_eMinus2Kappa[k]), sizeof(vfloat<VecSize>));
-        stream.write(reinterpret_cast<const char*>(&_meanCosines[k]), sizeof(vfloat<VecSize>));
+        stream.write(reinterpret_cast<const char*>(&_normalizations[k]), sizeof(embree::vfloat<VecSize>));
+        stream.write(reinterpret_cast<const char*>(&_eMinus2Kappa[k]), sizeof(embree::vfloat<VecSize>));
+        stream.write(reinterpret_cast<const char*>(&_meanCosines[k]), sizeof(embree::vfloat<VecSize>));
     }
     stream.write(reinterpret_cast<const char*>(&_numComponents), sizeof(_numComponents));
 }
@@ -199,13 +199,13 @@ template<int VecSize, int maxComponents>
 void VonMisesFisherMixture<VecSize, maxComponents>::deserialize(std::istream& stream)
 {
     for(uint32_t k=0;k<NumVectors;k++){
-        stream.read(reinterpret_cast<char*>(&_weights[k]), sizeof(vfloat<VecSize>));
-        stream.read(reinterpret_cast<char*>(&_kappas[k]), sizeof(vfloat<VecSize>));
-        stream.read(reinterpret_cast<char*>(&_meanDirections[k]), sizeof(Vec3<vfloat<VecSize> >));
+        stream.read(reinterpret_cast<char*>(&_weights[k]), sizeof(embree::vfloat<VecSize>));
+        stream.read(reinterpret_cast<char*>(&_kappas[k]), sizeof(embree::vfloat<VecSize>));
+        stream.read(reinterpret_cast<char*>(&_meanDirections[k]), sizeof(embree::Vec3<embree::vfloat<VecSize> >));
 
-        stream.read(reinterpret_cast<char*>(&_normalizations[k]), sizeof(vfloat<VecSize>));
-        stream.read(reinterpret_cast<char*>(&_eMinus2Kappa[k]), sizeof(vfloat<VecSize>));
-        stream.read(reinterpret_cast<char*>(&_meanCosines[k]), sizeof(vfloat<VecSize>));
+        stream.read(reinterpret_cast<char*>(&_normalizations[k]), sizeof(embree::vfloat<VecSize>));
+        stream.read(reinterpret_cast<char*>(&_eMinus2Kappa[k]), sizeof(embree::vfloat<VecSize>));
+        stream.read(reinterpret_cast<char*>(&_meanCosines[k]), sizeof(embree::vfloat<VecSize>));
     }
     stream.read(reinterpret_cast<char*>(&_numComponents), sizeof(_numComponents));
 }
@@ -220,75 +220,75 @@ bool VonMisesFisherMixture<VecSize, maxComponents>::isValid() const
         const div_t tmpK = div( k, VecSize );
         sumWeights += _weights[tmpK.quot][tmpK.rem];
 
-        valid &= isvalid(_weights[tmpK.quot][tmpK.rem]);
+        valid &= embree::isvalid(_weights[tmpK.quot][tmpK.rem]);
         valid &= _weights[tmpK.quot][tmpK.rem] >= 0.0f;
         valid &= _weights[tmpK.quot][tmpK.rem] <= 1.0f + 1e-6f;
         RKGUIDE_ASSERT(valid);
 
-        valid &= isvalid(_kappas[tmpK.quot][tmpK.rem]);
+        valid &= embree::isvalid(_kappas[tmpK.quot][tmpK.rem]);
         valid &= _kappas[tmpK.quot][tmpK.rem] >= 0.0f;
         RKGUIDE_ASSERT(valid);
 
-        valid &= isvalid(_meanCosines[tmpK.quot][tmpK.rem]);
+        valid &= embree::isvalid(_meanCosines[tmpK.quot][tmpK.rem]);
         valid &= _meanCosines[tmpK.quot][tmpK.rem] >= 0.0f;
         valid &= _meanCosines[tmpK.quot][tmpK.rem] <= 1.0f;
         RKGUIDE_ASSERT(valid);
 
-        valid &= isvalid(_meanDirections[tmpK.quot].x[tmpK.rem]);
+        valid &= embree::isvalid(_meanDirections[tmpK.quot].x[tmpK.rem]);
         valid &= _meanDirections[tmpK.quot].x[tmpK.rem] >= -1.0f;
         valid &= _meanDirections[tmpK.quot].x[tmpK.rem] <= 1.0f;
         RKGUIDE_ASSERT(valid);
 
-        valid &= isvalid(_meanDirections[tmpK.quot].y[tmpK.rem]);
+        valid &= embree::isvalid(_meanDirections[tmpK.quot].y[tmpK.rem]);
         valid &= _meanDirections[tmpK.quot].y[tmpK.rem] >= -1.0f;
         valid &= _meanDirections[tmpK.quot].y[tmpK.rem] <= 1.0f;
         RKGUIDE_ASSERT(valid);
 
-        valid &= isvalid(_meanDirections[tmpK.quot].z[tmpK.rem]);
+        valid &= embree::isvalid(_meanDirections[tmpK.quot].z[tmpK.rem]);
         valid &= _meanDirections[tmpK.quot].z[tmpK.rem] >= -1.0f;
         valid &= _meanDirections[tmpK.quot].z[tmpK.rem] <= 1.0f;
         RKGUIDE_ASSERT(valid);
 
-        valid &= isvalid(_normalizations[tmpK.quot][tmpK.rem]);
+        valid &= embree::isvalid(_normalizations[tmpK.quot][tmpK.rem]);
         valid &= _normalizations[tmpK.quot][tmpK.rem] >= 0.0f;
         RKGUIDE_ASSERT(valid);
 
-        valid &= isvalid(_eMinus2Kappa[tmpK.quot][tmpK.rem]);
+        valid &= embree::isvalid(_eMinus2Kappa[tmpK.quot][tmpK.rem]);
         RKGUIDE_ASSERT(valid);
     }
 
     // check unused componets
     for(size_t k = _numComponents; k < MaxComponents; k++){
         const div_t tmpK = div( k, VecSize );
-        valid &= isvalid(_weights[tmpK.quot][tmpK.rem]);
+        valid &= embree::isvalid(_weights[tmpK.quot][tmpK.rem]);
         valid &= _weights[tmpK.quot][tmpK.rem] == 0.0f;
         RKGUIDE_ASSERT(valid);
 
-        valid &= isvalid(_kappas[tmpK.quot][tmpK.rem]);
+        valid &= embree::isvalid(_kappas[tmpK.quot][tmpK.rem]);
         valid &= _kappas[tmpK.quot][tmpK.rem] == 0.0f;
         RKGUIDE_ASSERT(valid);
 
-        valid &= isvalid(_meanDirections[tmpK.quot].x[tmpK.rem]);
+        valid &= embree::isvalid(_meanDirections[tmpK.quot].x[tmpK.rem]);
         valid &= _meanDirections[tmpK.quot].x[tmpK.rem] == 0.0f;
         RKGUIDE_ASSERT(valid);
 
-        valid &= isvalid(_meanDirections[tmpK.quot].y[tmpK.rem]);
+        valid &= embree::isvalid(_meanDirections[tmpK.quot].y[tmpK.rem]);
         valid &= _meanDirections[tmpK.quot].y[tmpK.rem] == 0.0f;
         RKGUIDE_ASSERT(valid);
 
-        valid &= isvalid(_meanDirections[tmpK.quot].z[tmpK.rem]);
+        valid &= embree::isvalid(_meanDirections[tmpK.quot].z[tmpK.rem]);
         valid &= _meanDirections[tmpK.quot].z[tmpK.rem] == 1.0f;
         RKGUIDE_ASSERT(valid);
 
-        valid &= isvalid(_meanCosines[tmpK.quot][tmpK.rem]);
+        valid &= embree::isvalid(_meanCosines[tmpK.quot][tmpK.rem]);
         valid &= _meanCosines[tmpK.quot][tmpK.rem] == 0.0f;
         RKGUIDE_ASSERT(valid);
 
-        valid &= isvalid(_normalizations[tmpK.quot][tmpK.rem]);
+        valid &= embree::isvalid(_normalizations[tmpK.quot][tmpK.rem]);
         valid &= std::fabs(_normalizations[tmpK.quot][tmpK.rem] - ONE_OVER_FOUR_PI) < 1e-6f;
         RKGUIDE_ASSERT(valid);
 
-        valid &= isvalid(_eMinus2Kappa[tmpK.quot][tmpK.rem]);
+        valid &= embree::isvalid(_eMinus2Kappa[tmpK.quot][tmpK.rem]);
         valid &= _eMinus2Kappa[tmpK.quot][tmpK.rem] == 1.0f;
         RKGUIDE_ASSERT(valid);
     }
@@ -351,12 +351,12 @@ template<int VecSize, int maxComponents>
 void VonMisesFisherMixture<VecSize, maxComponents>::convole(const float &_meanCosine)
 {
     const int cnt = (_numComponents+VecSize-1) / VecSize;
-    const vfloat<VecSize> meanCosine = _meanCosine;
+    const embree::vfloat<VecSize> meanCosine = _meanCosine;
 
     for(int k = 0; k < cnt;k++)
     {
         _meanCosines[k] *= meanCosine;
-        _kappas[k] = MeanCosineToKappa< vfloat<VecSize> >(meanCosine);
+        _kappas[k] = MeanCosineToKappa< embree::vfloat<VecSize> >(meanCosine);
     }
     _calculateNormalization();
 }
@@ -380,25 +380,25 @@ float VonMisesFisherMixture<VecSize, maxComponents>::product(const float &_weigh
 template<int VecSize, int maxComponents>
 float VonMisesFisherMixture<VecSize, maxComponents>::product(const float &_weight, const Vector3 &_meanDirection, const float &_kappa, const float &_normalization)
 {
-    const vfloat<VecSize> twoPi(2.0f*M_PI);
-    const vfloat<VecSize> ones(1.0f);
-    const vfloat<VecSize> minusTwos(-2.0f);
-    const vfloat<VecSize> zeros(0.0f);
-    const vfloat<VecSize> zeroKappaNorm(ONE_OVER_FOUR_PI);
+    const embree::vfloat<VecSize> twoPi(2.0f*M_PI);
+    const embree::vfloat<VecSize> ones(1.0f);
+    const embree::vfloat<VecSize> minusTwos(-2.0f);
+    const embree::vfloat<VecSize> zeros(0.0f);
+    const embree::vfloat<VecSize> zeroKappaNorm(ONE_OVER_FOUR_PI);
 
     const int cnt = (_numComponents+VecSize-1) / VecSize;
-    const vfloat<VecSize> weight = _weight;
-    const vfloat<VecSize> kappa = _kappa;
-    const vfloat<VecSize> normalization = _normalization;
+    const embree::vfloat<VecSize> weight = _weight;
+    const embree::vfloat<VecSize> kappa = _kappa;
+    const embree::vfloat<VecSize> normalization = _normalization;
 
-    const Vec3<vfloat<VecSize> > meanDirection = _meanDirection;
+    const embree::Vec3<embree::vfloat<VecSize> > meanDirection = _meanDirection;
 
-    vfloat<VecSize> productIntegralVec(0.f);
+    embree::vfloat<VecSize> productIntegralVec(0.f);
 
     for(int k = 0; k < cnt;k++)
     {
-        Vec3<vfloat<VecSize> > newMeanDirection = _kappas[k] * _meanDirections[k] + kappa * meanDirection;
-        vfloat<VecSize> newKappa = embree::sqrt(embree::dot( newMeanDirection, newMeanDirection));
+        embree::Vec3<embree::vfloat<VecSize> > newMeanDirection = _kappas[k] * _meanDirections[k] + kappa * meanDirection;
+        embree::vfloat<VecSize> newKappa = embree::sqrt(embree::dot( newMeanDirection, newMeanDirection));
         auto checkNewKappa = (newKappa > 1e-3f);
         newKappa = select( checkNewKappa,  newKappa, zeros);
 
@@ -407,19 +407,19 @@ float VonMisesFisherMixture<VecSize, maxComponents>::product(const float &_weigh
         newMeanDirection.y = select( checkNewKappa,  newMeanDirection.y / newKappa,  _meanDirections[k].y);
         newMeanDirection.z = select( checkNewKappa,  newMeanDirection.z / newKappa,  _meanDirections[k].z);
 
-        vfloat<VecSize> newEMinus2Kappa = embree::fastapprox::exp(minusTwos * newKappa);
-        vfloat<VecSize> newNormalization = newKappa / (twoPi * ( ones - newEMinus2Kappa ));
+        embree::vfloat<VecSize> newEMinus2Kappa = embree::fastapprox::exp(minusTwos * newKappa);
+        embree::vfloat<VecSize> newNormalization = newKappa / (twoPi * ( ones - newEMinus2Kappa ));
         newNormalization = select( checkNewKappa, newNormalization, zeroKappaNorm);
 
-        vfloat<VecSize> scale = ( _normalizations[k] * normalization ) / newNormalization;
+        embree::vfloat<VecSize> scale = ( _normalizations[k] * normalization ) / newNormalization;
 
-        vfloat<VecSize> cosTheta0 = embree::dot( _meanDirections[k], newMeanDirection );
-        vfloat<VecSize> cosTheta1 = embree::dot( meanDirection, newMeanDirection );
+        embree::vfloat<VecSize> cosTheta0 = embree::dot( _meanDirections[k], newMeanDirection );
+        embree::vfloat<VecSize> cosTheta1 = embree::dot( meanDirection, newMeanDirection );
 
         //std::cout << "cosTheta0: " << cosTheta0 <<"\tcosTheta1: " << cosTheta1 << std::endl;
         //std::cout << "_kappas[k]: " << _kappas[k] <<"\tkappa: " << kappa << std::endl;
         //std::cout << "tmp: " <<  _kappas[k] * (cosTheta0 - ones) + kappa * (cosTheta1 - ones) << std::endl;
-        vfloat<VecSize> eval = embree::fastapprox::exp( _kappas[k] * (cosTheta0 - ones) + kappa * (cosTheta1 - ones) );
+        embree::vfloat<VecSize> eval = embree::fastapprox::exp( _kappas[k] * (cosTheta0 - ones) + kappa * (cosTheta1 - ones) );
         //std::cout << "scale: " << scale <<"\teval: " << eval << std::endl;
         scale *= eval;
         scale *= _weights[k] * weight;
@@ -433,7 +433,7 @@ float VonMisesFisherMixture<VecSize, maxComponents>::product(const float &_weigh
         productIntegralVec += _weights[k];
     }
 
-    float productIntegral = reduce_add(productIntegralVec);
+    float productIntegral = embree::reduce_add(productIntegralVec);
     for(int k = 0; k < cnt;k++)
     {
         _weights[k] /= productIntegral;
@@ -565,9 +565,9 @@ void VonMisesFisherMixture<VecSize, maxComponents>::uniformInit(float kappa){
     const int cnt = (_numComponents+VecSize-1) / VecSize;
 
     for(int k = 0; k < cnt;k++){
-        _kappas[k] = vfloat<VecSize>(kappa);
-        _weights[k] = vfloat<VecSize>(1.0f/float(maxComponents));
-        _meanDirections[k] = Vec3< vfloat<VecSize> >(0.0, 0.0, 1.0);
+        _kappas[k] = embree::vfloat<VecSize>(kappa);
+        _weights[k] = embree::vfloat<VecSize>(1.0f/float(maxComponents));
+        _meanDirections[k] = embree::Vec3< embree::vfloat<VecSize> >(0.0, 0.0, 1.0);
     }
     _calculateNormalization();
     _calculateMeanCosines();
@@ -577,17 +577,17 @@ template<int VecSize, int maxComponents>
 float VonMisesFisherMixture<VecSize, maxComponents>::pdf( Vector3 direction ) const{
     const int cnt = (_numComponents+VecSize-1) / VecSize;
 
-    vfloat<VecSize> pdf = {0.0f};
-    Vec3< vfloat<VecSize> > vec3Direction(direction[0], direction[1], direction[2]);
+    embree::vfloat<VecSize> pdf = {0.0f};
+    embree::Vec3< embree::vfloat<VecSize> > vec3Direction(direction[0], direction[1], direction[2]);
 
-    const vfloat<VecSize> ones(1.0f);
-    const vfloat<VecSize> zeros(0.0f);
+    const embree::vfloat<VecSize> ones(1.0f);
+    const embree::vfloat<VecSize> zeros(0.0f);
 
     for(int k = 0; k < cnt;k++)
     {
-        const vfloat<VecSize> cosTheta = embree::dot(vec3Direction, _meanDirections[k]);
-        const vfloat<VecSize> cosThetaMinusOne = embree::min(cosTheta - ones, zeros);
-        const vfloat<VecSize> eval = _normalizations[k] * embree::fastapprox::exp< vfloat<VecSize> >( _kappas[k] * cosThetaMinusOne );
+        const embree::vfloat<VecSize> cosTheta = embree::dot(vec3Direction, _meanDirections[k]);
+        const embree::vfloat<VecSize> cosThetaMinusOne = embree::min(cosTheta - ones, zeros);
+        const embree::vfloat<VecSize> eval = _normalizations[k] * embree::fastapprox::exp< embree::vfloat<VecSize> >( _kappas[k] * cosThetaMinusOne );
         pdf += _weights[k] * eval;
     }
 
@@ -599,22 +599,22 @@ bool VonMisesFisherMixture<VecSize, maxComponents>::softAssignment( Vector3 dire
 
     const int cnt = (_numComponents+VecSize-1) / VecSize;
 
-    vfloat<VecSize> pdf = {0.0f};
-    Vec3< vfloat<VecSize> > vec3Direction(direction[0], direction[1], direction[2]);
+    embree::vfloat<VecSize> pdf = {0.0f};
+    embree::Vec3< embree::vfloat<VecSize> > vec3Direction(direction[0], direction[1], direction[2]);
 
-    const vfloat<VecSize> ones(1.0f);
-    const vfloat<VecSize> zeros(0.0f);
+    const embree::vfloat<VecSize> ones(1.0f);
+    const embree::vfloat<VecSize> zeros(0.0f);
 
     for(int k = 0; k < cnt;k++)
     {
-        const vfloat<VecSize> cosTheta = embree::dot(vec3Direction, _meanDirections[k]);
-        const vfloat<VecSize> cosThetaMinusOne = embree::min(cosTheta - ones, zeros);
-        const vfloat<VecSize> eval = _normalizations[k] * embree::fastapprox::exp< vfloat<VecSize> >( _kappas[k] * cosThetaMinusOne );
+        const embree::vfloat<VecSize> cosTheta = embree::dot(vec3Direction, _meanDirections[k]);
+        const embree::vfloat<VecSize> cosThetaMinusOne = embree::min(cosTheta - ones, zeros);
+        const embree::vfloat<VecSize> eval = _normalizations[k] * embree::fastapprox::exp< embree::vfloat<VecSize> >( _kappas[k] * cosThetaMinusOne );
         softAssign.assignments[k] =  _weights[k] * eval;
         pdf += softAssign.assignments[k];
     }
 
-    softAssign.pdf = reduce_add(pdf);
+    softAssign.pdf = embree::reduce_add(pdf);
     softAssign.size = _numComponents;
 
     if ( softAssign.pdf <= 0.0f)
@@ -622,7 +622,7 @@ bool VonMisesFisherMixture<VecSize, maxComponents>::softAssignment( Vector3 dire
         return false;
     }
 
-    vfloat<VecSize> inv_pdf = rcp(softAssign.pdf);
+    embree::vfloat<VecSize> inv_pdf = embree::rcp(softAssign.pdf);
     for(int k = 0; k < cnt;k++)
     {
         softAssign.assignments[k] *= inv_pdf;
@@ -673,12 +673,12 @@ Vector3 VonMisesFisherMixture<VecSize, maxComponents>::sample( const Vector2 sam
 
     _sample[1] = std::min(1 - FLT_EPSILON, (searched - sumWeights) / cdf);
 
-     Vec3<float> sampledDirection(0.f, 0.f, 1.f);
+     embree::Vec3<float> sampledDirection(0.f, 0.f, 1.f);
 
     // Second, sample selected component
     const float sKappa = _kappas[selectedVector][selectedComponent];
     const float sEMinus2Kappa = _eMinus2Kappa[selectedVector][selectedComponent];
-    const Vec3<float> meanDirection( _meanDirections[selectedVector].x[selectedComponent],  _meanDirections[selectedVector].y[selectedComponent],  _meanDirections[selectedVector].z[selectedComponent]);
+    const embree::Vec3<float> meanDirection( _meanDirections[selectedVector].x[selectedComponent],  _meanDirections[selectedVector].y[selectedComponent],  _meanDirections[selectedVector].z[selectedComponent]);
 
     if (sKappa == 0.0f)
     {
@@ -734,12 +734,12 @@ template<int VecSize, int maxComponents>
 void VonMisesFisherMixture<VecSize, maxComponents>::_normalizeWeights( ) {
 
     const int cnt = (_numComponents+VecSize-1) / VecSize;
-    vfloat<VecSize> sumWeights = 0.0f;
+    embree::vfloat<VecSize> sumWeights = 0.0f;
     for(int k = 0; k < cnt;k++){
         sumWeights += _weights[k];
     }
 
-    vfloat<VecSize> inv_sumWeights = 1.0f / reduce_add(sumWeights);
+    embree::vfloat<VecSize> inv_sumWeights = 1.0f / reduce_add(sumWeights);
     for(int k = 0; k < cnt;k++){
         _weights[k] *= inv_sumWeights;
     }
@@ -748,13 +748,13 @@ void VonMisesFisherMixture<VecSize, maxComponents>::_normalizeWeights( ) {
 
 template<int VecSize, int maxComponents>
 void VonMisesFisherMixture<VecSize, maxComponents>::_calculateNormalization( ) {
-    const vfloat<VecSize> zeroKappaNorm(ONE_OVER_FOUR_PI);
+    const embree::vfloat<VecSize> zeroKappaNorm(ONE_OVER_FOUR_PI);
 
     const int cnt = (_numComponents+VecSize-1) / VecSize;
-    const vfloat<VecSize> minusTwo(-2.0f);
+    const embree::vfloat<VecSize> minusTwo(-2.0f);
     for(int k = 0; k < cnt;k++){
-        _eMinus2Kappa[k] = embree::fastapprox::exp< vfloat<VecSize> >(minusTwo*_kappas[k]);
-        const vfloat<VecSize> norm = _kappas[k]/(2.0f*M_PI*(1.0f-_eMinus2Kappa[k]));
+        _eMinus2Kappa[k] = embree::fastapprox::exp< embree::vfloat<VecSize> >(minusTwo*_kappas[k]);
+        const embree::vfloat<VecSize> norm = _kappas[k]/(2.0f*M_PI*(1.0f-_eMinus2Kappa[k]));
         _normalizations[k] = select(_kappas[k] > 0.f, norm, zeroKappaNorm);
     }
 
@@ -764,11 +764,11 @@ template<int VecSize, int maxComponents>
 void VonMisesFisherMixture<VecSize, maxComponents>::_calculateMeanCosines( ) {
 
     const int cnt = (_numComponents+VecSize-1) / VecSize;
-    const vfloat<VecSize> zeros(0.0f);
-    const vfloat<VecSize> ones(1.0f);
+    const embree::vfloat<VecSize> zeros(0.0f);
+    const embree::vfloat<VecSize> ones(1.0f);
     for(int k = 0; k < cnt;k++){
-        vfloat<VecSize>  tanh = ones - 2.0f / ( embree::fastapprox::exp( 2.0f * _kappas[k] ) - ones );
-        vfloat<VecSize>  meanCosine = ones /tanh - ones / _kappas[k];
+        embree::vfloat<VecSize>  tanh = ones - 2.0f / ( embree::fastapprox::exp( 2.0f * _kappas[k] ) - ones );
+        embree::vfloat<VecSize>  meanCosine = ones /tanh - ones / _kappas[k];
         //std::cout << "meanCosine: " << meanCosine << std::endl;
         _meanCosines[k] = select(_kappas[k] > 0.f, meanCosine, zeros);
     }
@@ -782,7 +782,7 @@ inline Type KappaToMeanCosine(const Type &kappa)
     const Type zeros( 0.0f);
 
     Type meanCosine = ones / embree::tanh( kappa) - ones / kappa;
-    return select( kappa > 0.f, meanCosine, zeros);
+    return embree::select( kappa > 0.f, meanCosine, zeros);
 }
 
 

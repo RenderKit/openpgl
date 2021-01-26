@@ -51,7 +51,7 @@ public:
         m_deterministic(settings.deterministic),
         m_useStochasticNNLookUp(settings.useStochasticNNLookUp),
         m_spatialSubdivBuilderSettings(settings.spatialSubdivBuilderSettings){
-        std::cout << "SurfaceVolumeField(const Settings &settings): " << settings.deterministic << std::endl;
+        //std::cout << "SurfaceVolumeField(const Settings &settings): " << settings.deterministic << std::endl;
     }
 /*
     const RegionType *getGuidingRegion( const rkguide::Point3 &p, rkguide::Sampler *sampler) const
@@ -289,13 +289,13 @@ protected:
     void buildSpatialStructureSurface(const BBox &bounds, TSampleContainer& samples)
     {
         //mitsuba::SLog(mitsuba::EInfo, "Begin Tree update");
-        mitsuba::ref<mitsuba::Timer> treeTimer = new mitsuba::Timer();
+//        mitsuba::ref<mitsuba::Timer> treeTimer = new mitsuba::Timer();
         m_spatialSubdivBuilder.build(m_spatialSubdivSurface, bounds, samples, m_regionStorageContainerSurface, m_spatialSubdivBuilderSettings, m_nCores);
         //mitsuba::SLog(mitsuba::EInfo, "Tree building time: %s", timeString(treeTimer->getSeconds(), true).c_str());
 
         if (m_useStochasticNNLookUp)
         {
-            mitsuba::ref<mitsuba::Timer> embreereeTimer = new mitsuba::Timer();
+//            mitsuba::ref<mitsuba::Timer> embreereeTimer = new mitsuba::Timer();
             m_regionKNNSearchTreeSurface.buildRegionSearchTree<RegionStorageContainerType, RegionType>(m_regionStorageContainerSurface);
             //mitsuba::SLog(mitsuba::EInfo, "Embree BVH update time: %s", timeString(embreereeTimer->getSeconds(), true).c_str());
         }
@@ -305,13 +305,13 @@ protected:
     void updateSpatialStructureSurface(TSampleContainer& samples)
     {
         //mitsuba::SLog(mitsuba::EInfo, "Begin Tree update");
-        mitsuba::ref<mitsuba::Timer> treeTimer = new mitsuba::Timer();
+//        mitsuba::ref<mitsuba::Timer> treeTimer = new mitsuba::Timer();
         m_spatialSubdivBuilder.updateTree(m_spatialSubdivSurface, samples, m_regionStorageContainerSurface, m_spatialSubdivBuilderSettings, m_nCores);
         //mitsuba::SLog(mitsuba::EInfo, "Tree building time: %s", timeString(treeTimer->getSeconds(), true).c_str());
 
         if (m_useStochasticNNLookUp)
         {
-            mitsuba::ref<mitsuba::Timer> embreereeTimer = new mitsuba::Timer();
+//            mitsuba::ref<mitsuba::Timer> embreereeTimer = new mitsuba::Timer();
             m_regionKNNSearchTreeSurface.buildRegionSearchTree<RegionStorageContainerType, RegionType>(m_regionStorageContainerSurface);
             //mitsuba::SLog(mitsuba::EInfo, "Embree BVH update time: %s", timeString(embreereeTimer->getSeconds(), true).c_str());
         }
@@ -321,13 +321,13 @@ protected:
     void buildSpatialStructureVolume(const BBox &bounds, TSampleContainer& samples)
     {
         //mitsuba::SLog(mitsuba::EInfo, "Begin Tree update");
-        mitsuba::ref<mitsuba::Timer> treeTimer = new mitsuba::Timer();
+//        mitsuba::ref<mitsuba::Timer> treeTimer = new mitsuba::Timer();
         m_spatialSubdivBuilder.build(m_spatialSubdivVolume, bounds, samples, m_regionStorageContainerVolume, m_spatialSubdivBuilderSettings, m_nCores);
         //mitsuba::SLog(mitsuba::EInfo, "Tree building time: %s", timeString(treeTimer->getSeconds(), true).c_str());
 
         if (m_useStochasticNNLookUp)
         {
-            mitsuba::ref<mitsuba::Timer> embreereeTimer = new mitsuba::Timer();
+//            mitsuba::ref<mitsuba::Timer> embreereeTimer = new mitsuba::Timer();
             m_regionKNNSearchTreeVolume.buildRegionSearchTree<RegionStorageContainerType, RegionType>(m_regionStorageContainerVolume);
             //mitsuba::SLog(mitsuba::EInfo, "Embree BVH update time: %s", timeString(embreereeTimer->getSeconds(), true).c_str());
         }
@@ -337,13 +337,13 @@ protected:
     void updateSpatialStructureVolume(TSampleContainer& samples)
     {
         //mitsuba::SLog(mitsuba::EInfo, "Begin Tree update");
-        mitsuba::ref<mitsuba::Timer> treeTimer = new mitsuba::Timer();
+//        mitsuba::ref<mitsuba::Timer> treeTimer = new mitsuba::Timer();
         m_spatialSubdivBuilder.updateTree(m_spatialSubdivVolume, samples, m_regionStorageContainerVolume, m_spatialSubdivBuilderSettings, m_nCores);
         //mitsuba::SLog(mitsuba::EInfo, "Tree building time: %s", timeString(treeTimer->getSeconds(), true).c_str());
 
         if (m_useStochasticNNLookUp)
         {
-            mitsuba::ref<mitsuba::Timer> embreereeTimer = new mitsuba::Timer();
+//            mitsuba::ref<mitsuba::Timer> embreereeTimer = new mitsuba::Timer();
             m_regionKNNSearchTreeVolume.buildRegionSearchTree<RegionStorageContainerType, RegionType>(m_regionStorageContainerVolume);
             //mitsuba::SLog(mitsuba::EInfo, "Embree BVH update time: %s", timeString(embreereeTimer->getSeconds(), true).c_str());
         }

@@ -5,7 +5,7 @@
 
 #include "VMM.h"
 
-using namespace embree;
+//using namespace embree;
 
 namespace rkguide
 {
@@ -20,7 +20,7 @@ public:
 
     typedef VonMisesFisherMixture<VecSize, maxComponents> VMM;
 
-    vfloat<VecSize> _distances[VMM::NumVectors];
+    embree::vfloat<VecSize> _distances[VMM::NumVectors];
 
     Point3 _pivotPosition {0.0f};
 
@@ -119,7 +119,7 @@ void ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents>::serialize(std::
 {
     VonMisesFisherMixture<VecSize, maxComponents>::serialize(stream);
     for(uint32_t k=0;k<VMM::NumVectors;k++){
-        stream.write(reinterpret_cast<const char*>(&_distances[k]), sizeof(vfloat<VecSize>));
+        stream.write(reinterpret_cast<const char*>(&_distances[k]), sizeof(embree::vfloat<VecSize>));
     }
     stream.write(reinterpret_cast<const char*>(&_pivotPosition), sizeof(Point3));
 }
@@ -129,7 +129,7 @@ void ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents>::deserialize(std
 {
     VonMisesFisherMixture<VecSize, maxComponents>::deserialize(stream);
     for(uint32_t k=0;k<VMM::NumVectors;k++){
-        stream.read(reinterpret_cast<char*>(&_distances[k]), sizeof(vfloat<VecSize>));
+        stream.read(reinterpret_cast<char*>(&_distances[k]), sizeof(embree::vfloat<VecSize>));
     }
     stream.read(reinterpret_cast<char*>(&_pivotPosition), sizeof(Point3));
 }
@@ -141,13 +141,13 @@ bool ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents>::isValid() const
 
     for(size_t k = 0; k < this->_numComponents; k++){
         const div_t tmpK = div( k, VecSize );
-        valid &= isvalid(_distances[tmpK.quot][tmpK.rem]);
+        valid &= embree::isvalid(_distances[tmpK.quot][tmpK.rem]);
         valid &= _distances[tmpK.quot][tmpK.rem] > 0.0f;
         RKGUIDE_ASSERT(valid);
     }
     for(size_t k = this->_numComponents; k < maxComponents; k++){
         const div_t tmpK = div( k, VecSize );
-        valid &= isvalid(_distances[tmpK.quot][tmpK.rem]);
+        valid &= embree::isvalid(_distances[tmpK.quot][tmpK.rem]);
         valid &= _distances[tmpK.quot][tmpK.rem] == 0.0f;
         RKGUIDE_ASSERT(valid);
     }
@@ -172,15 +172,15 @@ float ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents>::getComponentDi
 template<int VecSize, int maxComponents>
 void ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents>::performRelativeParallaxShift( const Vector3 &shiftDirection )
 {
-    const vfloat<VecSize> ones(1.0f);
-    const vfloat<VecSize> zeros(0.0f);
+    const embree::vfloat<VecSize> ones(1.0f);
+    const embree::vfloat<VecSize> zeros(0.0f);
 
     const int cnt = (this->_numComponents+VMM::VectorSize-1) / VMM::VectorSize;
-    const int rem = this->_numComponents % VMM::VectorSize;
+    //const int rem = this->_numComponents % VMM::VectorSize;
 
-    const Vec3<vfloat<VecSize> > shiftDirectionVec(shiftDirection);
-    Vec3<vfloat<VecSize> > parallaxCorrectedMeanDirections;
-    vfloat<VecSize> lengths;
+    const embree::Vec3<embree::vfloat<VecSize> > shiftDirectionVec(shiftDirection);
+    embree::Vec3<embree::vfloat<VecSize> > parallaxCorrectedMeanDirections;
+    embree::vfloat<VecSize> lengths;
     for(uint32_t k=0;k<cnt;k++){
         parallaxCorrectedMeanDirections = this->_meanDirections[k] * _distances[k] + shiftDirectionVec;
         lengths = embree::length(parallaxCorrectedMeanDirections);

@@ -39,7 +39,7 @@ struct FieldParallaxAwareVMM: public Field<rkguide::Region<ParallaxAwareVonMises
 
     void fitRegions() override
     {
-      mitsuba::ref<mitsuba::Timer> fittingTimer = new mitsuba::Timer();
+//      mitsuba::ref<mitsuba::Timer> fittingTimer = new mitsuba::Timer();
       size_t nGudiginRegions = this->m_regionStorageContainer.size();
 //      mitsuba::SLog(mitsuba::EInfo, "Begin region fitting: nRegions = %d", nGudiginRegions);
 #if defined(MTS_OPENMP)
@@ -72,7 +72,7 @@ struct FieldParallaxAwareVMM: public Field<rkguide::Region<ParallaxAwareVonMises
 
     void updateRegions() override
     {
-      mitsuba::ref<mitsuba::Timer> fittingTimer = new mitsuba::Timer();
+//      mitsuba::ref<mitsuba::Timer> fittingTimer = new mitsuba::Timer();
       size_t nGudiginRegions = this->m_regionStorageContainer.size();
 //      mitsuba::SLog(mitsuba::EInfo, "Begin region fitting: nRegions = %d", nGudiginRegions);
 #if defined(MTS_OPENMP)
