@@ -10,6 +10,10 @@
 #include "../vmm/ParallaxAwareVMM.h"
 #include "../vmm/AdaptiveSplitandMergeFactory.h"
 
+#if defined (USE_TBB_THREADING)
+#include <tbb/parallel_for.h>
+#endif
+
 namespace rkguide
 {
 
@@ -118,10 +122,17 @@ private:
     {
         size_t nGuidingRegions = regionStorageContainer.size();
         std::cout << "fitRegion: "<< (isSurface? "surface":"volume") << "\tnGuidingRegions = " << nGuidingRegions << std::endl;
-        #if defined(MTS_OPENMP)
+#if defined(USE_OPENMP)
         #pragma omp parallel for num_threads(this->m_nCores) schedule(dynamic)
-        #endif
+#endif
+
+#if defined (USE_TBB_THREADING)
+        tbb::parallel_for( tbb::blocked_range<int>(0,nGuidingRegions), [&](tbb::blocked_range<int> r)
+        {
+        for (int n = r.begin(); n<r.end(); ++n)
+#else
         for (size_t n=0; n < nGuidingRegions; n++)
+#endif
         {
             typename ParentField::RegionStorageType &regionStorage = regionStorageContainer[n];
             rkguide::Point3 sampleMean = regionStorage.first.sampleStatistics.mean;
@@ -150,16 +161,25 @@ private:
                 regionStorage.first.splitFlag = false;
             }
         }
+#if defined (USE_TBB_THREADING)
+        });
+#endif
     }
 
     void updateRegions(typename ParentField::RegionStorageContainerType &regionStorageContainer, const bool &isSurface)
     {
         size_t nGuidingRegions = regionStorageContainer.size();
         std::cout << "updateRegion: " << (isSurface? "surface":"volume") << "\tnGuidingRegions = " << nGuidingRegions << std::endl;
-#if defined(MTS_OPENMP)
+#if defined(USE_OPENMP)
         #pragma omp parallel for num_threads(this->m_nCores) schedule(dynamic)
 #endif
+#if defined (USE_TBB_THREADING)
+        tbb::parallel_for( tbb::blocked_range<int>(0,nGuidingRegions), [&](tbb::blocked_range<int> r)
+        {
+        for (int n = r.begin(); n<r.end(); ++n)
+#else
         for (size_t n=0; n < nGuidingRegions; n++)
+#endif
         {
             typename ParentField::RegionStorageType &regionStorage = regionStorageContainer[n];
             if (regionStorage.first.splitFlag)
@@ -204,6 +224,9 @@ private:
                 regionStorage.first.splitFlag = false;
             }
         }
+#if defined (USE_TBB_THREADING)
+        });
+#endif
     }
 
 

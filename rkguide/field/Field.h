@@ -83,15 +83,7 @@ public:
         {
             std::sort(samples.begin(), samples.end());
         }
-#if defined(MTS_OPENMP)
-//        ref<Scheduler> scheduler = Scheduler::getInstance();
-//        size_t nCores = scheduler->getCoreCount();
 
-        //m_nCores = nCores;
-//        m_nCores = 20;
-        //SLog(EWarn, "nCores: %d", nCores);
-        mitsuba::Thread::initializeOpenMP(m_nCores);
-#endif
         std::cout << "BufferSize: " << sizeof(DirectionalSampleData) * m_spatialSubdivBuilderSettings.maxSamples * 1e-6 <<  " MB" << std::endl;
         buildSpatialStructure(bounds, samples);
         fitRegions();
@@ -103,15 +95,7 @@ public:
         {
             std::sort(samples.begin(), samples.end());
         }
-#if defined(MTS_OPENMP)
-//        ref<Scheduler> scheduler = Scheduler::getInstance();
-//        size_t nCores = scheduler->getCoreCount();
 
-        //m_nCores = nCores;
-//        m_nCores = 20;
-        //SLog(EWarn, "nCores: %d", nCores);
-        mitsuba::Thread::initializeOpenMP(m_nCores);
-#endif
         updateSpatialStructure(samples);
         updateRegions();
     }

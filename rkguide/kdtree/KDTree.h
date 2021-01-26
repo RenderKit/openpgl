@@ -5,9 +5,9 @@
 
 #include "../rkguide.h"
 
-#ifdef USE_TBB
- #define USE_TBB_CONCURRENT_NODES
-#endif
+//#ifdef USE_TBB
+// #define USE_TBB_CONCURRENT_NODES
+//#endif
 
 #ifdef USE_TBB_CONCURRENT_NODES
 #include <tbb/concurrent_vector.h>

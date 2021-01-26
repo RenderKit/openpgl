@@ -137,48 +137,6 @@ public:
             return nullptr;
         }
     }
-/*
-    void buildField(const BBox &bounds, TSampleContainer& samples)
-    {
-        m_iteration = 0;
-        m_totalSPP  = 0;
-        if (m_deterministic)
-        {
-            std::sort(samples.begin(), samples.end());
-        }
-#if defined(MTS_OPENMP)
-//        ref<Scheduler> scheduler = Scheduler::getInstance();
-//        size_t nCores = scheduler->getCoreCount();
-
-        //m_nCores = nCores;
-//        m_nCores = 20;
-        //SLog(EWarn, "nCores: %d", nCores);
-        mitsuba::Thread::initializeOpenMP(m_nCores);
-#endif
-        std::cout << "BufferSize: " << sizeof(DirectionalSampleData) * m_spatialSubdivBuilderSettings.maxSamples * 1e-6 <<  " MB" << std::endl;
-        buildSpatialStructure(bounds, samples);
-        fitRegions();
-    }
-
-    void updateField(TSampleContainer& samples)
-    {
-        if (m_deterministic)
-        {
-            std::sort(samples.begin(), samples.end());
-        }
-#if defined(MTS_OPENMP)
-//        ref<Scheduler> scheduler = Scheduler::getInstance();
-//        size_t nCores = scheduler->getCoreCount();
-
-        //m_nCores = nCores;
-//        m_nCores = 20;
-        //SLog(EWarn, "nCores: %d", nCores);
-        mitsuba::Thread::initializeOpenMP(m_nCores);
-#endif
-        updateSpatialStructure(samples);
-        updateRegions();
-    }
-*/
 
     void buildField(const BBox &bounds, TSampleContainer& samplesSurface, TSampleContainer& samplesVolume)
     {
@@ -190,15 +148,7 @@ public:
             std::sort(samplesSurface.begin(), samplesSurface.end());
             std::sort(samplesVolume.begin(), samplesVolume.end());
         }
-#if defined(MTS_OPENMP)
-//        ref<Scheduler> scheduler = Scheduler::getInstance();
-//        size_t nCores = scheduler->getCoreCount();
 
-        //m_nCores = nCores;
-//        m_nCores = 20;
-        //SLog(EWarn, "nCores: %d", nCores);
-        mitsuba::Thread::initializeOpenMP(m_nCores);
-#endif
         std::cout << "BufferSize: " << sizeof(DirectionalSampleData) * m_spatialSubdivBuilderSettings.maxSamples * 1e-6 <<  " MB" << std::endl;
         std::cout << "buildField: samplesSurface = " << samplesSurface.size() << "\t samplesVolume = " << samplesVolume.size() << std::endl;
         buildSpatialStructureSurface(bounds, samplesSurface);
@@ -215,21 +165,11 @@ public:
             std::sort(samplesSurface.begin(), samplesSurface.end());
             std::sort(samplesVolume.begin(), samplesVolume.end());
         }
-#if defined(MTS_OPENMP)
-//        ref<Scheduler> scheduler = Scheduler::getInstance();
-//        size_t nCores = scheduler->getCoreCount();
 
-        //m_nCores = nCores;
-//        m_nCores = 20;
-        //SLog(EWarn, "nCores: %d", nCores);
-        mitsuba::Thread::initializeOpenMP(m_nCores);
-#endif
         updateSpatialStructureSurface(samplesSurface);
         updateSpatialStructureVolume(samplesVolume);
         updateRegions();
     }
-
-    
 
 
     void addTrainingIteration(uint32_t spp) {

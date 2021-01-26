@@ -10,6 +10,10 @@
 #include "../vmm/ParallaxAwareVMM.h"
 #include "../vmm/AdaptiveSplitandMergeFactory.h"
 
+#if defined (USE_TBB_THREADING)
+#include <tbb/parallel_for.h>
+#endif
+
 namespace rkguide
 {
 
@@ -40,13 +44,21 @@ struct FieldParallaxAwareVMM: public Field<rkguide::Region<ParallaxAwareVonMises
     void fitRegions() override
     {
 //      mitsuba::ref<mitsuba::Timer> fittingTimer = new mitsuba::Timer();
-      size_t nGudiginRegions = this->m_regionStorageContainer.size();
-//      mitsuba::SLog(mitsuba::EInfo, "Begin region fitting: nRegions = %d", nGudiginRegions);
-#if defined(MTS_OPENMP)
+      size_t nGuidingRegions = this->m_regionStorageContainer.size();
+      //mitsuba::SLog(mitsuba::EInfo, "Begin region fitting: nRegions = %d", nGuidingRegions);
+      std::cout << "Begin region fitting: nRegions =  " << nGuidingRegions << std::endl;
+#if defined(USE_OPENMP)
 			//SLog(EInfo, "Fit Mixtures: nCores= %d", m_nCores);
       #pragma omp parallel for num_threads(this->m_nCores) schedule(dynamic)
 #endif
-      for (size_t n=0; n < nGudiginRegions; n++)
+
+#if defined (USE_TBB_THREADING)
+      tbb::parallel_for( tbb::blocked_range<int>(0,nGuidingRegions), [&](tbb::blocked_range<int> r)
+      {
+      for (int n = r.begin(); n<r.end(); ++n)
+#else
+      for (size_t n=0; n < nGuidingRegions; n++)
+#endif
       {
         typename ParentField::RegionStorageType &regionStorage = this->m_regionStorageContainer[n];
         rkguide::Point3 sampleMean = regionStorage.first.sampleStatistics.mean;
@@ -67,19 +79,29 @@ struct FieldParallaxAwareVMM: public Field<rkguide::Region<ParallaxAwareVonMises
             std::cout << "!!!! regionStorage.first.valid !!! " << regionStorage.first.distribution.toString() << std::endl;
         regionStorage.first.splitFlag = false;
       }
+#if defined (USE_TBB_THREADING)
+      });
+#endif
 //      mitsuba::SLog(mitsuba::EInfo, "Region fitting time: %s", timeString(fittingTimer->getSeconds(), true).c_str());
     }
 
     void updateRegions() override
     {
 //      mitsuba::ref<mitsuba::Timer> fittingTimer = new mitsuba::Timer();
-      size_t nGudiginRegions = this->m_regionStorageContainer.size();
+      size_t nGuidingRegions = this->m_regionStorageContainer.size();
 //      mitsuba::SLog(mitsuba::EInfo, "Begin region fitting: nRegions = %d", nGudiginRegions);
-#if defined(MTS_OPENMP)
+      std::cout << "Begin region updating: nRegions =  " << nGuidingRegions << std::endl;
+#if defined(USE_OPENMP)
 //			mitsuba::SLog(mitsuba::EInfo, "Fit Mixtures: nCores= %d", this->m_nCores);
       #pragma omp parallel for num_threads(this->m_nCores) schedule(dynamic)
 #endif
-      for (size_t n=0; n < nGudiginRegions; n++)
+#if defined (USE_TBB_THREADING)
+      tbb::parallel_for( tbb::blocked_range<int>(0,nGuidingRegions), [&](tbb::blocked_range<int> r)
+      {
+      for (int n = r.begin(); n<r.end(); ++n)
+#else
+      for (size_t n=0; n < nGuidingRegions; n++)
+#endif
       {
         typename ParentField::RegionStorageType &regionStorage = this->m_regionStorageContainer[n];
 //        mitsuba::SLog(mitsuba::EInfo, "Region[%d] = nSamples %d", n, regionStorage.second.size());
@@ -114,6 +136,9 @@ struct FieldParallaxAwareVMM: public Field<rkguide::Region<ParallaxAwareVonMises
         if(!regionStorage.first.valid)
             std::cout << "!!!! regionStorage.first.valid !!! " << regionStorage.first.distribution.toString() << std::endl;
       }
+#if defined (USE_TBB_THREADING)
+      });
+#endif
 //      mitsuba::SLog(mitsuba::EInfo, "Region fitting time: %s", timeString(fittingTimer->getSeconds(), true).c_str());
     }
 

@@ -11,11 +11,11 @@
 
 #define USE_OMP_TASKS
 
-#ifdef USE_TBB
-    #define USE_TBB_CONCURRENT
-#endif
+//#ifdef USE_TBB
+//    #define USE_TBB_CONCURRENT
+//#endif
 
-#ifdef  USE_TBB_CONCURRENT
+#ifdef  USE_TBB_CONCURRENT_VECTOR
 #include <tbb/concurrent_vector.h>
 #else
 #include <mitsuba/guiding/AtomicallyGrowingVector.h>
@@ -40,7 +40,7 @@ struct KDTreePartitionBuilder
         size_t maxDepth{32};
     };
 
-#ifdef  USE_TBB_CONCURRENT
+#ifdef  USE_TBB_CONCURRENT_VECTOR
     void build(KDTree &kdTree, const BBox &bounds, typename TRange::Container &samples, tbb::concurrent_vector< std::pair<TRegion, TRange> > &dataStorage, const Settings &buildSettings, const size_t &nCores) const
 #else
     void build(KDTree &kdTree, const BBox &bounds, typename TRange::Container &samples, AtomicallyGrowingVector< std::pair<TRegion, TRange> > &dataStorage, const Settings &buildSettings, const size_t &nCores) const
@@ -55,7 +55,7 @@ struct KDTreePartitionBuilder
         //KDNode &root kdTree.getRoot();
         updateTree(kdTree, samples, dataStorage, buildSettings, nCores);
     }
-#ifdef  USE_TBB_CONCURRENT
+#ifdef  USE_TBB_CONCURRENT_VECTOR
     void updateTree(KDTree &kdTree, typename TRange::Container &samples, tbb::concurrent_vector< std::pair<TRegion, TRange> > &dataStorage, const Settings &buildSettings, const uint32_t &nCores) const
 #else
     void updateTree(KDTree &kdTree, typename TRange::Container &samples, AtomicallyGrowingVector< std::pair<TRegion, TRange> > &dataStorage, const Settings &buildSettings, const uint32_t &nCores) const
@@ -175,7 +175,7 @@ private:
         splitPos = sampleMean[splitDim];
     }
 
-#ifdef  USE_TBB_CONCURRENT
+#ifdef  USE_TBB_CONCURRENT_VECTOR
     void updateTreeNode(KDTree *kdTree, KDNode &node, size_t depth, const TRange sampleRange, const SampleStatistics sampleStats, tbb::concurrent_vector< std::pair<TRegion, TRange> > *dataStorage, const Settings &buildSettings) const
 #else
     void updateTreeNode(KDTree *kdTree, KDNode &node, size_t depth, const TRange sampleRange, const SampleStatistics sampleStats, AtomicallyGrowingVector< std::pair<TRegion, TRange> > *dataStorage, const Settings &buildSettings) const
@@ -213,7 +213,7 @@ private:
                 regionAndRangeData.first.regionBounds.upper[splitDim] = splitPos;
                 regionAndRangeDataRight.first.regionBounds.lower[splitDim] = splitPos;
 
-#ifdef  USE_TBB_CONCURRENT
+#ifdef  USE_TBB_CONCURRENT_VECTOR
                 auto rigthDataItr = dataStorage->push_back(regionAndRangeDataRight);
 #else
                 auto rigthDataItr = dataStorage->back_insert(regionAndRangeDataRight);
