@@ -42,6 +42,8 @@ public:
         bool useStochasticNNLookUp {false};
         bool deterministic {false};
         float decayOnSpatialSplit {0.25f};
+
+        std::string toString() const;
     };
 
     Field() = default;
@@ -199,5 +201,17 @@ private:
     KNearestRegionsSearchTree m_regionKNNSearchTree;
 };
 
+template<class TRegion, typename TSampleContainer>
+inline std::string Field<TRegion, TSampleContainer>::Settings::toString() const
+{
+    std::stringstream ss;
+    ss << "Field::Settings:" << std::endl;
+    ss << "spatialSubdivBuilderSettings: " << spatialSubdivBuilderSettings.toString() << std::endl;
+    ss << "useStochasticNNLookUp: " << useStochasticNNLookUp << std::endl;
+    ss << "deterministic: " << deterministic << std::endl;
+    ss << "decayOnSpatialSplit: " << decayOnSpatialSplit << std::endl;
+
+    return ss.str();
+}
 
 }

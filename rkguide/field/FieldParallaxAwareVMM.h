@@ -27,15 +27,18 @@ struct FieldParallaxAwareVMM: public Field<rkguide::Region<ParallaxAwareVonMises
 
     typedef ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents> DistributionType;
 
-    struct Settings: public ParentField::Settings
+    struct Settings
     {
+        typename ParentField::Settings settings;
         DistributionFactorySettings distributionFactorySettings;
         bool useParallaxCompensation{true};
+
+        std::string toString() const;
     };
 
     FieldParallaxAwareVMM() = default;
 
-    FieldParallaxAwareVMM(const Settings &settings): ParentField(settings)
+    FieldParallaxAwareVMM(const Settings &settings): ParentField(settings.settings)
     {
         m_distributionFactorySettings = settings.distributionFactorySettings;
         m_useParallaxCompensation = settings.useParallaxCompensation;
@@ -180,5 +183,19 @@ private:
     DistributionFactorySettings m_distributionFactorySettings;
 
 };
+
+template<int VecSize, int maxComponents, typename TSampleContainer>
+inline std::string FieldParallaxAwareVMM<VecSize, maxComponents, TSampleContainer>::Settings::toString() const
+{
+    std::stringstream ss;
+    ss << "FieldParallaxAwareVMM::Settings:" << std::endl;
+    ss << "settings: " << settings.toString() << std::endl;
+    ss << "distributionFactorySettings: " << distributionFactorySettings.toString() << std::endl;
+    ss << "useParallaxCompensation: " << useParallaxCompensation << std::endl;
+    //ss << "eigenValue1: " << eigenValue1 << std::endl;
+    //ss << "eigenVector0: " << eigenVector0 << std::endl;
+    //ss << "eigenVector1: " << eigenVector1 << std::endl;
+    return ss.str();
+}
 
 }

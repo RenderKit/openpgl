@@ -42,6 +42,8 @@ public:
         bool useStochasticNNLookUp {false};
         bool deterministic {false};
         float decayOnSpatialSplit {0.25f};
+
+        std::string toString() const;
     };
 
     SurfaceVolumeField() = default;
@@ -356,5 +358,17 @@ private:
     KNearestRegionsSearchTree m_regionKNNSearchTreeVolume;
 };
 
+template<class TRegion, typename TSampleContainer>
+inline std::string SurfaceVolumeField<TRegion, TSampleContainer>::Settings::toString() const
+{
+    std::stringstream ss;
+    ss << "SurfaceVolumeField::Settings:" << std::endl;
+    ss << "spatialSubdivBuilderSettings: " << spatialSubdivBuilderSettings.toString() << std::endl;
+    ss << "useStochasticNNLookUp: " << useStochasticNNLookUp << std::endl;
+    ss << "deterministic: " << deterministic << std::endl;
+    ss << "decayOnSpatialSplit: " << decayOnSpatialSplit << std::endl;
+
+    return ss.str();
+}
 
 }

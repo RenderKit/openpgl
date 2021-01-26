@@ -38,6 +38,8 @@ struct KDTreePartitionBuilder
         size_t minSamples {100};
         size_t maxSamples {32000};
         size_t maxDepth{32};
+
+        std::string toString() const;
     };
 
 #ifdef  USE_TBB_CONCURRENT_VECTOR
@@ -285,5 +287,17 @@ private:
     }
 
 };
+
+template<class TRegion, typename TRange>
+inline std::string KDTreePartitionBuilder<TRegion, TRange>::Settings::toString() const
+{
+    std::stringstream ss;
+    ss << "KDTreePartitionBuilder::Settings:" << std::endl;
+    ss << "minSamples: " << minSamples << std::endl;
+    ss << "maxSamples: " << maxSamples << std::endl;
+    ss << "maxDepth: " << maxDepth << std::endl;
+
+    return ss.str();
+}
 
 }
