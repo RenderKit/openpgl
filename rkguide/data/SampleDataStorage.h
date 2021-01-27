@@ -140,6 +140,53 @@ struct SampleDataStorage
         objFile.close();
     }
 
+
+    void serialize(std::ostream& stream) const
+    {
+        size_t num_surface_samples = m_surfaceContainer.size();
+        stream.write(reinterpret_cast<const char*>(&num_surface_samples), sizeof(size_t));
+        for ( size_t n = 0; n < num_surface_samples; n++)
+        {
+            DirectionalSampleData dsd = m_surfaceContainer[n];
+            stream.write(reinterpret_cast<const char*>(&dsd), sizeof(DirectionalSampleData));
+        }
+
+        size_t num_volume_samples = m_volumeContainer.size();
+        stream.write(reinterpret_cast<const char*>(&num_volume_samples), sizeof(size_t));
+        for ( size_t n = 0; n < num_volume_samples; n++)
+        {
+            DirectionalSampleData dsd = m_volumeContainer[n];
+            stream.write(reinterpret_cast<const char*>(&dsd), sizeof(DirectionalSampleData));
+        }
+        stream.write(reinterpret_cast<const char*>(&m_splatSamples), sizeof(bool));
+        stream.write(reinterpret_cast<const char*>(&m_sceneBounds), sizeof(BBox));
+    }
+
+    void deserialize(std::istream& stream)
+    {
+        size_t num_surface_samples;
+        stream.read(reinterpret_cast<char*>(&num_surface_samples), sizeof(size_t));
+        m_surfaceContainer.reserve(num_surface_samples);
+        for ( size_t n = 0; n < num_surface_samples; n++)
+        {
+            DirectionalSampleData dsd;
+            stream.read(reinterpret_cast<char*>(&dsd), sizeof(DirectionalSampleData));
+            m_surfaceContainer.push_back(dsd);
+        }
+
+        size_t num_volume_samples;
+        stream.read(reinterpret_cast<char*>(&num_volume_samples), sizeof(size_t));
+        m_volumeContainer.reserve(num_volume_samples);
+        for ( size_t n = 0; n < num_volume_samples; n++)
+        {
+            DirectionalSampleData dsd;
+            stream.read(reinterpret_cast<char*>(&dsd), sizeof(DirectionalSampleData));
+            m_volumeContainer.push_back(dsd);
+        }
+        stream.read(reinterpret_cast<char*>(&m_splatSamples), sizeof(bool));
+        stream.read(reinterpret_cast<char*>(&m_sceneBounds), sizeof(BBox));
+    }
+
     private:
 
     void splatSample(DirectionalSampleData &sample, const BBox &splattingBounds, const Point2 &sample2D) const
