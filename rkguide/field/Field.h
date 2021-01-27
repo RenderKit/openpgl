@@ -117,10 +117,7 @@ public:
         return m_iteration;
     }
 
-    std::string toString() const
-    {
-        return "";
-    }
+    std::string toString() const;
 
 protected:
 
@@ -181,6 +178,10 @@ protected:
 
     virtual void updateRegions() = 0;
 
+    void serialize(std::ostream& stream) const;
+
+    void deserialize(std::istream& stream);
+
 protected:
     uint32_t m_iteration {0};
     uint32_t m_totalSPP  {0};
@@ -202,16 +203,101 @@ private:
 };
 
 template<class TRegion, typename TSampleContainer>
+inline std::string Field<TRegion, TSampleContainer>::toString() const
+{
+    std::stringstream ss;
+    ss << "Field:" << std::endl;
+    ss << "  private: " << std::endl;
+    ss << "    iteration: " << m_iteration << std::endl;
+    ss << "    totalSPP: " << m_totalSPP << std::endl;
+    ss << "    nCores: " << m_nCores << std::endl;
+    ss << "    decayOnSpatialSplit: " << m_decayOnSpatialSplit << std::endl;
+    ss << "    deterministic: " << m_deterministic << std::endl;
+    ss << "    regionStorageContainer::size: " << m_regionStorageContainer.size() << std::endl;
+    ss << "  public: " << std::endl;
+    ss << "    spatialSubdivBuilderSettings: " << spatialSubdivBuilderSettings.toString() << std::endl;
+    ss << "    useStochasticNNLookUp: " << m_useStochasticNNLookUp << std::endl;
+    ss << "    spatialSubdivBuilder: " << m_spatialSubdivBuilder.toString() << std::endl;
+    ss << "    spatialSubdivBuilderSettings: " << m_spatialSubdivBuilderSettings.toString() << std::endl;
+    ss << "    spatialSubdiv: " << m_spatialSubdiv.toString() << std::endl;
+    ss << "    regionKNNSearchTree: " << m_regionKNNSearchTree.toString() << std::endl;
+
+    return ss.str();
+}
+
+
+template<class TRegion, typename TSampleContainer>
 inline std::string Field<TRegion, TSampleContainer>::Settings::toString() const
 {
     std::stringstream ss;
     ss << "Field::Settings:" << std::endl;
-    ss << "spatialSubdivBuilderSettings: " << spatialSubdivBuilderSettings.toString() << std::endl;
-    ss << "useStochasticNNLookUp: " << useStochasticNNLookUp << std::endl;
-    ss << "deterministic: " << deterministic << std::endl;
-    ss << "decayOnSpatialSplit: " << decayOnSpatialSplit << std::endl;
+    ss << "  spatialSubdivBuilderSettings: " << spatialSubdivBuilderSettings.toString() << std::endl;
+    ss << "  useStochasticNNLookUp: " << useStochasticNNLookUp << std::endl;
+    ss << "  deterministic: " << deterministic << std::endl;
+    ss << "  decayOnSpatialSplit: " << decayOnSpatialSplit << std::endl;
 
     return ss.str();
+}
+
+template<class TRegion, typename TSampleContainer>
+inline void Field<TRegion, TSampleContainer>::serialize(std::ostream& stream) const
+{
+    // protected
+    stream.write(reinterpret_cast<const char*>(&m_iteration), sizeof(uint32_t));
+    stream.write(reinterpret_cast<const char*>(&m_totalSPP), sizeof(uint32_t));
+    stream.write(reinterpret_cast<const char*>(&m_nCores), sizeof(uint32_t));
+
+    size_t num_regions = m_regionStorageContainer.size();
+    stream.write(reinterpret_cast<const char*>(&num_regions), sizeof(size_t));
+    for(size_t n = 0; n < num_regions; n++)
+    {
+        RegionStorageType region_storage = m_regionStorageContainer[n];
+        region_storage.first.serialize(stream);
+        //region_storage.second.serialize(stream);
+    }
+    stream.write(reinterpret_cast<const char*>(&m_decayOnSpatialSplit), sizeof(float));
+    stream.write(reinterpret_cast<const char*>(&m_deterministic), sizeof(bool));
+
+    // private
+    spatialSubdivBuilderSettings.serialize(stream);
+    stream.write(reinterpret_cast<const char*>(&m_useStochasticNNLookUp), sizeof(bool));
+
+    //m_spatialSubdivBuilder.serialize(stream);
+    m_spatialSubdivBuilderSettings.serialize(stream);
+
+    m_spatialSubdiv.serialize(stream);
+    m_regionKNNSearchTree.serialize(stream);
+}
+
+template<class TRegion, typename TSampleContainer>
+inline void Field<TRegion, TSampleContainer>::deserialize(std::istream& stream)
+{
+    // protected
+    stream.read(reinterpret_cast<char*>(&m_iteration), sizeof(uint32_t));
+    stream.read(reinterpret_cast<char*>(&m_totalSPP), sizeof(uint32_t));
+    stream.read(reinterpret_cast<char*>(&m_nCores), sizeof(uint32_t));
+
+    size_t num_regions =0;
+    stream.read(reinterpret_cast<char*>(&num_regions), sizeof(size_t));
+    m_regionStorageContainer.reserve(num_regions);
+    for(size_t n = 0; n < num_regions; n++)
+    {
+        RegionStorageType region_storage;
+        region_storage.first.deserialize(stream);
+        //region_storage.second.deserialize(stream);
+        m_regionStorageContainer.push_back(region_storage);
+    }
+    stream.read(reinterpret_cast<char*>(&m_decayOnSpatialSplit), sizeof(float));
+    stream.read(reinterpret_cast<char*>(&m_deterministic), sizeof(bool));
+    // private
+    spatialSubdivBuilderSettings.deserialize(stream);
+    stream.read(reinterpret_cast<char*>(&m_useStochasticNNLookUp), sizeof(bool));
+
+    //m_spatialSubdivBuilder.deserialize(stream);
+    m_spatialSubdivBuilderSettings.deserialize(stream);
+
+    m_spatialSubdiv.deserialize(stream);
+    m_regionKNNSearchTree.deserialize(stream);
 }
 
 }

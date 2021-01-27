@@ -233,6 +233,10 @@ private:
     }
 
 
+    void serialize(std::ostream& stream) const;
+
+    void deserialize(std::istream& stream);
+
 private:
     bool m_useParallaxCompensation {true};
 
@@ -246,13 +250,30 @@ inline std::string SurfaceVolumeFieldParallaxAwareVMM<VecSize, maxComponents, TS
 {
     std::stringstream ss;
     ss << "SurfaceVolumeFieldParallaxAwareVMM::Settings:" << std::endl;
-    ss << "settings: " << settings.toString() << std::endl;
-    ss << "distributionFactorySettings: " << distributionFactorySettings.toString() << std::endl;
-    ss << "useParallaxCompensation: " << useParallaxCompensation << std::endl;
-    //ss << "eigenValue1: " << eigenValue1 << std::endl;
-    //ss << "eigenVector0: " << eigenVector0 << std::endl;
-    //ss << "eigenVector1: " << eigenVector1 << std::endl;
+    ss << "  settings: " << settings.toString() << std::endl;
+    ss << "  distributionFactorySettings: " << distributionFactorySettings.toString() << std::endl;
+    ss << "  useParallaxCompensation: " << useParallaxCompensation << std::endl;
     return ss.str();
+}
+
+template<int VecSize, int maxComponents, typename TSampleContainer>
+inline void SurfaceVolumeFieldParallaxAwareVMM<VecSize, maxComponents, TSampleContainer>::serialize(std::ostream& stream) const
+{
+    ParentField::seialize(stream);
+    stream.write(reinterpret_cast<const char*>(&m_useParallaxCompensation), sizeof(bool));
+
+    m_distributionFactory.seialize(stream);
+    m_distributionFactorySettings.seialize(stream);
+}
+
+template<int VecSize, int maxComponents, typename TSampleContainer>
+inline void SurfaceVolumeFieldParallaxAwareVMM<VecSize, maxComponents, TSampleContainer>::deserialize(std::istream& stream)
+{
+    ParentField::deserialize(stream);
+    stream.read(reinterpret_cast<char*>(&m_useParallaxCompensation), sizeof(bool));
+
+    m_distributionFactory.deserialize(stream);
+    m_distributionFactorySettings.deserialize(stream);
 }
 
 }

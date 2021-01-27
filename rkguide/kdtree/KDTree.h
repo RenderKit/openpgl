@@ -186,6 +186,29 @@ struct KDNode
     void setSplitPivot(const float &pos){
         splitPosition = pos;
     }
+
+    void serialize(std::ostream& stream)const
+    {
+        stream.write(reinterpret_cast<const char*>(&splitPosition), sizeof(float));
+#ifdef MERGE_SPLITDIM_AND_NODE_IDX
+        stream.write(reinterpret_cast<const char*>(&splitDimAndNodeIdx), sizeof(uint32_t));
+#else
+        stream.write(reinterpret_cast<const char*>(&splitDim), sizeof(uint8_t));
+        stream.write(reinterpret_cast<const char*>(&nodeIdx), sizeof(uint32_t));
+#endif
+    }
+
+    void deserialize(std::istream& stream)
+    {
+        stream.read(reinterpret_cast<char*>(&splitPosition), sizeof(float));
+#ifdef MERGE_SPLITDIM_AND_NODE_IDX
+        stream.read(reinterpret_cast<char*>(&splitDimAndNodeIdx), sizeof(uint32_t));
+#else
+        stream.read(reinterpret_cast<char*>(&splitDim), sizeof(uint8_t));
+        stream.read(reinterpret_cast<char*>(&nodeIdx), sizeof(uint32_t));
+#endif
+    }
+
 };
 
 
@@ -263,8 +286,9 @@ struct KDTree
     {
         std::stringstream ss;
         ss.precision(5);
-        ss << "KDTree" << std::endl;
-
+        ss << "KDTree::" << std::endl;
+        ss << "  isInit: " << m_isInit <<  std::endl;
+        ss << "  bounds: " << m_bounds<< std::endl;
         return ss.str();
     }
 
@@ -421,6 +445,33 @@ struct KDTree
 
             vertexIDOffset += 8;
             //std::cout << "BBox: lower = [" << sampleBound.lower[0] << ",\t"<< sampleBound.lower[1] << ",\t"<< sampleBound.lower[2] << "] \t upper = ["<< sampleBound.upper[0] << ",\t"<< sampleBound.upper[1] << ",\t"<< sampleBound.upper[2] << std::endl;
+        }
+    }
+
+    void serialize(std::ostream& stream)const
+    {
+        stream.write(reinterpret_cast<const char*>(&m_isInit), sizeof(bool));
+        stream.write(reinterpret_cast<const char*>(&m_bounds), sizeof(BBox));
+        size_t num_nodes = m_nodes.size();
+        stream.write(reinterpret_cast<const char*>(&num_nodes), sizeof(size_t));
+        for (size_t n = 0; n < num_nodes; n++)
+        {
+            m_nodes[n].serialize(stream);
+        }
+    }
+
+    void deserialize(std::istream& stream)
+    {
+        stream.read(reinterpret_cast<char*>(&m_isInit), sizeof(bool));
+        stream.read(reinterpret_cast<char*>(&m_bounds), sizeof(BBox));
+        size_t num_nodes = 0;
+        stream.read(reinterpret_cast<char*>(&num_nodes), sizeof(size_t));
+        m_nodes.reserve(num_nodes);
+        for (size_t n = 0; n < num_nodes; n++)
+        {
+            KDNode node;
+            node.deserialize(stream);
+            m_nodes.push_back(node);
         }
     }
 

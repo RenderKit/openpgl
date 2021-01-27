@@ -39,6 +39,8 @@ struct KDTreePartitionBuilder
         size_t maxSamples {32000};
         size_t maxDepth{32};
 
+        void serialize(std::ostream& stream) const;
+        void deserialize(std::istream& stream);
         std::string toString() const;
     };
 
@@ -127,6 +129,8 @@ struct KDTreePartitionBuilder
         updateTreeNode(&kdTree, root, depth, sampleRange, sampleStats, &dataStorage, buildSettings);
 
     }
+
+    std::string toString() const;
 
 private:
 
@@ -288,16 +292,41 @@ private:
 
 };
 
+
+template<class TRegion, typename TRange>
+inline std::string KDTreePartitionBuilder<TRegion, TRange>::toString() const
+{
+    std::stringstream ss;
+    ss << "KDTreePartitionBuilder" << std::endl;
+    return ss.str();
+}
+
 template<class TRegion, typename TRange>
 inline std::string KDTreePartitionBuilder<TRegion, TRange>::Settings::toString() const
 {
     std::stringstream ss;
     ss << "KDTreePartitionBuilder::Settings:" << std::endl;
-    ss << "minSamples: " << minSamples << std::endl;
-    ss << "maxSamples: " << maxSamples << std::endl;
-    ss << "maxDepth: " << maxDepth << std::endl;
+    ss << "  minSamples: " << minSamples << std::endl;
+    ss << "  maxSamples: " << maxSamples << std::endl;
+    ss << "  maxDepth: " << maxDepth << std::endl;
 
     return ss.str();
 }
 
+
+template<class TRegion, typename TRange>
+inline void KDTreePartitionBuilder<TRegion, TRange>::Settings::serialize(std::ostream& stream)const
+    {
+        stream.write(reinterpret_cast<const char*>(&minSamples), sizeof(size_t));
+        stream.write(reinterpret_cast<const char*>(&maxSamples), sizeof(size_t));
+        stream.write(reinterpret_cast<const char*>(&maxDepth), sizeof(size_t));
+    }
+
+template<class TRegion, typename TRange>
+inline void KDTreePartitionBuilder<TRegion, TRange>::Settings::deserialize(std::istream& stream)
+    {
+        stream.read(reinterpret_cast<char*>(&minSamples), sizeof(size_t));
+        stream.read(reinterpret_cast<char*>(&maxSamples), sizeof(size_t));
+        stream.read(reinterpret_cast<char*>(&maxDepth), sizeof(size_t));
+    }
 }

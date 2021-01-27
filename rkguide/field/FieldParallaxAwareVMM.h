@@ -176,6 +176,13 @@ struct FieldParallaxAwareVMM: public Field<rkguide::Region<ParallaxAwareVonMises
         sample.direction = newDirection / newDistance;
     }
 
+
+    void serialize(std::ostream& stream) const;
+
+    void deserialize(std::istream& stream);
+
+    std::string toString() const;
+
 private:
     bool m_useParallaxCompensation {true};
 
@@ -185,17 +192,47 @@ private:
 };
 
 template<int VecSize, int maxComponents, typename TSampleContainer>
+inline std::string FieldParallaxAwareVMM<VecSize, maxComponents, TSampleContainer>::toString() const
+{
+    std::stringstream ss;
+    ss << "FieldParallaxAwareVMM:" << std::endl;
+    ss << "  useParallaxCompensation: " << m_useParallaxCompensation << std::endl;
+    ss << "  distributionFactory: " << m_distributionFactory.toString() << std::endl;
+    ss << "  distributionFactorySettings: " << m_distributionFactorySettings.toString() << std::endl;
+    ss << ParentField::toString() << std::endl;
+    return ss.str();
+}
+
+template<int VecSize, int maxComponents, typename TSampleContainer>
 inline std::string FieldParallaxAwareVMM<VecSize, maxComponents, TSampleContainer>::Settings::toString() const
 {
     std::stringstream ss;
     ss << "FieldParallaxAwareVMM::Settings:" << std::endl;
-    ss << "settings: " << settings.toString() << std::endl;
-    ss << "distributionFactorySettings: " << distributionFactorySettings.toString() << std::endl;
-    ss << "useParallaxCompensation: " << useParallaxCompensation << std::endl;
-    //ss << "eigenValue1: " << eigenValue1 << std::endl;
-    //ss << "eigenVector0: " << eigenVector0 << std::endl;
-    //ss << "eigenVector1: " << eigenVector1 << std::endl;
+    ss << "  settings: " << settings.toString() << std::endl;
+    ss << "  distributionFactorySettings: " << distributionFactorySettings.toString() << std::endl;
+    ss << "  useParallaxCompensation: " << useParallaxCompensation << std::endl;
     return ss.str();
 }
+
+template<int VecSize, int maxComponents, typename TSampleContainer>
+inline void FieldParallaxAwareVMM<VecSize, maxComponents, TSampleContainer>::serialize(std::ostream& stream) const
+{
+    ParentField::serialize(stream);
+    stream.write(reinterpret_cast<const char*>(&m_useParallaxCompensation), sizeof(bool));
+
+    //m_distributionFactory.serialize(stream);
+    m_distributionFactorySettings.serialize(stream);
+}
+
+template<int VecSize, int maxComponents, typename TSampleContainer>
+inline void FieldParallaxAwareVMM<VecSize, maxComponents, TSampleContainer>::deserialize(std::istream& stream)
+{
+    ParentField::deserialize(stream);
+    stream.read(reinterpret_cast<char*>(&m_useParallaxCompensation), sizeof(bool));
+
+    //m_distributionFactory.deserialize(stream);
+    m_distributionFactorySettings.deserialize(stream);
+}
+
 
 }

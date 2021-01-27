@@ -55,29 +55,6 @@ public:
         m_spatialSubdivBuilderSettings(settings.spatialSubdivBuilderSettings){
         //std::cout << "SurfaceVolumeField(const Settings &settings): " << settings.deterministic << std::endl;
     }
-/*
-    const RegionType *getGuidingRegion( const rkguide::Point3 &p, rkguide::Sampler *sampler) const
-    {
-        if (m_iteration >0 && embree::inside(m_spatialSubdiv.getBounds(), p))
-        {
-            if(m_useStochasticNNLookUp)
-            {
-                return getClosestRegion(p, sampler->next1D());
-            }
-            else
-            {
-                rkguide::BBox regionBounds;
-                uint32_t dataIdx = m_spatialSubdiv.getDataIdxAtPos(p, regionBounds);
-                RKGUIDE_ASSERT(dataIdx >= 0);
-                return &m_regionStorageContainer[dataIdx].first;
-            }
-        }
-        else
-        {
-            return nullptr;
-        }
-    }
-*/
 
     const RegionType *getSurfaceGuidingRegion( const rkguide::Point3 &p, rkguide::Sampler *sampler) const
     {
@@ -189,44 +166,9 @@ public:
         return m_iteration;
     }
 
-    std::string toString() const
-    {
-        return "";
-    }
+    std::string toString() const;
 
 protected:
-/*
-    void buildSpatialStructure(const BBox &bounds, TSampleContainer& samples)
-    {
-        //mitsuba::SLog(mitsuba::EInfo, "Begin Tree update");
-        mitsuba::ref<mitsuba::Timer> treeTimer = new mitsuba::Timer();
-        m_spatialSubdivBuilder.build(m_spatialSubdiv, bounds, samples, m_regionStorageContainer, m_spatialSubdivBuilderSettings, m_nCores);
-        //mitsuba::SLog(mitsuba::EInfo, "Tree building time: %s", timeString(treeTimer->getSeconds(), true).c_str());
-
-        if (m_useStochasticNNLookUp)
-        {
-            mitsuba::ref<mitsuba::Timer> embreereeTimer = new mitsuba::Timer();
-            m_regionKNNSearchTree.buildRegionSearchTree<RegionStorageContainerType, RegionType>(m_regionStorageContainer);
-            //mitsuba::SLog(mitsuba::EInfo, "Embree BVH update time: %s", timeString(embreereeTimer->getSeconds(), true).c_str());
-        }
-    }
-
-
-    void updateSpatialStructure(TSampleContainer& samples)
-    {
-        //mitsuba::SLog(mitsuba::EInfo, "Begin Tree update");
-        mitsuba::ref<mitsuba::Timer> treeTimer = new mitsuba::Timer();
-        m_spatialSubdivBuilder.updateTree(m_spatialSubdiv, samples, m_regionStorageContainer, m_spatialSubdivBuilderSettings, m_nCores);
-        //mitsuba::SLog(mitsuba::EInfo, "Tree building time: %s", timeString(treeTimer->getSeconds(), true).c_str());
-
-        if (m_useStochasticNNLookUp)
-        {
-            mitsuba::ref<mitsuba::Timer> embreereeTimer = new mitsuba::Timer();
-            m_regionKNNSearchTree.buildRegionSearchTree<RegionStorageContainerType, RegionType>(m_regionStorageContainer);
-            //mitsuba::SLog(mitsuba::EInfo, "Embree BVH update time: %s", timeString(embreereeTimer->getSeconds(), true).c_str());
-        }
-    }
-*/
 
     void buildSpatialStructureSurface(const BBox &bounds, TSampleContainer& samples)
     {
@@ -345,12 +287,12 @@ protected:
     float m_decayOnSpatialSplit {0.25f};
     bool m_deterministic {false};
 private:
-    typename SpatialSubdivBuilder::Settings spatialSubdivBuilderSettings;
+    //typename SpatialSubdivBuilder::Settings spatialSubdivBuilderSettings;
     bool m_useStochasticNNLookUp {false};
     // spatial structure
     SpatialSubdivBuilder m_spatialSubdivBuilder;
     typename SpatialSubdivBuilder::Settings m_spatialSubdivBuilderSettings;
-    
+
     SpatialSubdivStructure m_spatialSubdivSurface;
     KNearestRegionsSearchTree m_regionKNNSearchTreeSurface;
 
@@ -359,14 +301,40 @@ private:
 };
 
 template<class TRegion, typename TSampleContainer>
+inline std::string SurfaceVolumeField<TRegion, TSampleContainer>::toString() const
+{
+    std::stringstream ss;
+    ss << "SurfaceVolumeField:" << std::endl;
+    ss << "  private: " << std::endl;
+    ss << "    iteration: " << m_iteration << std::endl;
+    ss << "    totalSPP: " << m_totalSPP << std::endl;
+    ss << "    nCores: " << m_nCores << std::endl;
+    ss << "    decayOnSpatialSplit: " << m_decayOnSpatialSplit << std::endl;
+    ss << "    deterministic: " << m_deterministic << std::endl;
+    ss << "    regionStorageContainerSurface::size: " << m_regionStorageContainerSurface.size() << std::endl;
+    ss << "    regionStorageContainerVolume::size: " << m_regionStorageContainerVolume.size() << std::endl;
+    ss << "  public: " << std::endl;
+    ss << "    spatialSubdivBuilderSettings: " << m_spatialSubdivBuilderSettings.toString() << std::endl;
+    ss << "    useStochasticNNLookUp: " << m_useStochasticNNLookUp << std::endl;
+    ss << "    spatialSubdivBuilder: " << m_spatialSubdivBuilder.toString() << std::endl;
+    ss << "    spatialSubdivBuilderSettings: " << m_spatialSubdivBuilderSettings.toString() << std::endl;
+    ss << "    spatialSubdivSurface: " << m_spatialSubdivSurface.toString() << std::endl;
+    ss << "    regionKNNSearchTreeSurface: " << m_regionKNNSearchTreeSurface.toString() << std::endl;
+    ss << "    spatialSubdivVolume: " << m_spatialSubdivVolume.toString() << std::endl;
+    ss << "    regionKNNSearchTreeVolume: " << m_regionKNNSearchTreeVolume.toString() << std::endl;
+
+    return ss.str();
+}
+
+template<class TRegion, typename TSampleContainer>
 inline std::string SurfaceVolumeField<TRegion, TSampleContainer>::Settings::toString() const
 {
     std::stringstream ss;
     ss << "SurfaceVolumeField::Settings:" << std::endl;
-    ss << "spatialSubdivBuilderSettings: " << spatialSubdivBuilderSettings.toString() << std::endl;
-    ss << "useStochasticNNLookUp: " << useStochasticNNLookUp << std::endl;
-    ss << "deterministic: " << deterministic << std::endl;
-    ss << "decayOnSpatialSplit: " << decayOnSpatialSplit << std::endl;
+    ss << "  spatialSubdivBuilderSettings: " << spatialSubdivBuilderSettings.toString() << std::endl;
+    ss << "  useStochasticNNLookUp: " << useStochasticNNLookUp << std::endl;
+    ss << "  deterministic: " << deterministic << std::endl;
+    ss << "  decayOnSpatialSplit: " << decayOnSpatialSplit << std::endl;
 
     return ss.str();
 }

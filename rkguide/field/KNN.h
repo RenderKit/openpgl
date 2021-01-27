@@ -214,6 +214,61 @@ struct KNearestRegionsSearchTree
         return num_points;
     }
 
+    void serialize(std::ostream& stream) const
+    {
+        stream.write(reinterpret_cast<const char*>(&_isBuild), sizeof(bool));
+        if(_isBuild)
+        {
+            stream.write(reinterpret_cast<const char*>(&num_points), sizeof(uint32_t));
+            for (uint32_t n = 0; n < num_points; n++)
+            {
+                stream.write(reinterpret_cast<const char*>(&embree_points[n]), sizeof(Point));
+            }
+        }
+    }
+
+    void deserialize(std::istream& stream)
+    {
+        stream.read(reinterpret_cast<char*>(&_isBuild), sizeof(bool));
+        if(_isBuild)
+        {
+            stream.read(reinterpret_cast<char*>(&num_points), sizeof(uint32_t));
+            embree_points = (Point*) myalignedMalloc(num_points*sizeof(Point), 16);
+            for (uint32_t n = 0; n < num_points; n++)
+            {
+                Point p;
+                stream.read(reinterpret_cast<char*>(&p), sizeof(Point));
+                embree_points[n] = p;
+            }
+            if (embree_scene){
+                rtcReleaseScene (embree_scene);
+            }
+            embree_scene = rtcNewScene(embree_device);
+            RTCGeometry geom = rtcNewGeometry(embree_device, RTC_GEOMETRY_TYPE_USER);
+            rtcAttachGeometry(embree_scene, geom);
+            rtcSetGeometryUserPrimitiveCount(geom, num_points);
+            rtcSetGeometryUserData(geom, embree_points);
+            rtcSetGeometryBoundsFunction(geom, pointBoundsFunc, nullptr);
+            rtcCommitGeometry(geom);
+            rtcReleaseGeometry(geom);
+            rtcCommitScene(embree_scene);
+        }
+        else
+        {
+            embree_scene = nullptr;
+            embree_points = nullptr;
+        }
+    }
+
+    std::string toString() const
+    {
+        std::stringstream ss;
+        ss << "KNearestRegionsSearchTree:" << std::endl;
+        ss << "  num_points: " << num_points << std::endl;
+        ss << "  _isBuild: " << _isBuild << std::endl;
+        return ss.str();
+    }
+
 private:
     // Embree
     RTCDevice embree_device = nullptr;
