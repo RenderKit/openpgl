@@ -275,6 +275,10 @@ protected:
 
     virtual void updateRegions() = 0;
 
+    void serialize(std::ostream& stream) const;
+
+    void deserialize(std::istream& stream);
+
 protected:
     uint32_t m_iteration {0};
     uint32_t m_totalSPP  {0};
@@ -338,5 +342,93 @@ inline std::string SurfaceVolumeField<TRegion, TSampleContainer>::Settings::toSt
 
     return ss.str();
 }
+
+template<class TRegion, typename TSampleContainer>
+inline void SurfaceVolumeField<TRegion, TSampleContainer>::serialize(std::ostream& stream) const
+{
+    // protected
+    stream.write(reinterpret_cast<const char*>(&m_iteration), sizeof(uint32_t));
+    stream.write(reinterpret_cast<const char*>(&m_totalSPP), sizeof(uint32_t));
+    stream.write(reinterpret_cast<const char*>(&m_nCores), sizeof(uint32_t));
+
+    size_t num_surface_regions = m_regionStorageContainerSurface.size();
+    stream.write(reinterpret_cast<const char*>(&num_surface_regions), sizeof(size_t));
+    for(size_t n = 0; n < num_surface_regions; n++)
+    {
+        RegionStorageType region_storage = m_regionStorageContainerSurface[n];
+        region_storage.first.serialize(stream);
+        //region_storage.second.serialize(stream);
+    }
+
+    size_t num_volume_regions = m_regionStorageContainerVolume.size();
+    stream.write(reinterpret_cast<const char*>(&num_volume_regions), sizeof(size_t));
+    for(size_t n = 0; n < num_volume_regions; n++)
+    {
+        RegionStorageType region_storage = m_regionStorageContainerVolume[n];
+        region_storage.first.serialize(stream);
+        //region_storage.second.serialize(stream);
+    }
+
+    stream.write(reinterpret_cast<const char*>(&m_decayOnSpatialSplit), sizeof(float));
+    stream.write(reinterpret_cast<const char*>(&m_deterministic), sizeof(bool));
+
+    // private
+    stream.write(reinterpret_cast<const char*>(&m_useStochasticNNLookUp), sizeof(bool));
+
+    //m_spatialSubdivBuilder.serialize(stream);
+    m_spatialSubdivBuilderSettings.serialize(stream);
+
+    m_spatialSubdivSurface.serialize(stream);
+    m_spatialSubdivVolume.serialize(stream);
+
+    m_regionKNNSearchTreeSurface.serialize(stream);
+    m_regionKNNSearchTreeVolume.serialize(stream);
+}
+
+template<class TRegion, typename TSampleContainer>
+inline void SurfaceVolumeField<TRegion, TSampleContainer>::deserialize(std::istream& stream)
+{
+    // protected
+    stream.read(reinterpret_cast<char*>(&m_iteration), sizeof(uint32_t));
+    stream.read(reinterpret_cast<char*>(&m_totalSPP), sizeof(uint32_t));
+    stream.read(reinterpret_cast<char*>(&m_nCores), sizeof(uint32_t));
+
+    size_t num_surface_regions =0;
+    stream.read(reinterpret_cast<char*>(&num_surface_regions), sizeof(size_t));
+    m_regionStorageContainerSurface.reserve(num_surface_regions);
+    for(size_t n = 0; n < num_surface_regions; n++)
+    {
+        RegionStorageType region_storage;
+        region_storage.first.deserialize(stream);
+        //region_storage.second.deserialize(stream);
+        m_regionStorageContainerSurface.push_back(region_storage);
+    }
+
+    size_t num_volume_regions =0;
+    stream.read(reinterpret_cast<char*>(&num_volume_regions), sizeof(size_t));
+    m_regionStorageContainerVolume.reserve(num_volume_regions);
+    for(size_t n = 0; n < num_volume_regions; n++)
+    {
+        RegionStorageType region_storage;
+        region_storage.first.deserialize(stream);
+
+        m_regionStorageContainerVolume.push_back(region_storage);
+    }
+
+    stream.read(reinterpret_cast<char*>(&m_decayOnSpatialSplit), sizeof(float));
+    stream.read(reinterpret_cast<char*>(&m_deterministic), sizeof(bool));
+    // private
+    stream.read(reinterpret_cast<char*>(&m_useStochasticNNLookUp), sizeof(bool));
+
+    //m_spatialSubdivBuilder.deserialize(stream);
+    m_spatialSubdivBuilderSettings.deserialize(stream);
+
+    m_spatialSubdivSurface.deserialize(stream);
+    m_spatialSubdivVolume.deserialize(stream);
+
+    m_regionKNNSearchTreeSurface.deserialize(stream);
+    m_regionKNNSearchTreeVolume.deserialize(stream);
+}
+
 
 }

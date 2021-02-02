@@ -232,7 +232,7 @@ private:
 #endif
     }
 
-
+public:
     void serialize(std::ostream& stream) const;
 
     void deserialize(std::istream& stream);
@@ -259,11 +259,11 @@ inline std::string SurfaceVolumeFieldParallaxAwareVMM<VecSize, maxComponents, TS
 template<int VecSize, int maxComponents, typename TSampleContainer>
 inline void SurfaceVolumeFieldParallaxAwareVMM<VecSize, maxComponents, TSampleContainer>::serialize(std::ostream& stream) const
 {
-    ParentField::seialize(stream);
+    ParentField::serialize(stream);
     stream.write(reinterpret_cast<const char*>(&m_useParallaxCompensation), sizeof(bool));
 
-    m_distributionFactory.seialize(stream);
-    m_distributionFactorySettings.seialize(stream);
+    //m_distributionFactory.serialize(stream);
+    m_distributionFactorySettings.serialize(stream);
 }
 
 template<int VecSize, int maxComponents, typename TSampleContainer>
@@ -272,7 +272,7 @@ inline void SurfaceVolumeFieldParallaxAwareVMM<VecSize, maxComponents, TSampleCo
     ParentField::deserialize(stream);
     stream.read(reinterpret_cast<char*>(&m_useParallaxCompensation), sizeof(bool));
 
-    m_distributionFactory.deserialize(stream);
+    //m_distributionFactory.deserialize(stream);
     m_distributionFactorySettings.deserialize(stream);
 }
 

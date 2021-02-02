@@ -193,7 +193,6 @@ protected:
     float m_decayOnSpatialSplit {0.25f};
     bool m_deterministic {false};
 private:
-    typename SpatialSubdivBuilder::Settings spatialSubdivBuilderSettings;
     bool m_useStochasticNNLookUp {false};
     // spatial structure
     SpatialSubdivBuilder m_spatialSubdivBuilder;
@@ -215,7 +214,7 @@ inline std::string Field<TRegion, TSampleContainer>::toString() const
     ss << "    deterministic: " << m_deterministic << std::endl;
     ss << "    regionStorageContainer::size: " << m_regionStorageContainer.size() << std::endl;
     ss << "  public: " << std::endl;
-    ss << "    spatialSubdivBuilderSettings: " << spatialSubdivBuilderSettings.toString() << std::endl;
+    ss << "    spatialSubdivBuilderSettings: " << m_spatialSubdivBuilderSettings.toString() << std::endl;
     ss << "    useStochasticNNLookUp: " << m_useStochasticNNLookUp << std::endl;
     ss << "    spatialSubdivBuilder: " << m_spatialSubdivBuilder.toString() << std::endl;
     ss << "    spatialSubdivBuilderSettings: " << m_spatialSubdivBuilderSettings.toString() << std::endl;
@@ -259,7 +258,6 @@ inline void Field<TRegion, TSampleContainer>::serialize(std::ostream& stream) co
     stream.write(reinterpret_cast<const char*>(&m_deterministic), sizeof(bool));
 
     // private
-    spatialSubdivBuilderSettings.serialize(stream);
     stream.write(reinterpret_cast<const char*>(&m_useStochasticNNLookUp), sizeof(bool));
 
     //m_spatialSubdivBuilder.serialize(stream);
@@ -290,7 +288,6 @@ inline void Field<TRegion, TSampleContainer>::deserialize(std::istream& stream)
     stream.read(reinterpret_cast<char*>(&m_decayOnSpatialSplit), sizeof(float));
     stream.read(reinterpret_cast<char*>(&m_deterministic), sizeof(bool));
     // private
-    spatialSubdivBuilderSettings.deserialize(stream);
     stream.read(reinterpret_cast<char*>(&m_useStochasticNNLookUp), sizeof(bool));
 
     //m_spatialSubdivBuilder.deserialize(stream);
