@@ -54,6 +54,21 @@ struct DirectionalSampleData
         flags ^= EInsideVolume;
     }
 
+    inline bool isValid() const
+    {
+        bool valid = true;
+        valid &= embree::isvalid(position[0]);
+        valid &= embree::isvalid(position[1]);
+        valid &= embree::isvalid(position[2]);
+        valid &= embree::isvalid(direction[0]);
+        valid &= embree::isvalid(direction[1]);
+        valid &= embree::isvalid(direction[2]);
+        valid &= weight >=0.f;
+        valid &= pdf >0.f;
+        valid &= distance >0.f;
+        return valid;
+    }
+
     const std::string toString() const
     {
         std::stringstream ss;
