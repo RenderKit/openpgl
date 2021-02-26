@@ -1,15 +1,8 @@
 [submodule "third-party/embree"]
 	path = third-party/embree
-	url = git@gitlab.com:sdvis/embree.git
+	url = git@vis-gitlab.an.intel.com:renderkit/embree.git
 	branch = devel
 [submodule "third-party/rkcommon"]
 	path = third-party/rkcommon
-	url = git@gitlab.com:ospray/rkcommon.git
+	url = git@vis-gitlab.an.intel.com:renderkit/rkcommon.git
 	branch = devel
-[submodule "third-party/pybind11"]
-	path = python/pybind11
-	url = https://github.com/pybind/pybind11.git
-	branch = master
-[submodule "notebooks"]
-	path = notebooks
-	url = git@gitlab.com:sdvis/rkguide-notebooks.git
