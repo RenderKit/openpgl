@@ -1,8 +1,8 @@
 [submodule "third-party/embree"]
 	path = third-party/embree
-	url = git@vis-gitlab.an.intel.com:renderkit/embree.git
+	url = ../embree.git
 	branch = devel
 [submodule "third-party/rkcommon"]
 	path = third-party/rkcommon
-	url = git@vis-gitlab.an.intel.com:renderkit/rkcommon.git
+	url = ../rkcommon.git
 	branch = devel
