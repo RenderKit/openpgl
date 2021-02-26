@@ -2,7 +2,3 @@
 	path = third-party/embree
 	url = ../embree.git
 	branch = devel
-[submodule "third-party/rkcommon"]
-	path = third-party/rkcommon
-	url = ../rkcommon.git
-	branch = devel
