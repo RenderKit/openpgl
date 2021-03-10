@@ -83,6 +83,8 @@ struct PathSegmentDataStorage
                 // prepare the current pos, direction, distance, pdf at the current
                 // path vertex
                 rkguide::Point3 pos = currentPathSegment.position;
+                // using the direction directly is numerically more stable than recalcuating
+                // it using position of the next segment when the distance is small. 
                 rkguide::Vector3 dir = currentPathSegment.directionIn;
                 float pdf = std::max(minPDF,currentPathSegment.pdfDirectionIn);
                 uint32_t flags{0};
