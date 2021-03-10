@@ -56,7 +56,7 @@ struct SurfaceVolumeFieldParallaxAwareVMM: public SurfaceVolumeField<rkguide::Re
         updateRegions(this->m_regionStorageContainerVolume, false);
     }
 
-    void storeInvalidRegionData(const std::string &fileName, const typename ParentField::RegionType &regionBeforeUpdate, const std::vector<DirectionalSampleData> &samples, const DistributionFactorySettings &factorySettings)
+    static void storeInvalidRegionData(const std::string &fileName, const typename ParentField::RegionType &regionBeforeUpdate, const std::vector<DirectionalSampleData> &samples, const DistributionFactorySettings &factorySettings)
     {
         std::filebuf fbDump;
         fbDump.open (fileName,std::ios::out);
@@ -75,7 +75,7 @@ struct SurfaceVolumeFieldParallaxAwareVMM: public SurfaceVolumeField<rkguide::Re
         fbDump.close();
     }
 
-    void loadInvalidRegionData(const std::string &fileName, typename ParentField::RegionType &regionBeforeUpdate, std::vector<DirectionalSampleData> &samples, DistributionFactorySettings &factorySettings)
+    static void loadInvalidRegionData(const std::string &fileName, typename ParentField::RegionType &regionBeforeUpdate, std::vector<DirectionalSampleData> &samples, DistributionFactorySettings &factorySettings)
     {
         std::filebuf fbDumpIn;
         fbDumpIn.open (fileName,std::ios::in);
