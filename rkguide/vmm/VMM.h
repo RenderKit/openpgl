@@ -51,7 +51,7 @@ public:
         float pdf;
 
         std::string toString() const;
-
+        bool isValid() const;
     };
 
 
@@ -151,6 +151,28 @@ std::string VonMisesFisherMixture<VecSize, maxComponents>::SoftAssignment::toStr
     return ss.str();
 }
 
+template<int VecSize, int maxComponents>
+bool VonMisesFisherMixture<VecSize, maxComponents>::SoftAssignment::isValid() const{
+    bool valid = true;
+
+    valid &= size > 0;
+    valid &= size <= maxComponents;
+    RKGUIDE_ASSERT(valid);
+
+    valid &= pdf >= 0;    
+    valid &= embree::isvalid(pdf);
+    RKGUIDE_ASSERT(valid);
+
+    for ( int k = 0; k < size; k++)
+    {
+        const div_t tmpK = div(k, static_cast<int>(VecSize));
+        valid &= assignments[tmpK.quot][tmpK.rem] >= 0.0f;
+        valid &= embree::isvalid(assignments[tmpK.quot][tmpK.rem]);
+        RKGUIDE_ASSERT(valid);
+    }
+    RKGUIDE_ASSERT(valid);
+    return valid;
+}
 
 template<int VecSize, int maxComponents>
 void VonMisesFisherMixture<VecSize, maxComponents>::splitComponent(const size_t &idx0, const size_t &idx1, const float &weight0, const float &weight1, const Vector3 &meanDirection0, const Vector3 &meanDirection1, const float &meanCosine0, const float &meanCosine1)
@@ -611,18 +633,20 @@ bool VonMisesFisherMixture<VecSize, maxComponents>::softAssignment( Vector3 dire
         const embree::vfloat<VecSize> cosThetaMinusOne = embree::min(cosTheta - ones, zeros);
         const embree::vfloat<VecSize> eval = _normalizations[k] * embree::fastapprox::exp< embree::vfloat<VecSize> >( _kappas[k] * cosThetaMinusOne );
         softAssign.assignments[k] =  _weights[k] * eval;
+        RKGUIDE_ASSERT(embree::isvalid(softAssign.assignments[k]));
         pdf += softAssign.assignments[k];
     }
-
+    RKGUIDE_ASSERT(embree::isvalid(pdf));
     softAssign.pdf = embree::reduce_add(pdf);
     softAssign.size = _numComponents;
 
-    if ( softAssign.pdf <= 0.0f)
+    if ( softAssign.pdf <= 1e-16f)
     {
         return false;
     }
 
     embree::vfloat<VecSize> inv_pdf = embree::rcp(softAssign.pdf);
+    RKGUIDE_ASSERT(embree::isvalid(inv_pdf));
     for(int k = 0; k < cnt;k++)
     {
         softAssign.assignments[k] *= inv_pdf;
