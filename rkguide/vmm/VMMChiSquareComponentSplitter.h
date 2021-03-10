@@ -109,6 +109,11 @@ struct ComponentSplitStatistics
         return numComponents;
     }
 
+    void setNumComponents(const size_t &n)
+    {
+        numComponents = n;
+    }
+
     std::string toString() const;
 };
 

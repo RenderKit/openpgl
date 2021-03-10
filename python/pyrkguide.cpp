@@ -81,7 +81,7 @@ static rkguide::VMMWEMFactory::FittingStatistics  WeightedEMVMMFactory_fit( Weig
 
 
 template< typename WeightedEMVMMFactory, typename VMM>
-static rkguide::VMMWEMFactory::FittingStatistics  WeightedEMVMMFactory_partialUpdate( WeightedEMVMMFactory *vmmFactory, VMM &model, const typename WeightedEMVMMFactory::PartialFittingMask &mask, typename WeightedEMVMMFactory::SufficientStatisitcs &stats, const py::list &listParticles, typename WeightedEMVMMFactory::Configuration &cfg)
+static rkguide::VMMWEMFactory::FittingStatistics  WeightedEMVMMFactory_partialUpdate( WeightedEMVMMFactory *vmmFactory, VMM &model, typename WeightedEMVMMFactory::PartialFittingMask &mask, typename WeightedEMVMMFactory::SufficientStatisitcs &stats, const py::list &listParticles, typename WeightedEMVMMFactory::Configuration &cfg)
 {
     rkguide::VMMWEMFactory::FittingStatistics fitStats;
     std::vector<rkguide::DirectionalSampleData> dataPoints = listParticles.cast<std::vector<rkguide::DirectionalSampleData>>();

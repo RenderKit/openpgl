@@ -315,9 +315,16 @@ void AdaptiveSplitAndMergeFactory<TVMMDistribution>::update(VMM &vmm, ASMStatist
     WeightedEMFactory factory = WeightedEMFactory();
     typename WeightedEMFactory::FittingStatistics wemFitStats;
     //stats.sufficientStatistics.clear(vmm._numComponents);
+    const size_t prevNumberOfComponents = vmm._numComponents;
     factory.updateMixture(vmm, stats.sufficientStatistics, samples, numSamples, cfg.weightedEMCfg, wemFitStats);
-
     RKGUIDE_ASSERT(vmm.isValid());
+    // check if the update step added a new component. 
+    // This happnes if samples are not covered by any existing component
+    // and we need to extend the splittingStats.
+    if (prevNumberOfComponents < vmm._numComponents)
+    {
+        stats.splittingStatistics.setNumComponents(vmm._numComponents);
+    }
     RKGUIDE_ASSERT(stats.sufficientStatistics.isValid());
 
     if (cfg.useSplitAndMerge)
@@ -348,12 +355,11 @@ void AdaptiveSplitAndMergeFactory<TVMMDistribution>::update(VMM &vmm, ASMStatist
             {
                 if (splitComps[k].chiSquareEst > cfg.splittingThreshold && vmm._numComponents  < VMM::MaxComponents)
                 {
-                    //bool splitSucess = splitter.SplitComponent(vmm, stats.splittingStatistics, stats.sufficientStatistics, splitComps[k].componentIndex);
+                    splitter.SplitComponent(vmm, stats.splittingStatistics, stats.sufficientStatistics, splitComps[k].componentIndex);
                     mask.setToTrue(splitComps[k].componentIndex);
                     mask.setToTrue(vmm._numComponents-1);
                     //std::cout << "split[" << totalSplitCount << "]: " << "\tidx0: " << splitComps[k].componentIndex << "\tidx1: " << vmm._numComponents-1 << std::endl;
                     totalSplitCount++;
-
                 }
             }
 
@@ -368,7 +374,9 @@ void AdaptiveSplitAndMergeFactory<TVMMDistribution>::update(VMM &vmm, ASMStatist
                 factory.partialUpdateMixture(vmm, mask, tempSuffStatistics, samples, numSamples, cfg.weightedEMCfg, wemFitStats);
                 stats.sufficientStatistics.setNumComponents(vmm._numComponents);
                 stats.sufficientStatistics.maskedReplace(mask, tempSuffStatistics);
-
+                // update number of components for the splitStats to 
+                // account for additionaly added componetes based on not covered samples.
+                stats.splittingStatistics.setNumComponents(vmm._numComponents);
                 fitStats.numPartialUpdateWEMIterations = wemFitStats.numIterations;
                 RKGUIDE_ASSERT(vmm.isValid());
                 RKGUIDE_ASSERT(vmm.getNumComponents() == stats.getNumComponents());

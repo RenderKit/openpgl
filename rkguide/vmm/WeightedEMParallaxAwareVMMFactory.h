@@ -91,7 +91,7 @@ public:
 
     void updateMixture(VMM &vmm, SufficientStatisitcs &previousStats, const DirectionalSampleData* samples, const size_t numSamples, const Configuration &cfg, FittingStatistics &fitStats) const;
 
-    void partialUpdateMixture(VMM &vmm, const PartialFittingMask &mask, SufficientStatisitcs &previousStats, const DirectionalSampleData* samples, const size_t numSamples, const Configuration &cfg, FittingStatistics &fitStats) const;
+    void partialUpdateMixture(VMM &vmm, PartialFittingMask &mask, SufficientStatisitcs &previousStats, const DirectionalSampleData* samples, const size_t numSamples, const Configuration &cfg, FittingStatistics &fitStats) const;
 
     //VMM VMMfromSufficientStatisitcs(const SufficientStatisitcs &suffStats, const Configuration &cfg) const override;
     std::string toString() const
@@ -217,7 +217,7 @@ std::string WeightedEMParallaxAwareVonMisesFisherFactory< TVMMDistribution>::Suf
     ss << "\tnumSamples = " << wEMSufficientStatisitcs.numSamples << std::endl;
     ss << "\toverallNumSamples = " << wEMSufficientStatisitcs.overallNumSamples << std::endl;
     ss << "\tnumComponents = " << wEMSufficientStatisitcs.numComponents << std::endl;
-    ss << "\tisNormalized = " << wEMSufficientStatisitcs.isNormalized << std::endl;
+    ss << "\tisNormalized = " << wEMSufficientStatisitcs.normalized << std::endl;
     //for (size_t k = 0; k < wEMSufficientStatisitcs.numComponents ; k++)
     for (size_t k = 0; k < VMM::MaxComponents ; k++)
     {
@@ -301,7 +301,7 @@ void WeightedEMParallaxAwareVonMisesFisherFactory< TVMMDistribution>::updateMixt
 }
 
 template<class TVMMDistribution>
-void WeightedEMParallaxAwareVonMisesFisherFactory< TVMMDistribution>::partialUpdateMixture(VMM &vmm, const PartialFittingMask &mask, SufficientStatisitcs &previousStats, const DirectionalSampleData* samples, const size_t numSamples, const Configuration &cfg, FittingStatistics &fitStats) const
+void WeightedEMParallaxAwareVonMisesFisherFactory< TVMMDistribution>::partialUpdateMixture(VMM &vmm, PartialFittingMask &mask, SufficientStatisitcs &previousStats, const DirectionalSampleData* samples, const size_t numSamples, const Configuration &cfg, FittingStatistics &fitStats) const
 {
     WeightedEMVonMisesFisherFactory< TVMMDistribution>::partialUpdateMixture( vmm, mask, previousStats.wEMSufficientStatisitcs, samples, numSamples, cfg, fitStats);
 }
@@ -411,11 +411,13 @@ void WeightedEMParallaxAwareVonMisesFisherFactory< TVMMDistribution>::updateComp
     for (size_t k = 0; k < cnt; k++)
     {
 #ifdef USE_HARMONIC_MEAN
-        const embree::vfloat<VMM::VectorSize> sumInverseDistances = (sufficientStats.sumOfDistanceWeightes[k] / vmm._distances[k]) + batchDistances[k];
+        //embree::vfloat<VMM::VectorSize> sumInverseDistances = (sufficientStats.sumOfDistanceWeightes[k] / vmm._distances[k]) + batchDistances[k];
+        embree::vfloat<VMM::VectorSize> sumInverseDistances = batchDistances[k];
+        sumInverseDistances += select( vmm._distances[k] > 0.0f , (sufficientStats.sumOfDistanceWeightes[k] / vmm._distances[k]) , embree::vfloat<VMM::VectorSize>(0.0f));
         sufficientStats.sumOfDistanceWeightes[k] += batchSumWeights[k];
         vmm._distances[k] = sufficientStats.sumOfDistanceWeightes[k] / sumInverseDistances;
 #else
-        const vfloat<VMM::VectorSize> sumInverseDistances = (sufficientStats.sumOfDistanceWeightes[k] * vmm._distances[k]) + batchDistances[k];
+        const embree::vfloat<VMM::VectorSize> sumInverseDistances = (sufficientStats.sumOfDistanceWeightes[k] * vmm._distances[k]) + batchDistances[k];
         sufficientStats.sumOfDistanceWeightes[k] += batchSumWeights[k];
         vmm._distances[k] = sumInverseDistances / sufficientStats.sumOfDistanceWeightes[k];
 #endif

@@ -142,7 +142,7 @@ bool ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents>::isValid() const
     for(size_t k = 0; k < this->_numComponents; k++){
         const div_t tmpK = div( k, VecSize );
         valid &= embree::isvalid(_distances[tmpK.quot][tmpK.rem]);
-        valid &= _distances[tmpK.quot][tmpK.rem] > 0.0f;
+        valid &= _distances[tmpK.quot][tmpK.rem] >= 0.0f;
         RKGUIDE_ASSERT(valid);
     }
     for(size_t k = this->_numComponents; k < maxComponents; k++){

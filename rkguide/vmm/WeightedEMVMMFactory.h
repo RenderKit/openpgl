@@ -86,7 +86,7 @@ struct WeightedEMVonMisesFisherFactory: public VonMisesFisherFactory< TVMMDistri
         float numSamples {0.f};
         float overallNumSamples {0.f};
         size_t numComponents {VMM::MaxComponents};
-        bool isNormalized {false};
+        bool normalized {false};
         //SufficientStatisitcs operator+(const SufficientStatisitcs &stats);
         virtual SufficientStatisitcs& operator+=(const SufficientStatisitcs &stats);
 
@@ -99,6 +99,11 @@ struct WeightedEMVonMisesFisherFactory: public VonMisesFisherFactory< TVMMDistri
         virtual void clearAll();
 
         virtual void normalize( const float &_numSamples );
+
+        inline bool isNormalized() const
+        {
+            return normalized;
+        };
 
         virtual void mergeComponentStats(const size_t &idx0, const size_t &idx1);
 
@@ -138,9 +143,13 @@ struct WeightedEMVonMisesFisherFactory: public VonMisesFisherFactory< TVMMDistri
 
     };
 
-
-
-
+    struct UnassignedSamplesStatistics
+    {
+        float sumOfUnassignedWeights{0.0f};
+        Vector3 sumUnassignedWeightedDirections{0.0f};
+        void clear();
+        bool isValid() const;
+    };
 
 public:
 
@@ -152,7 +161,7 @@ public:
 
     virtual void updateMixture(VMM &vmm, SufficientStatisitcs &previousStats, const DirectionalSampleData* samples, const size_t numSamples, const Configuration &cfg, FittingStatistics &fitStats) const;
 
-    virtual void partialUpdateMixture(VMM &vmm, const PartialFittingMask &mask, SufficientStatisitcs &previousStats, const DirectionalSampleData* samples, const size_t numSamples, const Configuration &cfg, FittingStatistics &fitStats) const;
+    virtual void partialUpdateMixture(VMM &vmm, PartialFittingMask &mask, SufficientStatisitcs &previousStats, const DirectionalSampleData* samples, const size_t numSamples, const Configuration &cfg, FittingStatistics &fitStats) const;
 
     virtual VMM VMMfromSufficientStatisitcs(const SufficientStatisitcs &suffStats, const Configuration &cfg) const;
 
@@ -163,7 +172,7 @@ public:
 
 private:
 
-    float weightedExpectationStep(VMM &vmm, SufficientStatisitcs &stats, const DirectionalSampleData* samples, const size_t numSamples) const;
+    float weightedExpectationStep(VMM &vmm, SufficientStatisitcs &stats, UnassignedSamplesStatistics &unassignedStats, const DirectionalSampleData* samples, const size_t numSamples) const;
 
     void weightedMaximumAPosteriorStep(VMM &vmm, const SufficientStatisitcs &previousStats,
         const SufficientStatisitcs &currentStats,
@@ -181,9 +190,31 @@ private:
 
     void estimatePartialMAPMeanDirectionAndConcentration( VMM &vmm, const PartialFittingMask &mask, SufficientStatisitcs &currentStats, SufficientStatisitcs &previousStats, const Configuration &cfg) const;
 
+    void handleUnassignedSampleStats(UnassignedSamplesStatistics &unassignedStats, VMM &vmm, SufficientStatisitcs &currentStats, SufficientStatisitcs &previousStats) const;
 
 };
 
+template<class TVMMDistribution>
+void WeightedEMVonMisesFisherFactory< TVMMDistribution>::UnassignedSamplesStatistics::clear()
+{
+    sumOfUnassignedWeights = 0.0f;
+    sumUnassignedWeightedDirections = Vector3(0.0f);
+}
+
+template<class TVMMDistribution>
+bool WeightedEMVonMisesFisherFactory< TVMMDistribution>::UnassignedSamplesStatistics::isValid() const
+{
+    bool valid = true;
+    valid &= embree::isvalid(sumOfUnassignedWeights);
+    valid &= sumOfUnassignedWeights>=0.f;
+    RKGUIDE_ASSERT(valid);
+
+    valid &= embree::isvalid(sumUnassignedWeightedDirections.x);
+    valid &= embree::isvalid(sumUnassignedWeightedDirections.y);
+    valid &= embree::isvalid(sumUnassignedWeightedDirections.z);
+    RKGUIDE_ASSERT(valid);
+    return valid;
+}
 
 template<class TVMMDistribution>
 WeightedEMVonMisesFisherFactory< TVMMDistribution>::WeightedEMVonMisesFisherFactory()
@@ -213,25 +244,54 @@ void WeightedEMVonMisesFisherFactory< TVMMDistribution>::fitMixture(VMM &vmm, si
     //RKGUIDE_ASSERT(vmm.isValid());
     //SufficientStatisitcs stats;
     stats.clear(numComponents);
-    stats.isNormalized = true;
+    stats.normalized = true;
     //stats.clearAll();
     updateMixture(vmm, stats, samples, numSamples, cfg, fitStats);
 
 }
 
 template<class TVMMDistribution>
+void WeightedEMVonMisesFisherFactory< TVMMDistribution>::handleUnassignedSampleStats(UnassignedSamplesStatistics &unassignedStats, VMM &vmm, SufficientStatisitcs &currentStats, SufficientStatisitcs &previousStats) const
+{
+    const div_t tmpK = div(currentStats.numComponents, TVMMDistribution::VectorSize);
+    currentStats.numComponents++;
+    currentStats.sumOfWeightedStats[tmpK.quot][tmpK.rem] = unassignedStats.sumOfUnassignedWeights;
+    currentStats.sumOfWeightedDirections[tmpK.quot].x[tmpK.rem] = unassignedStats.sumUnassignedWeightedDirections.x;
+    currentStats.sumOfWeightedDirections[tmpK.quot].y[tmpK.rem] = unassignedStats.sumUnassignedWeightedDirections.y;
+    currentStats.sumOfWeightedDirections[tmpK.quot].z[tmpK.rem] = unassignedStats.sumUnassignedWeightedDirections.z;
+
+    previousStats.numComponents++;
+    previousStats.sumOfWeightedStats[tmpK.quot][tmpK.rem] = 0.0f;
+    previousStats.sumOfWeightedDirections[tmpK.quot].x[tmpK.rem] = 0.0f;
+    previousStats.sumOfWeightedDirections[tmpK.quot].y[tmpK.rem] = 0.0f;
+    previousStats.sumOfWeightedDirections[tmpK.quot].z[tmpK.rem] = 0.0f;
+
+    vmm._numComponents++;
+}
+
+template<class TVMMDistribution>
 void WeightedEMVonMisesFisherFactory< TVMMDistribution>::updateMixture(VMM &vmm, SufficientStatisitcs &previousStats, const DirectionalSampleData* samples, const size_t numSamples, const Configuration &cfg, FittingStatistics &fitStats) const
 {
     SufficientStatisitcs currentStats;
-    // clear will be called in weightedExpectationStep
-    //currentStats.clear(vmm._numComponents);
+    // initially clear all stats
+    currentStats.clearAll();
+
     size_t currentEMIteration = 0;
     bool converged = false;
     float previousLogLikelihood = 0.0f;
     float inv_previousLogLikelihood = 1.0f;
+    UnassignedSamplesStatistics unassignedStats;
     while ( !converged  && currentEMIteration < cfg.maxEMIterrations )
     {
-        float logLikelihood = weightedExpectationStep( vmm, currentStats, samples, numSamples);
+        float logLikelihood = weightedExpectationStep( vmm, currentStats, unassignedStats, samples, numSamples);
+        if(unassignedStats.sumOfUnassignedWeights > 0.0f && currentStats.numComponents < TVMMDistribution::MaxComponents)
+        {
+            handleUnassignedSampleStats(unassignedStats, vmm, currentStats, previousStats);
+        }
+
+        RKGUIDE_ASSERT(!currentStats.isNormalized());
+        currentStats.normalize(currentStats.numSamples);
+        RKGUIDE_ASSERT(currentStats.isValid());
         weightedMaximumAPosteriorStep( vmm, currentStats, previousStats, cfg);
         currentEMIteration++;
 
@@ -257,18 +317,31 @@ void WeightedEMVonMisesFisherFactory< TVMMDistribution>::updateMixture(VMM &vmm,
 }
 
 template<class TVMMDistribution>
-void WeightedEMVonMisesFisherFactory< TVMMDistribution>::partialUpdateMixture(VMM &vmm, const PartialFittingMask &mask, SufficientStatisitcs &previousStats, const DirectionalSampleData* samples, const size_t numSamples, const Configuration &cfg, FittingStatistics &fitStats) const
+void WeightedEMVonMisesFisherFactory< TVMMDistribution>::partialUpdateMixture(VMM &vmm, PartialFittingMask &mask, SufficientStatisitcs &previousStats, const DirectionalSampleData* samples, const size_t numSamples, const Configuration &cfg, FittingStatistics &fitStats) const
 {
     SufficientStatisitcs currentStats;
-    // clear will be called in weightedExpectationStep
-    //currentStats.clear(vmm._numComponents);
+    // initially clear all stats
+    currentStats.clearAll();
+
     size_t currentEMIteration = 0;
     bool converged = false;
     float previousLogLikelihood = 0.0f;
     float inv_previousLogLikelihood = 1.0f;
+
+    UnassignedSamplesStatistics unassignedStats;
     while ( !converged  && currentEMIteration < cfg.maxEMIterrations )
     {
-        float logLikelihood = weightedExpectationStep( vmm, currentStats, samples, numSamples);
+        float logLikelihood = weightedExpectationStep( vmm, currentStats, unassignedStats, samples, numSamples);
+        if(unassignedStats.sumOfUnassignedWeights > 0.0f && currentStats.numComponents < TVMMDistribution::MaxComponents)
+        {
+            handleUnassignedSampleStats(unassignedStats, vmm, currentStats, previousStats);
+            mask.setToTrue(vmm._numComponents-1);
+        }
+
+        RKGUIDE_ASSERT(!currentStats.isNormalized());
+        currentStats.normalize(currentStats.numSamples);
+        RKGUIDE_ASSERT(currentStats.isValid());
+
         partialWeightedMaximumAPosteriorStep( vmm, mask, currentStats, previousStats, cfg);
         currentEMIteration++;
         // TODO: Add convergence check
@@ -436,6 +509,22 @@ bool WeightedEMVonMisesFisherFactory< TVMMDistribution>::SufficientStatisitcs::i
         RKGUIDE_ASSERT(valid);
     }
 
+    for(size_t k = numComponents; k < VMM::MaxComponents; k++)
+    {
+        const div_t tmpK = div( k, VMM::VectorSize );
+        valid &= sumOfWeightedDirections[tmpK.quot].x[tmpK.rem] == 0.0f;
+        RKGUIDE_ASSERT(valid);
+
+        valid &= sumOfWeightedDirections[tmpK.quot].y[tmpK.rem] == 0.0f;
+        RKGUIDE_ASSERT(valid);
+
+        valid &= sumOfWeightedDirections[tmpK.quot].z[tmpK.rem] == 0.0f;
+        RKGUIDE_ASSERT(valid);
+
+        valid &= sumOfWeightedStats[tmpK.quot][tmpK.rem] == 0.0f;
+        RKGUIDE_ASSERT(valid);
+    }
+
     valid &= embree::isvalid(numSamples);
     valid &= numSamples >= 0.0f;
     RKGUIDE_ASSERT(valid);
@@ -473,7 +562,7 @@ void WeightedEMVonMisesFisherFactory< TVMMDistribution>::SufficientStatisitcs::m
         sumOfWeightedStats[k] =  select(mask.mask[k], stats.sumOfWeightedStats[k], sumOfWeightedStats[k]);
         newSumWeights += sumOfWeightedStats[k];
     }
-    if (isNormalized)
+    if (normalized)
     {
         numSamples = embree::reduce_add(newSumWeights);
     }
@@ -494,7 +583,7 @@ void WeightedEMVonMisesFisherFactory< TVMMDistribution>::SufficientStatisitcs::s
     stream.write(reinterpret_cast<const char*>(&numSamples), sizeof(float));
     stream.write(reinterpret_cast<const char*>(&overallNumSamples), sizeof(float));
     stream.write(reinterpret_cast<const char*>(&numComponents), sizeof(size_t));
-    stream.write(reinterpret_cast<const char*>(&isNormalized), sizeof(bool));
+    stream.write(reinterpret_cast<const char*>(&normalized), sizeof(bool));
 }
 
 template<class TVMMDistribution>
@@ -508,7 +597,7 @@ void WeightedEMVonMisesFisherFactory< TVMMDistribution>::SufficientStatisitcs::d
     stream.read(reinterpret_cast<char*>(&numSamples), sizeof(float));
     stream.read(reinterpret_cast<char*>(&overallNumSamples), sizeof(float));
     stream.read(reinterpret_cast<char*>(&numComponents), sizeof(size_t));
-    stream.read(reinterpret_cast<char*>(&isNormalized), sizeof(bool));
+    stream.read(reinterpret_cast<char*>(&normalized), sizeof(bool));
 }
 
 template<class TVMMDistribution>
@@ -603,7 +692,7 @@ void WeightedEMVonMisesFisherFactory< TVMMDistribution>::SufficientStatisitcs::c
 
     sumWeights = 0.0f;
     numSamples = 0;
-    isNormalized = false;
+    normalized = false;
 }
 
 template<class TVMMDistribution>
@@ -631,7 +720,7 @@ void WeightedEMVonMisesFisherFactory< TVMMDistribution>::SufficientStatisitcs::n
         sumOfWeightedDirections[k] *= norm;
         sumOfWeightedStats[k] *= norm;
     }
-    isNormalized = true;
+    normalized = true;
 }
 
 template<class TVMMDistribution>
@@ -663,7 +752,7 @@ std::string WeightedEMVonMisesFisherFactory< TVMMDistribution>::SufficientStatis
     ss << "\tnumSamples:" << numSamples << std::endl;
     ss << "\toverallNumSamples:" << overallNumSamples << std::endl;
     ss << "\tnumComponents:" << numComponents << std::endl;
-    ss << "\tisNormalized:" << isNormalized << std::endl;
+    ss << "\tnormalized:" << normalized << std::endl;
     for (size_t k = 0; k < numComponents ; k++)
     {
         int i = k / VMM::VectorSize;
@@ -679,11 +768,12 @@ std::string WeightedEMVonMisesFisherFactory< TVMMDistribution>::SufficientStatis
 template<class TVMMDistribution>
 float WeightedEMVonMisesFisherFactory< TVMMDistribution>::weightedExpectationStep(VMM &vmm,
         SufficientStatisitcs &stats,
+        UnassignedSamplesStatistics &unassignedStats,
         const DirectionalSampleData* samples,
         const size_t numSamples) const
 {
+    unassignedStats.clear();
     stats.clear(vmm._numComponents);
-    //stats.clearAll();
     stats.numComponents = vmm._numComponents;
     stats.numSamples = numSamples;
 
@@ -702,6 +792,8 @@ float WeightedEMVonMisesFisherFactory< TVMMDistribution>::weightedExpectationSte
         // check if the samples is covered by any of the components
         if ( !vmm.softAssignment( sampleData.direction, softAssign) )
         {
+            unassignedStats.sumOfUnassignedWeights += sampleData.weight;
+            unassignedStats.sumUnassignedWeightedDirections += sampleData.direction * sampleData.weight;
             std::cout << "continue" << std::endl;
             continue;
         }
@@ -715,8 +807,6 @@ float WeightedEMVonMisesFisherFactory< TVMMDistribution>::weightedExpectationSte
         }
 
     }
-
-    stats.normalize(numSamples);
     return summedWeightedLogLikelihood;
 }
 
