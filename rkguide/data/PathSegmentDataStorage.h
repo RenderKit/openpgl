@@ -44,7 +44,7 @@ struct PathSegmentDataStorage
     }
 
 
-    uint32_t prepareSamples(const bool useNEEMiWeights = false)
+    uint32_t prepareSamples(const bool useNEEMiWeights = false, const bool guideDirectLight = false)
     {
         //m_sampleStorage.clear();
         //m_regionPtrStorage.clear();
@@ -103,26 +103,37 @@ struct PathSegmentDataStorage
                     throughput = throughput * nextPathSegment.transmittanceWeight;
                     rkguide::Vector3 clampedThroughput = embree::min(throughput, maxThroughput);
                     contribution += clampedThroughput * nextPathSegment.scatteredContribution;
+                    RKGUIDE_ASSERT(embree::isvalid(contribution));
                     if(j == i+1 && !useNEEMiWeights)
                     {
-                        contribution += clampedThroughput * nextPathSegment.directContribution;
+                        if(guideDirectLight)
+                        {
+                            contribution += clampedThroughput * nextPathSegment.directContribution;
+                            RKGUIDE_ASSERT(embree::isvalid(contribution));
+                        }
                     }
                     else
                     {
-                        contribution += clampedThroughput * nextPathSegment.miWeight * nextPathSegment.directContribution;
+                        if(j>i+1 || guideDirectLight)
+                        {
+                            contribution += clampedThroughput * nextPathSegment.miWeight * nextPathSegment.directContribution;
+                            RKGUIDE_ASSERT(embree::isvalid(contribution));
+                        }
                     }
                     throughput = throughput * nextPathSegment.scatteringWeight;
                     throughput /= nextPathSegment.russianRouletteProbability;
                 }
 
+				RKGUIDE_ASSERT(embree::isvalid(contribution));
                 if (contribution[0] > 0.0f || contribution[1] > 0.0f || contribution[2] > 0.0f )
                 {
                     //if (considerNEE) SLog(EInfo, "Sample 2[%d]: pos: %f, %f, %f \t dir: %f, %f, %f \t pdf: %f \t distance: %f \t con: %f, %f, %f ", 
                     //    i, pos[0], pos[1], pos[2], dir[0], dir[1], dir[2], pdf, distance, contribution[0], contribution[1], contribution[2]);
+					RKGUIDE_ASSERT(embree::isvalid(distance));
                     if(distance>0){
-                        RKGUIDE_ASSERT(distance > 0);
-                        RKGUIDE_ASSERT(embree::isvalid(distance));
-                        m_sampleStorage.emplace_back(DirectionalSampleData(pos, dir, RKGUIDE_SPECTRUM_TO_FLOAT(contribution)/pdf,
+                        const float weight = RKGUIDE_SPECTRUM_TO_FLOAT(contribution)/pdf;
+                        RKGUIDE_ASSERT(embree::isvalid(weight));
+                        m_sampleStorage.emplace_back(DirectionalSampleData(pos, dir, weight,
                                                 pdf, distance, flags), regionPtr);
                     }
                     else
@@ -145,6 +156,7 @@ struct PathSegmentDataStorage
 
     void addSample(const DirectionalSampleData &sampleData, const void *regionPtr)
     {
+        RKGUIDE_ASSERT(sampleData.isValid());
         RKGUIDE_ASSERT(sampleData.distance > 0);
         RKGUIDE_ASSERT(embree::isvalid(sampleData.distance));
         m_sampleStorage.push_back(std::pair<DirectionalSampleData, const void*>(sampleData, regionPtr));
