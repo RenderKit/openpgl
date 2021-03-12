@@ -146,6 +146,7 @@ private:
                 {
                     reorientSample(sample, sampleMean);
                 }
+                RKGUIDE_ASSERT(sample.isValid());
                 dataPoints.push_back(sample);
             }
             if (dataPoints.size() > 0)
@@ -199,6 +200,7 @@ private:
                 {
                     reorientSample(sample, sampleMean);
                 }
+                RKGUIDE_ASSERT(sample.isValid());
                 dataPoints.push_back(sample);
             }
             if (dataPoints.size() > 0)

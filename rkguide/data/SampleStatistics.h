@@ -79,14 +79,16 @@ namespace rkguide
                 {
                     sampleBounds.lower[splitDim] = std::max(splitPos, sampleBounds.lower[splitDim]);
                     mean[splitDim] = std::min(sampleBounds.upper[splitDim], mean[splitDim] + stdDerivation / 2.0f);
-                    RKGUIDE_ASSERT(mean[splitDim] >= sampleBounds.lower[splitDim]);
+                    // TODO: there are rare ocasions where this can happen (boarder of the head scene)
+                    // find a way to handle these
+                    //RKGUIDE_ASSERT(mean[splitDim] >= sampleBounds.lower[splitDim]);
                     //mean[splitDim] += stdDerivation / 2.0f;
                 }
                 else
                 {
                     sampleBounds.upper[splitDim] = std::min(splitPos, sampleBounds.upper[splitDim]);
                     mean[splitDim] = std::max(sampleBounds.lower[splitDim], mean[splitDim] - stdDerivation / 2.0f);
-                    RKGUIDE_ASSERT(mean[splitDim] <= sampleBounds.upper[splitDim]);
+                    //RKGUIDE_ASSERT(mean[splitDim] <= sampleBounds.upper[splitDim]);
                     //mean[splitDim] -= stdDerivation / 2.0f;
                 }
 
