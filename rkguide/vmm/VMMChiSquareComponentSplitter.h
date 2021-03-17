@@ -377,17 +377,18 @@ ComponentSplitinfo VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::GetPro
             const div_t tmp = div(idx, static_cast<int>(VMM::VectorSize));
 
             const embree::vfloat<VMM::VectorSize> weight = sample.weight;
-            const embree::vfloat<VMM::VectorSize> samplePDF = sample.pdf;
+            //const embree::vfloat<VMM::VectorSize> samplePDF = sample.pdf;
             //const vfloat<VMM::VectorSize> value =  weight * samplePDF;
 
 
             const embree::Vec3< embree::vfloat<VMM::VectorSize> > localDirection = embree::frame( vmm._meanDirections[tmp.quot] ).inverse() * embree::Vec3< embree::vfloat<VMM::VectorSize> > (sample.direction);
+            //const embree::Vec2< embree::vfloat<VMM::VectorSize> > localDirection2D = Map3DTo2D< embree::Vec3< embree::vfloat<VMM::VectorSize> >,  embree::Vec2< embree::vfloat<VMM::VectorSize> >, embree::vfloat<VMM::VectorSize> >(localDirection);
+            const Vector2 localDirection2D = Map3DTo2D< Vector3,  Vector2, float >(Vector3(localDirection.x[tmp.rem], localDirection.y[tmp.rem], localDirection.z[tmp.rem]));
 
-            const embree::Vec2< embree::vfloat<VMM::VectorSize> > localDirection2D = Map3DTo2D< embree::Vec3< embree::vfloat<VMM::VectorSize> >,  embree::Vec2< embree::vfloat<VMM::VectorSize> >, embree::vfloat<VMM::VectorSize> >(localDirection);
 
             const embree::vfloat<VMM::VectorSize> assignedWeight = softAssign.assignments[tmp.quot] * weight;
-            local2D[n].x = localDirection2D.x[tmp.rem];
-            local2D[n].y = localDirection2D.y[tmp.rem];
+            local2D[n].x = localDirection2D.x;
+            local2D[n].y = localDirection2D.y;
             local2D[n].z = assignedWeight[tmp.rem];
 
             sumWeights += assignedWeight[tmp.rem];
@@ -395,12 +396,12 @@ ComponentSplitinfo VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::GetPro
             mean.x += 0.0f;
             mean.y += 0.0f;
 #else
-            mean.x += assignedWeight[tmp.rem] * localDirection2D.x[tmp.rem];
-            mean.y += assignedWeight[tmp.rem] * localDirection2D.y[tmp.rem];
+            mean.x += assignedWeight[tmp.rem] * localDirection2D.x;
+            mean.y += assignedWeight[tmp.rem] * localDirection2D.y;
 #endif
-            covarianceStats.x += assignedWeight[tmp.rem] * localDirection2D.x[tmp.rem] * localDirection2D.x[tmp.rem];
-            covarianceStats.y += assignedWeight[tmp.rem] * localDirection2D.y[tmp.rem] * localDirection2D.y[tmp.rem];
-            covarianceStats.z += assignedWeight[tmp.rem] * localDirection2D.x[tmp.rem] * localDirection2D.y[tmp.rem];
+            covarianceStats.x += assignedWeight[tmp.rem] * localDirection2D.x * localDirection2D.x;
+            covarianceStats.y += assignedWeight[tmp.rem] * localDirection2D.y * localDirection2D.y;
+            covarianceStats.z += assignedWeight[tmp.rem] * localDirection2D.x * localDirection2D.y;
         }
     }
     mean /= sumWeights;
