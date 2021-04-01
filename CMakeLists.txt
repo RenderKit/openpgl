@@ -16,9 +16,9 @@ include(GNUInstallDirs)
 
 ## Establish project ##
 
-project(rkguide VERSION 0.0.1 LANGUAGES CXX)
+project(openpgl VERSION 0.0.1 LANGUAGES CXX)
 
 ## Build library and  ##
-add_subdirectory(rkguide)
+add_subdirectory(openpgl)
 
 add_subdirectory(python)
