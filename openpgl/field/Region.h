@@ -38,6 +38,17 @@ namespace openpgl
             return pDistribution;
         }
 
+        void getDistribution(TDistribution &pDistribution, Point3 samplePosition, const bool &useParallaxComp) const
+        {
+            pDistribution = distribution;
+            if(useParallaxComp)
+            {
+                Point3 pivotPosition = pDistribution._pivotPosition;
+                pDistribution.performRelativeParallaxShift(pivotPosition - samplePosition);
+            }
+            //return pDistribution;
+        }
+
         void serialize(std::ostream& stream) const
         {
             distribution.serialize(stream);

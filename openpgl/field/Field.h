@@ -7,9 +7,11 @@
 
 #include "../openpgl.h"
 //#include "../data/SampleStatistics.h"
+#include "../data/DirectionalSampleData.h"
 #include "../data/Range.h"
 #include "../kdtree/KDTree.h"
 #include "../kdtree/KDTreeBuilder.h"
+#include "../sampler/Sampler.h"
 #include "Region.h"
 #include "KNN.h"
 

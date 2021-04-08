@@ -185,9 +185,9 @@ void ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents>::performRelative
         parallaxCorrectedMeanDirections = this->_meanDirections[k] * _distances[k] + shiftDirectionVec;
         lengths = embree::length(parallaxCorrectedMeanDirections);
         parallaxCorrectedMeanDirections /= lengths;
-        this->_meanDirections[k].x = select(_distances[k] > 0.0f & embree::isfinite(_distances[k]), parallaxCorrectedMeanDirections.x, this->_meanDirections[k].x);
-        this->_meanDirections[k].y = select(_distances[k] > 0.0f & embree::isfinite(_distances[k]), parallaxCorrectedMeanDirections.y, this->_meanDirections[k].y);
-        this->_meanDirections[k].z = select(_distances[k] > 0.0f & embree::isfinite(_distances[k]), parallaxCorrectedMeanDirections.z, this->_meanDirections[k].z);
+        this->_meanDirections[k].x = select(_distances[k] > 0.0f & embree::isfinite<VMM::VectorSize>(_distances[k]), parallaxCorrectedMeanDirections.x, this->_meanDirections[k].x);
+        this->_meanDirections[k].y = select(_distances[k] > 0.0f & embree::isfinite<VMM::VectorSize>(_distances[k]), parallaxCorrectedMeanDirections.y, this->_meanDirections[k].y);
+        this->_meanDirections[k].z = select(_distances[k] > 0.0f & embree::isfinite<VMM::VectorSize>(_distances[k]), parallaxCorrectedMeanDirections.z, this->_meanDirections[k].z);
         _distances[k] = select(_distances[k] > 0.0f, lengths, zeros);
     }
 
