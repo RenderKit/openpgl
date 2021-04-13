@@ -449,7 +449,8 @@ void VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::UpdateSplitStatistic
     for (size_t n = 0; n < numData; n++)
     {
         const DirectionalSampleData sample = data[n];
-        if (vmm.softAssignment(sample.direction, softAssign) )
+        const Vector3 sampleDirection(sample.direction.x, sample.direction.y, sample.direction.z);
+        if (vmm.softAssignment(sampleDirection, softAssign) )
         {
             const embree::vfloat<VMM::VectorSize> weight = sample.weight;
             const embree::vfloat<VMM::VectorSize> samplePDF = sample.pdf;
@@ -484,7 +485,7 @@ void VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::UpdateSplitStatistic
                 splitStats.numSamples[k] += 1.0f;
                 splitStats.chiSquareMCEstimates[k] += (chiSquareEst - splitStats.chiSquareMCEstimates[k]) / splitStats.numSamples[k];
 
-                const embree::Vec3< embree::vfloat<VMM::VectorSize> > localDirection = embree::frame( vmm._meanDirections[k] ).inverse() * embree::Vec3< embree::vfloat<VMM::VectorSize> > (sample.direction);
+                const embree::Vec3< embree::vfloat<VMM::VectorSize> > localDirection = embree::frame( vmm._meanDirections[k] ).inverse() * embree::Vec3< embree::vfloat<VMM::VectorSize> > (sampleDirection);
                 const embree::Vec2< embree::vfloat<VMM::VectorSize> > localDirection2D(localDirection.x, localDirection.y);
                 const embree::vfloat<VMM::VectorSize> assignedWeight = softAssign.assignments[k] * weight;
                 //const vfloat<VMM::VectorSize> assignedWeight = softAssign.assignments[k] * weight * weight;

@@ -87,10 +87,11 @@ struct KDTreePartitionBuilder
 
             for (const auto& sample : samples)
             {
-                sampleStats.addSample(sample.position);
-                x += sample.position[0];
-                y += sample.position[1];
-                z += sample.position[2];
+                const Point3 samplePosition(sample.position.x, sample.position.y, sample.position.z);
+                sampleStats.addSample(samplePosition);
+                x += samplePosition[0];
+                y += samplePosition[1];
+                z += samplePosition[2];
             }
 
             x /= double(samples.size());
@@ -141,7 +142,8 @@ private:
         std::function<bool(typename TRange::DataType)> pivotSplitPredicate
                 = [splitDimension, pivot](typename TRange::DataType sample) -> bool
         {
-            return sample.position[splitDimension] < pivot;
+            const Vector3 samplePosition(sample.position.x, sample.position.y, sample.position.z);
+            return samplePosition[splitDimension] < pivot;
 
         };
         return std::partition(begin, end, pivotSplitPredicate);
@@ -155,11 +157,12 @@ private:
         std::function<bool(typename TRange::DataType)> pivotSplitPredicate
                 = [splitDimension, pivot, &statsLeft, &statsRight](typename TRange::DataType sample) -> bool
         {
-            bool left = sample.position[splitDimension] < pivot;
+            const Vector3 samplePosition(sample.position.x, sample.position.y, sample.position.z);
+            bool left = samplePosition[splitDimension] < pivot;
             if(left){
-                statsLeft.addSample(sample.position);
+                statsLeft.addSample(samplePosition);
             }else{
-                statsRight.addSample(sample.position);
+                statsRight.addSample(samplePosition);
             }
             return left;
         };

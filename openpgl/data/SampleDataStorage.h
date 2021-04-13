@@ -33,7 +33,7 @@ struct SampleDataStorage
         {
             splatSample(sample, region->getSampleBounds(), sampler->next2D());
         }
-        if(sample.isInsideVolume())
+        if(isInsideVolume(sample))
         {
             m_volumeContainer.push_back(sample);
         }
@@ -54,7 +54,7 @@ struct SampleDataStorage
 
     inline void addSample2(DirectionalSampleData sample)
     {
-        if(sample.isInsideVolume())
+        if(isInsideVolume(sample))
         {
             m_volumeContainer.push_back(sample);
         }
@@ -100,7 +100,7 @@ struct SampleDataStorage
 
     void sortSurface()
     {
-        std::sort(m_surfaceContainer.begin(), m_surfaceContainer.end());
+        std::sort(m_surfaceContainer.begin(), m_surfaceContainer.end(), DirectionalSampleDataLess);
     }
 
     inline void reserveVolume(const size_t &size)
@@ -120,7 +120,7 @@ struct SampleDataStorage
 
     void sortVolume()
     {
-        std::sort(m_volumeContainer.begin(), m_volumeContainer.end());
+        std::sort(m_volumeContainer.begin(), m_volumeContainer.end(), DirectionalSampleDataLess);
     }
 
 
@@ -195,11 +195,13 @@ struct SampleDataStorage
         //float maxBoundsExtent = (boundsExtents.x > boundsExtents.y) ?   ((boundsExtents.x > boundsExtents.z) ? boundsExtents.x : boundsExtents.z):
         //                                                                ((boundsExtents.y > boundsExtents.z) ? boundsExtents.y : boundsExtents.z);
         const Vector3 sampleDisplacement = boundsExtents * squareToUniformSphere(sample2D);
-
-        Point3 splattedPosition = sample.position + sampleDisplacement;
+        const Point3 samplePosition(sample.position.x, sample.position.y, sample.position.z);
+        Vector3 sampleDirection(sample.direction.x, sample.direction.y, sample.direction.z);
+        
+        Point3 splattedPosition = samplePosition + sampleDisplacement;
         if (!embree::inside(splattingBounds, splattedPosition))
         {
-            Point3 sourcePosition = sample.position + sample.direction * sample.distance;
+            Point3 sourcePosition = samplePosition + sampleDirection * sample.distance;
             for (int i = 0; i < 3; i++)
             {
                 if (splattedPosition[i] < m_sceneBounds.lower[i])
@@ -212,10 +214,17 @@ struct SampleDataStorage
                 }
             }
 
-            sample.position = splattedPosition;
-            sample.direction = sourcePosition - splattedPosition;
-            sample.distance = embree::length(sample.direction);
-            sample.direction /= sample.distance;
+            sample.position.x = splattedPosition[0];
+            sample.position.y = splattedPosition[1];
+            sample.position.z = splattedPosition[2];
+
+            sampleDirection = sourcePosition - splattedPosition;
+            sample.distance = embree::length(sampleDirection);
+            sampleDirection = sampleDirection / sample.distance;
+
+            sample.direction.x = sampleDirection[0];
+            sample.direction.y = sampleDirection[1];
+            sample.direction.z = sampleDirection[2];
 
             sample.flags |= DirectionalSampleData::ESplatted;
         }
@@ -249,19 +258,20 @@ struct SampleDataStorage
 */
             for (auto& sample : subSampledData)
             {
-                objFile << "v " << sample.position[0] << "\t" << sample.position[1] << "\t"<< sample.position[2] << std::endl;
+                objFile << "v " << sample.position.x << "\t" << sample.position.y << "\t"<< sample.position.z << std::endl;
                 if (!pointsOnly)
                 {
-                    Vector3 dir = sample.direction;
-                    Point3 pos2 = sample.position + dir * sample.distance;
+                    Vector3 dir(sample.direction.x, sample.direction.y, sample.direction.z);
+                    Point3 samplePosition(sample.position.x, sample.position.y, sample.position.z);
+                    Point3 pos2 = samplePosition + dir * sample.distance;
                     objFile << "v " << pos2[0] << "\t" << pos2[1] << "\t"<< pos2[2] << std::endl;
-                    objFile << "v " << sample.position[0] << "\t" << sample.position[1] << "\t"<< sample.position[2] << std::endl;
+                    objFile << "v " << sample.position.x << "\t" << sample.position.y << "\t"<< sample.position.z << std::endl;
                 }
             }
 
             for (auto& sample : subSampledData)
             {
-                Vector3 dir = sample.direction;
+                Vector3 dir(sample.direction.x, sample.direction.y, sample.direction.z);
                 //dir *= sample.distance;
                 objFile << "vn " << dir[0] << "\t" << dir[1] << "\t"<< dir[2] << std::endl;
                 if (!pointsOnly)

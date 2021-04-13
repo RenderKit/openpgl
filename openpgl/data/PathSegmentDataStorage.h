@@ -18,6 +18,7 @@ struct PathSegmentDataStorage
     {
         m_segmentStorage.reserve(size);
         m_sampleStorage.reserve(size);
+        m_sampleStorage2.reserve(size);
         //m_regionPtrStorage.reserve(size);
     }
 
@@ -30,11 +31,18 @@ struct PathSegmentDataStorage
     {
         m_segmentStorage.clear();
         m_sampleStorage.clear();
+        m_sampleStorage2.clear();
     }
 
     PathSegmentData *create_back(const Point3 &pos, const Vector3 &normal, const Vector3 &outDir)
     {
        m_segmentStorage.emplace_back(pos, normal, outDir);
+       return &m_segmentStorage.back();
+    }
+
+    PathSegmentData *next()
+    {
+       m_segmentStorage.emplace_back();
        return &m_segmentStorage.back();
     }
 
@@ -133,8 +141,19 @@ struct PathSegmentDataStorage
                     if(distance>0){
                         const float weight = OPENPGL_SPECTRUM_TO_FLOAT(contribution)/pdf;
                         OPENPGL_ASSERT(embree::isvalid(weight));
-                        m_sampleStorage.emplace_back(DirectionalSampleData(pos, dir, weight,
-                                                pdf, distance, flags), regionPtr);
+                        DirectionalSampleData dsd;
+                        dsd.position.x = pos[0];
+                        dsd.position.y = pos[1];
+                        dsd.position.z = pos[2];
+                        dsd.direction.x = dir[0];
+                        dsd.direction.y = dir[1];
+                        dsd.direction.z = dir[2];
+                        dsd.weight = weight;
+                        dsd.pdf = pdf;
+                        dsd.distance = distance;
+                        dsd.flags = flags;
+                        m_sampleStorage.emplace_back(dsd, regionPtr);
+                        m_sampleStorage2.emplace_back(dsd);
                     }
                     else
                     {
@@ -154,17 +173,31 @@ struct PathSegmentDataStorage
         return m_sampleStorage;
     }
 
+    const std::vector<DirectionalSampleData>& getSamples2()const
+    {
+        return m_sampleStorage2;
+    }
+
     void addSample(const DirectionalSampleData &sampleData, const void *regionPtr)
     {
-        OPENPGL_ASSERT(sampleData.isValid());
+        OPENPGL_ASSERT(isValid(sampleData));
         OPENPGL_ASSERT(sampleData.distance > 0);
         OPENPGL_ASSERT(embree::isvalid(sampleData.distance));
         m_sampleStorage.push_back(std::pair<DirectionalSampleData, const void*>(sampleData, regionPtr));
     }
 
 
+    void addSample2(const DirectionalSampleData &sampleData)
+    {
+        OPENPGL_ASSERT(isValid(sampleData));
+        OPENPGL_ASSERT(sampleData.distance > 0);
+        OPENPGL_ASSERT(embree::isvalid(sampleData.distance));
+        m_sampleStorage2.push_back(sampleData);
+    }
+
 private:
     std::vector<std::pair<DirectionalSampleData, const void*>> m_sampleStorage;
+    std::vector<DirectionalSampleData> m_sampleStorage2;
     //std::vector<const void*> m_regionPtrStorage;
 
 };

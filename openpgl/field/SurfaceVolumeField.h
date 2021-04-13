@@ -124,8 +124,8 @@ public:
         if (m_deterministic)
         {
             std::cout << "SurfaceVolumeField::buildField(): deterministic = " << m_deterministic<< std::endl;
-            std::sort(samplesSurface.begin(), samplesSurface.end());
-            std::sort(samplesVolume.begin(), samplesVolume.end());
+            std::sort(samplesSurface.begin(), samplesSurface.end(), DirectionalSampleDataLess);
+            std::sort(samplesVolume.begin(), samplesVolume.end(), DirectionalSampleDataLess);
         }
 
         std::cout << "BufferSize: " << sizeof(DirectionalSampleData) * m_spatialSubdivBuilderSettings.maxSamples * 1e-6 <<  " MB" << std::endl;
@@ -141,8 +141,8 @@ public:
         if (m_deterministic)
         {
             std::cout << "SurfaceVolumeField::buildField(): deterministic = " << m_deterministic << std::endl;
-            std::sort(samplesSurface.begin(), samplesSurface.end());
-            std::sort(samplesVolume.begin(), samplesVolume.end());
+            std::sort(samplesSurface.begin(), samplesSurface.end(), DirectionalSampleDataLess);
+            std::sort(samplesVolume.begin(), samplesVolume.end(), DirectionalSampleDataLess);
         }
 
         updateSpatialStructureSurface(samplesSurface);

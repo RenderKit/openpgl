@@ -4,6 +4,7 @@
 #pragma once
 
 #include "common.h"
+#include "data.h"
 #include "region.h"
 #include "samplestorage.h"
 #include "pathsegmentstorage.h"

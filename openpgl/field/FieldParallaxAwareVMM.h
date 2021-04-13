@@ -158,7 +158,9 @@ struct FieldParallaxAwareVMM: public Field<openpgl::Region<ParallaxAwareVonMises
         if (std::isinf(sample.distance))
         {
             //std::cout << "inf sample" << std::endl;
-            sample.position = pivotPoint;
+            sample.position.x = pivotPoint[0];
+            sample.position.y = pivotPoint[1];
+            sample.position.z = pivotPoint[2];
             return;
         }
         else if (!(sample.distance > 0.0f))
@@ -167,13 +169,20 @@ struct FieldParallaxAwareVMM: public Field<openpgl::Region<ParallaxAwareVonMises
             return;
         }
 
-        const openpgl::Point3 originPosition = sample.position + sample.direction * sample.distance;
-        const openpgl::Vector3 newDirection = originPosition - pivotPoint;
+        const openpgl::Point3 samplePosition(sample.position.x, sample.position.y, sample.position.z);
+        const openpgl::Vector3 sampleDirection(sample.direction.x, sample.direction.y, sample.direction.z);
+        const openpgl::Point3 originPosition = samplePosition + sampleDirection * sample.distance;
+        openpgl::Vector3 newDirection = originPosition - pivotPoint;
         const float newDistance = embree::length(newDirection);
+        newDirection = newDirection / newDistance;
 
-        sample.position = pivotPoint;
+        sample.position.x = pivotPoint[0];
+        sample.position.y = pivotPoint[1];
+        sample.position.z = pivotPoint[2];
         sample.distance = newDistance;
-        sample.direction = newDirection / newDistance;
+        sample.direction.x = newDirection[0];
+        sample.direction.y = newDirection[1];
+        sample.direction.z = newDirection[2];
     }
 
 

@@ -38,6 +38,7 @@ namespace openpgl
             return pDistribution;
         }
 
+        /*
         void getDistribution(TDistribution &pDistribution, Point3 samplePosition, const bool &useParallaxComp) const
         {
             pDistribution = distribution;
@@ -48,6 +49,7 @@ namespace openpgl
             }
             //return pDistribution;
         }
+        */
 
         void serialize(std::ostream& stream) const
         {

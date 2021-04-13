@@ -787,13 +787,14 @@ float WeightedEMVonMisesFisherFactory< TVMMDistribution>::weightedExpectationSte
     {
         const DirectionalSampleData sampleData = samples[n];
         const embree::vfloat<VMM::VectorSize> sampleWeight = sampleData.weight;
-        const embree::Vec3< embree::vfloat<VMM::VectorSize> > sampleDirection( sampleData.direction[0], sampleData.direction[1], sampleData.direction[2] );
+        const Vector3 sampleDirection(sampleData.direction.x, sampleData.direction.y, sampleData.direction.z);
+        const embree::Vec3< embree::vfloat<VMM::VectorSize> > sampleDirectionSIMD( sampleDirection );
 
         // check if the samples is covered by any of the components
-        if ( !vmm.softAssignment( sampleData.direction, softAssign) )
+        if ( !vmm.softAssignment( sampleDirection, softAssign) )
         {
             unassignedStats.sumOfUnassignedWeights += sampleData.weight;
-            unassignedStats.sumUnassignedWeightedDirections += sampleData.direction * sampleData.weight;
+            unassignedStats.sumUnassignedWeightedDirections += sampleDirection * sampleData.weight;
             std::cout << "continue" << std::endl;
             continue;
         }
@@ -802,7 +803,7 @@ float WeightedEMVonMisesFisherFactory< TVMMDistribution>::weightedExpectationSte
 
         for (size_t k =0; k < cnt; k++)
         {
-            stats.sumOfWeightedDirections[k] += sampleDirection * softAssign.assignments[k] * sampleWeight;
+            stats.sumOfWeightedDirections[k] += sampleDirectionSIMD * softAssign.assignments[k] * sampleWeight;
             stats.sumOfWeightedStats[k] += softAssign.assignments[k] * sampleWeight;
         }
 

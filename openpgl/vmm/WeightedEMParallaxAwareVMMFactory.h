@@ -335,7 +335,8 @@ void WeightedEMParallaxAwareVonMisesFisherFactory< TVMMDistribution>::initCompon
 #else
         sampleDistance = samples[n].distance;
 #endif
-        if (vmm.softAssignment(samples[n].direction, softAssign))
+        const Vector3 sampleDirection(samples[n].direction.x, samples[n].direction.y, samples[n].direction.z);
+        if (vmm.softAssignment(sampleDirection, softAssign))
         {
             for (size_t k = 0; k < cnt; k++)
             {
@@ -397,7 +398,8 @@ void WeightedEMParallaxAwareVonMisesFisherFactory< TVMMDistribution>::updateComp
 #else
         sampleDistance = samples[n].distance;
 #endif
-        if (vmm.softAssignment(samples[n].direction, softAssign))
+        const Vector3 sampleDirection(samples[n].direction.x, samples[n].direction.y, samples[n].direction.z);
+        if (vmm.softAssignment(sampleDirection, softAssign))
         {
             for (size_t k = 0; k < cnt; k++)
             {

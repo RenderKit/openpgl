@@ -85,7 +85,7 @@ public:
         m_totalSPP  = 0;
         if (m_deterministic)
         {
-            std::sort(samples.begin(), samples.end());
+            std::sort(samples.begin(), samples.end(), DirectionalSampleDataLess);
         }
 
         std::cout << "BufferSize: " << sizeof(DirectionalSampleData) * m_spatialSubdivBuilderSettings.maxSamples * 1e-6 <<  " MB" << std::endl;
@@ -97,7 +97,7 @@ public:
     {
         if (m_deterministic)
         {
-            std::sort(samples.begin(), samples.end());
+            std::sort(samples.begin(), samples.end(), DirectionalSampleDataLess);
         }
 
         updateSpatialStructure(samples);

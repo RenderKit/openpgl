@@ -35,11 +35,11 @@ PGLField pglNewField(PGLFieldArguments args);
 
 uint32_t pglFieldGetIteration(PGLField field);
 
-void pglFieldSetSceneBounds(PGLField field, pgl_box3f bounds);
+//void pglFieldSetSceneBounds(PGLField field, pgl_box3f bounds);
 
-pgl_box3f pglFieldGetSceneBounds(PGLField field);
+//pgl_box3f pglFieldGetSceneBounds(PGLField field);
 
-void pglFieldUpdateField(PGLField field, PGLSampleStorage sampleStorage, uint32_t numPerPixelSamples);
+void pglFieldUpdate(PGLField field, pgl_box3f bounds, PGLSampleStorage sampleStorage, uint32_t numPerPixelSamples);
 
 //uint32_t pglGetTrainingIteration(PGLField field);
 

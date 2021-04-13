@@ -14,7 +14,7 @@
 
 #include "common.h"
 
-struct DirectionalSampleData
+struct PGLDirectionalSampleData
 {
     enum Flags
     {
@@ -30,7 +30,7 @@ struct DirectionalSampleData
     uint32_t flags;
 };
 
-struct PathSegmentData
+struct PGLPathSegmentData
 {
     // world space information
     pgl_point3f position;
