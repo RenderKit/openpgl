@@ -1,4 +1,0 @@
-[submodule "third-party/embree"]
-	path = third-party/embree
-	url = ../embree.git
-	branch = devel
