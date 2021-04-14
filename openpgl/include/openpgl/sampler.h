@@ -3,23 +3,22 @@
 
 #pragma once
 
+#include "common.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+typedef float (*PGLSamplerNext1DFunction)(void* samplerPtr);
 
-#ifdef __cplusplus
-struct Sampler
+typedef pgl_point2f (*PGLSamplerNext2DFunction)(void* samplerPtr);
+
+struct PGLSampler
 {
+    void* sampler;
+    PGLSamplerNext1DFunction next1D;
+    PGLSamplerNext2DFunction next2D;
 };
-#else
-typedef ManagedObject Region;
-#endif
-
-typedef Sampler *PGLSampler;
-
-
-
 
 #ifdef __cplusplus
 }  // extern "C"

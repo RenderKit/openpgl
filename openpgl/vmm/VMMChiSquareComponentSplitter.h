@@ -8,8 +8,8 @@
 #include "../data/DirectionalSampleData.h"
 #include "WeightedEMVMMFactory.h"
 
-#include <embree/common/math/vec2.h>
-#include <embree/common/math/vec3.h>
+#include <embreeSrc/common/math/vec2.h>
+#include <embreeSrc/common/math/vec3.h>
 
 #include <algorithm>
 #include <vector>

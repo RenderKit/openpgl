@@ -10,11 +10,11 @@
 
 #define ONE_OVER_FOUR_PI 0.07957747154594767
 
-#include <embree/common/math/constants.h>
-#include <embree/common/math/vec2.h>
-#include <embree/common/math/vec3.h>
-#include <embree/common/math/bbox.h>
-/* */
+#include <embreeSrc/common/math/constants.h>
+#include <embreeSrc/common/math/vec2.h>
+#include <embreeSrc/common/math/vec3.h>
+#include <embreeSrc/common/math/bbox.h>
+
 namespace openpgl
 {
     typedef embree::Vec2<float> Vector2;
@@ -34,29 +34,7 @@ namespace openpgl
         return embree::dot(a, b);
     }
 }
-/* */
 
-/*
-#include <mitsuba/mitsuba.h>
-//#include <mitsuba/vec3.h>
-
-namespace openpgl
-{
-    typedef mitsuba::Vector2 Vector2;
-    typedef mitsuba::Vector3 Vector3;
-    typedef mitsuba::Point3 Point3;
-
-    inline float dot(Vector2 &a, Vector2 &b)
-    {
-        return mitsuba::dot(a, b);
-    }
-
-    inline float dot(Vector3 &a, Vector3 &b)
-    {
-        return mitsuba::dot(a, b);
-    }
-}
-*/
 //#define OPENPGL_DISABLE_ASSERTS
 
 #ifndef OPENPGL_DISABLE_ASSERTS

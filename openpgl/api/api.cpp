@@ -24,7 +24,44 @@ using namespace openpgl;
 
 extern "C" PGLField pglNewField(PGLFieldArguments args)
 {
-    GuidingField* gField = new GuidingField();
+    
+    GuidingField::Settings gFieldSettings;
+    
+    gFieldSettings.settings.decayOnSpatialSplit   = 0.25f;
+    gFieldSettings.settings.deterministic         = false;
+
+    PGLKDTreeArguments *spatialSturctureArguments = (PGLKDTreeArguments*)args.spatialSturctureArguments;
+    gFieldSettings.settings.useStochasticNNLookUp = spatialSturctureArguments->knnLookup;
+    gFieldSettings.settings.spatialSubdivBuilderSettings.minSamples = spatialSturctureArguments->minSamples;
+    gFieldSettings.settings.spatialSubdivBuilderSettings.maxSamples = spatialSturctureArguments->maxSamples;
+    gFieldSettings.settings.spatialSubdivBuilderSettings.maxDepth   = spatialSturctureArguments->maxDepth;
+
+    PGLVMMFactoryArguments *directionalDistributionArguments = (PGLVMMFactoryArguments*)args.directionalDistributionArguments;
+    gFieldSettings.distributionFactorySettings.weightedEMCfg.initK = directionalDistributionArguments->initK;
+    gFieldSettings.distributionFactorySettings.weightedEMCfg.maxK = directionalDistributionArguments->maxK;
+    gFieldSettings.distributionFactorySettings.weightedEMCfg.maxEMIterrations = directionalDistributionArguments->maxEMIterrations;
+
+    gFieldSettings.distributionFactorySettings.weightedEMCfg.maxKappa = directionalDistributionArguments->maxKappa;
+    gFieldSettings.distributionFactorySettings.weightedEMCfg.maxMeanCosine = openpgl::KappaToMeanCosine<float>(gFieldSettings.distributionFactorySettings.weightedEMCfg.maxKappa);
+    gFieldSettings.distributionFactorySettings.weightedEMCfg.convergenceThreshold = directionalDistributionArguments->convergenceThreshold;
+    gFieldSettings.distributionFactorySettings.weightedEMCfg.weightPrior = directionalDistributionArguments->weightPrior;
+    gFieldSettings.distributionFactorySettings.weightedEMCfg.meanCosinePriorStrength = directionalDistributionArguments->meanCosinePriorStrength;
+    gFieldSettings.distributionFactorySettings.weightedEMCfg.meanCosinePrior = directionalDistributionArguments->meanCosinePrior;
+
+    gFieldSettings.distributionFactorySettings.splittingThreshold = directionalDistributionArguments->splittingThreshold;
+    gFieldSettings.distributionFactorySettings.mergingThreshold = directionalDistributionArguments->mergingThreshold;
+
+
+    gFieldSettings.distributionFactorySettings.partialReFit = directionalDistributionArguments->partialReFit;
+    gFieldSettings.distributionFactorySettings.maxSplitItr = directionalDistributionArguments->maxSplitItr;
+
+    gFieldSettings.distributionFactorySettings.useSplitAndMerge = directionalDistributionArguments->useSplitAndMerge;
+    gFieldSettings.distributionFactorySettings.minSamplesForSplitting = directionalDistributionArguments->minSamplesForSplitting;
+    gFieldSettings.distributionFactorySettings.minSamplesForPartialRefitting = directionalDistributionArguments->minSamplesForPartialRefitting;
+    gFieldSettings.distributionFactorySettings.minSamplesForMerging = directionalDistributionArguments->minSamplesForMerging;
+
+    gFieldSettings.useParallaxCompensation = args.useParallaxCompensation;
+    GuidingField* gField = new GuidingField(gFieldSettings);
     return (PGLField) gField;
 }
 
@@ -92,21 +129,21 @@ extern "C"  void pglFieldUpdate(PGLField field, pgl_box3f bounds, PGLSampleStora
     gField->addTrainingIteration(numPerPixelSamples);
 }
 
-extern "C"  PGLRegion pglFieldGetSurfaceRegion(PGLField field, pgl_point3f position, PGLSampler sampler)
+extern "C"  PGLRegion pglFieldGetSurfaceRegion(PGLField field, pgl_point3f position, PGLSampler* sampler)
 {
     const openpgl::Point3 pos(position.x, position.y, position.z);
-    
+    GuidingSampler gSampler(sampler);
     auto *gField = (GuidingField *)field;
-    const GuidingRegion* gRegion = gField->getSurfaceGuidingRegion(pos, nullptr);
+    const GuidingRegion* gRegion = gField->getSurfaceGuidingRegion(pos, &gSampler);
     return (PGLRegion) gRegion;
 }
 
-extern "C"  PGLRegion pglFieldGetVolumeRegion(PGLField field, pgl_point3f position, PGLSampler sampler)
+extern "C"  PGLRegion pglFieldGetVolumeRegion(PGLField field, pgl_point3f position, PGLSampler* sampler)
 {
     const openpgl::Point3 pos(position.x, position.y, position.z);
-    
+    GuidingSampler gSampler(sampler);
     auto *gField = (GuidingField *)field;
-    const GuidingRegion* gRegion = gField->getVolumeGuidingRegion(pos, nullptr);
+    const GuidingRegion* gRegion = gField->getVolumeGuidingRegion(pos, &gSampler);
     return (PGLRegion) gRegion;
 }
 
@@ -114,10 +151,10 @@ extern "C"  PGLRegion pglFieldGetVolumeRegion(PGLField field, pgl_point3f positi
 // Region /////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
-extern "C" bool pglRegionIsValid(PGLRegion region)
+extern "C" bool pglRegionGetValid(PGLRegion region)
 {
     auto *gRegion = (GuidingRegion *)region;
-    return gRegion->isValid();
+    return gRegion->valid;
 }
 /*
 extern "C" PGLDistribution pglRegionGetDistribution(PGLRegion region, pgl_point3f samplePosition, const bool &useParallaxComp)
@@ -154,17 +191,17 @@ extern "C" void pglSampleStorageSetSceneBounds(PGLSampleStorage sampleStorage, p
     openpgl::BBox sceneBound;
     sceneBound.lower = openpgl::Vector3(bounds.lower.x,bounds.lower.y,bounds.lower.z);
     sceneBound.upper = openpgl::Vector3(bounds.upper.x,bounds.upper.y,bounds.upper.z);
-    gSampleStorage->setSceneBounds(sceneBound);
+    //gSampleStorage->setSceneBounds(sceneBound);
 }
 
-extern "C" void pglSampleStorageAddSample(PGLSampleStorage sampleStorage, PGLSampleData sample)
+extern "C" void pglSampleStorageAddSample(PGLSampleStorage sampleStorage, PGLSampleData& sample)
 {
     auto *gSampleStorage = (openpgl::SampleDataStorage *)sampleStorage;
-    openpgl::DirectionalSampleData opglSample = *(openpgl::DirectionalSampleData*)sample;
+    openpgl::DirectionalSampleData opglSample = /**(openpgl::DirectionalSampleData*)*/sample;
     gSampleStorage->addSample2(opglSample); 
 }
 
-extern "C" void pglSampleStorageAddSamples(PGLSampleStorage sampleStorage, PGLSampleData samples, uint32_t numSamples)
+extern "C" void pglSampleStorageAddSamples(PGLSampleStorage sampleStorage, const PGLSampleData* samples, uint32_t numSamples)
 {
     auto *gSampleStorage = (openpgl::SampleDataStorage *)sampleStorage;
 
@@ -206,7 +243,7 @@ extern "C" uint32_t pglSampleStorageGetSizeVolume(PGLSampleStorage sampleStorage
 ///////////////////////////////////////////////////////////////////////////////
 // SampleData /////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-
+/*
 extern "C" void pglSampleDataSetPosition(PGLSampleData sampleData, const pgl_point3f pos)
 {
     sampleData->position = pos;
@@ -236,7 +273,7 @@ extern "C" void pglSampleDataSetFlags(PGLSampleData sampleData, const int flags)
 {
     sampleData->flags = flags;
 }
-
+*/
 
 ///////////////////////////////////////////////////////////////////////////////
 // PathSegmentStorage /////////////////////////////////////////////////////////
@@ -244,60 +281,61 @@ extern "C" void pglSampleDataSetFlags(PGLSampleData sampleData, const int flags)
 
 extern "C" PGLPathSegmentStorage pglNewPathSegmentStorage()
 {
-    openpgl::PathSegmentDataStorage* pathSegmentStorage = new openpgl::PathSegmentDataStorage();
+    openpgl::PathSegmentDataStorage<openpgl::GuidingRegion>* pathSegmentStorage = new openpgl::PathSegmentDataStorage<openpgl::GuidingRegion>();
     return (PGLPathSegmentStorage) pathSegmentStorage;
 }
 
 extern "C" void pglReleasePathSegmentStorage(PGLPathSegmentStorage pathSegmentStorage)
 {
-    auto *gPathSegmentStorage = (openpgl::PathSegmentDataStorage *)pathSegmentStorage;
+    auto *gPathSegmentStorage = (openpgl::PathSegmentDataStorage<openpgl::GuidingRegion> *)pathSegmentStorage;
     //return (PGLPathSegmentStorage) pathSegmentStorage;
 }
 
 extern "C" void pglPathSegmentStorageReserve(PGLPathSegmentStorage pathSegmentStorage, size_t size)
 {
-    auto *gPathSegmentStorage = (openpgl::PathSegmentDataStorage *)pathSegmentStorage;
+    auto *gPathSegmentStorage = (openpgl::PathSegmentDataStorage<openpgl::GuidingRegion> *)pathSegmentStorage;
     gPathSegmentStorage->reserve(size);
 }
 
 extern "C" void pglPathSegmentStorageClear(PGLPathSegmentStorage pathSegmentStorage)
 {
-    auto *gPathSegmentStorage = (openpgl::PathSegmentDataStorage *)pathSegmentStorage;
+    auto *gPathSegmentStorage = (openpgl::PathSegmentDataStorage<openpgl::GuidingRegion> *)pathSegmentStorage;
     gPathSegmentStorage->clear();
 }
 
-extern "C" size_t pglPathSegmentStoragePrepareSamples(PGLPathSegmentStorage pathSegmentStorage, const bool useNEEMiWeights, const bool guideDirectLight)
+extern "C" size_t pglPathSegmentStoragePrepareSamples(PGLPathSegmentStorage pathSegmentStorage,const bool &spaltSamples, PGLSampler* sampler,  const bool useNEEMiWeights, const bool guideDirectLight)
 {
-    auto *gPathSegmentStorage = (openpgl::PathSegmentDataStorage *)pathSegmentStorage;
-    return gPathSegmentStorage->prepareSamples();
+    auto *gPathSegmentStorage = (openpgl::PathSegmentDataStorage<openpgl::GuidingRegion> *)pathSegmentStorage;
+    GuidingSampler gSampler(sampler);
+    return gPathSegmentStorage->prepareSamples(spaltSamples, &gSampler, useNEEMiWeights, guideDirectLight);
 }
 
-extern "C" void pglPathSegmentStorageGetSamples(PGLPathSegmentStorage pathSegmentStorage, PGLSampleData &samples, uint32_t &nSamples)
+extern "C" const PGLSampleData* pglPathSegmentStorageGetSamples(PGLPathSegmentStorage pathSegmentStorage, uint32_t &nSamples)
 {
-    auto *gPathSegmentStorage = (openpgl::PathSegmentDataStorage *)pathSegmentStorage;
-    const std::vector<openpgl::DirectionalSampleData> &opglSamples = gPathSegmentStorage->getSamples2();
+    auto *gPathSegmentStorage = (openpgl::PathSegmentDataStorage<openpgl::GuidingRegion> *)pathSegmentStorage;
+    const std::vector<openpgl::DirectionalSampleData> &opglSamples = gPathSegmentStorage->getSamples();
     nSamples = opglSamples.size();
-    samples = (PGLSampleData)opglSamples.data();
+    return (PGLSampleData*)opglSamples.data();
 }
 
 
 
 extern "C" void pglPathSegmentStorageAddSegment(PGLPathSegmentStorage pathSegmentStorage, PGLPathSegment pathSegment)
 {
-    auto *gPathSegmentStorage = (openpgl::PathSegmentDataStorage *)pathSegmentStorage;
+    auto *gPathSegmentStorage = (openpgl::PathSegmentDataStorage<openpgl::GuidingRegion> *)pathSegmentStorage;
     //gPathSegmentStorage->
 }
 
 extern "C" void pglPathSegmentStorageAddSample(PGLPathSegmentStorage pathSegmentStorage, PGLSampleData sample)
 {
-    auto *gPathSegmentStorage = (openpgl::PathSegmentDataStorage *)pathSegmentStorage;
-//    gPathSegmentStorage->addSample(sample, nullptr);
+    auto *gPathSegmentStorage = (openpgl::PathSegmentDataStorage<openpgl::GuidingRegion> *)pathSegmentStorage;
+    gPathSegmentStorage->addSample(sample);
 }
 
 
 extern "C" PGLPathSegment pglPathSegmentNextSegment(PGLPathSegmentStorage pathSegmentStorage)
 {
-    auto *gPathSegmentStorage = (openpgl::PathSegmentDataStorage *)pathSegmentStorage;
+    auto *gPathSegmentStorage = (openpgl::PathSegmentDataStorage<openpgl::GuidingRegion> *)pathSegmentStorage;
     return (PGLPathSegment)gPathSegmentStorage->next();
 
 }
@@ -522,4 +560,16 @@ extern "C" void pglPhaseFunctionSamplingDistributionClear(PGLPhaseFunctionSampli
 {
     GuidingPhaseFunctionSamplingDistribution* gPhaseFunctionSamplingDistribution =  (GuidingPhaseFunctionSamplingDistribution*)phaseFunctionSamplingDistribution;
     gPhaseFunctionSamplingDistribution->clear();
+}
+
+
+extern "C" void pglFieldArgumentsSetDefaults(PGLFieldArguments &fieldArguments)
+{
+    fieldArguments.spatialStructureType = PGL_SPATIAL_STRUCTURE_KDTREE;
+    fieldArguments.spatialSturctureArguments = new PGLKDTreeArguments();
+
+    fieldArguments.directionalDistributionType = PGL_DIRECTIONAL_DISTRIBUTION_PARALLAX_AWARE_VMM;
+    fieldArguments.directionalDistributionArguments = new PGLVMMFactoryArguments();
+
+    fieldArguments.useParallaxCompensation = true;
 }

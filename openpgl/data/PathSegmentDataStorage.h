@@ -6,10 +6,12 @@
 #include "../openpgl.h"
 #include "PathSegmentData.h"
 #include "DirectionalSampleData.h"
+#include "../sampler/Sampler.h"
 
 namespace openpgl
 {
 
+template <typename TRegion>
 struct PathSegmentDataStorage
 {
     std::vector<PathSegmentData> m_segmentStorage;
@@ -18,8 +20,6 @@ struct PathSegmentDataStorage
     {
         m_segmentStorage.reserve(size);
         m_sampleStorage.reserve(size);
-        m_sampleStorage2.reserve(size);
-        //m_regionPtrStorage.reserve(size);
     }
 
     size_t size()
@@ -31,7 +31,6 @@ struct PathSegmentDataStorage
     {
         m_segmentStorage.clear();
         m_sampleStorage.clear();
-        m_sampleStorage2.clear();
     }
 
     PathSegmentData *create_back(const Point3 &pos, const Vector3 &normal, const Vector3 &outDir)
@@ -52,11 +51,8 @@ struct PathSegmentDataStorage
     }
 
 
-    uint32_t prepareSamples(const bool useNEEMiWeights = false, const bool guideDirectLight = false)
+    uint32_t prepareSamples(const bool splatSamples, Sampler* sampler, const bool useNEEMiWeights = false, const bool guideDirectLight = false)
     {
-        //m_sampleStorage.clear();
-        //m_regionPtrStorage.clear();
-
         const float minPDF {0.1f};
         const openpgl::Vector3 maxThroughput {10.0f};
 
@@ -96,7 +92,8 @@ struct PathSegmentDataStorage
                 openpgl::Vector3 dir = currentPathSegment.directionIn;
                 float pdf = std::max(minPDF,currentPathSegment.pdfDirectionIn);
                 uint32_t flags{0};
-                const void* regionPtr = (const void*)currentPathSegment.regionPtr;
+                const TRegion* regionPtr = (const TRegion*)currentPathSegment.regionPtr;
+                //OPENPGL_ASSERT(regionPtr != nullptr);
                 bool insideVolume = currentPathSegment.volumeScatter;
                 if(insideVolume)
                 {
@@ -152,53 +149,38 @@ struct PathSegmentDataStorage
                         dsd.pdf = pdf;
                         dsd.distance = distance;
                         dsd.flags = flags;
-                        m_sampleStorage.emplace_back(dsd, regionPtr);
-                        m_sampleStorage2.emplace_back(dsd);
+                        //m_sampleStorage.emplace_back(dsd, regionPtr);
+                        if(regionPtr !=nullptr && splatSamples)
+                        {
+                            regionPtr->splatSample(dsd,sampler->next2D()); 
+                        }
+                        m_sampleStorage.emplace_back(dsd);
                     }
                     else
                     {
                         std::cout << "PathSegmentDataStorage::prepareSamples(): !(distance>0)" << std::endl;
                     }
-                    //m_regionPtrStorage.emplace_back(regionPtr);
                 }
 
             }
         }
-        //pathSegmentDataStorage->clear();
         return m_sampleStorage.size();
     }
 
-    const std::vector<std::pair<DirectionalSampleData, const void*>>& getSamples()const
+    const std::vector<DirectionalSampleData>& getSamples()const
     {
         return m_sampleStorage;
     }
 
-    const std::vector<DirectionalSampleData>& getSamples2()const
-    {
-        return m_sampleStorage2;
-    }
-
-    void addSample(const DirectionalSampleData &sampleData, const void *regionPtr)
+    void addSample(const DirectionalSampleData &sampleData)
     {
         OPENPGL_ASSERT(isValid(sampleData));
         OPENPGL_ASSERT(sampleData.distance > 0);
         OPENPGL_ASSERT(embree::isvalid(sampleData.distance));
-        m_sampleStorage.push_back(std::pair<DirectionalSampleData, const void*>(sampleData, regionPtr));
-    }
-
-
-    void addSample2(const DirectionalSampleData &sampleData)
-    {
-        OPENPGL_ASSERT(isValid(sampleData));
-        OPENPGL_ASSERT(sampleData.distance > 0);
-        OPENPGL_ASSERT(embree::isvalid(sampleData.distance));
-        m_sampleStorage2.push_back(sampleData);
+        m_sampleStorage.push_back(sampleData);
     }
 
 private:
-    std::vector<std::pair<DirectionalSampleData, const void*>> m_sampleStorage;
-    std::vector<DirectionalSampleData> m_sampleStorage2;
-    //std::vector<const void*> m_regionPtrStorage;
-
+    std::vector<DirectionalSampleData> m_sampleStorage;
 };
 }

@@ -30,15 +30,15 @@ typedef ManagedObject Region;
 
 typedef SampleStorage *PGLSampleStorage;
 
-typedef PGLDirectionalSampleData *PGLSampleData;
+typedef PGLDirectionalSampleData PGLSampleData;
 
 PGLSampleStorage pglNewSampleStorage();
 
 void pglSampleStorageSetSceneBounds(PGLSampleStorage sampleStorage, pgl_box3f bounds);
 
-void pglSampleStorageAddSample(PGLSampleStorage sampleStorage, PGLSampleData sample);
+void pglSampleStorageAddSample(PGLSampleStorage sampleStorage, PGLSampleData& sample);
 
-void pglSampleStorageAddSamples(PGLSampleStorage sampleStorage, PGLSampleData samples, uint32_t numSamples);
+void pglSampleStorageAddSamples(PGLSampleStorage sampleStorage, const PGLSampleData* samples, uint32_t numSamples);
 
 void pglSampleStorageReserve(PGLSampleStorage sampleStorage, const size_t sizeSurface, const size_t sizeVolume);
 
@@ -54,18 +54,19 @@ uint32_t pglSampleStorageGetSizeSurface(PGLSampleStorage sampleStorage);
 
 uint32_t pglSampleStorageGetSizeVolume(PGLSampleStorage sampleStorage);
 
+/*
+void pglSampleDataSetPosition(PGLSampleData& sampleData, const pgl_point3f pos);
 
-void pglSampleDataSetPosition(PGLSampleData sampleData, const pgl_point3f pos);
+void pglSampleDataSetDirection(PGLSampleData& sampleData, const pgl_vec3f direction);
 
-void pglSampleDataSetDirection(PGLSampleData sampleData, const pgl_vec3f direction);
+void pglSampleDataSetDistance(PGLSampleData& sampleData, const float distance);
 
-void pglSampleDataSetDistance(PGLSampleData sampleData, const float distance);
+void pglSampleDataSetPDF(PGLSampleData& sampleData, const float pdf);
 
-void pglSampleDataSetPDF(PGLSampleData sampleData, const float pdf);
+void pglSampleDataSetWeight(PGLSampleData& sampleData, const float weight);
 
-void pglSampleDataSetWeight(PGLSampleData sampleData, const float weight);
-
-void pglSampleDataSetFlags(PGLSampleData sampleData, const int flags);
+void pglSampleDataSetFlags(PGLSampleData& sampleData, const int flags);
+*/
 
 #ifdef __cplusplus
 }  // extern "C"

@@ -12,6 +12,8 @@
 #endif
 
 #include "common.h"
+#include "region.h"
+#include "sampler.h"
 #include "samplestorage.h"
 
 #ifdef __cplusplus
@@ -38,9 +40,9 @@ void pglPathSegmentStorageReserve(PGLPathSegmentStorage pathSegmentStorage, size
 
 void pglPathSegmentStorageClear(PGLPathSegmentStorage pathSegmentStorage);
 
-size_t pglPathSegmentStoragePrepareSamples(PGLPathSegmentStorage pathSegmentStorage, const bool useNEEMiWeights = false, const bool guideDirectLight = false);
+size_t pglPathSegmentStoragePrepareSamples(PGLPathSegmentStorage pathSegmentStorage,const bool &spaltSamples, PGLSampler* sampler, const bool useNEEMiWeights = false, const bool guideDirectLight = false);
 
-void pglPathSegmentStorageGetSamples(PGLPathSegmentStorage pathSegmentStorage, PGLSampleData &samples, uint32_t &nSamples);
+const PGLSampleData* pglPathSegmentStorageGetSamples(PGLPathSegmentStorage pathSegmentStorage, uint32_t &nSamples);
 
 void pglPathSegmentStorageAddSegment(PGLPathSegmentStorage pathSegmentStorage, PGLPathSegment sample);
 

@@ -45,9 +45,9 @@ void pglFieldUpdate(PGLField field, pgl_box3f bounds, PGLSampleStorage sampleSto
 
 uint32_t pglFieldGetTotalSPP(PGLField field);
 
-PGLRegion pglFieldGetSurfaceRegion(PGLField field, pgl_point3f position, PGLSampler sampler);
+PGLRegion pglFieldGetSurfaceRegion(PGLField field, pgl_point3f position, PGLSampler* sampler);
 
-PGLRegion pglFieldGetVolumeRegion(PGLField field, pgl_point3f position, PGLSampler sampler);
+PGLRegion pglFieldGetVolumeRegion(PGLField field, pgl_point3f position, PGLSampler* sampler);
 
 #ifdef __cplusplus
 }  // extern "C"

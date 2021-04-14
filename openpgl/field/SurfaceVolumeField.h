@@ -60,7 +60,7 @@ public:
     {
         if (m_iteration >0 && embree::inside(m_spatialSubdivSurface.getBounds(), p))
         {
-            if(m_useStochasticNNLookUp)
+            if(sampler && m_useStochasticNNLookUp)
             {
                 uint32_t regionIdx =  getClosestRegionIdx(m_regionKNNSearchTreeSurface, p, sampler->next1D());
                 if(regionIdx != -1)

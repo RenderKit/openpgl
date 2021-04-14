@@ -80,6 +80,48 @@ namespace openpgl
             return valid;
         }
 
+        void splatSample(DirectionalSampleData &sample/*, const BBox &sceneBounds*/, const Point2 &sample2D) const
+        {
+            const Vector3 boundsExtents = (regionBounds.upper - regionBounds.lower) * 0.5f;
+                                                               ((boundsExtents.y > boundsExtents.z) ? boundsExtents.y : boundsExtents.z);
+            const Vector3 sampleDisplacement = boundsExtents * squareToUniformSphere(sample2D);
+            const Point3 samplePosition(sample.position.x, sample.position.y, sample.position.z);
+            Vector3 sampleDirection(sample.direction.x, sample.direction.y, sample.direction.z);
+            
+            Point3 splattedPosition = samplePosition + sampleDisplacement;
+            if (!embree::inside(regionBounds, splattedPosition))
+            {
+                Point3 sourcePosition = samplePosition + sampleDirection * sample.distance;
+// code if we want to ensure that the sample is not spatted outside the scene bounds
+/*
+                for (int i = 0; i < 3; i++)
+                {
+                    if (splattedPosition[i] < sceneBounds.lower[i])
+                    {
+                        splattedPosition[i] = sceneBounds.lower[i];
+                    }
+                    if (splattedPosition[i] > sceneBounds.upper[i])
+                    {
+                        splattedPosition[i] = sceneBounds.upper[i];
+                    }
+                }
+*/
+                sample.position.x = splattedPosition[0];
+                sample.position.y = splattedPosition[1];
+                sample.position.z = splattedPosition[2];
+
+                sampleDirection = sourcePosition - splattedPosition;
+                sample.distance = embree::length(sampleDirection);
+                sampleDirection = sampleDirection / sample.distance;
+
+                sample.direction.x = sampleDirection[0];
+                sample.direction.y = sampleDirection[1];
+                sample.direction.z = sampleDirection[2];
+
+                sample.flags |= DirectionalSampleData::ESplatted;
+            }
+        }
+
         std::string toString() const
         {
             std::stringstream ss;

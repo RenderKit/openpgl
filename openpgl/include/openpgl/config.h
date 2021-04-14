@@ -86,6 +86,10 @@ struct PGLFieldArguments
 };
 
 
+
+void pglFieldArgumentsSetDefaults(PGLFieldArguments &fieldArguments);
+
+
 #ifdef __cplusplus
 }  // extern "C"
 #endif

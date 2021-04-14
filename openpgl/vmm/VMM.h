@@ -5,12 +5,12 @@
 
 #include "../openpgl.h"
 
-#include <embree/common/simd/simd.h>
+#include <embreeSrc/common/simd/simd.h>
 
-#include <embree/common/math/vec2.h>
-#include <embree/common/math/vec3.h>
-#include <embree/common/math/linearspace3.h>
-#include <embree/common/math/transcendental.h>
+#include <embreeSrc/common/math/vec2.h>
+#include <embreeSrc/common/math/vec3.h>
+#include <embreeSrc/common/math/linearspace3.h>
+#include <embreeSrc/common/math/transcendental.h>
 
 #include <math.h>
 

@@ -15,6 +15,7 @@
 #include "vmm/AdaptiveSplitandMergeFactory.h"
 #include "vmm/VMMBSDFSamplingDistribution.h"
 #include "vmm/VMMPhaseFunctionSamplingDistribution.h"
+#include "sampler/Sampler.h"
 
 namespace openpgl
 {
@@ -24,4 +25,5 @@ namespace openpgl
     typedef VMMBSDFSamplingDistribution<GuidingDistribution> GuidingBSDFSamplingDistribution;
     typedef VMMPhaseFunctionSamplingDistribution<GuidingDistribution> GuidingPhaseFunctionSamplingDistribution;
     typedef GuidingField::Settings GuidingFieldProperties;
+    typedef SamplerC GuidingSampler;
 }
