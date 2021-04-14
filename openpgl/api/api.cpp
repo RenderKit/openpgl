@@ -67,7 +67,7 @@ extern "C" PGLField pglNewField(PGLFieldArguments args)
 
 extern "C" void pglReleaseField(PGLField field)
 {
-    auto *gField = (GuidingField *)field;
+    //auto *gField = (GuidingField *)field;
     //delete gField;
 }
 
@@ -182,9 +182,10 @@ extern "C" PGLSampleStorage pglNewSampleStorage()
 
 extern "C" void pglReleaseSampleStorage(PGLSampleStorage sampleStorage)
 {
-    auto *gSampleStorage = (openpgl::SampleDataStorage *)sampleStorage;
+    //auto *gSampleStorage = (openpgl::SampleDataStorage *)sampleStorage;
 }
 
+/*
 extern "C" void pglSampleStorageSetSceneBounds(PGLSampleStorage sampleStorage, pgl_box3f bounds)
 {
     auto *gSampleStorage = (openpgl::SampleDataStorage *)sampleStorage;
@@ -193,12 +194,12 @@ extern "C" void pglSampleStorageSetSceneBounds(PGLSampleStorage sampleStorage, p
     sceneBound.upper = openpgl::Vector3(bounds.upper.x,bounds.upper.y,bounds.upper.z);
     //gSampleStorage->setSceneBounds(sceneBound);
 }
-
+*/
 extern "C" void pglSampleStorageAddSample(PGLSampleStorage sampleStorage, PGLSampleData& sample)
 {
     auto *gSampleStorage = (openpgl::SampleDataStorage *)sampleStorage;
     openpgl::DirectionalSampleData opglSample = /**(openpgl::DirectionalSampleData*)*/sample;
-    gSampleStorage->addSample2(opglSample); 
+    gSampleStorage->addSample(opglSample); 
 }
 
 extern "C" void pglSampleStorageAddSamples(PGLSampleStorage sampleStorage, const PGLSampleData* samples, uint32_t numSamples)
@@ -209,7 +210,7 @@ extern "C" void pglSampleStorageAddSamples(PGLSampleStorage sampleStorage, const
     for(uint32_t n =0; n < numSamples; n++)
     {
         openpgl::DirectionalSampleData opglSample = opglSamples[n];
-        gSampleStorage->addSample2(opglSample); 
+        gSampleStorage->addSample(opglSample); 
     }
 }
 
@@ -287,7 +288,7 @@ extern "C" PGLPathSegmentStorage pglNewPathSegmentStorage()
 
 extern "C" void pglReleasePathSegmentStorage(PGLPathSegmentStorage pathSegmentStorage)
 {
-    auto *gPathSegmentStorage = (openpgl::PathSegmentDataStorage<openpgl::GuidingRegion> *)pathSegmentStorage;
+    //auto *gPathSegmentStorage = (openpgl::PathSegmentDataStorage<openpgl::GuidingRegion> *)pathSegmentStorage;
     //return (PGLPathSegmentStorage) pathSegmentStorage;
 }
 
@@ -322,7 +323,7 @@ extern "C" const PGLSampleData* pglPathSegmentStorageGetSamples(PGLPathSegmentSt
 
 extern "C" void pglPathSegmentStorageAddSegment(PGLPathSegmentStorage pathSegmentStorage, PGLPathSegment pathSegment)
 {
-    auto *gPathSegmentStorage = (openpgl::PathSegmentDataStorage<openpgl::GuidingRegion> *)pathSegmentStorage;
+    //auto *gPathSegmentStorage = (openpgl::PathSegmentDataStorage<openpgl::GuidingRegion> *)pathSegmentStorage;
     //gPathSegmentStorage->
 }
 

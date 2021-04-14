@@ -1,7 +1,7 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
-#include <openpgl/openpgl.h>
+#include <openpgl/openpgl_common.h>
 #include <openpgl/data/DirectionalSampleData.h>
 #include <openpgl/vmm/ParallaxAwareVMM.h>
 #include <openpgl/vmm/VMM.h>
@@ -328,8 +328,8 @@ py::class_< openpgl::DirectionalSampleData >(m, "DirectionalSampleData")
     .def_readwrite("direction", &openpgl::DirectionalSampleData::direction)
     .def_readwrite("weight", &openpgl::DirectionalSampleData::weight)
     .def_readwrite("pdf", &openpgl::DirectionalSampleData::pdf)
-    .def_readwrite("distance", &openpgl::DirectionalSampleData::distance)
-    .def("__repr__", &openpgl::DirectionalSampleData::toString);
+    .def_readwrite("distance", &openpgl::DirectionalSampleData::distance);
+ //   .def("__repr__", &openpgl::DirectionalSampleData::toString);
 
 
 py::class_< openpgl::ComponentSplitinfo >(m, "ComponentSplitinfo")

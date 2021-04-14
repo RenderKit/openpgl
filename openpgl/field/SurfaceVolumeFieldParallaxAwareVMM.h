@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "../openpgl.h"
+#include "../openpgl_common.h"
 #include "../data/SampleStatistics.h"
 #include "../field/SurfaceVolumeField.h"
 
@@ -100,7 +100,6 @@ struct SurfaceVolumeFieldParallaxAwareVMM: public SurfaceVolumeField<openpgl::Re
 
         if (std::isinf(sample.distance))
         {
-            //std::cout << "inf sample" << std::endl;
             sample.position.x = pivotPoint[0];
             sample.position.y = pivotPoint[1];
             sample.position.z = pivotPoint[2];
@@ -108,7 +107,6 @@ struct SurfaceVolumeFieldParallaxAwareVMM: public SurfaceVolumeField<openpgl::Re
         }
         else if (!(sample.distance > 0.0f))
         {
-//            mitsuba::SLog(mitsuba::EWarn, "invalid sample distance %f", sample.distance);
             return;
         }
 

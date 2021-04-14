@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "../openpgl.h"
+#include "../openpgl_common.h"
 #include "PathSegmentData.h"
 #include "DirectionalSampleData.h"
 #include "../sampler/Sampler.h"
@@ -132,8 +132,6 @@ struct PathSegmentDataStorage
 				OPENPGL_ASSERT(embree::isvalid(contribution));
                 if (contribution[0] > 0.0f || contribution[1] > 0.0f || contribution[2] > 0.0f )
                 {
-                    //if (considerNEE) SLog(EInfo, "Sample 2[%d]: pos: %f, %f, %f \t dir: %f, %f, %f \t pdf: %f \t distance: %f \t con: %f, %f, %f ", 
-                    //    i, pos[0], pos[1], pos[2], dir[0], dir[1], dir[2], pdf, distance, contribution[0], contribution[1], contribution[2]);
 					OPENPGL_ASSERT(embree::isvalid(distance));
                     if(distance>0){
                         const float weight = OPENPGL_SPECTRUM_TO_FLOAT(contribution)/pdf;

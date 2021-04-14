@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "../openpgl.h"
+#include "../openpgl_common.h"
 
 namespace openpgl
 {
@@ -11,7 +11,6 @@ namespace openpgl
 inline float OPENPGL_SPECTRUM_TO_FLOAT(Vector3 spectrum)
 {
     return (spectrum[0] + spectrum[1] + spectrum[2] ) / 3.0f;
-    //return spectrum.max();
 }
 
 struct PathSegmentData
@@ -53,7 +52,6 @@ struct PathSegmentData
     float roughness {1.0f};
 
     const void* regionPtr{nullptr};
-
 
     PathSegmentData() = default;
 

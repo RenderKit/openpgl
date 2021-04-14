@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "../openpgl.h"
+#include "../openpgl_common.h"
 #include "../data/SampleStatistics.h"
 #include "../field/Field.h"
 
@@ -46,12 +46,9 @@ struct FieldParallaxAwareVMM: public Field<openpgl::Region<ParallaxAwareVonMises
 
     void fitRegions() override
     {
-//      mitsuba::ref<mitsuba::Timer> fittingTimer = new mitsuba::Timer();
       size_t nGuidingRegions = this->m_regionStorageContainer.size();
-      //mitsuba::SLog(mitsuba::EInfo, "Begin region fitting: nRegions = %d", nGuidingRegions);
       std::cout << "Begin region fitting: nRegions =  " << nGuidingRegions << std::endl;
 #if defined(USE_OPENMP)
-			//SLog(EInfo, "Fit Mixtures: nCores= %d", m_nCores);
       #pragma omp parallel for num_threads(this->m_nCores) schedule(dynamic)
 #endif
 
@@ -85,17 +82,13 @@ struct FieldParallaxAwareVMM: public Field<openpgl::Region<ParallaxAwareVonMises
 #if defined (USE_TBB_THREADING)
       });
 #endif
-//      mitsuba::SLog(mitsuba::EInfo, "Region fitting time: %s", timeString(fittingTimer->getSeconds(), true).c_str());
     }
 
     void updateRegions() override
     {
-//      mitsuba::ref<mitsuba::Timer> fittingTimer = new mitsuba::Timer();
       size_t nGuidingRegions = this->m_regionStorageContainer.size();
-//      mitsuba::SLog(mitsuba::EInfo, "Begin region fitting: nRegions = %d", nGudiginRegions);
       std::cout << "Begin region updating: nRegions =  " << nGuidingRegions << std::endl;
 #if defined(USE_OPENMP)
-//			mitsuba::SLog(mitsuba::EInfo, "Fit Mixtures: nCores= %d", this->m_nCores);
       #pragma omp parallel for num_threads(this->m_nCores) schedule(dynamic)
 #endif
 #if defined (USE_TBB_THREADING)
@@ -107,7 +100,6 @@ struct FieldParallaxAwareVMM: public Field<openpgl::Region<ParallaxAwareVonMises
 #endif
       {
         typename ParentField::RegionStorageType &regionStorage = this->m_regionStorageContainer[n];
-//        mitsuba::SLog(mitsuba::EInfo, "Region[%d] = nSamples %d", n, regionStorage.second.size());
         if (regionStorage.first.splitFlag)
         {
             //m_factory.onSpatialSplit(regionStorage.first.distribution, regionStorage.first.trainingStatistics);
@@ -142,22 +134,13 @@ struct FieldParallaxAwareVMM: public Field<openpgl::Region<ParallaxAwareVonMises
 #if defined (USE_TBB_THREADING)
       });
 #endif
-//      mitsuba::SLog(mitsuba::EInfo, "Region fitting time: %s", timeString(fittingTimer->getSeconds(), true).c_str());
     }
-
-    //const RegionType *getGuidingRegion( const openpgl::Point3 &p, openpgl::Sampler *sampler) const override;
-
-    //template<typename TSampleContainer>
-    //void buildField(const BBox &bounds, TSampleContainer& samples) override;
-
-    //void updateField(TSampleContainer& samples) override;
 
     void reorientSample(openpgl::DirectionalSampleData &sample, const openpgl::Point3 &pivotPoint) const
     {
 
         if (std::isinf(sample.distance))
         {
-            //std::cout << "inf sample" << std::endl;
             sample.position.x = pivotPoint[0];
             sample.position.y = pivotPoint[1];
             sample.position.z = pivotPoint[2];
@@ -165,7 +148,6 @@ struct FieldParallaxAwareVMM: public Field<openpgl::Region<ParallaxAwareVonMises
         }
         else if (!(sample.distance > 0.0f))
         {
-//            mitsuba::SLog(mitsuba::EWarn, "invalid sample distance %f", sample.distance);
             return;
         }
 
@@ -228,8 +210,6 @@ inline void FieldParallaxAwareVMM<VecSize, maxComponents, TSampleContainer>::ser
 {
     ParentField::serialize(stream);
     stream.write(reinterpret_cast<const char*>(&m_useParallaxCompensation), sizeof(bool));
-
-    //m_distributionFactory.serialize(stream);
     m_distributionFactorySettings.serialize(stream);
 }
 
@@ -238,8 +218,6 @@ inline void FieldParallaxAwareVMM<VecSize, maxComponents, TSampleContainer>::des
 {
     ParentField::deserialize(stream);
     stream.read(reinterpret_cast<char*>(&m_useParallaxCompensation), sizeof(bool));
-
-    //m_distributionFactory.deserialize(stream);
     m_distributionFactorySettings.deserialize(stream);
 }
 

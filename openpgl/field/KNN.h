@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #pragma once
-#include "../openpgl.h"
+#include "../openpgl_common.h"
 
 // Nearest neighbor queries
 /* include embree API */

@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "../openpgl.h"
+#include "../openpgl_common.h"
 
 #include <embreeSrc/common/simd/simd.h>
 

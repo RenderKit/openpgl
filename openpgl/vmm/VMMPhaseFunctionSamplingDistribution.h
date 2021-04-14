@@ -30,12 +30,6 @@ struct VMMPhaseFunctionSamplingDistribution
         this->m_weights[0] = 1.0f;
         this->m_numDistributions = 1;
         this->m_productIntegral = 1.0f;
-/*
-        if ( useCosineProduct )
-        {
-            this->m_distributions[0].product(1.0f, normal, 2.18853f);
-        }
-*/
     }
 
 

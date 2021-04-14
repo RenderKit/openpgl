@@ -34,7 +34,7 @@ typedef PGLDirectionalSampleData PGLSampleData;
 
 PGLSampleStorage pglNewSampleStorage();
 
-void pglSampleStorageSetSceneBounds(PGLSampleStorage sampleStorage, pgl_box3f bounds);
+//void pglSampleStorageSetSceneBounds(PGLSampleStorage sampleStorage, pgl_box3f bounds);
 
 void pglSampleStorageAddSample(PGLSampleStorage sampleStorage, PGLSampleData& sample);
 

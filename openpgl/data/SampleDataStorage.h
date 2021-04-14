@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "../openpgl.h"
+#include "../openpgl_common.h"
 
 #include "DirectionalSampleData.h"
 #include "../sampler/Sampler.h"
@@ -19,7 +19,7 @@ struct SampleDataStorage
     SampleDataContainer m_surfaceContainer;
     SampleDataContainer m_volumeContainer;
 
-    inline void addSample2(DirectionalSampleData sample)
+    inline void addSample(DirectionalSampleData sample)
     {
         if(isInsideVolume(sample))
         {
@@ -31,11 +31,11 @@ struct SampleDataStorage
         }
     }
 
-    inline void addSamples2(const std::vector<DirectionalSampleData> &samples)
+    inline void addSamples(const std::vector<DirectionalSampleData> &samples)
     {
         for (auto& sample : samples)
         {
-            addSample2(sample);
+            addSample(sample);
         }
     }
 
@@ -150,40 +150,38 @@ struct SampleDataStorage
             subSampledData.push_back(sampleContainer[i]);
         }
 
-            for (auto& sample : subSampledData)
-            {
-                objFile << "v " << sample.position.x << "\t" << sample.position.y << "\t"<< sample.position.z << std::endl;
-                if (!pointsOnly)
-                {
-                    Vector3 dir(sample.direction.x, sample.direction.y, sample.direction.z);
-                    Point3 samplePosition(sample.position.x, sample.position.y, sample.position.z);
-                    Point3 pos2 = samplePosition + dir * sample.distance;
-                    objFile << "v " << pos2[0] << "\t" << pos2[1] << "\t"<< pos2[2] << std::endl;
-                    objFile << "v " << sample.position.x << "\t" << sample.position.y << "\t"<< sample.position.z << std::endl;
-                }
-            }
-
-            for (auto& sample : subSampledData)
-            {
-                Vector3 dir(sample.direction.x, sample.direction.y, sample.direction.z);
-                objFile << "vn " << dir[0] << "\t" << dir[1] << "\t"<< dir[2] << std::endl;
-                if (!pointsOnly)
-                {
-                    objFile << "vn " << dir[0] << "\t" << dir[1] << "\t"<< dir[2] << std::endl;
-                    objFile << "vn " << dir[0] << "\t" << dir[1] << "\t"<< dir[2] << std::endl;
-                }
-            }
-
+        for (auto& sample : subSampledData)
+        {
+            objFile << "v " << sample.position.x << "\t" << sample.position.y << "\t"<< sample.position.z << std::endl;
             if (!pointsOnly)
             {
-                for (int i = 0; i < subSampledData.size(); i++)
-                {
-                    objFile << "f " << i*3+1 << "\t" << i*3+2 << "\t"<< i*3+3 << std::endl;
-                }
+                Vector3 dir(sample.direction.x, sample.direction.y, sample.direction.z);
+                Point3 samplePosition(sample.position.x, sample.position.y, sample.position.z);
+                Point3 pos2 = samplePosition + dir * sample.distance;
+                objFile << "v " << pos2[0] << "\t" << pos2[1] << "\t"<< pos2[2] << std::endl;
+                objFile << "v " << sample.position.x << "\t" << sample.position.y << "\t"<< sample.position.z << std::endl;
             }
+        }
+
+        for (auto& sample : subSampledData)
+        {
+            Vector3 dir(sample.direction.x, sample.direction.y, sample.direction.z);
+            objFile << "vn " << dir[0] << "\t" << dir[1] << "\t"<< dir[2] << std::endl;
+            if (!pointsOnly)
+            {
+                objFile << "vn " << dir[0] << "\t" << dir[1] << "\t"<< dir[2] << std::endl;
+                objFile << "vn " << dir[0] << "\t" << dir[1] << "\t"<< dir[2] << std::endl;
+            }
+        }
+
+        if (!pointsOnly)
+        {
+            for (int i = 0; i < subSampledData.size(); i++)
+            {
+                objFile << "f " << i*3+1 << "\t" << i*3+2 << "\t"<< i*3+3 << std::endl;
+            }
+        }
     }
-
-
 };
 
 }

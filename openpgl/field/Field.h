@@ -5,8 +5,7 @@
 
 #define USE_TBB
 
-#include "../openpgl.h"
-//#include "../data/SampleStatistics.h"
+#include "../openpgl_common.h"
 #include "../data/DirectionalSampleData.h"
 #include "../data/Range.h"
 #include "../kdtree/KDTree.h"
@@ -22,10 +21,6 @@ template<class TRegion, typename TSampleContainer>
 struct Field
 {
 public:
-    //typedef TDistribution DistributionType;
-    //typedef typename TDistributionFactory::ASMStatistics   StatisticsType;
-
-    //typedef openpgl::Region<DistributionType, StatisticsType> RegionType;
     typedef TRegion RegionType;
     typedef openpgl::Range<TSampleContainer> RangeType;
 protected:
@@ -125,32 +120,22 @@ protected:
 
     void buildSpatialStructure(const BBox &bounds, TSampleContainer& samples)
     {
-        //mitsuba::SLog(mitsuba::EInfo, "Begin Tree update");
-//        mitsuba::ref<mitsuba::Timer> treeTimer = new mitsuba::Timer();
         m_spatialSubdivBuilder.build(m_spatialSubdiv, bounds, samples, m_regionStorageContainer, m_spatialSubdivBuilderSettings, m_nCores);
-        //mitsuba::SLog(mitsuba::EInfo, "Tree building time: %s", timeString(treeTimer->getSeconds(), true).c_str());
 
         if (m_useStochasticNNLookUp)
         {
-//            mitsuba::ref<mitsuba::Timer> embreereeTimer = new mitsuba::Timer();
             m_regionKNNSearchTree.buildRegionSearchTree<RegionStorageContainerType, RegionType>(m_regionStorageContainer);
-            //mitsuba::SLog(mitsuba::EInfo, "Embree BVH update time: %s", timeString(embreereeTimer->getSeconds(), true).c_str());
         }
     }
 
 
     void updateSpatialStructure(TSampleContainer& samples)
     {
-        //mitsuba::SLog(mitsuba::EInfo, "Begin Tree update");
-//        mitsuba::ref<mitsuba::Timer> treeTimer = new mitsuba::Timer();
         m_spatialSubdivBuilder.updateTree(m_spatialSubdiv, samples, m_regionStorageContainer, m_spatialSubdivBuilderSettings, m_nCores);
-        //mitsuba::SLog(mitsuba::EInfo, "Tree building time: %s", timeString(treeTimer->getSeconds(), true).c_str());
 
         if (m_useStochasticNNLookUp)
         {
-//            mitsuba::ref<mitsuba::Timer> embreereeTimer = new mitsuba::Timer();
             m_regionKNNSearchTree.buildRegionSearchTree<RegionStorageContainerType, RegionType>(m_regionStorageContainer);
-            //mitsuba::SLog(mitsuba::EInfo, "Embree BVH update time: %s", timeString(embreereeTimer->getSeconds(), true).c_str());
         }
     }
 
@@ -254,7 +239,6 @@ inline void Field<TRegion, TSampleContainer>::serialize(std::ostream& stream) co
     {
         RegionStorageType region_storage = m_regionStorageContainer[n];
         region_storage.first.serialize(stream);
-        //region_storage.second.serialize(stream);
     }
     stream.write(reinterpret_cast<const char*>(&m_decayOnSpatialSplit), sizeof(float));
     stream.write(reinterpret_cast<const char*>(&m_deterministic), sizeof(bool));
@@ -262,7 +246,6 @@ inline void Field<TRegion, TSampleContainer>::serialize(std::ostream& stream) co
     // private
     stream.write(reinterpret_cast<const char*>(&m_useStochasticNNLookUp), sizeof(bool));
 
-    //m_spatialSubdivBuilder.serialize(stream);
     m_spatialSubdivBuilderSettings.serialize(stream);
 
     m_spatialSubdiv.serialize(stream);
@@ -284,15 +267,12 @@ inline void Field<TRegion, TSampleContainer>::deserialize(std::istream& stream)
     {
         RegionStorageType region_storage;
         region_storage.first.deserialize(stream);
-        //region_storage.second.deserialize(stream);
         m_regionStorageContainer.push_back(region_storage);
     }
     stream.read(reinterpret_cast<char*>(&m_decayOnSpatialSplit), sizeof(float));
     stream.read(reinterpret_cast<char*>(&m_deterministic), sizeof(bool));
     // private
     stream.read(reinterpret_cast<char*>(&m_useStochasticNNLookUp), sizeof(bool));
-
-    //m_spatialSubdivBuilder.deserialize(stream);
     m_spatialSubdivBuilderSettings.deserialize(stream);
 
     m_spatialSubdiv.deserialize(stream);

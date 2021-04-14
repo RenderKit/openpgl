@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "../openpgl.h"
+#include "../openpgl_common.h"
 #include "../data/SampleStatistics.h"
 namespace openpgl
 {
@@ -83,7 +83,6 @@ namespace openpgl
         void splatSample(DirectionalSampleData &sample/*, const BBox &sceneBounds*/, const Point2 &sample2D) const
         {
             const Vector3 boundsExtents = (regionBounds.upper - regionBounds.lower) * 0.5f;
-                                                               ((boundsExtents.y > boundsExtents.z) ? boundsExtents.y : boundsExtents.z);
             const Vector3 sampleDisplacement = boundsExtents * squareToUniformSphere(sample2D);
             const Point3 samplePosition(sample.position.x, sample.position.y, sample.position.z);
             Vector3 sampleDirection(sample.direction.x, sample.direction.y, sample.direction.z);

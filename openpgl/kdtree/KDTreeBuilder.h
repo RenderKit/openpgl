@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "../openpgl.h"
+#include "../openpgl_common.h"
 #include "KDTree.h"
 #include "../data/SampleStatistics.h"
 #include "../data/Range.h"
@@ -11,15 +11,8 @@
 
 #define USE_OMP_TASKS
 
-//#ifdef USE_TBB
-//    #define USE_TBB_CONCURRENT
-//#endif
-
-#ifdef  USE_TBB_CONCURRENT_VECTOR
 #include <tbb/concurrent_vector.h>
-#else
-#include <mitsuba/guiding/AtomicallyGrowingVector.h>
-#endif
+
 #include <tbb/parallel_for.h>
 #include <tbb/parallel_reduce.h>
 
@@ -44,12 +37,7 @@ struct KDTreePartitionBuilder
         std::string toString() const;
     };
 
-#ifdef  USE_TBB_CONCURRENT_VECTOR
     void build(KDTree &kdTree, const BBox &bounds, typename TRange::Container &samples, tbb::concurrent_vector< std::pair<TRegion, TRange> > &dataStorage, const Settings &buildSettings, const size_t &nCores) const
-#else
-    void build(KDTree &kdTree, const BBox &bounds, typename TRange::Container &samples, AtomicallyGrowingVector< std::pair<TRegion, TRange> > &dataStorage, const Settings &buildSettings, const size_t &nCores) const
-
-#endif
     {
 
         kdTree.init(bounds, 4096);
@@ -59,11 +47,8 @@ struct KDTreePartitionBuilder
         //KDNode &root kdTree.getRoot();
         updateTree(kdTree, samples, dataStorage, buildSettings, nCores);
     }
-#ifdef  USE_TBB_CONCURRENT_VECTOR
+
     void updateTree(KDTree &kdTree, typename TRange::Container &samples, tbb::concurrent_vector< std::pair<TRegion, TRange> > &dataStorage, const Settings &buildSettings, const uint32_t &nCores) const
-#else
-    void updateTree(KDTree &kdTree, typename TRange::Container &samples, AtomicallyGrowingVector< std::pair<TRegion, TRange> > &dataStorage, const Settings &buildSettings, const uint32_t &nCores) const
-#endif
     {
         int numEstLeafs = dataStorage.size() + (samples.size()*2)/buildSettings.maxSamples+32;
         kdTree.m_nodes.reserve(4*numEstLeafs);
@@ -79,8 +64,6 @@ struct KDTreePartitionBuilder
 
         if (root.isLeaf())
         {
-//            mitsuba::ref<mitsuba::Timer> statsTimer = new mitsuba::Timer();
-
             double x = 0.0f;
             double y = 0.0f;
             double z = 0.0f;
@@ -97,32 +80,7 @@ struct KDTreePartitionBuilder
             x /= double(samples.size());
             y /= double(samples.size());
             z /= double(samples.size());
-/*
-            std::cout <<  "Stats building: time: " <<  statsTimer->getSeconds() << std::endl;
-
-            mitsuba::ref<mitsuba::Timer> statsTimerPar = new mitsuba::Timer();
-            SampleStatistics sampleStatsIdentity;
-            SampleStatistics sampleStats2 = tbb::parallel_reduce(
-                tbb::blocked_range<int>(0,samples.size()), 
-                sampleStatsIdentity, 
-                [&](tbb::blocked_range<int> r, SampleStatistics running_total)
-                {
-                        for (int i=r.begin(); i<r.end(); ++i)
-                        {
-                            running_total.addSample(samples[i].position);
-                        }
-                        return running_total;
-                    }, SampleStatistics());
-            //std::cout <<  "StatsPar building: time: " <<  statsTimerPar->getSeconds() << std::endl;
-            std::cout <<  "mean double: " << x << "\t" << y << "\t" << z << std::endl;
-            std::cout <<  "sampleStats: " << sampleStats.toString() << std::endl;
-            std::cout <<  "sampleStats2: " << sampleStats2.toString() << std::endl;
-
-            //std::cout <<  "Tree building: time: " <<  statsTimer->getSeconds() << std::endl;
-            sampleStats = sampleStats2;
-*/
         }
-        //std::cout <<  std::numeric_limits<float>::max() << "\t" << sampleStats.getNumSamples() << std::endl;
 #ifdef USE_OMP_TASKS
 #pragma omp parallel num_threads(nCores)
 #pragma omp single nowait
@@ -184,11 +142,8 @@ private:
         splitPos = sampleMean[splitDim];
     }
 
-#ifdef  USE_TBB_CONCURRENT_VECTOR
+
     void updateTreeNode(KDTree *kdTree, KDNode &node, size_t depth, const TRange sampleRange, const SampleStatistics sampleStats, tbb::concurrent_vector< std::pair<TRegion, TRange> > *dataStorage, const Settings &buildSettings) const
-#else
-    void updateTreeNode(KDTree *kdTree, KDNode &node, size_t depth, const TRange sampleRange, const SampleStatistics sampleStats, AtomicallyGrowingVector< std::pair<TRegion, TRange> > *dataStorage, const Settings &buildSettings) const
-#endif
     {
         if(sampleRange.size() == 0)
         {
@@ -222,11 +177,8 @@ private:
                 regionAndRangeData.first.regionBounds.upper[splitDim] = splitPos;
                 regionAndRangeDataRight.first.regionBounds.lower[splitDim] = splitPos;
 
-#ifdef  USE_TBB_CONCURRENT_VECTOR
                 auto rigthDataItr = dataStorage->push_back(regionAndRangeDataRight);
-#else
-                auto rigthDataItr = dataStorage->back_insert(regionAndRangeDataRight);
-#endif
+
                 uint32_t rightDataIdx = std::distance(dataStorage->begin(), rigthDataItr);
 
                 //we need to split the leaf node

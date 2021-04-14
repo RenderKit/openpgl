@@ -1,5 +1,5 @@
-cmake_minimum_required(VERSION 2.8.12)
-project(pyopenpgl)
+cmake_minimum_required(VERSION 3.1)
+project(pyopenpgl VERSION 0.1.0)
 
 #add_subdirectory(pybind11)
 find_package(pybind11 REQUIRED)
@@ -8,7 +8,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -Wall -msse2 -msse4.1")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-padded -ftree-vectorize -mfpmath=sse -funsafe-math-optimizations -fno-rounding-math -fno-signaling-nans -fno-math-errno -fomit-frame-pointer ")
 set(CMAKE_VERBOSE_MAKEFILE ON)
 
-pybind11_add_module(pyopenpgl32 pyopenpgl.cpp ../third-party/embree/common/simd/sse.cpp)
+pybind11_add_module(pyopenpgl32 pyopenpgl.cpp ../third-party/embreeSrc/common/simd/sse.cpp)
 
 target_compile_definitions(pyopenpgl32 PUBLIC -DPYGUIDE_MAX_COMPONENTS=32)
 target_include_directories(pyopenpgl32
@@ -20,7 +20,7 @@ target_include_directories(pyopenpgl32
 )
 
 
-pybind11_add_module(pyopenpgl64 pyopenpgl.cpp ../third-party/embree/common/simd/sse.cpp)
+pybind11_add_module(pyopenpgl64 pyopenpgl.cpp ../third-party/embreeSrc/common/simd/sse.cpp)
 
 target_compile_definitions(pyopenpgl64 PUBLIC -DPYGUIDE_MAX_COMPONENTS=64)
 target_include_directories(pyopenpgl64
@@ -32,7 +32,7 @@ target_include_directories(pyopenpgl64
 )
 
 
-pybind11_add_module(pyopenpgl128 pyopenpgl.cpp ../third-party/embree/common/simd/sse.cpp)
+pybind11_add_module(pyopenpgl128 pyopenpgl.cpp ../third-party/embreeSrc/common/simd/sse.cpp)
 
 target_compile_definitions(pyopenpgl128 PUBLIC -DPYGUIDE_MAX_COMPONENTS=128)
 target_include_directories(pyopenpgl128

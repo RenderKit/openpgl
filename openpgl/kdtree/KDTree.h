@@ -3,17 +3,10 @@
 
 #pragma once
 
-#include "../openpgl.h"
+#include "../openpgl_common.h"
 
-//#ifdef USE_TBB
-// #define USE_TBB_CONCURRENT_NODES
-//#endif
-
-#ifdef USE_TBB_CONCURRENT_NODES
 #include <tbb/concurrent_vector.h>
-#else
-#include <mitsuba/guiding/AtomicallyGrowingVector.h>
-#endif
+
 
 #include <fstream>
 #include <string>
@@ -481,11 +474,7 @@ public:
     BBox m_bounds;
 
     //node storage
-#ifdef USE_TBB_CONCURRENT_NODES
     tbb::concurrent_vector<KDNode> m_nodes;
-#else
-    AtomicallyGrowingVector<KDNode> m_nodes;
-#endif
 };
 
 }

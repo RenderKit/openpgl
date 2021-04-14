@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "../openpgl.h"
+#include "../openpgl_common.h"
 #include "VMM.h"
 #include "../data/DirectionalSampleData.h"
 #include "WeightedEMVMMFactory.h"
@@ -372,7 +372,8 @@ ComponentSplitinfo VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::GetPro
     for (size_t n = 0; n < numData; n++)
     {
         const DirectionalSampleData sample = data[n];
-        if (vmm.softAssignment(sample.direction, softAssign) )
+        openpgl::Vector3 sampleDirection(sample.direction.x, sample.direction.y, sample.direction.z);
+        if (vmm.softAssignment(sampleDirection, softAssign) )
         {
             const div_t tmp = div(idx, static_cast<int>(VMM::VectorSize));
 
@@ -381,7 +382,7 @@ ComponentSplitinfo VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::GetPro
             //const vfloat<VMM::VectorSize> value =  weight * samplePDF;
 
 
-            const embree::Vec3< embree::vfloat<VMM::VectorSize> > localDirection = embree::frame( vmm._meanDirections[tmp.quot] ).inverse() * embree::Vec3< embree::vfloat<VMM::VectorSize> > (sample.direction);
+            const embree::Vec3< embree::vfloat<VMM::VectorSize> > localDirection = embree::frame( vmm._meanDirections[tmp.quot] ).inverse() * embree::Vec3< embree::vfloat<VMM::VectorSize> > (sampleDirection);
             //const embree::Vec2< embree::vfloat<VMM::VectorSize> > localDirection2D = Map3DTo2D< embree::Vec3< embree::vfloat<VMM::VectorSize> >,  embree::Vec2< embree::vfloat<VMM::VectorSize> >, embree::vfloat<VMM::VectorSize> >(localDirection);
             const Vector2 localDirection2D = Map3DTo2D< Vector3,  Vector2, float >(Vector3(localDirection.x[tmp.rem], localDirection.y[tmp.rem], localDirection.z[tmp.rem]));
 

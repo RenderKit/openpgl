@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "../openpgl.h"
+#include "../openpgl_common.h"
 
 #include "../include/openpgl/data.h"
 
@@ -61,8 +61,6 @@ inline DirectionalSampleData *LoadDirectionalSampleData(const std::string fileNa
 
     std::ifstream file;
     file.open(fileName, std::ios::binary);
-
-    //size_t numData;
     file.read((char*)&numData, sizeof(size_t));
 
     DirectionalSampleData *data = new DirectionalSampleData[numData];

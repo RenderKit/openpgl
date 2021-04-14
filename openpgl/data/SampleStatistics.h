@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "../openpgl.h"
+#include "../openpgl_common.h"
 
 namespace openpgl
 {
@@ -22,7 +22,6 @@ namespace openpgl
             numSamples = 0.0f;
             sampleBounds.lower = openpgl::Vector3(std::numeric_limits<float>::max());
             sampleBounds.upper = openpgl::Vector3(-std::numeric_limits<float>::max());
-            //sampleBound
         }
 
         inline void addSample( const Point3 sample)

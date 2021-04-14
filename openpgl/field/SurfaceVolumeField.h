@@ -5,8 +5,7 @@
 
 #define USE_TBB
 
-#include "../openpgl.h"
-//#include "../data/SampleStatistics.h"
+#include "../openpgl_common.h"
 #include "../data/Range.h"
 #include "../kdtree/KDTree.h"
 #include "../kdtree/KDTreeBuilder.h"
@@ -20,10 +19,6 @@ template<class TRegion, typename TSampleContainer>
 struct SurfaceVolumeField
 {
 public:
-    //typedef TDistribution DistributionType;
-    //typedef typename TDistributionFactory::ASMStatistics   StatisticsType;
-
-    //typedef openpgl::Region<DistributionType, StatisticsType> RegionType;
     typedef TRegion RegionType;
     typedef openpgl::Range<TSampleContainer> RangeType;
 protected:
@@ -53,7 +48,6 @@ public:
         m_deterministic(settings.deterministic),
         m_useStochasticNNLookUp(settings.useStochasticNNLookUp),
         m_spatialSubdivBuilderSettings(settings.spatialSubdivBuilderSettings){
-        //std::cout << "SurfaceVolumeField(const Settings &settings): " << settings.deterministic << std::endl;
     }
 
     const RegionType *getSurfaceGuidingRegion( const openpgl::Point3 &p, openpgl::Sampler *sampler) const
@@ -172,74 +166,43 @@ protected:
 
     void buildSpatialStructureSurface(const BBox &bounds, TSampleContainer& samples)
     {
-        //mitsuba::SLog(mitsuba::EInfo, "Begin Tree update");
-//        mitsuba::ref<mitsuba::Timer> treeTimer = new mitsuba::Timer();
         m_spatialSubdivBuilder.build(m_spatialSubdivSurface, bounds, samples, m_regionStorageContainerSurface, m_spatialSubdivBuilderSettings, m_nCores);
-        //mitsuba::SLog(mitsuba::EInfo, "Tree building time: %s", timeString(treeTimer->getSeconds(), true).c_str());
-
         if (m_useStochasticNNLookUp)
         {
-//            mitsuba::ref<mitsuba::Timer> embreereeTimer = new mitsuba::Timer();
             m_regionKNNSearchTreeSurface.buildRegionSearchTree<RegionStorageContainerType, RegionType>(m_regionStorageContainerSurface);
-            //mitsuba::SLog(mitsuba::EInfo, "Embree BVH update time: %s", timeString(embreereeTimer->getSeconds(), true).c_str());
         }
     }
 
 
     void updateSpatialStructureSurface(TSampleContainer& samples)
     {
-        //mitsuba::SLog(mitsuba::EInfo, "Begin Tree update");
-//        mitsuba::ref<mitsuba::Timer> treeTimer = new mitsuba::Timer();
         m_spatialSubdivBuilder.updateTree(m_spatialSubdivSurface, samples, m_regionStorageContainerSurface, m_spatialSubdivBuilderSettings, m_nCores);
-        //mitsuba::SLog(mitsuba::EInfo, "Tree building time: %s", timeString(treeTimer->getSeconds(), true).c_str());
-
         if (m_useStochasticNNLookUp)
         {
-//            mitsuba::ref<mitsuba::Timer> embreereeTimer = new mitsuba::Timer();
             m_regionKNNSearchTreeSurface.buildRegionSearchTree<RegionStorageContainerType, RegionType>(m_regionStorageContainerSurface);
-            //mitsuba::SLog(mitsuba::EInfo, "Embree BVH update time: %s", timeString(embreereeTimer->getSeconds(), true).c_str());
         }
     }
 
 
     void buildSpatialStructureVolume(const BBox &bounds, TSampleContainer& samples)
     {
-        //mitsuba::SLog(mitsuba::EInfo, "Begin Tree update");
-//        mitsuba::ref<mitsuba::Timer> treeTimer = new mitsuba::Timer();
         m_spatialSubdivBuilder.build(m_spatialSubdivVolume, bounds, samples, m_regionStorageContainerVolume, m_spatialSubdivBuilderSettings, m_nCores);
-        //mitsuba::SLog(mitsuba::EInfo, "Tree building time: %s", timeString(treeTimer->getSeconds(), true).c_str());
 
         if (m_useStochasticNNLookUp)
         {
-//            mitsuba::ref<mitsuba::Timer> embreereeTimer = new mitsuba::Timer();
             m_regionKNNSearchTreeVolume.buildRegionSearchTree<RegionStorageContainerType, RegionType>(m_regionStorageContainerVolume);
-            //mitsuba::SLog(mitsuba::EInfo, "Embree BVH update time: %s", timeString(embreereeTimer->getSeconds(), true).c_str());
         }
     }
 
 
     void updateSpatialStructureVolume(TSampleContainer& samples)
     {
-        //mitsuba::SLog(mitsuba::EInfo, "Begin Tree update");
-//        mitsuba::ref<mitsuba::Timer> treeTimer = new mitsuba::Timer();
         m_spatialSubdivBuilder.updateTree(m_spatialSubdivVolume, samples, m_regionStorageContainerVolume, m_spatialSubdivBuilderSettings, m_nCores);
-        //mitsuba::SLog(mitsuba::EInfo, "Tree building time: %s", timeString(treeTimer->getSeconds(), true).c_str());
-
         if (m_useStochasticNNLookUp)
         {
-//            mitsuba::ref<mitsuba::Timer> embreereeTimer = new mitsuba::Timer();
             m_regionKNNSearchTreeVolume.buildRegionSearchTree<RegionStorageContainerType, RegionType>(m_regionStorageContainerVolume);
-            //mitsuba::SLog(mitsuba::EInfo, "Embree BVH update time: %s", timeString(embreereeTimer->getSeconds(), true).c_str());
         }
     }
-
-
-/*
-    void updateKNNRegionSearchTree()
-    {
-        m_regionKNNSearchTree.buildRegionSearchTree<RegionStorageContainerType, RegionType>(m_regionStorageContainer);
-    }
-*/
 
     void updateKNNRegionSearchTreeSurface()
     {
@@ -258,16 +221,6 @@ protected:
 
         const uint32_t regionIdx = knnTree.sampleClosestRegionIdx(p, sample);
         return regionIdx;
-        /*
-        if (regionIdx != -1)
-        {
-            return &m_regionStorageContainer[regionIdx].first;
-        }
-        else
-        {
-            return nullptr;
-        }
-        */
     }
 
 
@@ -291,7 +244,6 @@ protected:
     float m_decayOnSpatialSplit {0.25f};
     bool m_deterministic {false};
 private:
-    //typename SpatialSubdivBuilder::Settings spatialSubdivBuilderSettings;
     bool m_useStochasticNNLookUp {false};
     // spatial structure
     SpatialSubdivBuilder m_spatialSubdivBuilder;
@@ -357,7 +309,6 @@ inline void SurfaceVolumeField<TRegion, TSampleContainer>::serialize(std::ostrea
     {
         RegionStorageType region_storage = m_regionStorageContainerSurface[n];
         region_storage.first.serialize(stream);
-        //region_storage.second.serialize(stream);
     }
 
     size_t num_volume_regions = m_regionStorageContainerVolume.size();
@@ -366,7 +317,6 @@ inline void SurfaceVolumeField<TRegion, TSampleContainer>::serialize(std::ostrea
     {
         RegionStorageType region_storage = m_regionStorageContainerVolume[n];
         region_storage.first.serialize(stream);
-        //region_storage.second.serialize(stream);
     }
 
     stream.write(reinterpret_cast<const char*>(&m_decayOnSpatialSplit), sizeof(float));
@@ -375,7 +325,6 @@ inline void SurfaceVolumeField<TRegion, TSampleContainer>::serialize(std::ostrea
     // private
     stream.write(reinterpret_cast<const char*>(&m_useStochasticNNLookUp), sizeof(bool));
 
-    //m_spatialSubdivBuilder.serialize(stream);
     m_spatialSubdivBuilderSettings.serialize(stream);
 
     m_spatialSubdivSurface.serialize(stream);
@@ -400,7 +349,6 @@ inline void SurfaceVolumeField<TRegion, TSampleContainer>::deserialize(std::istr
     {
         RegionStorageType region_storage;
         region_storage.first.deserialize(stream);
-        //region_storage.second.deserialize(stream);
         m_regionStorageContainerSurface.push_back(region_storage);
     }
 
@@ -420,7 +368,6 @@ inline void SurfaceVolumeField<TRegion, TSampleContainer>::deserialize(std::istr
     // private
     stream.read(reinterpret_cast<char*>(&m_useStochasticNNLookUp), sizeof(bool));
 
-    //m_spatialSubdivBuilder.deserialize(stream);
     m_spatialSubdivBuilderSettings.deserialize(stream);
 
     m_spatialSubdivSurface.deserialize(stream);
