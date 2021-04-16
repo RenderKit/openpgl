@@ -23,7 +23,7 @@ struct Region
     friend class PathSegment;
     friend class SurfaceSamplingDistribution;
     friend class VolumeSamplingDistribution;
-    //private:
+    private:
         PGLRegion m_regionHandle{nullptr};
 };
 

@@ -6,7 +6,7 @@
 #include "../openpgl.h"
 #include "PathSegment.h"
 #include "Sampler.h"
-
+#include "SampleData.h"
 
 namespace openpgl
 {
@@ -25,9 +25,9 @@ struct PathSegmentStorage
 
     size_t PrepareSamples(const bool& splatSamples, Sampler& sampler, const bool useNEEMiWeights = false, const bool guideDirectLight = false);
 
-    const PGLSampleData* GetSamples(uint32_t &nSamples);
+    const SampleData* GetSamples(uint32_t &nSamples);
 
-    void AddSample(PGLSampleData sample);
+    void AddSample(SampleData sample);
 
     PathSegment NextSegment();
 
@@ -66,14 +66,14 @@ OPENPGL_INLINE size_t PathSegmentStorage::PrepareSamples(const bool& splatSample
     return pglPathSegmentStoragePrepareSamples(m_pathSegmentStorageHandle, splatSamples, &sampler.m_samplerHandle, useNEEMiWeights, guideDirectLight);
 }
 
-OPENPGL_INLINE const PGLSampleData* PathSegmentStorage::GetSamples(uint32_t &nSamples)
+OPENPGL_INLINE const SampleData* PathSegmentStorage::GetSamples(uint32_t &nSamples)
 {
     OPENPGL_ASSERT(m_pathSegmentStorageHandle);
     return pglPathSegmentStorageGetSamples(m_pathSegmentStorageHandle, nSamples);
 }
 
 
-OPENPGL_INLINE void PathSegmentStorage::AddSample(PGLSampleData sample)
+OPENPGL_INLINE void PathSegmentStorage::AddSample(SampleData sample)
 {
     OPENPGL_ASSERT(m_pathSegmentStorageHandle);
     pglPathSegmentStorageAddSample(m_pathSegmentStorageHandle, sample);

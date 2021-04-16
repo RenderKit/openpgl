@@ -4,6 +4,7 @@
 #pragma once
 
 #include "../openpgl.h"
+#include "SampleData.h"
 
 namespace openpgl
 {
@@ -17,9 +18,9 @@ struct SampleStorage
 
     SampleStorage(const SampleStorage&) = delete;
     
-    void AddSample(PGLSampleData& sample);
+    void AddSample(SampleData& sample);
 
-    void AddSamples(const PGLSampleData* samples, uint32_t numSamples);
+    void AddSamples(const SampleData* samples, uint32_t numSamples);
 
     void Reserve(const uint32_t& sizeSurface, const uint32_t& sizeVolume);
 
@@ -47,13 +48,13 @@ OPENPGL_INLINE SampleStorage::~SampleStorage()
 }
 
     
-OPENPGL_INLINE void SampleStorage::AddSample(PGLSampleData& sample)
+OPENPGL_INLINE void SampleStorage::AddSample(SampleData& sample)
 {
     OPENPGL_ASSERT(m_sampleStorageHandle);
     pglSampleStorageAddSample(m_sampleStorageHandle, sample);
 }
 
-OPENPGL_INLINE void SampleStorage::AddSamples(const PGLSampleData* samples, uint32_t numSamples)
+OPENPGL_INLINE void SampleStorage::AddSamples(const SampleData* samples, uint32_t numSamples)
 {
     OPENPGL_ASSERT(m_sampleStorageHandle);
     pglSampleStorageAddSamples(m_sampleStorageHandle, samples, numSamples);

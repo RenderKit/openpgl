@@ -9,16 +9,9 @@
 #include "Field.h"
 #include "PathSegmentStorage.h"
 #include "Region.h"
+#include "SampleData.h"
 #include "Sampler.h"
 #include "SampleStorage.h"
 #include "SurfaceSamplingDistribution.h"
 #include "VolumeSamplingDistriubtion.h"
 
-namespace openpgl
-{
-    namespace cpp
-    {
-
-    }
-
-}
