@@ -85,7 +85,7 @@ public:
     {
         if (m_iteration >0 && embree::inside(m_spatialSubdivVolume.getBounds(), p))
         {
-            if(m_useStochasticNNLookUp)
+            if(sampler && m_useStochasticNNLookUp)
             {
                 uint32_t regionIdx =  getClosestRegionIdx(m_regionKNNSearchTreeVolume, p, sampler->next1D());
                 if(regionIdx != -1)

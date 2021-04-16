@@ -14,6 +14,8 @@ struct SampleStorage
 {
     SampleStorage();
     ~SampleStorage();
+
+    SampleStorage(const SampleStorage&) = delete;
     
     void AddSample(PGLSampleData& sample);
 
@@ -41,6 +43,7 @@ OPENPGL_INLINE SampleStorage::~SampleStorage()
 {
     OPENPGL_ASSERT(m_sampleStorageHandle);
     pglReleaseSampleStorage(m_sampleStorageHandle);
+    m_sampleStorageHandle = nullptr;
 }
 
     

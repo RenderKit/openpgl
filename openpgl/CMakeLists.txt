@@ -2,7 +2,7 @@
 ## SPDX-License-Identifier: Apache-2.0
 
 
-add_library(${PROJECT_NAME} STATIC
+add_library(${PROJECT_NAME} SHARED
   #${RKCOMMON_RESOURCE}
   api/api.cpp
   ../third-party/embreeSrc/common/simd/sse.cpp

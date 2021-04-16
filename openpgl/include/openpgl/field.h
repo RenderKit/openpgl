@@ -33,6 +33,8 @@ typedef Field *PGLField;
 
 PGLField pglNewField(PGLFieldArguments args);
 
+void pglReleaseField(PGLField field);
+
 uint32_t pglFieldGetIteration(PGLField field);
 
 //void pglFieldSetSceneBounds(PGLField field, pgl_box3f bounds);

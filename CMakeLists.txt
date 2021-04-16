@@ -24,7 +24,7 @@ include(openpgl_macros)
 
 ## openpgl specific configuration ##
 
-option(BUILD_PYTHON "Build python wrapper 'pyopenpgl'."  ON)
+option(BUILD_PYTHON "Build python wrapper 'pyopenpgl'."  OFF)
 
 find_package(embree 3.6.1 REQUIRED)
 

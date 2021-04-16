@@ -7,8 +7,12 @@ namespace openpgl
 {
 
 template<class TVMMDistribution>
-struct VMMBSDFSamplingDistribution
+struct VMMPhaseFunctionSamplingDistribution
 {
+    
+    VMMPhaseFunctionSamplingDistribution() = default;
+    ~VMMPhaseFunctionSamplingDistribution() = default;
+
     typedef std::integral_constant<size_t, 2> MaxNumProductDistributions;
 
     /// the region's Li distribution with applied parallax-compensation
@@ -23,17 +27,13 @@ struct VMMBSDFSamplingDistribution
     /// guiding cosine/BSDF product integral (= irradiance/flux, for cosine)
     float m_productIntegral;
 
-    inline void init(const TVMMDistribution &distribution, const Vector3& normal, bool useCosineProduct)
+    inline void init(const TVMMDistribution &distribution)
     {
         // prespare sampling distribution
         this->m_distributions[0] = distribution;
         this->m_weights[0] = 1.0f;
         this->m_numDistributions = 1;
         this->m_productIntegral = 1.0f;
-        if ( useCosineProduct )
-        {
-            this->m_distributions[0].product(1.0f, normal, 2.18853f);
-        }
     }
 
 

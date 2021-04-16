@@ -17,6 +17,8 @@ struct PathSegmentStorage
     PathSegmentStorage();
     ~PathSegmentStorage();
 
+    PathSegmentStorage(const PathSegmentStorage&) = delete;
+
     void Reserve(size_t size);
 
     void Clear();
@@ -42,6 +44,7 @@ OPENPGL_INLINE PathSegmentStorage::~PathSegmentStorage()
 {
     OPENPGL_ASSERT(m_pathSegmentStorageHandle);
     pglReleasePathSegmentStorage(m_pathSegmentStorageHandle);
+    m_pathSegmentStorageHandle = nullptr;
 }
 
 OPENPGL_INLINE void PathSegmentStorage::Reserve(size_t size)

@@ -14,6 +14,8 @@ namespace openpgl
 template <typename TRegion>
 struct PathSegmentDataStorage
 {
+    PathSegmentDataStorage() = default;
+    ~PathSegmentDataStorage() = default;
     std::vector<PathSegmentData> m_segmentStorage;
 
     void reserve(const size_t &size)
@@ -148,7 +150,7 @@ struct PathSegmentDataStorage
                         dsd.distance = distance;
                         dsd.flags = flags;
                         //m_sampleStorage.emplace_back(dsd, regionPtr);
-                        if(regionPtr !=nullptr && splatSamples)
+                        if(sampler && regionPtr !=nullptr && splatSamples)
                         {
                             regionPtr->splatSample(dsd,sampler->next2D()); 
                         }

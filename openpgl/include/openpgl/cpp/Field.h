@@ -20,6 +20,8 @@ struct Field
 
     ~Field();
 
+    Field(const Field&) = delete;
+
     uint32_t GetIteration() const;
 
     uint32_t GetTotalSPP() const;
@@ -43,6 +45,7 @@ OPENPGL_INLINE Field::~Field()
 {
     OPENPGL_ASSERT(m_fieldHandle);
     pglReleaseField(m_fieldHandle);
+    m_fieldHandle = nullptr;
 }
 
 OPENPGL_INLINE uint32_t Field::GetIteration() const

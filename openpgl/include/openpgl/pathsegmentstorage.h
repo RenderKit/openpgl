@@ -36,6 +36,8 @@ typedef PGLPathSegmentData *PGLPathSegment;
 
 PGLPathSegmentStorage pglNewPathSegmentStorage();
 
+void pglReleasePathSegmentStorage(PGLPathSegmentStorage pathSegmentStorage);
+
 void pglPathSegmentStorageReserve(PGLPathSegmentStorage pathSegmentStorage, size_t size);
 
 void pglPathSegmentStorageClear(PGLPathSegmentStorage pathSegmentStorage);
@@ -44,14 +46,13 @@ size_t pglPathSegmentStoragePrepareSamples(PGLPathSegmentStorage pathSegmentStor
 
 const PGLSampleData* pglPathSegmentStorageGetSamples(PGLPathSegmentStorage pathSegmentStorage, uint32_t &nSamples);
 
-void pglPathSegmentStorageAddSegment(PGLPathSegmentStorage pathSegmentStorage, PGLPathSegment sample);
+//void pglPathSegmentStorageAddSegment(PGLPathSegmentStorage pathSegmentStorage, PGLPathSegment sample);
 
 void pglPathSegmentStorageAddSample(PGLPathSegmentStorage pathSegmentStorage, PGLSampleData sample);
 
 PGLPathSegment pglPathSegmentNextSegment(PGLPathSegmentStorage pathSegmentStorage);
 
 //void pglAddSamples(PGLSampleStorage sampleStorage, PGLSampleData* samples, uint32_t numSamples);
-
 
 void pglPathSegmentSetPosition(PGLPathSegment pathSegmentStorage, pgl_point3f position);
 
@@ -83,7 +84,7 @@ void pglPathSegmentSetRussianRouletteProbability(PGLPathSegment pathSegmentStora
 
 void pglPathSegmentSetEta(PGLPathSegment pathSegmentStorage, float eta);
 
-void pglPathSegmentSetIsDelta(PGLPathSegment pathSegmentStorage, float isDelta);
+void pglPathSegmentSetIsDelta(PGLPathSegment pathSegmentStorage, bool isDelta);
 
 void pglPathSegmentSetRoughness(PGLPathSegment pathSegmentStorage, float roughness);
 

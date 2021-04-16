@@ -24,19 +24,19 @@ typedef ManagedObject Distribution;
 #endif
 
 #ifdef __cplusplus
-struct BSDFSamplingDistribution;
+struct SurfaceSamplingDistribution;
 #else
-typedef ManagedObject BSDFSamplingDistribution;
+typedef ManagedObject SurfaceSamplingDistribution;
 #endif
 
 #ifdef __cplusplus
-struct PhaseFunctionSamplingDistribution;
+struct VolumeSamplingDistribution;
 #else
-typedef ManagedObject PhaseFunctionSamplingDistribution;
+typedef ManagedObject VolumeSamplingDistribution;
 #endif
 
-typedef BSDFSamplingDistribution *PGLBSDFSamplingDistribution;
-typedef PhaseFunctionSamplingDistribution *PGLPhaseFunctionSamplingDistribution;
+typedef SurfaceSamplingDistribution *PGLSurfaceSamplingDistribution;
+typedef VolumeSamplingDistribution *PGLVolumeSamplingDistribution;
 typedef Distribution *PGLDistribution;
 typedef Region *PGLRegion;
 
@@ -44,34 +44,33 @@ bool pglDistributionIsValid(PGLDistribution distribution);
 
 //void pglGetDistribution(PGLRegion region, pgl_point3f samplePosition, const bool &useParallaxComp);
 
-PGLBSDFSamplingDistribution pglNewBSDFSamplingDistribution();
+PGLSurfaceSamplingDistribution pglNewSurfaceSamplingDistribution();
 
-void pglReleaseBSDFSamplingDistribution(PGLBSDFSamplingDistribution bsdfSamplingDistribution);
+void pglReleaseSurfaceSamplingDistribution(PGLSurfaceSamplingDistribution SurfaceSamplingDistribution);
 
-void pglBSDFSamplingDistributionInit(PGLBSDFSamplingDistribution bsdfSamplingDistribution, PGLRegion region, pgl_point3f samplePosition, pgl_vec3f normal, bool useParallaxComp = true, bool useCosine = true);
+void pglSurfaceSamplingDistributionInit(PGLSurfaceSamplingDistribution SurfaceSamplingDistribution, PGLRegion region, pgl_point3f samplePosition, pgl_vec3f normal, bool useParallaxComp = true, bool useCosine = true);
 
-pgl_vec3f pglBSDFSamplingDistributionSample(PGLBSDFSamplingDistribution bsdfSamplingDistribution, pgl_point2f sample);
+pgl_vec3f pglSurfaceSamplingDistributionSample(PGLSurfaceSamplingDistribution SurfaceSamplingDistribution, pgl_point2f sample);
 
-float pglBSDFSamplingDistributionPDF(PGLBSDFSamplingDistribution bsdfSamplingDistribution, pgl_vec3f direction);
+float pglSurfaceSamplingDistributionPDF(PGLSurfaceSamplingDistribution SurfaceSamplingDistribution, pgl_vec3f direction);
 
-bool pglBSDFSamplingDistributionIsValid(PGLBSDFSamplingDistribution bsdfSamplingDistribution);
+bool pglSurfaceSamplingDistributionIsValid(PGLSurfaceSamplingDistribution SurfaceSamplingDistribution);
 
-void pglBSDFSamplingDistributionClear(PGLBSDFSamplingDistribution bsdfSamplingDistribution);
+void pglSurfaceSamplingDistributionClear(PGLSurfaceSamplingDistribution SurfaceSamplingDistribution);
 
+PGLVolumeSamplingDistribution pglNewVolumeSamplingDistribution();
 
-PGLPhaseFunctionSamplingDistribution pglNewPhaseFunctionSamplingDistribution();
+void pglReleaseVolumeSamplingDistribution(PGLVolumeSamplingDistribution VolumeSamplingDistribution);
 
-void pglReleasePhaseFunctionSamplingDistribution(PGLPhaseFunctionSamplingDistribution phaseFunctionSamplingDistribution);
+void pglVolumeSamplingDistributionInit(PGLVolumeSamplingDistribution VolumeSamplingDistribution, PGLRegion region, pgl_point3f samplePosition, bool useParallaxComp = true);
 
-void pglPhaseFunctionSamplingDistributionInit(PGLPhaseFunctionSamplingDistribution phaseFunctionSamplingDistribution, PGLRegion region, pgl_point3f samplePosition, bool useParallaxComp = true);
+pgl_vec3f pglVolumeSamplingDistributionSample(PGLVolumeSamplingDistribution VolumeSamplingDistribution, pgl_point2f sample);
 
-pgl_vec3f pglPhaseFunctionSamplingDistributionSample(PGLPhaseFunctionSamplingDistribution phaseFunctionSamplingDistribution, pgl_point2f sample);
+float pglVolumeSamplingDistributionPDF(PGLVolumeSamplingDistribution VolumeSamplingDistribution, pgl_vec3f direction);
 
-float pglPhaseFunctionSamplingDistributionPDF(PGLPhaseFunctionSamplingDistribution phaseFunctionSamplingDistribution, pgl_vec3f direction);
+bool pglVolumeSamplingDistributionIsValid(PGLVolumeSamplingDistribution VolumeSamplingDistribution);
 
-bool pglPhaseFunctionSamplingDistributionIsValid(PGLPhaseFunctionSamplingDistribution phaseFunctionSamplingDistribution);
-
-void pglPhaseFunctionSamplingDistributionClear(PGLPhaseFunctionSamplingDistribution phaseFunctionSamplingDistribution);
+void pglVolumeSamplingDistributionClear(PGLVolumeSamplingDistribution VolumeSamplingDistribution);
 
 
 #ifdef __cplusplus
