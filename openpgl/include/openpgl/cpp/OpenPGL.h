@@ -5,6 +5,7 @@
 
 #include "../openpgl.h"
 
+#include "Common.h"
 #include "Distribution.h"
 #include "Field.h"
 #include "PathSegmentStorage.h"

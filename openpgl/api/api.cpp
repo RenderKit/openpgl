@@ -206,16 +206,6 @@ extern "C" void pglReleaseSampleStorage(PGLSampleStorage sampleStorage)
     delete gSampleStorage;
 }
 
-/*
-extern "C" void pglSampleStorageSetSceneBounds(PGLSampleStorage sampleStorage, pgl_box3f bounds)
-{
-    auto *gSampleStorage = (openpgl::SampleDataStorage *)sampleStorage;
-    openpgl::BBox sceneBound;
-    sceneBound.lower = openpgl::Vector3(bounds.lower.x,bounds.lower.y,bounds.lower.z);
-    sceneBound.upper = openpgl::Vector3(bounds.upper.x,bounds.upper.y,bounds.upper.z);
-    //gSampleStorage->setSceneBounds(sceneBound);
-}
-*/
 extern "C" void pglSampleStorageAddSample(PGLSampleStorage sampleStorage, PGLSampleData& sample)
 {
     auto *gSampleStorage = (openpgl::SampleDataStorage *)sampleStorage;

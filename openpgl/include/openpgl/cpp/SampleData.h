@@ -11,5 +11,4 @@ namespace openpgl
     {
         typedef PGLSampleData SampleData;
     }
-
 }

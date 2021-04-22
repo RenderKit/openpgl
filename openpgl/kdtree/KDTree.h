@@ -262,11 +262,7 @@ struct KDTree
 
     uint32_t addChildrenPair()
     {
-#ifdef USE_TBB_CONCURRENT_NODES
        auto firstChildItr = m_nodes.grow_by(2);
-#else
-        auto firstChildItr = m_nodes.back_insert(2, KDNode());
-#endif
        return std::distance(m_nodes.begin(), firstChildItr);
     }
 

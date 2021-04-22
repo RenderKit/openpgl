@@ -3,14 +3,16 @@
 
 
 add_library(${PROJECT_NAME} SHARED
-  #${RKCOMMON_RESOURCE}
   api/api.cpp
   ../third-party/embreeSrc/common/simd/sse.cpp
-  #openpgl.cpp
 )
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -Wall -msse2 -msse4.1")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-padded -fopenmp -ftree-vectorize -mfpmath=sse -funsafe-math-optimizations -fno-rounding-math -fno-signaling-nans -fno-math-errno -fomit-frame-pointer ")
+set(OPENPGL_RELEASE_OPTIONS "-O3 -Wall -msse2 -msse4.1")
+set(OPENPGL_RELEASE_OPTIONS "${OPENPGL_RELEASE_OPTIONS} -Wno-padded -fopenmp -ftree-vectorize -mfpmath=sse -funsafe-math-optimizations -fno-rounding-math -fno-signaling-nans -fno-math-errno -fomit-frame-pointer ")
+
+target_compile_options(${PROJECT_NAME} PUBLIC "$<$<CONFIG:RELEASE>:${OPENPGL_RELEASE_OPTIONS}>")
+
+target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_11)
 
 #add_compile_options()
 
