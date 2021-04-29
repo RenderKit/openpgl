@@ -3,3 +3,5 @@
 build*
 python/pybind11
 install*
+doxygen
+.vscode
