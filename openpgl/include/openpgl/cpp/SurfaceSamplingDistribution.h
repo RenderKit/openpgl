@@ -12,7 +12,7 @@ namespace cpp
 {
 
 /**
- * @brief 
+ * @brief Guided sampling distriubtion to be used on surfaces.
  * 
  */
 struct SurfaceSamplingDistribution
@@ -63,7 +63,27 @@ struct SurfaceSamplingDistribution
      */
     void Init(const Region& region, const pgl_point3f& pos, const bool useParallaxCompensation = true);
 
+    /**
+     * @brief Applies the product with the cosine to the sampling distriubtion.
+     * 
+     *  
+     * @param normal 
+     */
     void ApplyCosineProduct(const pgl_vec3f& normal);
+
+    ///////////////////////////////////////
+    /// Future plans
+    ///////////////////////////////////////
+    
+    /**
+     * @brief 
+     * 
+     * @param normal 
+     * @param opaque 
+     * @param transmission 
+     */
+    //void ApplyCosineProduct(const pgl_vec3f& normal, const bool opaque, const pgl_vec3f transmission);
+    
 
     private:
         PGLSurfaceSamplingDistribution m_surfaceSamplingDistributionHandle{nullptr};

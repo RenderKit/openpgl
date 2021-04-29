@@ -12,6 +12,7 @@ namespace cpp
 {
 /**
  * @brief The container class holding the collected sample data generated during rendering.
+ * 
  *  This container class stores the (radiance/photon) samples generated during rendering or
  *  or at a pre-processing pass. The container is thread save and supports concurrent adding of
  *  samples by multiple threads. As a result only one instance of this container is needed per 

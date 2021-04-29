@@ -28,30 +28,30 @@ typedef struct
   pgl_vec3f lower, upper;
 } pgl_box3f;
 
-inline void pglVec3f(pgl_vec3f &vec, const float& x, const float& y, const float& z)
+inline void pglVec3f(pgl_vec3f &vec, const float x, const float y, const float z)
 {
   vec.x = x;
   vec.y = y;
   vec.z = z;
 }
 
-inline void pglVec2f(pgl_vec2f &vec, const float& x, const float& y)
+inline void pglVec2f(pgl_vec2f &vec, const float x, const float y)
 {
   vec.x = x;
   vec.y = y;
 }
 
-inline void pglPoint3f(pgl_point3f &vec, const float& x, const float& y, const float& z)
+inline void pglPoint3f(pgl_point3f &vec, const float x, const float y, const float z)
 {
   pglVec3f(vec, x, y, z);
 }
 
-inline void pglPoint2f(pgl_point2f &vec, const float& x, const float& y)
+inline void pglPoint2f(pgl_point2f &vec, const float x, const float y)
 {
   pglVec2f(vec, x, y);
 }
 
-inline void pglBox3f(pgl_box3f& box, const float& lx, const float& ly, const float& lz, const float& ux, const float& uy, const float& uz)
+inline void pglBox3f(pgl_box3f& box, const float lx, const float ly, const float lz, const float ux, const float uy, const float uz)
 {
   pglVec3f(box.lower, lx, ly, lz);
   pglVec3f(box.upper, ux, uy, uz);

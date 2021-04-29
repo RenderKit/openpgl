@@ -10,7 +10,6 @@
 
 namespace openpgl
 {
-
 template <typename TRegion>
 struct PathSegmentDataStorage
 {
