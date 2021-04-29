@@ -7,8 +7,8 @@ add_library(${PROJECT_NAME} SHARED
   ../third-party/embreeSrc/common/simd/sse.cpp
 )
 
-set(OPENPGL_RELEASE_OPTIONS "-O3 -Wall -msse2 -msse4.1")
-set(OPENPGL_RELEASE_OPTIONS "${OPENPGL_RELEASE_OPTIONS} -Wno-padded -fopenmp -ftree-vectorize -mfpmath=sse -funsafe-math-optimizations -fno-rounding-math -fno-signaling-nans -fno-math-errno -fomit-frame-pointer ")
+set(OPENPGL_RELEASE_OPTIONS -O3 -Wall -msse2 -msse4.1)
+set(OPENPGL_RELEASE_OPTIONS ${OPENPGL_RELEASE_OPTIONS} -Wno-padded -fopenmp -ftree-vectorize -mfpmath=sse -funsafe-math-optimizations -fno-rounding-math -fno-signaling-nans -fno-math-errno -fomit-frame-pointer )
 
 target_compile_options(${PROJECT_NAME} PUBLIC "$<$<CONFIG:RELEASE>:${OPENPGL_RELEASE_OPTIONS}>")
 
@@ -16,9 +16,11 @@ target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_11)
 
 #add_compile_options()
 
-FIND_PACKAGE(embree 3.6 REQUIRED)
-get_target_property(embree_include_dir embree INTERFACE_INCLUDE_DIRECTORIES)
+FIND_PACKAGE(TBB REQUIRED tbb)
 
+FIND_PACKAGE(embree 3.6 REQUIRED)
+
+get_target_property(embree_include_dir embree INTERFACE_INCLUDE_DIRECTORIES)
 
 message(STATUS "CMAKE_CURRENT_LIST_DIR = ${CMAKE_CURRENT_LIST_DIR}")
 message(STATUS "CMAKE_CURRENT_SOURCE_DIR = ${CMAKE_CURRENT_SOURCE_DIR}")
@@ -29,12 +31,15 @@ target_include_directories(${PROJECT_NAME}
     $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/../third-party/>
     $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include/>
     ${embree_include_dir}
+    ${TBB_INCLUDE_DIRS}
     #$<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/>
     #$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
   PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}
 )
 
+target_link_libraries(${PROJECT_NAME} PUBLIC embree)
+target_link_libraries(${PROJECT_NAME} PUBLIC TBB::tbb)
 
 ## Configure OpenPGL installation ##
 
