@@ -53,10 +53,10 @@ struct SampleStorage
     void Clear();
 
     /// Returns the number of surface samples currently stored inside the storage container.
-    uint32_t GetSizeSurface() const;
+    size_t GetSizeSurface() const;
 
     /// Returns the number of volume samples currently stored inside the storage container.
-    uint32_t GetSizeVolume() const;
+    size_t GetSizeVolume() const;
 
     friend class Field;
     private:
@@ -100,13 +100,13 @@ OPENPGL_INLINE void SampleStorage::Clear()
     pglSampleStorageClear(m_sampleStorageHandle);
 }
 
-OPENPGL_INLINE uint32_t SampleStorage::GetSizeSurface() const
+OPENPGL_INLINE size_t SampleStorage::GetSizeSurface() const
 {
     OPENPGL_ASSERT(m_sampleStorageHandle);
     return pglSampleStorageGetSizeSurface(m_sampleStorageHandle);
 }
 
-OPENPGL_INLINE uint32_t SampleStorage::GetSizeVolume() const
+OPENPGL_INLINE size_t SampleStorage::GetSizeVolume() const
 {
     OPENPGL_ASSERT(m_sampleStorageHandle);
     return pglSampleStorageGetSizeVolume(m_sampleStorageHandle);

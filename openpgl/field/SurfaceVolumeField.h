@@ -156,17 +156,17 @@ public:
     }
 
 
-    void addTrainingIteration(uint32_t spp) {
+    void addTrainingIteration(size_t spp) {
         m_totalSPP += spp;
         ++m_iteration;
     }
 
-    uint32_t getTotalSPP() const
+    size_t getTotalSPP() const
     {
         return m_totalSPP;
     }
 
-    uint32_t getIteration() const
+    size_t getIteration() const
     {
         return m_iteration;
     }
@@ -264,10 +264,10 @@ protected:
     void deserialize(std::istream& stream);
 
 protected:
-    uint32_t m_iteration {0};
-    uint32_t m_totalSPP  {0};
+    size_t m_iteration {0};
+    size_t m_totalSPP  {0};
 
-    uint32_t m_nCores {20};
+    size_t m_nCores {20};
 
     RegionStorageContainerType m_regionStorageContainerSurface;
     RegionStorageContainerType m_regionStorageContainerVolume;

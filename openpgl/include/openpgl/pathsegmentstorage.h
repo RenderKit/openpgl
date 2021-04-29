@@ -52,7 +52,7 @@ void pglPathSegmentStorageAddSample(PGLPathSegmentStorage pathSegmentStorage, PG
 
 PGLPathSegment pglPathSegmentNextSegment(PGLPathSegmentStorage pathSegmentStorage);
 
-//void pglAddSamples(PGLSampleStorage sampleStorage, PGLSampleData* samples, uint32_t numSamples);
+//void pglAddSamples(PGLSampleStorage sampleStorage, PGLSampleData* samples, size_t numSamples);
 
 void pglPathSegmentSetPosition(PGLPathSegment pathSegmentStorage, pgl_point3f position);
 

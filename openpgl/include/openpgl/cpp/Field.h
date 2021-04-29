@@ -70,10 +70,10 @@ struct Field
 
 
     /// Returns the number of perforemd training iterations.
-    uint32_t GetIteration() const;
+    size_t GetIteration() const;
 
     /// Return the over all number of sample per pixel used across all trainin iterations.
-    uint32_t GetTotalSPP() const;
+    size_t GetTotalSPP() const;
 
     /**
      * @brief Returns the spatial surface Region containing the approximation of the local incident radiance distriubtion. 
@@ -109,13 +109,13 @@ OPENPGL_INLINE Field::~Field()
     m_fieldHandle = nullptr;
 }
 
-OPENPGL_INLINE uint32_t Field::GetIteration() const
+OPENPGL_INLINE size_t Field::GetIteration() const
 {
     OPENPGL_ASSERT(m_fieldHandle);
     return pglFieldGetIteration(m_fieldHandle);
 }
 
-OPENPGL_INLINE uint32_t Field::GetTotalSPP() const
+OPENPGL_INLINE size_t Field::GetTotalSPP() const
 {
     OPENPGL_ASSERT(m_fieldHandle);
     return pglFieldGetTotalSPP(m_fieldHandle);

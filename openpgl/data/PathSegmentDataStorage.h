@@ -53,7 +53,7 @@ struct PathSegmentDataStorage
     }
 
 
-    uint32_t prepareSamples(const bool splatSamples, Sampler* sampler, const bool useNEEMiWeights = false, const bool guideDirectLight = false)
+    size_t prepareSamples(const bool splatSamples, Sampler* sampler, const bool useNEEMiWeights = false, const bool guideDirectLight = false)
     {
         const float minPDF {0.1f};
         const openpgl::Vector3 maxThroughput {10.0f};

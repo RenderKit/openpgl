@@ -43,7 +43,7 @@ void pglFieldSetSceneBounds(PGLField field, pgl_box3f bounds);
 
 void pglFieldUpdate(PGLField field, PGLSampleStorage sampleStorage, size_t numPerPixelSamples);
 
-//uint32_t pglGetTrainingIteration(PGLField field);
+//size_t pglGetTrainingIteration(PGLField field);
 
 size_t pglFieldGetTotalSPP(PGLField field);
 
