@@ -11,48 +11,80 @@ namespace openpgl
 {
 namespace cpp
 {
+/**
+ * @brief Class to store information of the current path segment.
+ * 
+ * This class stores all required information for a path segment
+ * so that a list of succeeding segments (stored in a PathSegmentStorage) 
+ * can be used to generate SampleData for training the guiding Field. 
+ * 
+ */
 struct PathSegment
 {
     PathSegment();
 
     PathSegment(PGLPathSegment pathSegmentHandle);
 
+    /// Sets the position of the current event/segment.
     void SetPosition(const pgl_point3f& position);
 
+    /// Sets the surface normal at the current intersection/event.
+    /// The normal is equvalent to the surface normal on surfaces and
+    /// can be arbritray at volume events.  
     void SetNormal(const pgl_vec3f& normal);
 
+    /// Sets the incomming direction (direction to the next path segment).
     void SetDirectionIn(const pgl_vec3f& directionIn);
 
+    /// returns the direction to the next path segment.
     pgl_vec3f GetDirectionIn() const;
 
+    /// Sets the PDF used for sampling the direction towards the next segment.
     void SetPDFDirectionIn(const float& pdfDirectionIn);
 
+    /// Sets the direction to the previous path segment (i.e., out-scattered direction).
     void SetDirectionOut(const pgl_vec3f& directionOut);
 
+    /// Marks if the current event is inside a volume or not.
     void SetVolumeScatter(const bool& volumeScatter);
 
+    /// Sets the scattering weight (e.g., BSDF/PDF or phase function/PDF).
     void SetScatteringWeight(const pgl_vec3f& scatteringWeight);
 
+    /// Sets the direct/emissive contribution (e.g., emitted radiance).
     void SetDirectContribution(const pgl_vec3f& directContribution);
 
+    /// Adds additional direct/emissive contribution.
     void AddDirectContribution(const pgl_vec3f& directContribution);
 
-    void SetScatteredContribution(const pgl_vec3f& directScatter);
+    /// Sets the out-scatter contribution.
+    void SetScatteredContribution(const pgl_vec3f& scatteredContribution);
 
-    void AddScatteredContribution(const pgl_vec3f& directScatter);
+    /// Adds additional out-scattered contribtuion to the stored one.
+    void AddScatteredContribution(const pgl_vec3f& scatteredContribution);
 
+    /// Sets the MIS weight which would be multiplied to the directContribution 
+    /// to account for NEE sampling from the previous segment.
     void SetMiWeight(const float& miWeight);
 
+    /// Sets the Russian roulette probablity for surviving path termination at the current segment. 
     void SetRussianRouletteProbability(const float& russianRouletteProbability);
 
+    /// Sets the eta the current material (1.0 for indexed matched, opaque and volumes).
     void SetEta(const float& eta);
 
+    /// Sets if the current scattering event is a delta Dirac (e.g., perfect glass/mirror with roughness = 0.0f) 
     void SetIsDelta(const bool& isDelta);
 
+    /// Sets the roughness (mean cosines for volumes) of the current material.
     void SetRoughness(const float& roughness);
 
+    /// Sets the transmittance weights (transmittance/PDF) from the current to the next path segment.
     void SetTransmittanceWeight(const pgl_vec3f& transmittanceWeight);
 
+    /// Sets a refence to the spatial Region connected to the starting position of the segment.
+    /// Note: it is planned to get rid of this since it is only needed for sample splatting
+    /// which should be replace by KNN lookups
     void SetRegion(const Region& region);
 
     private:

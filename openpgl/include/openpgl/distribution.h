@@ -48,7 +48,9 @@ PGLSurfaceSamplingDistribution pglNewSurfaceSamplingDistribution();
 
 void pglReleaseSurfaceSamplingDistribution(PGLSurfaceSamplingDistribution SurfaceSamplingDistribution);
 
-void pglSurfaceSamplingDistributionInit(PGLSurfaceSamplingDistribution SurfaceSamplingDistribution, PGLRegion region, pgl_point3f samplePosition, pgl_vec3f normal, bool useParallaxComp = true, bool useCosine = true);
+void pglSurfaceSamplingDistributionInit(PGLSurfaceSamplingDistribution SurfaceSamplingDistribution, PGLRegion region, pgl_point3f samplePosition, bool useParallaxComp = true);
+
+void pglSurfaceSamplingDistributionApplyCosineProduct(PGLSurfaceSamplingDistribution surfaceSamplingDistribution, pgl_vec3f normal);
 
 pgl_vec3f pglSurfaceSamplingDistributionSample(PGLSurfaceSamplingDistribution SurfaceSamplingDistribution, pgl_point2f sample);
 

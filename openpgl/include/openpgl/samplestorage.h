@@ -38,15 +38,15 @@ void pglReleaseSampleStorage(PGLSampleStorage sampleStorage);
 
 void pglSampleStorageAddSample(PGLSampleStorage sampleStorage, PGLSampleData& sample);
 
-void pglSampleStorageAddSamples(PGLSampleStorage sampleStorage, const PGLSampleData* samples, uint32_t numSamples);
+void pglSampleStorageAddSamples(PGLSampleStorage sampleStorage, const PGLSampleData* samples, size_t numSamples);
 
 void pglSampleStorageReserve(PGLSampleStorage sampleStorage, const size_t sizeSurface, const size_t sizeVolume);
 
 void pglSampleStorageClear(PGLSampleStorage sampleStorage);
 
-uint32_t pglSampleStorageGetSizeSurface(PGLSampleStorage sampleStorage);
+size_t pglSampleStorageGetSizeSurface(PGLSampleStorage sampleStorage);
 
-uint32_t pglSampleStorageGetSizeVolume(PGLSampleStorage sampleStorage);
+size_t pglSampleStorageGetSizeVolume(PGLSampleStorage sampleStorage);
 
 #ifdef __cplusplus
 }  // extern "C"

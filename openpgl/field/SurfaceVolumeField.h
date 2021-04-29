@@ -50,6 +50,12 @@ public:
         m_spatialSubdivBuilderSettings(settings.spatialSubdivBuilderSettings){
     }
 
+    void setSceneBounds(const openpgl::BBox &sceneBounds)
+    {
+        m_sceneBounds = sceneBounds;
+        m_isSceneBoundsSet = true;
+    }
+
     const RegionType *getSurfaceGuidingRegion( const openpgl::Point3 &p, openpgl::Sampler *sampler) const
     {
         if (m_iteration >0 && embree::inside(m_spatialSubdivSurface.getBounds(), p))
@@ -111,7 +117,7 @@ public:
         }
     }
 
-    void buildField(const BBox &bounds, TSampleContainer& samplesSurface, TSampleContainer& samplesVolume)
+    void buildField(TSampleContainer& samplesSurface, TSampleContainer& samplesVolume)
     {
         m_iteration = 0;
         m_totalSPP  = 0;
@@ -124,8 +130,13 @@ public:
 
         std::cout << "BufferSize: " << sizeof(DirectionalSampleData) * m_spatialSubdivBuilderSettings.maxSamples * 1e-6 <<  " MB" << std::endl;
         std::cout << "buildField: samplesSurface = " << samplesSurface.size() << "\t samplesVolume = " << samplesVolume.size() << std::endl;
-        buildSpatialStructureSurface(bounds, samplesSurface);
-        buildSpatialStructureVolume(bounds, samplesVolume);
+        if(!m_isSceneBoundsSet)
+        {
+            estimateSceneBounds(samplesSurface, samplesVolume);
+        }
+        
+        buildSpatialStructureSurface(m_sceneBounds, samplesSurface);
+        buildSpatialStructureVolume(m_sceneBounds, samplesVolume);
         fitRegions();
     }
 
@@ -163,6 +174,26 @@ public:
     std::string toString() const;
 
 protected:
+
+    void estimateSceneBounds(const TSampleContainer& samplesSurface, const TSampleContainer& samplesVolume)
+    {
+        m_sceneBounds.lower = Vector3(std::numeric_limits<float>::max());
+        m_sceneBounds.upper = Vector3(std::numeric_limits<float>::min());
+        
+        // TODO parallize this part (also use some stats?)
+        for (const auto& ssample : samplesSurface)
+        {
+            m_sceneBounds.extend(Vector3(ssample.position.x, ssample.position.y, ssample.position.z));
+        }
+
+        for (const auto& vsample : samplesVolume)
+        {
+            m_sceneBounds.extend(Vector3(vsample.position.x, vsample.position.y, vsample.position.z));
+        }
+
+        m_sceneBounds.enlarge_by(3.0f);
+        m_isSceneBoundsSet = true;
+    }
 
     void buildSpatialStructureSurface(const BBox &bounds, TSampleContainer& samples)
     {
@@ -244,6 +275,9 @@ protected:
     float m_decayOnSpatialSplit {0.25f};
     bool m_deterministic {false};
 private:
+    bool m_isSceneBoundsSet{false};
+    BBox m_sceneBounds;
+
     bool m_useStochasticNNLookUp {false};
     // spatial structure
     SpatialSubdivBuilder m_spatialSubdivBuilder;

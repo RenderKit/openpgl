@@ -10,6 +10,12 @@ namespace openpgl
 {
 namespace cpp
 {
+
+/**
+ * @brief 
+ * 
+ */
+
 struct VolumeSamplingDistribution
 {
     VolumeSamplingDistribution();
@@ -17,15 +23,44 @@ struct VolumeSamplingDistribution
 
     VolumeSamplingDistribution(const VolumeSamplingDistribution&) = delete;
 
+    /**
+     * @brief 
+     * 
+     * @param sample2D 
+     * @return pgl_vec3f 
+     */
     pgl_vec3f Sample(const pgl_point2f& sample2D)const;
 
+    /**
+     * @brief 
+     * 
+     * @param direction 
+     * @return float 
+     */
     float PDF(const pgl_vec3f& direction) const;
 
+    /**
+     * @brief 
+     * 
+     * @return true 
+     * @return false 
+     */
     bool IsValid() const;
 
+    /**
+     * @brief 
+     * 
+     */
     void Clear();
 
-    void Init(const Region& region, const pgl_point3f& pos, const bool& useParallaxCompensation = true);
+    /**
+     * @brief 
+     * 
+     * @param region 
+     * @param pos 
+     * @param useParallaxCompensation 
+     */
+    void Init(const Region& region, const pgl_point3f& pos, const bool useParallaxCompensation = true);
 
     private:
         PGLVolumeSamplingDistribution m_volumeSamplingDistributionHandle{nullptr};
@@ -68,7 +103,7 @@ void VolumeSamplingDistribution::Clear()
     return pglVolumeSamplingDistributionClear(m_volumeSamplingDistributionHandle);
 }
 
-void VolumeSamplingDistribution::Init(const Region& region, const pgl_point3f& pos, const bool& useParallaxCompensation)
+void VolumeSamplingDistribution::Init(const Region& region, const pgl_point3f& pos, const bool useParallaxCompensation)
 {
     OPENPGL_ASSERT(m_volumeSamplingDistributionHandle);
     pglVolumeSamplingDistributionInit(m_volumeSamplingDistributionHandle, region.m_regionHandle, pos, useParallaxCompensation);

@@ -12,6 +12,11 @@ namespace openpgl
 {
 namespace cpp
 {
+/**
+ * @brief 
+ * 
+ */
+
 struct PathSegmentStorage
 {
     PathSegmentStorage();
@@ -19,16 +24,49 @@ struct PathSegmentStorage
 
     PathSegmentStorage(const PathSegmentStorage&) = delete;
 
+    /**
+     * @brief Reserves memory for the storage. 
+     * 
+     * @param size 
+     */
     void Reserve(size_t size);
 
+    /// Clears all path segments as well as samples stored inside the storage.
     void Clear();
 
+    /**
+     * @brief  Generates and internaly stores -radiance- samples from the the stored path segments.
+     * 
+     * 
+     * 
+     * @param splatSamples 
+     * @param sampler 
+     * @param useNEEMiWeights 
+     * @param guideDirectLight 
+     * @return size_t 
+     */
     size_t PrepareSamples(const bool& splatSamples, Sampler& sampler, const bool useNEEMiWeights = false, const bool guideDirectLight = false);
 
-    const SampleData* GetSamples(uint32_t &nSamples);
+    /**
+     * @brief Get the Samples object
+     * 
+     * @param nSamples 
+     * @return const SampleData* 
+     */
+    const SampleData* GetSamples(size_t &nSamples);
 
+    /**
+     * @brief 
+     * 
+     * @param sample 
+     */
     void AddSample(SampleData sample);
 
+    /**
+     * @brief 
+     * 
+     * @return PathSegment 
+     */
     PathSegment NextSegment();
 
     private:
@@ -66,7 +104,7 @@ OPENPGL_INLINE size_t PathSegmentStorage::PrepareSamples(const bool& splatSample
     return pglPathSegmentStoragePrepareSamples(m_pathSegmentStorageHandle, splatSamples, &sampler.m_samplerHandle, useNEEMiWeights, guideDirectLight);
 }
 
-OPENPGL_INLINE const SampleData* PathSegmentStorage::GetSamples(uint32_t &nSamples)
+OPENPGL_INLINE const SampleData* PathSegmentStorage::GetSamples(size_t &nSamples)
 {
     OPENPGL_ASSERT(m_pathSegmentStorageHandle);
     return pglPathSegmentStorageGetSamples(m_pathSegmentStorageHandle, nSamples);

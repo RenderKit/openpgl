@@ -27,19 +27,22 @@ struct VMMBSDFSamplingDistribution
     /// guiding cosine/BSDF product integral (= irradiance/flux, for cosine)
     float m_productIntegral;
 
-    inline void init(const TVMMDistribution &distribution, const Vector3& normal, bool useCosineProduct)
+    inline void init(const TVMMDistribution &distribution)
     {
         // prespare sampling distribution
         this->m_distributions[0] = distribution;
         this->m_weights[0] = 1.0f;
         this->m_numDistributions = 1;
         this->m_productIntegral = 1.0f;
-        if ( useCosineProduct )
+    }
+
+    inline void applyCosineProduct(const Vector3& normal)
+    {
+        if(this->m_numDistributions > 0)
         {
             this->m_distributions[0].product(1.0f, normal, 2.18853f);
         }
     }
-
 
     inline Vector3 sample(const Point2 sample) const
     {

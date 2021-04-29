@@ -9,6 +9,10 @@ namespace openpgl
 {
     namespace cpp
     {
+        /**
+         * @brief 
+         * 
+         */
         typedef PGLSampleData SampleData;
     }
 }

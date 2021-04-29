@@ -44,7 +44,7 @@ void pglPathSegmentStorageClear(PGLPathSegmentStorage pathSegmentStorage);
 
 size_t pglPathSegmentStoragePrepareSamples(PGLPathSegmentStorage pathSegmentStorage,const bool &spaltSamples, PGLSampler* sampler, const bool useNEEMiWeights = false, const bool guideDirectLight = false);
 
-const PGLSampleData* pglPathSegmentStorageGetSamples(PGLPathSegmentStorage pathSegmentStorage, uint32_t &nSamples);
+const PGLSampleData* pglPathSegmentStorageGetSamples(PGLPathSegmentStorage pathSegmentStorage, size_t &nSamples);
 
 //void pglPathSegmentStorageAddSegment(PGLPathSegmentStorage pathSegmentStorage, PGLPathSegment sample);
 
