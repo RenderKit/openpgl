@@ -43,35 +43,35 @@ struct PGLKDTreeArguments
 struct PGLVMMFactoryArguments
 {
     // weighted EM arguments
-    size_t initK {PGL_VECTOR_SIZE};
+    size_t initK {PGL_VMM_MAX_COMPONENTS/2};
 
     size_t maxK {PGL_VMM_MAX_COMPONENTS};
     size_t maxEMIterrations {100};
 
     float maxKappa {PGL_VMM_MAX_KAPPA};
     //float maxMeanCosine { KappaToMeanCosine<float>(OPENPGL_MAX_KAPPA)};
-    float convergenceThreshold {0.0025f};
+    float convergenceThreshold {0.005f};
 
     // MAP prior parameters
     // weight prior
-    float weightPrior{0.1f};
+    float weightPrior{0.01f};
 
     // concentration/meanCosine prior
-    float meanCosinePriorStrength {0.1f};
+    float meanCosinePriorStrength {0.2f};
     float meanCosinePrior {0.0f};
 
     // adaptive split and merge arguments
     bool useSplitAndMerge {true};
 
-    float splittingThreshold { 0.75 };
-    float mergingThreshold { 0.00625 };
+    float splittingThreshold { 0.5 };
+    float mergingThreshold { 0.025 };
 
-    bool partialReFit { false };
+    bool partialReFit { true };
     int maxSplitItr { 1 };
 
-    int minSamplesForSplitting { 0 };
-    int minSamplesForPartialRefitting { 0 };
-    int minSamplesForMerging { 0 };
+    int minSamplesForSplitting { 32000/8 };
+    int minSamplesForPartialRefitting { 32000/8 };
+    int minSamplesForMerging { 32000/4 };
 };
 
 
