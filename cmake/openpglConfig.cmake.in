@@ -1,0 +1,22 @@
+## Copyright 2019-2020 Intel Corporation
+## SPDX-License-Identifier: Apache-2.0
+
+@PACKAGE_INIT@
+
+## Include openpgl targets ##
+
+include("${CMAKE_CURRENT_LIST_DIR}/@PROJECT_NAME@_Exports.cmake")
+
+check_required_components("@PROJECT_NAME@")
+
+### openvkl ISA build configuration ##
+
+#set(OPENVKL_ISA_SSE4 @OPENVKL_ISA_SSE4@)
+#set(OPENVKL_ISA_AVX @OPENVKL_ISA_AVX@)
+#set(OPENVKL_ISA_AVX2 @OPENVKL_ISA_AVX2@)
+#set(OPENVKL_ISA_AVX512KNL @OPENVKL_ISA_AVX512KNL@)
+#set(OPENVKL_ISA_AVX512SKX @OPENVKL_ISA_AVX512SKX@)
+
+## Standard signal that the package was found ##
+
+set(@PROJECT_NAME@_FOUND TRUE)
