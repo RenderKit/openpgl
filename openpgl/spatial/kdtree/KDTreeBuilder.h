@@ -3,10 +3,10 @@
 
 #pragma once
 
-#include "../openpgl_common.h"
+#include "../../openpgl_common.h"
 #include "KDTree.h"
-#include "../data/SampleStatistics.h"
-#include "../data/Range.h"
+#include "../../data/SampleStatistics.h"
+#include "../../data/Range.h"
 
 #if !defined(WIN32)
 #include <tbb/task_scheduler_init.h>

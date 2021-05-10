@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "../openpgl_common.h"
+#include "../../openpgl_common.h"
 
 #include <tbb/concurrent_vector.h>
 

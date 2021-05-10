@@ -3,9 +3,9 @@
 
 #pragma once
 
-#include "../openpgl_common.h"
+#include "../../openpgl_common.h"
 #include "VMM.h"
-#include "../data/SampleData.h"
+#include "../../data/SampleData.h"
 
 #include "WeightedEMVMMFactory.h"
 #include "WeightedEMParallaxAwareVMMFactory.h"
