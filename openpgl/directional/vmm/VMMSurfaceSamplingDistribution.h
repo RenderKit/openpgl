@@ -3,13 +3,15 @@
 
 #pragma once
 
+#include "../ISurfaceSamplingDistribution.h"
+
 #include <array>
 
 namespace openpgl
 {
 
 template<class TVMMDistribution>
-struct VMMBSDFSamplingDistribution
+struct VMMBSDFSamplingDistribution: public ISurfaceSamplingDistribution
 {
     
     VMMBSDFSamplingDistribution() = default;
@@ -29,16 +31,17 @@ struct VMMBSDFSamplingDistribution
     /// guiding cosine/BSDF product integral (= irradiance/flux, for cosine)
     float m_productIntegral;
 
-    inline void init(const TVMMDistribution &distribution)
+    inline void init(const void* distribution) override
     {
+        const TVMMDistribution* vmmdistribution = (TVMMDistribution*)distribution;
         // prespare sampling distribution
-        this->m_distributions[0] = distribution;
+        this->m_distributions[0] = *vmmdistribution;
         this->m_weights[0] = 1.0f;
         this->m_numDistributions = 1;
         this->m_productIntegral = 1.0f;
     }
 
-    inline void applyCosineProduct(const Vector3& normal)
+    inline void applyCosineProduct(const Vector3& normal) override
     {
         if(this->m_numDistributions > 0)
         {
@@ -46,7 +49,7 @@ struct VMMBSDFSamplingDistribution
         }
     }
 
-    inline Vector3 sample(const Point2 sample) const
+    inline Vector3 sample(const Point2 sample) const override
     {
         OPENPGL_ASSERT(m_numDistributions > 0);
 
@@ -67,7 +70,7 @@ struct VMMBSDFSamplingDistribution
         return Vector3(dir[0], dir[1], dir[2]);
     }
 
-    inline float pdf(const Vector3 dir) const
+    inline float pdf(const Vector3 dir) const override
     {
         OPENPGL_ASSERT(m_numDistributions > 0);
 
@@ -78,15 +81,18 @@ struct VMMBSDFSamplingDistribution
         return pdf;
     }
 
-    inline bool valid() const {
+    inline bool valid() const override
+    {
         return m_numDistributions > 0;
     }
 
-    inline void clear() {
+    inline void clear() override
+    {
         m_numDistributions = 0;
     }
 
-    std::string toString() const {
+    std::string toString() const override
+    {
         std::ostringstream oss;
         oss << "GuidingData [\n";
         for (uint32_t i=0; i<m_numDistributions; ++i)

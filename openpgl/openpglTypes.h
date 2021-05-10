@@ -11,6 +11,8 @@
 
 #include "data/SampleDataStorage.h"
 #include "field/SurfaceVolumeFieldParallaxAwareVMM.h"
+#include "directional/ISurfaceSamplingDistribution.h"
+#include "directional/IVolumeSamplingDistribution.h"
 #include "directional/vmm/ParallaxAwareVMM.h"
 #include "directional/vmm/AdaptiveSplitandMergeFactory.h"
 #include "directional/vmm/VMMSurfaceSamplingDistribution.h"

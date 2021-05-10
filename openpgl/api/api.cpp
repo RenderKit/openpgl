@@ -472,30 +472,30 @@ OPENPGL_CATCH_END(nullptr)
 
 extern "C" void pglReleaseSurfaceSamplingDistribution(PGLSurfaceSamplingDistribution surfaceSamplingDistribution)OPENPGL_CATCH_BEGIN
 {
-    GuidedSurfaceSamplingDistribution* gSurfaceSamplingDistribution =  (GuidedSurfaceSamplingDistribution*)surfaceSamplingDistribution;
+    ISurfaceSamplingDistribution* gSurfaceSamplingDistribution =  (ISurfaceSamplingDistribution*)surfaceSamplingDistribution;
     delete gSurfaceSamplingDistribution;
 }
 OPENPGL_CATCH_END()
 
 extern "C" void pglSurfaceSamplingDistributionInit(PGLSurfaceSamplingDistribution surfaceSamplingDistribution, PGLRegion region, pgl_point3f samplePosition, bool useParallaxComp)
 {
-    GuidedSurfaceSamplingDistribution* gSurfaceSamplingDistribution =  (GuidedSurfaceSamplingDistribution*)surfaceSamplingDistribution;
+    ISurfaceSamplingDistribution* gSurfaceSamplingDistribution =  (ISurfaceSamplingDistribution*)surfaceSamplingDistribution;
     GuidingRegion *gRegion = (GuidingRegion*)region;
     openpgl::Vector3 opglSamplePosition(samplePosition.x, samplePosition.y, samplePosition.z);
     GuidingDistribution distriubtion = gRegion->getDistribution(opglSamplePosition, useParallaxComp);
-    gSurfaceSamplingDistribution->init(distriubtion);
+    gSurfaceSamplingDistribution->init(&distriubtion);
 }
 
 extern "C" void pglSurfaceSamplingDistributionApplyCosineProduct(PGLSurfaceSamplingDistribution surfaceSamplingDistribution, pgl_vec3f normal)
 {
-    GuidedSurfaceSamplingDistribution* gSurfaceSamplingDistribution =  (GuidedSurfaceSamplingDistribution*)surfaceSamplingDistribution;
+    ISurfaceSamplingDistribution* gSurfaceSamplingDistribution =  (ISurfaceSamplingDistribution*)surfaceSamplingDistribution;
     openpgl::Vector3 opglNormal(normal.x, normal.y, normal.z);
     gSurfaceSamplingDistribution->applyCosineProduct(opglNormal);
 }
 
 extern "C" pgl_vec3f pglSurfaceSamplingDistributionSample(PGLSurfaceSamplingDistribution surfaceSamplingDistribution, pgl_point2f sample)
 {
-    GuidedSurfaceSamplingDistribution* gSurfaceSamplingDistribution =  (GuidedSurfaceSamplingDistribution*)surfaceSamplingDistribution;   
+    ISurfaceSamplingDistribution* gSurfaceSamplingDistribution =  (ISurfaceSamplingDistribution*)surfaceSamplingDistribution;   
     openpgl::Point2 opglSample(sample.x, sample.y);
     openpgl::Vector3 opglDirection = gSurfaceSamplingDistribution->sample(opglSample);
     pgl_vec3f pglDirection;
@@ -505,19 +505,19 @@ extern "C" pgl_vec3f pglSurfaceSamplingDistributionSample(PGLSurfaceSamplingDist
 
 extern "C" float pglSurfaceSamplingDistributionPDF(PGLSurfaceSamplingDistribution surfaceSamplingDistribution, pgl_vec3f direction)
 {
-    GuidedSurfaceSamplingDistribution* gSurfaceSamplingDistribution =  (GuidedSurfaceSamplingDistribution*)surfaceSamplingDistribution;
+    ISurfaceSamplingDistribution* gSurfaceSamplingDistribution =  (ISurfaceSamplingDistribution*)surfaceSamplingDistribution;
     return gSurfaceSamplingDistribution->pdf(openpgl::Vector3(direction.x, direction.y, direction.z));
 }
 
 extern "C" bool pglSurfaceSamplingDistributionIsValid(PGLSurfaceSamplingDistribution surfaceSamplingDistribution)
 {
-    GuidedSurfaceSamplingDistribution* gSurfaceSamplingDistribution =  (GuidedSurfaceSamplingDistribution*)surfaceSamplingDistribution; 
+    ISurfaceSamplingDistribution* gSurfaceSamplingDistribution =  (ISurfaceSamplingDistribution*)surfaceSamplingDistribution; 
     return gSurfaceSamplingDistribution->valid();
 }
 
 extern "C" void pglSurfaceSamplingDistributionClear(PGLSurfaceSamplingDistribution surfaceSamplingDistribution)
 {
-    GuidedSurfaceSamplingDistribution* gSurfaceSamplingDistribution =  (GuidedSurfaceSamplingDistribution*)surfaceSamplingDistribution;
+    ISurfaceSamplingDistribution* gSurfaceSamplingDistribution =  (ISurfaceSamplingDistribution*)surfaceSamplingDistribution;
     gSurfaceSamplingDistribution->clear();
 }
 
@@ -530,23 +530,23 @@ OPENPGL_CATCH_END(nullptr)
 
 extern "C" void pglReleaseVolumeSamplingDistribution(PGLVolumeSamplingDistribution volumeSamplingDistribution)OPENPGL_CATCH_BEGIN
 {
-    GuidedVolumeSamplingDistribution* gVolumeSamplingDistribution =  (GuidedVolumeSamplingDistribution*)volumeSamplingDistribution;
+    IVolumeSamplingDistribution* gVolumeSamplingDistribution =  (IVolumeSamplingDistribution*)volumeSamplingDistribution;
     delete gVolumeSamplingDistribution;
 }
 OPENPGL_CATCH_END()
 
 extern "C" void pglVolumeSamplingDistributionInit(PGLVolumeSamplingDistribution volumeSamplingDistribution, PGLRegion region, pgl_point3f samplePosition, bool useParallaxComp)
 {
-    GuidedVolumeSamplingDistribution* gVolumeSamplingDistribution =  (GuidedVolumeSamplingDistribution*)volumeSamplingDistribution;
+    IVolumeSamplingDistribution* gVolumeSamplingDistribution =  (IVolumeSamplingDistribution*)volumeSamplingDistribution;
     GuidingRegion *gRegion = (GuidingRegion*)region;
     openpgl::Vector3 opglSamplePosition(samplePosition.x, samplePosition.y, samplePosition.z);
     GuidingDistribution distriubtion = gRegion->getDistribution(opglSamplePosition, useParallaxComp);
-    gVolumeSamplingDistribution->init(distriubtion);
+    gVolumeSamplingDistribution->init(&distriubtion);
 }
 
 extern "C" pgl_vec3f pglVolumeSamplingDistributionSample(PGLVolumeSamplingDistribution volumeSamplingDistribution, pgl_point2f sample)
 {
-    GuidedVolumeSamplingDistribution* gVolumeSamplingDistribution =  (GuidedVolumeSamplingDistribution*)volumeSamplingDistribution; 
+    IVolumeSamplingDistribution* gVolumeSamplingDistribution =  (IVolumeSamplingDistribution*)volumeSamplingDistribution; 
     openpgl::Point2 opglSample(sample.x, sample.y);
     openpgl::Vector3 opglDirection = gVolumeSamplingDistribution->sample(opglSample);
     pgl_vec3f pglDirection;
@@ -556,19 +556,19 @@ extern "C" pgl_vec3f pglVolumeSamplingDistributionSample(PGLVolumeSamplingDistri
 
 extern "C" float pglVolumeSamplingDistributionPDF(PGLVolumeSamplingDistribution volumeSamplingDistribution, pgl_vec3f direction)
 {
-    GuidedVolumeSamplingDistribution* gVolumeSamplingDistribution =  (GuidedVolumeSamplingDistribution*)volumeSamplingDistribution;
+    IVolumeSamplingDistribution* gVolumeSamplingDistribution =  (IVolumeSamplingDistribution*)volumeSamplingDistribution;
     return gVolumeSamplingDistribution->pdf(openpgl::Vector3(direction.x, direction.y, direction.z));
 }
 
 extern "C" bool pglVolumeSamplingDistributionIsValid(PGLVolumeSamplingDistribution volumeSamplingDistribution)
 {
-    GuidedVolumeSamplingDistribution* gVolumeSamplingDistribution =  (GuidedVolumeSamplingDistribution*)volumeSamplingDistribution;
+    IVolumeSamplingDistribution* gVolumeSamplingDistribution =  (IVolumeSamplingDistribution*)volumeSamplingDistribution;
     return gVolumeSamplingDistribution->valid();
 }
 
 extern "C" void pglVolumeSamplingDistributionClear(PGLVolumeSamplingDistribution volumeSamplingDistribution)
 {
-    GuidedVolumeSamplingDistribution* gVolumeSamplingDistribution =  (GuidedVolumeSamplingDistribution*)volumeSamplingDistribution;
+    IVolumeSamplingDistribution* gVolumeSamplingDistribution =  (IVolumeSamplingDistribution*)volumeSamplingDistribution;
     gVolumeSamplingDistribution->clear();
 }
 
