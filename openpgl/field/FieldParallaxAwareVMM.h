@@ -10,7 +10,7 @@
 #include "../vmm/ParallaxAwareVMM.h"
 #include "../vmm/AdaptiveSplitandMergeFactory.h"
 
-#if defined (USE_TBB_THREADING)
+#if !defined (OPENPGL_USE_OMP_THREADING)
 #include <tbb/parallel_for.h>
 #endif
 
@@ -48,16 +48,13 @@ struct FieldParallaxAwareVMM: public Field<openpgl::Region<ParallaxAwareVonMises
     {
       size_t nGuidingRegions = this->m_regionStorageContainer.size();
       std::cout << "Begin region fitting: nRegions =  " << nGuidingRegions << std::endl;
-#if defined(USE_OPENMP)
+#if defined(OPENPGL_USE_OMP_THREADING)
       #pragma omp parallel for num_threads(this->m_nCores) schedule(dynamic)
-#endif
-
-#if defined (USE_TBB_THREADING)
+      for (size_t n=0; n < nGuidingRegions; n++)
+#else
       tbb::parallel_for( tbb::blocked_range<int>(0,nGuidingRegions), [&](tbb::blocked_range<int> r)
       {
-      for (int n = r.begin(); n<r.end(); ++n)
-#else
-      for (size_t n=0; n < nGuidingRegions; n++)
+      for (int n = r.begin(); n<r.end(); ++n)      
 #endif
       {
         typename ParentField::RegionStorageType &regionStorage = this->m_regionStorageContainer[n];
@@ -79,7 +76,7 @@ struct FieldParallaxAwareVMM: public Field<openpgl::Region<ParallaxAwareVonMises
             std::cout << "!!!! regionStorage.first.valid !!! " << regionStorage.first.distribution.toString() << std::endl;
         regionStorage.first.splitFlag = false;
       }
-#if defined (USE_TBB_THREADING)
+#if !defined (OPENPGL_USE_OMP_THREADING)
       });
 #endif
     }
@@ -88,15 +85,13 @@ struct FieldParallaxAwareVMM: public Field<openpgl::Region<ParallaxAwareVonMises
     {
       size_t nGuidingRegions = this->m_regionStorageContainer.size();
       std::cout << "Begin region updating: nRegions =  " << nGuidingRegions << std::endl;
-#if defined(USE_OPENMP)
+#if defined(OPENPGL_USE_OMP_THREADING)
       #pragma omp parallel for num_threads(this->m_nCores) schedule(dynamic)
-#endif
-#if defined (USE_TBB_THREADING)
+      for (size_t n=0; n < nGuidingRegions; n++)
+#else
       tbb::parallel_for( tbb::blocked_range<int>(0,nGuidingRegions), [&](tbb::blocked_range<int> r)
       {
-      for (int n = r.begin(); n<r.end(); ++n)
-#else
-      for (size_t n=0; n < nGuidingRegions; n++)
+      for (int n = r.begin(); n<r.end(); ++n) 
 #endif
       {
         typename ParentField::RegionStorageType &regionStorage = this->m_regionStorageContainer[n];
@@ -131,7 +126,7 @@ struct FieldParallaxAwareVMM: public Field<openpgl::Region<ParallaxAwareVonMises
         if(!regionStorage.first.valid)
             std::cout << "!!!! regionStorage.first.valid !!! " << regionStorage.first.distribution.toString() << std::endl;
       }
-#if defined (USE_TBB_THREADING)
+#if !defined (OPENPGL_USE_OMP_THREADING)
       });
 #endif
     }

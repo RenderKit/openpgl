@@ -3,9 +3,6 @@
 
 #pragma once
 
-#define USE_TBB_THREADING
-//#define OPENPGL_SHOW_PRINT_OUTS
-
 #define ONE_OVER_FOUR_PI 0.07957747154594767
 
 #include <embreeSrc/common/math/constants.h>

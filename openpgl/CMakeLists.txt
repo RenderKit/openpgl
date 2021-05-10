@@ -8,11 +8,19 @@ add_library(${PROJECT_NAME} SHARED
 )
 
 set(OPENPGL_RELEASE_OPTIONS -O3 -Wall -msse2 -msse4.1)
-set(OPENPGL_RELEASE_OPTIONS ${OPENPGL_RELEASE_OPTIONS} -Wno-padded -fopenmp -ftree-vectorize -mfpmath=sse -funsafe-math-optimizations -fno-rounding-math -fno-signaling-nans -fno-math-errno -fomit-frame-pointer )
+set(OPENPGL_RELEASE_OPTIONS ${OPENPGL_RELEASE_OPTIONS} -Wno-padded -ftree-vectorize -mfpmath=sse -funsafe-math-optimizations -fno-rounding-math -fno-signaling-nans -fno-math-errno -fomit-frame-pointer )
+
+if(USE_OMP_THREADING)
+  set(OPENPGL_RELEASE_OPTIONS -fopenmp)
+endif()
 
 target_compile_options(${PROJECT_NAME} PUBLIC "$<$<CONFIG:RELEASE>:${OPENPGL_RELEASE_OPTIONS}>")
 
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_11)
+
+if(USE_OMP_THREADING)
+  add_compile_definitions(OPENPGL_USE_OMP_THREADING)
+endif()
 
 #add_compile_options()
 
@@ -28,18 +36,20 @@ message(STATUS "CMAKE_CURRENT_BINARY_DIR = ${CMAKE_CURRENT_BINARY_DIR}")
 
 target_include_directories(${PROJECT_NAME}
   PUBLIC
+    #$<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/../third-party/>
+    #$<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include/>
+
+    #$<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+  PRIVATE
     $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/../third-party/>
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include/>
+    ${CMAKE_CURRENT_LIST_DIR}
     ${embree_include_dir}
     ${TBB_INCLUDE_DIRS}
-    #$<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/>
-    #$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
-  PRIVATE
-    ${CMAKE_CURRENT_LIST_DIR}
 )
 
-target_link_libraries(${PROJECT_NAME} PUBLIC embree)
-target_link_libraries(${PROJECT_NAME} PUBLIC TBB::tbb)
+target_link_libraries(${PROJECT_NAME} PRIVATE embree)
+target_link_libraries(${PROJECT_NAME} PRIVATE TBB::tbb)
 
 ## Configure OpenPGL installation ##
 

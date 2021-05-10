@@ -10,7 +10,7 @@
 #include "../vmm/ParallaxAwareVMM.h"
 #include "../vmm/AdaptiveSplitandMergeFactory.h"
 
-#if defined (USE_TBB_THREADING)
+#if !defined (OPENPGL_USE_OMP_THREADING)
 #include <tbb/parallel_for.h>
 #endif
 
@@ -132,16 +132,13 @@ private:
     {
         size_t nGuidingRegions = regionStorageContainer.size();
         std::cout << "fitRegion: "<< (isSurface? "surface":"volume") << "\tnGuidingRegions = " << nGuidingRegions << std::endl;
-#if defined(USE_OPENMP)
+#if defined(OPENPGL_USE_OMP_THREADING)
         #pragma omp parallel for num_threads(this->m_nCores) schedule(dynamic)
-#endif
-
-#if defined (USE_TBB_THREADING)
+        for (size_t n=0; n < nGuidingRegions; n++)
+#else
         tbb::parallel_for( tbb::blocked_range<int>(0,nGuidingRegions), [&](tbb::blocked_range<int> r)
         {
-        for (int n = r.begin(); n<r.end(); ++n)
-#else
-        for (size_t n=0; n < nGuidingRegions; n++)
+        for (int n = r.begin(); n<r.end(); ++n) 
 #endif
         {
             typename ParentField::RegionStorageType &regionStorage = regionStorageContainer[n];
@@ -172,7 +169,7 @@ private:
                 regionStorage.first.splitFlag = false;
             }
         }
-#if defined (USE_TBB_THREADING)
+#if !defined (OPENPGL_USE_OMP_THREADING)
         });
 #endif
     }
@@ -181,15 +178,13 @@ private:
     {
         size_t nGuidingRegions = regionStorageContainer.size();
         std::cout << "updateRegion: " << (isSurface? "surface":"volume") << "\tnGuidingRegions = " << nGuidingRegions << std::endl;
-#if defined(USE_OPENMP)
+#if defined(OPENPGL_USE_OMP_THREADING)
         #pragma omp parallel for num_threads(this->m_nCores) schedule(dynamic)
-#endif
-#if defined (USE_TBB_THREADING)
+        for (size_t n=0; n < nGuidingRegions; n++)
+#else
         tbb::parallel_for( tbb::blocked_range<int>(0,nGuidingRegions), [&](tbb::blocked_range<int> r)
         {
         for (int n = r.begin(); n<r.end(); ++n)
-#else
-        for (size_t n=0; n < nGuidingRegions; n++)
 #endif
         {
             typename ParentField::RegionStorageType &regionStorage = regionStorageContainer[n];
@@ -236,7 +231,7 @@ private:
                 regionStorage.first.splitFlag = false;
             }
         }
-#if defined (USE_TBB_THREADING)
+#if !defined (OPENPGL_USE_OMP_THREADING)
         });
 #endif
     }

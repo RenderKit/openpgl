@@ -8,14 +8,12 @@
 #include "../data/SampleStatistics.h"
 #include "../data/Range.h"
 
-
-#define USE_OMP_TASKS
-
+#include <tbb/task_scheduler_init.h>
 #include <tbb/concurrent_vector.h>
 
 #include <tbb/parallel_for.h>
 #include <tbb/parallel_reduce.h>
-
+#include <tbb/parallel_invoke.h>
 #include <iostream>
 #include <limits>
 
@@ -81,9 +79,11 @@ struct KDTreePartitionBuilder
             y /= double(samples.size());
             z /= double(samples.size());
         }
-#ifdef USE_OMP_TASKS
-#pragma omp parallel num_threads(nCores)
-#pragma omp single nowait
+#ifdef OPENPGL_USE_OMP_THREADING
+    #pragma omp parallel num_threads(nCores)
+    #pragma omp single nowait
+#else
+        tbb::task_scheduler_init init(nCores);
 #endif
         updateTreeNode(&kdTree, root, depth, sampleRange, sampleStats, &dataStorage, buildSettings);
 
@@ -232,16 +232,15 @@ private:
         OPENPGL_ASSERT(sampleRangeLeftRight[0].size() > 1);
         OPENPGL_ASSERT(sampleRangeLeftRight[1].size() > 1);
 
-#ifdef USE_OMP_TASKS
-#pragma omp task mergeable
+#ifdef OPENPGL_USE_OMP_THREADING
+    #pragma omp task mergeable
         updateTreeNode(kdTree, kdTree->getNode(nodeIdsLeftRight[0]), depth + 1, sampleRangeLeftRight[0], sampleStatsLeftRight[0], dataStorage, buildSettings);
         updateTreeNode(kdTree, kdTree->getNode(nodeIdsLeftRight[1]), depth + 1, sampleRangeLeftRight[1], sampleStatsLeftRight[1], dataStorage, buildSettings);
 #else
-#pragma omp parallel for num_threads(2)
-        for (size_t i = 0; i < 2; i++)
-        {
-            updateTreeNode(kdTree, kdTree->getNode(nodeIdsLeftRight[i]), depth + 1, sampleRangeLeftRight[i], sampleStatsLeftRight[i], dataStorage, buildSettings);
-        }
+    tbb::parallel_invoke(
+        [&]{updateTreeNode(kdTree, kdTree->getNode(nodeIdsLeftRight[0]), depth + 1, sampleRangeLeftRight[0], sampleStatsLeftRight[0], dataStorage, buildSettings);},
+        [&]{updateTreeNode(kdTree, kdTree->getNode(nodeIdsLeftRight[1]), depth + 1, sampleRangeLeftRight[1], sampleStatsLeftRight[1], dataStorage, buildSettings);}
+    );
 #endif
     }
 
