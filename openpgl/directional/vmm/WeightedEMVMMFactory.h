@@ -5,7 +5,7 @@
 
 #include "../openpgl_common.h"
 #include "VMM.h"
-#include "../data/DirectionalSampleData.h"
+#include "../data/SampleData.h"
 
 #include "VMMFactory.h"
 
@@ -157,11 +157,11 @@ public:
 
     WeightedEMVonMisesFisherFactory();
 
-    virtual void fitMixture(VMM &vmm, size_t numComponents, SufficientStatisitcs &stats, const DirectionalSampleData* samples, const size_t numSamples, const Configuration &cfg, FittingStatistics &fitStats) const;
+    virtual void fitMixture(VMM &vmm, size_t numComponents, SufficientStatisitcs &stats, const SampleData* samples, const size_t numSamples, const Configuration &cfg, FittingStatistics &fitStats) const;
 
-    virtual void updateMixture(VMM &vmm, SufficientStatisitcs &previousStats, const DirectionalSampleData* samples, const size_t numSamples, const Configuration &cfg, FittingStatistics &fitStats) const;
+    virtual void updateMixture(VMM &vmm, SufficientStatisitcs &previousStats, const SampleData* samples, const size_t numSamples, const Configuration &cfg, FittingStatistics &fitStats) const;
 
-    virtual void partialUpdateMixture(VMM &vmm, PartialFittingMask &mask, SufficientStatisitcs &previousStats, const DirectionalSampleData* samples, const size_t numSamples, const Configuration &cfg, FittingStatistics &fitStats) const;
+    virtual void partialUpdateMixture(VMM &vmm, PartialFittingMask &mask, SufficientStatisitcs &previousStats, const SampleData* samples, const size_t numSamples, const Configuration &cfg, FittingStatistics &fitStats) const;
 
     virtual VMM VMMfromSufficientStatisitcs(const SufficientStatisitcs &suffStats, const Configuration &cfg) const;
 
@@ -172,7 +172,7 @@ public:
 
 private:
 
-    float weightedExpectationStep(VMM &vmm, SufficientStatisitcs &stats, UnassignedSamplesStatistics &unassignedStats, const DirectionalSampleData* samples, const size_t numSamples) const;
+    float weightedExpectationStep(VMM &vmm, SufficientStatisitcs &stats, UnassignedSamplesStatistics &unassignedStats, const SampleData* samples, const size_t numSamples) const;
 
     void weightedMaximumAPosteriorStep(VMM &vmm, const SufficientStatisitcs &previousStats,
         const SufficientStatisitcs &currentStats,
@@ -237,7 +237,7 @@ typename WeightedEMVonMisesFisherFactory< TVMMDistribution>::VMM WeightedEMVonMi
 
 
 template<class TVMMDistribution>
-void WeightedEMVonMisesFisherFactory< TVMMDistribution>::fitMixture(VMM &vmm, size_t numComponents, SufficientStatisitcs &stats, const DirectionalSampleData* samples, const size_t numSamples, const Configuration &cfg, FittingStatistics &fitStats) const
+void WeightedEMVonMisesFisherFactory< TVMMDistribution>::fitMixture(VMM &vmm, size_t numComponents, SufficientStatisitcs &stats, const SampleData* samples, const size_t numSamples, const Configuration &cfg, FittingStatistics &fitStats) const
 {
     //VonMisesFisherFactory< TVMMDistribution>::InitUniformVMM( vmm, numComponents, 5.0f);
     this->InitUniformVMM( vmm, numComponents, 5.0f);
@@ -270,7 +270,7 @@ void WeightedEMVonMisesFisherFactory< TVMMDistribution>::handleUnassignedSampleS
 }
 
 template<class TVMMDistribution>
-void WeightedEMVonMisesFisherFactory< TVMMDistribution>::updateMixture(VMM &vmm, SufficientStatisitcs &previousStats, const DirectionalSampleData* samples, const size_t numSamples, const Configuration &cfg, FittingStatistics &fitStats) const
+void WeightedEMVonMisesFisherFactory< TVMMDistribution>::updateMixture(VMM &vmm, SufficientStatisitcs &previousStats, const SampleData* samples, const size_t numSamples, const Configuration &cfg, FittingStatistics &fitStats) const
 {
     SufficientStatisitcs currentStats;
     // initially clear all stats
@@ -317,7 +317,7 @@ void WeightedEMVonMisesFisherFactory< TVMMDistribution>::updateMixture(VMM &vmm,
 }
 
 template<class TVMMDistribution>
-void WeightedEMVonMisesFisherFactory< TVMMDistribution>::partialUpdateMixture(VMM &vmm, PartialFittingMask &mask, SufficientStatisitcs &previousStats, const DirectionalSampleData* samples, const size_t numSamples, const Configuration &cfg, FittingStatistics &fitStats) const
+void WeightedEMVonMisesFisherFactory< TVMMDistribution>::partialUpdateMixture(VMM &vmm, PartialFittingMask &mask, SufficientStatisitcs &previousStats, const SampleData* samples, const size_t numSamples, const Configuration &cfg, FittingStatistics &fitStats) const
 {
     SufficientStatisitcs currentStats;
     // initially clear all stats
@@ -769,7 +769,7 @@ template<class TVMMDistribution>
 float WeightedEMVonMisesFisherFactory< TVMMDistribution>::weightedExpectationStep(VMM &vmm,
         SufficientStatisitcs &stats,
         UnassignedSamplesStatistics &unassignedStats,
-        const DirectionalSampleData* samples,
+        const SampleData* samples,
         const size_t numSamples) const
 {
     unassignedStats.clear();
@@ -785,7 +785,7 @@ float WeightedEMVonMisesFisherFactory< TVMMDistribution>::weightedExpectationSte
 
     for (size_t n = 0; n < numSamples; n++ )
     {
-        const DirectionalSampleData sampleData = samples[n];
+        const SampleData sampleData = samples[n];
         const embree::vfloat<VMM::VectorSize> sampleWeight = sampleData.weight;
         const Vector3 sampleDirection(sampleData.direction.x, sampleData.direction.y, sampleData.direction.z);
         const embree::Vec3< embree::vfloat<VMM::VectorSize> > sampleDirectionSIMD( sampleDirection );

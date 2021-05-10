@@ -7,10 +7,10 @@
 
 #include "../openpgl_common.h"
 #include "../data/Range.h"
-#include "../kdtree/KDTree.h"
-#include "../kdtree/KDTreeBuilder.h"
-#include "Region.h"
-#include "KNN.h"
+#include "../spatial/kdtree/KDTree.h"
+#include "../spatial/kdtree/KDTreeBuilder.h"
+#include "../spatial/Region.h"
+#include "../spatial/KNN.h"
 
 namespace openpgl
 {
@@ -124,11 +124,11 @@ public:
         if (m_deterministic)
         {
             std::cout << "SurfaceVolumeField::buildField(): deterministic = " << m_deterministic<< std::endl;
-            std::sort(samplesSurface.begin(), samplesSurface.end(), DirectionalSampleDataLess);
-            std::sort(samplesVolume.begin(), samplesVolume.end(), DirectionalSampleDataLess);
+            std::sort(samplesSurface.begin(), samplesSurface.end(), SampleDataLess);
+            std::sort(samplesVolume.begin(), samplesVolume.end(), SampleDataLess);
         }
 
-        std::cout << "BufferSize: " << sizeof(DirectionalSampleData) * m_spatialSubdivBuilderSettings.maxSamples * 1e-6 <<  " MB" << std::endl;
+        std::cout << "BufferSize: " << sizeof(SampleData) * m_spatialSubdivBuilderSettings.maxSamples * 1e-6 <<  " MB" << std::endl;
         std::cout << "buildField: samplesSurface = " << samplesSurface.size() << "\t samplesVolume = " << samplesVolume.size() << std::endl;
         if(!m_isSceneBoundsSet)
         {
@@ -146,8 +146,8 @@ public:
         if (m_deterministic)
         {
             std::cout << "SurfaceVolumeField::buildField(): deterministic = " << m_deterministic << std::endl;
-            std::sort(samplesSurface.begin(), samplesSurface.end(), DirectionalSampleDataLess);
-            std::sort(samplesVolume.begin(), samplesVolume.end(), DirectionalSampleDataLess);
+            std::sort(samplesSurface.begin(), samplesSurface.end(), SampleDataLess);
+            std::sort(samplesVolume.begin(), samplesVolume.end(), SampleDataLess);
         }
 
         updateSpatialStructureSurface(samplesSurface);

@@ -87,11 +87,11 @@ struct WeightedEMParallaxAwareVonMisesFisherFactory: public WeightedEMVonMisesFi
 
 
 public:
-    void fitMixture(VMM &vmm, size_t numComponents, SufficientStatisitcs &stats, const DirectionalSampleData* samples, const size_t numSamples, const Configuration &cfg, FittingStatistics &fitStats) const;
+    void fitMixture(VMM &vmm, size_t numComponents, SufficientStatisitcs &stats, const SampleData* samples, const size_t numSamples, const Configuration &cfg, FittingStatistics &fitStats) const;
 
-    void updateMixture(VMM &vmm, SufficientStatisitcs &previousStats, const DirectionalSampleData* samples, const size_t numSamples, const Configuration &cfg, FittingStatistics &fitStats) const;
+    void updateMixture(VMM &vmm, SufficientStatisitcs &previousStats, const SampleData* samples, const size_t numSamples, const Configuration &cfg, FittingStatistics &fitStats) const;
 
-    void partialUpdateMixture(VMM &vmm, PartialFittingMask &mask, SufficientStatisitcs &previousStats, const DirectionalSampleData* samples, const size_t numSamples, const Configuration &cfg, FittingStatistics &fitStats) const;
+    void partialUpdateMixture(VMM &vmm, PartialFittingMask &mask, SufficientStatisitcs &previousStats, const SampleData* samples, const size_t numSamples, const Configuration &cfg, FittingStatistics &fitStats) const;
 
     //VMM VMMfromSufficientStatisitcs(const SufficientStatisitcs &suffStats, const Configuration &cfg) const override;
     std::string toString() const
@@ -101,9 +101,9 @@ public:
 
 //private:
 
-    void initComponentDistances (VMM &vmm, SufficientStatisitcs &sufficientStats, const DirectionalSampleData* samples, const size_t numSamples) const;
+    void initComponentDistances (VMM &vmm, SufficientStatisitcs &sufficientStats, const SampleData* samples, const size_t numSamples) const;
 
-    void updateComponentDistances (VMM &vmm, SufficientStatisitcs &sufficientStats, const DirectionalSampleData* samples, const size_t numSamples) const;
+    void updateComponentDistances (VMM &vmm, SufficientStatisitcs &sufficientStats, const SampleData* samples, const size_t numSamples) const;
 };
 
 ////////////////////////////////////////////////////////////
@@ -278,7 +278,7 @@ void WeightedEMParallaxAwareVonMisesFisherFactory< TVMMDistribution>::Sufficient
 ////////////////////////////////////////////////////////////
 
 template<class TVMMDistribution>
-void WeightedEMParallaxAwareVonMisesFisherFactory< TVMMDistribution>::fitMixture(VMM &vmm, size_t numComponents, SufficientStatisitcs &stats, const DirectionalSampleData* samples, const size_t numSamples, const Configuration &cfg, FittingStatistics &fitStats) const
+void WeightedEMParallaxAwareVonMisesFisherFactory< TVMMDistribution>::fitMixture(VMM &vmm, size_t numComponents, SufficientStatisitcs &stats, const SampleData* samples, const size_t numSamples, const Configuration &cfg, FittingStatistics &fitStats) const
 {
     WeightedEMVonMisesFisherFactory< TVMMDistribution>::fitMixture( vmm, numComponents, stats.wEMSufficientStatisitcs, samples, numSamples, cfg, fitStats);
     /*
@@ -294,20 +294,20 @@ void WeightedEMParallaxAwareVonMisesFisherFactory< TVMMDistribution>::fitMixture
 }
 
 template<class TVMMDistribution>
-void WeightedEMParallaxAwareVonMisesFisherFactory< TVMMDistribution>::updateMixture(VMM &vmm, SufficientStatisitcs &previousStats, const DirectionalSampleData* samples, const size_t numSamples, const Configuration &cfg, FittingStatistics &fitStats) const
+void WeightedEMParallaxAwareVonMisesFisherFactory< TVMMDistribution>::updateMixture(VMM &vmm, SufficientStatisitcs &previousStats, const SampleData* samples, const size_t numSamples, const Configuration &cfg, FittingStatistics &fitStats) const
 {
     WeightedEMVonMisesFisherFactory< TVMMDistribution>::updateMixture( vmm, previousStats.wEMSufficientStatisitcs, samples, numSamples, cfg, fitStats);
     //updateComponentDistances(vmm, stats, samples, numSamples);
 }
 
 template<class TVMMDistribution>
-void WeightedEMParallaxAwareVonMisesFisherFactory< TVMMDistribution>::partialUpdateMixture(VMM &vmm, PartialFittingMask &mask, SufficientStatisitcs &previousStats, const DirectionalSampleData* samples, const size_t numSamples, const Configuration &cfg, FittingStatistics &fitStats) const
+void WeightedEMParallaxAwareVonMisesFisherFactory< TVMMDistribution>::partialUpdateMixture(VMM &vmm, PartialFittingMask &mask, SufficientStatisitcs &previousStats, const SampleData* samples, const size_t numSamples, const Configuration &cfg, FittingStatistics &fitStats) const
 {
     WeightedEMVonMisesFisherFactory< TVMMDistribution>::partialUpdateMixture( vmm, mask, previousStats.wEMSufficientStatisitcs, samples, numSamples, cfg, fitStats);
 }
 
 template<class TVMMDistribution>
-void WeightedEMParallaxAwareVonMisesFisherFactory< TVMMDistribution>::initComponentDistances (VMM &vmm, SufficientStatisitcs &sufficientStats, const DirectionalSampleData* samples, const size_t numSamples) const
+void WeightedEMParallaxAwareVonMisesFisherFactory< TVMMDistribution>::initComponentDistances (VMM &vmm, SufficientStatisitcs &sufficientStats, const SampleData* samples, const size_t numSamples) const
 {
     OPENPGL_ASSERT(vmm.getNumComponents() == sufficientStats.getNumComponents());
 
@@ -369,7 +369,7 @@ void WeightedEMParallaxAwareVonMisesFisherFactory< TVMMDistribution>::initCompon
 }
 
 template<class TVMMDistribution>
-void WeightedEMParallaxAwareVonMisesFisherFactory< TVMMDistribution>::updateComponentDistances (VMM &vmm, SufficientStatisitcs &sufficientStats, const DirectionalSampleData* samples, const size_t numSamples) const
+void WeightedEMParallaxAwareVonMisesFisherFactory< TVMMDistribution>::updateComponentDistances (VMM &vmm, SufficientStatisitcs &sufficientStats, const SampleData* samples, const size_t numSamples) const
 {
     OPENPGL_ASSERT(vmm.getNumComponents() == sufficientStats.getNumComponents());
 
@@ -437,7 +437,7 @@ void WeightedEMParallaxAwareVonMisesFisherFactory< TVMMDistribution>::updateComp
 }
 /*
 template<class TVMMDistribution>
-void WeightedEMParallaxAwareVonMisesFisherFactory< TVMMDistribution>::partialUpdateComponentDistances (VMM &vmm, const PartialFittingMask &mask, SufficientStatisitcs &sufficientStats, const DirectionalSampleData* samples, const size_t numSamples) const
+void WeightedEMParallaxAwareVonMisesFisherFactory< TVMMDistribution>::partialUpdateComponentDistances (VMM &vmm, const PartialFittingMask &mask, SufficientStatisitcs &sufficientStats, const SampleData* samples, const size_t numSamples) const
 {
     vfloat<VMM::VectorSize> batchDistances[VMM::NumVectors];
     vfloat<VMM::VectorSize> batchSumWeights[VMM::NumVectors];

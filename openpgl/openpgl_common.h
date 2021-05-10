@@ -10,6 +10,18 @@
 #include <embreeSrc/common/math/vec3.h>
 #include <embreeSrc/common/math/bbox.h>
 
+#include <cmath>
+#if defined(WIN32)
+
+inline void sincosf(const float theta, float* sin, float* cos)
+{
+    *sin = std::sinf(theta);
+    *cos = std::cosf(theta);
+}
+
+#endif
+
+
 namespace openpgl
 {
     typedef embree::Vec2<float> Vector2;

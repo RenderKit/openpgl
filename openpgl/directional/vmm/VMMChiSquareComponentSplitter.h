@@ -5,7 +5,7 @@
 
 #include "../openpgl_common.h"
 #include "VMM.h"
-#include "../data/DirectionalSampleData.h"
+#include "../data/SampleData.h"
 #include "WeightedEMVMMFactory.h"
 
 #include <embreeSrc/common/math/vec2.h>
@@ -118,21 +118,21 @@ struct ComponentSplitStatistics
 };
 
 
-void PerformSplitting(VMM &vmm, const float &splitThreshold, const float &mcEstimate, const DirectionalSampleData *data, const size_t &numData, const typename VMMFactory::Configuration factoryCfg, const bool &doPartialRefit, const int &maxSplittingItr = -1) const;
+void PerformSplitting(VMM &vmm, const float &splitThreshold, const float &mcEstimate, const SampleData *data, const size_t &numData, const typename VMMFactory::Configuration factoryCfg, const bool &doPartialRefit, const int &maxSplittingItr = -1) const;
 
-void PerformRecursiveSplitting(VMM &vmm, typename VMMFactory::SufficientStatisitcs &suffStats, const float &splitThreshold, const float &mcEstimate, const DirectionalSampleData *data, const size_t &numData, const typename VMMFactory::Configuration factoryCfg) const;
+void PerformRecursiveSplitting(VMM &vmm, typename VMMFactory::SufficientStatisitcs &suffStats, const float &splitThreshold, const float &mcEstimate, const SampleData *data, const size_t &numData, const typename VMMFactory::Configuration factoryCfg) const;
 
 void PerformSplittingIteration(VMM &vmm, const float &splitThreshold) const;
 
-void CalculateSplitStatistics(const VMM &vmm, ComponentSplitStatistics &splitStats, const float &mcEstimate, const DirectionalSampleData *data, const size_t &numData) const;
+void CalculateSplitStatistics(const VMM &vmm, ComponentSplitStatistics &splitStats, const float &mcEstimate, const SampleData *data, const size_t &numData) const;
 
-void UpdateSplitStatistics(const VMM &vmm, ComponentSplitStatistics &splitStats, const float &mcEstimate, const DirectionalSampleData *data, const size_t &numData) const;
+void UpdateSplitStatistics(const VMM &vmm, ComponentSplitStatistics &splitStats, const float &mcEstimate, const SampleData *data, const size_t &numData) const;
 
 bool SplitComponent(VMM &vmm, ComponentSplitStatistics &splitStats, SufficientStatisitcs &suffStats, const size_t idx) const;
 
 bool SplitComponentIntoThree(VMM &vmm, ComponentSplitStatistics &splitStats, SufficientStatisitcs &suffStats, const size_t idx) const;
 
-ComponentSplitinfo GetProjectedLocalDirections(const VMM &vmm, const size_t &idx, const DirectionalSampleData *data, const size_t &numData, Vector3 *local2D) const;
+ComponentSplitinfo GetProjectedLocalDirections(const VMM &vmm, const size_t &idx, const SampleData *data, const size_t &numData, Vector3 *local2D) const;
 
 
 };
@@ -205,7 +205,7 @@ inline std::string ComponentSplitinfo::toString() const
 }
 
 template<class TVMMFactory>
-void VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::CalculateSplitStatistics(const VMM &vmm, ComponentSplitStatistics &splitStats, const float &mcEstimate, const DirectionalSampleData *data, const size_t &numData) const
+void VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::CalculateSplitStatistics(const VMM &vmm, ComponentSplitStatistics &splitStats, const float &mcEstimate, const SampleData *data, const size_t &numData) const
 {
     splitStats.clear(vmm._numComponents);
     this->UpdateSplitStatistics(vmm, splitStats, mcEstimate, data, numData);
@@ -213,7 +213,7 @@ void VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::CalculateSplitStatis
 
 
 template<class TVMMFactory>
-void VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::PerformSplitting(VMM &vmm, const float &splitThreshold, const float &mcEstimate, const DirectionalSampleData *data, const size_t &numData, const typename VMMFactory::Configuration factoryCfg, const bool &doPartialRefit, const int &maxSplittingItr) const
+void VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::PerformSplitting(VMM &vmm, const float &splitThreshold, const float &mcEstimate, const SampleData *data, const size_t &numData, const typename VMMFactory::Configuration factoryCfg, const bool &doPartialRefit, const int &maxSplittingItr) const
 {
     PartialFittingMask mask;
     ComponentSplitStatistics splitStatistics;
@@ -289,7 +289,7 @@ void VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::PerformSplitting(VMM
 }
 
 template<class TVMMFactory>
-void VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::PerformRecursiveSplitting(VMM &vmm, typename VMMFactory::SufficientStatisitcs &suffStatistics, const float &splitThreshold, const float &mcEstimate, const DirectionalSampleData *data, const size_t &numData, const typename VMMFactory::Configuration factoryCfg) const
+void VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::PerformRecursiveSplitting(VMM &vmm, typename VMMFactory::SufficientStatisitcs &suffStatistics, const float &splitThreshold, const float &mcEstimate, const SampleData *data, const size_t &numData, const typename VMMFactory::Configuration factoryCfg) const
 {
     PartialFittingMask mask;
     ComponentSplitStatistics splitStatistics;
@@ -356,7 +356,7 @@ void VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::PerformRecursiveSpli
 }
 
 template<class TVMMFactory>
-ComponentSplitinfo VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::GetProjectedLocalDirections(const VMM &vmm, const size_t &idx, const DirectionalSampleData *data, const size_t &numData, Vector3 *local2D) const
+ComponentSplitinfo VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::GetProjectedLocalDirections(const VMM &vmm, const size_t &idx, const SampleData *data, const size_t &numData, Vector3 *local2D) const
 {
     typename VMM::SoftAssignment softAssign;
     const embree::vfloat<VMM::VectorSize> zeros(0.f);
@@ -371,7 +371,7 @@ ComponentSplitinfo VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::GetPro
 
     for (size_t n = 0; n < numData; n++)
     {
-        const DirectionalSampleData sample = data[n];
+        const SampleData sample = data[n];
         openpgl::Vector3 sampleDirection(sample.direction.x, sample.direction.y, sample.direction.z);
         if (vmm.softAssignment(sampleDirection, softAssign) )
         {
@@ -436,7 +436,7 @@ ComponentSplitinfo VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::GetPro
 
 
 template<class TVMMFactory>
-void VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::UpdateSplitStatistics(const VMM &vmm, ComponentSplitStatistics &splitStats, const float &mcEstimate, const DirectionalSampleData *data, const size_t &numData) const
+void VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::UpdateSplitStatistics(const VMM &vmm, ComponentSplitStatistics &splitStats, const float &mcEstimate, const SampleData *data, const size_t &numData) const
 {
     //std::cout << "UpdateSplitStatistics" << std::endl;
 
@@ -449,7 +449,7 @@ void VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::UpdateSplitStatistic
 
     for (size_t n = 0; n < numData; n++)
     {
-        const DirectionalSampleData sample = data[n];
+        const SampleData sample = data[n];
         const Vector3 sampleDirection(sample.direction.x, sample.direction.y, sample.direction.z);
         if (vmm.softAssignment(sampleDirection, softAssign) )
         {

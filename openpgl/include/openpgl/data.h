@@ -18,7 +18,7 @@
  * @brief 
  * 
  */
-struct PGLDirectionalSampleData
+struct PGLSampleData
 {
     enum Flags
     {

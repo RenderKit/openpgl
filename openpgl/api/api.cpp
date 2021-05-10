@@ -205,7 +205,7 @@ extern "C" void pglReleaseSampleStorage(PGLSampleStorage sampleStorage)
 extern "C" void pglSampleStorageAddSample(PGLSampleStorage sampleStorage, PGLSampleData& sample)
 {
     auto *gSampleStorage = (openpgl::SampleDataStorage *)sampleStorage;
-    openpgl::DirectionalSampleData opglSample = /**(openpgl::DirectionalSampleData*)*/sample;
+    openpgl::SampleData opglSample = /**(openpgl::SampleData*)*/sample;
     gSampleStorage->addSample(opglSample); 
 }
 
@@ -213,10 +213,10 @@ extern "C" void pglSampleStorageAddSamples(PGLSampleStorage sampleStorage, const
 {
     auto *gSampleStorage = (openpgl::SampleDataStorage *)sampleStorage;
 
-    openpgl::DirectionalSampleData* opglSamples = (openpgl::DirectionalSampleData*)samples;
+    openpgl::SampleData* opglSamples = (openpgl::SampleData*)samples;
     for(size_t n =0; n < numSamples; n++)
     {
-        openpgl::DirectionalSampleData opglSample = opglSamples[n];
+        openpgl::SampleData opglSample = opglSamples[n];
         gSampleStorage->addSample(opglSample); 
     }
 }
@@ -323,7 +323,7 @@ extern "C" size_t pglPathSegmentStoragePrepareSamples(PGLPathSegmentStorage path
 extern "C" const PGLSampleData* pglPathSegmentStorageGetSamples(PGLPathSegmentStorage pathSegmentStorage, size_t &nSamples)
 {
     auto *gPathSegmentStorage = (openpgl::PathSegmentDataStorage<openpgl::GuidingRegion> *)pathSegmentStorage;
-    const std::vector<openpgl::DirectionalSampleData> &opglSamples = gPathSegmentStorage->getSamples();
+    const std::vector<openpgl::SampleData> &opglSamples = gPathSegmentStorage->getSamples();
     nSamples = opglSamples.size();
     return (PGLSampleData*)opglSamples.data();
 }

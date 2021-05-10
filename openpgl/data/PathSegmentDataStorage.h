@@ -5,7 +5,7 @@
 
 #include "../openpgl_common.h"
 #include "PathSegmentData.h"
-#include "DirectionalSampleData.h"
+#include "SampleData.h"
 #include "../sampler/Sampler.h"
 
 namespace openpgl
@@ -98,7 +98,7 @@ struct PathSegmentDataStorage
                 bool insideVolume = currentPathSegment.volumeScatter;
                 if(insideVolume)
                 {
-                    flags |= DirectionalSampleData::EInsideVolume;
+                    flags |= SampleData::EInsideVolume;
                 }
                 // evalaute the incident radiance the incident
                 openpgl::Vector3 throughput {1.0f};
@@ -137,7 +137,7 @@ struct PathSegmentDataStorage
                     if(distance>0){
                         const float weight = OPENPGL_SPECTRUM_TO_FLOAT(contribution)/pdf;
                         OPENPGL_ASSERT(embree::isvalid(weight));
-                        DirectionalSampleData dsd;
+                        SampleData dsd;
                         dsd.position.x = pos[0];
                         dsd.position.y = pos[1];
                         dsd.position.z = pos[2];
@@ -166,12 +166,12 @@ struct PathSegmentDataStorage
         return m_sampleStorage.size();
     }
 
-    const std::vector<DirectionalSampleData>& getSamples()const
+    const std::vector<SampleData>& getSamples()const
     {
         return m_sampleStorage;
     }
 
-    void addSample(const DirectionalSampleData &sampleData)
+    void addSample(const SampleData &sampleData)
     {
         OPENPGL_ASSERT(isValid(sampleData));
         OPENPGL_ASSERT(sampleData.distance > 0);
@@ -180,6 +180,6 @@ struct PathSegmentDataStorage
     }
 
 private:
-    std::vector<DirectionalSampleData> m_sampleStorage;
+    std::vector<SampleData> m_sampleStorage;
 };
 }

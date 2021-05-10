@@ -7,8 +7,8 @@
 #include "../data/SampleStatistics.h"
 #include "../field/SurfaceVolumeField.h"
 
-#include "../vmm/ParallaxAwareVMM.h"
-#include "../vmm/AdaptiveSplitandMergeFactory.h"
+#include "../directional/vmm/ParallaxAwareVMM.h"
+#include "../directional/vmm/AdaptiveSplitandMergeFactory.h"
 
 #if !defined (OPENPGL_USE_OMP_THREADING)
 #include <tbb/parallel_for.h>
@@ -56,7 +56,7 @@ struct SurfaceVolumeFieldParallaxAwareVMM: public SurfaceVolumeField<openpgl::Re
         updateRegions(this->m_regionStorageContainerVolume, false);
     }
 
-    static void storeInvalidRegionData(const std::string &fileName, const typename ParentField::RegionType &regionBeforeUpdate, const std::vector<DirectionalSampleData> &samples, const DistributionFactorySettings &factorySettings)
+    static void storeInvalidRegionData(const std::string &fileName, const typename ParentField::RegionType &regionBeforeUpdate, const std::vector<SampleData> &samples, const DistributionFactorySettings &factorySettings)
     {
         std::filebuf fbDump;
         fbDump.open (fileName,std::ios::out);
@@ -68,14 +68,14 @@ struct SurfaceVolumeFieldParallaxAwareVMM: public SurfaceVolumeField<openpgl::Re
         dumpStream.write(reinterpret_cast<const char*>(&numSamples), sizeof(size_t));
         for (size_t i = 0; i < numSamples; i++)
         {
-            dumpStream.write(reinterpret_cast<const char*>(&samples[i]), sizeof(openpgl::DirectionalSampleData));
+            dumpStream.write(reinterpret_cast<const char*>(&samples[i]), sizeof(openpgl::SampleData));
         }
 
         regionBeforeUpdate.serialize(dumpStream);
         fbDump.close();
     }
 
-    static void loadInvalidRegionData(const std::string &fileName, typename ParentField::RegionType &regionBeforeUpdate, std::vector<DirectionalSampleData> &samples, DistributionFactorySettings &factorySettings)
+    static void loadInvalidRegionData(const std::string &fileName, typename ParentField::RegionType &regionBeforeUpdate, std::vector<SampleData> &samples, DistributionFactorySettings &factorySettings)
     {
         std::filebuf fbDumpIn;
         fbDumpIn.open (fileName,std::ios::in);
@@ -87,15 +87,15 @@ struct SurfaceVolumeFieldParallaxAwareVMM: public SurfaceVolumeField<openpgl::Re
         dumpIStream.read(reinterpret_cast<char*>(&numSamples), sizeof(size_t));
         for (size_t i = 0; i < numSamples; i++)
         {
-            DirectionalSampleData dsd;
-            dumpIStream.read(reinterpret_cast<char*>(&dsd), sizeof(openpgl::DirectionalSampleData));
+            SampleData dsd;
+            dumpIStream.read(reinterpret_cast<char*>(&dsd), sizeof(openpgl::SampleData));
             samples.push_back(dsd);
         }
         regionBeforeUpdate.deserialize(dumpIStream);
         fbDumpIn.close();
     }
 
-    void reorientSample(openpgl::DirectionalSampleData &sample, const openpgl::Point3 &pivotPoint) const
+    void reorientSample(openpgl::SampleData &sample, const openpgl::Point3 &pivotPoint) const
     {
 
         if (std::isinf(sample.distance))
@@ -143,7 +143,7 @@ private:
         {
             typename ParentField::RegionStorageType &regionStorage = regionStorageContainer[n];
             openpgl::Point3 sampleMean = regionStorage.first.sampleStatistics.mean;
-            std::vector<openpgl::DirectionalSampleData> dataPoints;
+            std::vector<openpgl::SampleData> dataPoints;
             for (auto& sample : regionStorage.second)
             {
                 if(m_useParallaxCompensation)
@@ -195,7 +195,7 @@ private:
             }
 
             openpgl::Point3 sampleMean = regionStorage.first.sampleStatistics.mean;
-            std::vector<openpgl::DirectionalSampleData> dataPoints;
+            std::vector<openpgl::SampleData> dataPoints;
             for (auto& sample : regionStorage.second)
             {
                 if(m_useParallaxCompensation)

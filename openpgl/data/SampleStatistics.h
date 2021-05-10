@@ -131,7 +131,7 @@ namespace openpgl
             return valid;
         }
 
-        constexpr SampleStatistics operator()(const SampleStatistics &a, const SampleStatistics &b) const{
+        SampleStatistics operator()(const SampleStatistics &a, const SampleStatistics &b) const{
             SampleStatistics merged = a;
             merged.merge(b);
             return merged;

@@ -7,8 +7,8 @@
 #include "../data/SampleStatistics.h"
 #include "../field/Field.h"
 
-#include "../vmm/ParallaxAwareVMM.h"
-#include "../vmm/AdaptiveSplitandMergeFactory.h"
+#include "../directional/vmm/ParallaxAwareVMM.h"
+#include "../directional/vmm/AdaptiveSplitandMergeFactory.h"
 
 #if !defined (OPENPGL_USE_OMP_THREADING)
 #include <tbb/parallel_for.h>
@@ -59,7 +59,7 @@ struct FieldParallaxAwareVMM: public Field<openpgl::Region<ParallaxAwareVonMises
       {
         typename ParentField::RegionStorageType &regionStorage = this->m_regionStorageContainer[n];
         openpgl::Point3 sampleMean = regionStorage.first.sampleStatistics.mean;
-        std::vector<openpgl::DirectionalSampleData> dataPoints;
+        std::vector<openpgl::SampleData> dataPoints;
         for (auto& sample : regionStorage.second)
         {
             if(m_useParallaxCompensation)
@@ -103,7 +103,7 @@ struct FieldParallaxAwareVMM: public Field<openpgl::Region<ParallaxAwareVonMises
         }
 
         openpgl::Point3 sampleMean = regionStorage.first.sampleStatistics.mean;
-        std::vector<openpgl::DirectionalSampleData> dataPoints;
+        std::vector<openpgl::SampleData> dataPoints;
         for (auto& sample : regionStorage.second)
         {
             if(m_useParallaxCompensation)
@@ -131,7 +131,7 @@ struct FieldParallaxAwareVMM: public Field<openpgl::Region<ParallaxAwareVonMises
 #endif
     }
 
-    void reorientSample(openpgl::DirectionalSampleData &sample, const openpgl::Point3 &pivotPoint) const
+    void reorientSample(openpgl::SampleData &sample, const openpgl::Point3 &pivotPoint) const
     {
 
         if (std::isinf(sample.distance))

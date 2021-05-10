@@ -6,13 +6,13 @@
 #define USE_TBB
 
 #include "../openpgl_common.h"
-#include "../data/DirectionalSampleData.h"
+#include "../data/SampleData.h"
 #include "../data/Range.h"
-#include "../kdtree/KDTree.h"
-#include "../kdtree/KDTreeBuilder.h"
+#include "../spatial/kdtree/KDTree.h"
+#include "../spatial/kdtree/KDTreeBuilder.h"
 #include "../sampler/Sampler.h"
-#include "Region.h"
-#include "KNN.h"
+#include "../spatial/Region.h"
+#include "../spatial/KNN.h"
 
 namespace openpgl
 {
@@ -80,10 +80,10 @@ public:
         m_totalSPP  = 0;
         if (m_deterministic)
         {
-            std::sort(samples.begin(), samples.end(), DirectionalSampleDataLess);
+            std::sort(samples.begin(), samples.end(), SampleDataLess);
         }
 
-        std::cout << "BufferSize: " << sizeof(DirectionalSampleData) * m_spatialSubdivBuilderSettings.maxSamples * 1e-6 <<  " MB" << std::endl;
+        std::cout << "BufferSize: " << sizeof(SampleData) * m_spatialSubdivBuilderSettings.maxSamples * 1e-6 <<  " MB" << std::endl;
         buildSpatialStructure(bounds, samples);
         fitRegions();
     }
@@ -92,7 +92,7 @@ public:
     {
         if (m_deterministic)
         {
-            std::sort(samples.begin(), samples.end(), DirectionalSampleDataLess);
+            std::sort(samples.begin(), samples.end(), SampleDataLess);
         }
 
         updateSpatialStructure(samples);

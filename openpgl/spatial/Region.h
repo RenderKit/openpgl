@@ -80,7 +80,7 @@ namespace openpgl
             return valid;
         }
 
-        void splatSample(DirectionalSampleData &sample/*, const BBox &sceneBounds*/, const Point2 &sample2D) const
+        void splatSample(SampleData &sample/*, const BBox &sceneBounds*/, const Point2 &sample2D) const
         {
             const Vector3 boundsExtents = (regionBounds.upper - regionBounds.lower) * 0.5f;
             const Vector3 sampleDisplacement = boundsExtents * squareToUniformSphere(sample2D);
@@ -117,7 +117,7 @@ namespace openpgl
                 sample.direction.y = sampleDirection[1];
                 sample.direction.z = sampleDirection[2];
 
-                sample.flags |= DirectionalSampleData::ESplatted;
+                sample.flags |= SampleData::ESplatted;
             }
         }
 

@@ -15,14 +15,14 @@ namespace openpgl
 {
 
 
-    typedef PGLDirectionalSampleData DirectionalSampleData;
-    enum DirectionalSampleData_Flags
+    typedef PGLSampleData SampleData;
+    enum SampleData_Flags
     {
         ESplatted = 1<<0,      // point does not represent any real scene intersection point
         EInsideVolume = 1<<1   // point does not represent any real scene intersection point
     };
 
-    inline bool isValid(const DirectionalSampleData& dsd)
+    inline bool isValid(const SampleData& dsd)
     {
         bool valid = true;
         valid &= embree::isvalid(dsd.position.x);
@@ -37,13 +37,13 @@ namespace openpgl
         return valid;
     }
 
-    inline bool isInsideVolume(const DirectionalSampleData& dsd)
+    inline bool isInsideVolume(const SampleData& dsd)
     {
         return (dsd.flags & EInsideVolume);
     }
 
     struct {
-        inline bool operator() (const PGLDirectionalSampleData &compA,  const PGLDirectionalSampleData &compB )
+        inline bool operator() (const PGLSampleData &compA,  const PGLSampleData &compB )
         {
             return compA.weight < compB.weight ||
                     ( compA.weight        == compB.weight          &&  ( compA.pdf       < compB.pdf              ||
@@ -55,27 +55,27 @@ namespace openpgl
                     (compA.direction.x    == compB.direction.x   &&  ( compA.direction.y < compB.direction.y  ||
                     (compA.direction.y    == compB.direction.y   &&  ( compA.direction.z < compB.direction.z  ))))))))))))))));
         }
-    } DirectionalSampleDataLess;
+    } SampleDataLess;
 
-inline DirectionalSampleData *LoadDirectionalSampleData(const std::string fileName, size_t &numData){
+inline SampleData *LoadSampleData(const std::string fileName, size_t &numData){
 
     std::ifstream file;
     file.open(fileName, std::ios::binary);
     file.read((char*)&numData, sizeof(size_t));
 
-    DirectionalSampleData *data = new DirectionalSampleData[numData];
-    file.read((char*)data, numData*sizeof(DirectionalSampleData));
+    SampleData *data = new SampleData[numData];
+    file.read((char*)data, numData*sizeof(SampleData));
     file.close();
 
     return data;
 }
 
-inline void StoreDirectionalSampleData(const std::string fileName, const DirectionalSampleData *data, const size_t &numData){
+inline void StoreSampleData(const std::string fileName, const SampleData *data, const size_t &numData){
     std::ofstream file;
     file.open(fileName, std::ios::binary);
 
     file.write((char*)&numData, sizeof(size_t));
-    file.write((char*)&data, numData * sizeof(DirectionalSampleData));
+    file.write((char*)&data, numData * sizeof(SampleData));
     file.close();
 }
 

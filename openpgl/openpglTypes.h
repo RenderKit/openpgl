@@ -5,16 +5,16 @@
 
 #include "openpgl_common.h"
 
-#include "data/DirectionalSampleData.h"
+#include "data/SampleData.h"
 #include "data/PathSegmentDataStorage.h"
 #include "data/PathSegmentData.h"
 
 #include "data/SampleDataStorage.h"
 #include "field/SurfaceVolumeFieldParallaxAwareVMM.h"
-#include "vmm/ParallaxAwareVMM.h"
-#include "vmm/AdaptiveSplitandMergeFactory.h"
-#include "vmm/VMMSurfaceSamplingDistribution.h"
-#include "vmm/VMMVolumeSamplingDistribution.h"
+#include "directional/vmm/ParallaxAwareVMM.h"
+#include "directional/vmm/AdaptiveSplitandMergeFactory.h"
+#include "directional/vmm/VMMSurfaceSamplingDistribution.h"
+#include "directional/vmm/VMMVolumeSamplingDistribution.h"
 #include "sampler/Sampler.h"
 
 namespace openpgl

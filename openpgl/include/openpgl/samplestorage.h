@@ -22,7 +22,7 @@ struct SampleStorage
 {
 };
 
-struct PGLDirectionalSampleData;
+struct PGLSampleData;
 
 #else
 typedef ManagedObject Region;
@@ -30,7 +30,7 @@ typedef ManagedObject Region;
 
 typedef SampleStorage *PGLSampleStorage;
 
-typedef PGLDirectionalSampleData PGLSampleData;
+typedef PGLSampleData PGLSampleData;
 
 PGLSampleStorage pglNewSampleStorage();
 

@@ -8,7 +8,9 @@
 #include "../data/SampleStatistics.h"
 #include "../data/Range.h"
 
+#if !defined(WIN32)
 #include <tbb/task_scheduler_init.h>
+#endif
 #include <tbb/concurrent_vector.h>
 
 #include <tbb/parallel_for.h>
@@ -83,7 +85,9 @@ struct KDTreePartitionBuilder
     #pragma omp parallel num_threads(nCores)
     #pragma omp single nowait
 #else
+#if !defined(WIN32)
         tbb::task_scheduler_init init(nCores);
+#endif
 #endif
         updateTreeNode(&kdTree, root, depth, sampleRange, sampleStats, &dataStorage, buildSettings);
 

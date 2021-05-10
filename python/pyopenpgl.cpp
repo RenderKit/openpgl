@@ -2,7 +2,7 @@
 #include <pybind11/stl.h>
 
 #include <openpgl/openpgl_common.h>
-#include <openpgl/data/DirectionalSampleData.h>
+#include <openpgl/data/SampleData.h>
 #include <openpgl/vmm/ParallaxAwareVMM.h>
 #include <openpgl/vmm/VMM.h>
 #include <openpgl/vmm/VMMFactory.h>
@@ -33,15 +33,15 @@ int add(int i, int j) {
     return i + j;
 }
 
-static void DirectionalSampleData_storeDirectionalSampleData(const std::string& fileName, const py::list &listParticles){
-	std::vector<openpgl::DirectionalSampleData> dataPoints = listParticles.cast<std::vector<openpgl::DirectionalSampleData>>();
-	openpgl::StoreDirectionalSampleData(fileName, dataPoints.data(), dataPoints.size());
+static void SampleData_storeSampleData(const std::string& fileName, const py::list &listParticles){
+	std::vector<openpgl::SampleData> dataPoints = listParticles.cast<std::vector<openpgl::SampleData>>();
+	openpgl::StoreSampleData(fileName, dataPoints.data(), dataPoints.size());
 }
 
-static py::list DirectionalSampleData_loadDirectionalSampleData(const std::string& fileName){
+static py::list SampleData_loadSampleData(const std::string& fileName){
     size_t numData;
-    openpgl::DirectionalSampleData* data = openpgl::LoadDirectionalSampleData(fileName, numData);
-    std::vector<openpgl::DirectionalSampleData> dataPoints;
+    openpgl::SampleData* data = openpgl::LoadSampleData(fileName, numData);
+    std::vector<openpgl::SampleData> dataPoints;
     for( size_t n = 0; n < numData; n++)
     {
         dataPoints.push_back(data[n]);
@@ -53,8 +53,8 @@ static py::list DirectionalSampleData_loadDirectionalSampleData(const std::strin
 static openpgl::VMMAdaptiveSplitAndMergeFactory::ASMFittingStatistics  AdaptiveSplitAndMergeFactory_fit( openpgl::VMMAdaptiveSplitAndMergeFactory *asmFactory, openpgl::VMM &model, const size_t &K, openpgl::VMMAdaptiveSplitAndMergeFactory::ASMStatistics &stats, const py::list &listParticles, openpgl::VMMAdaptiveSplitAndMergeFactory::ASMConfiguration &cfg)
 {
     openpgl::VMMAdaptiveSplitAndMergeFactory::ASMFittingStatistics fitStats;
-    std::vector<openpgl::DirectionalSampleData> dataPoints = listParticles.cast<std::vector<openpgl::DirectionalSampleData>>();
-	//openpgl::StoreDirectionalSampleData(fileName, dataPoints.data(), dataPoints.size());
+    std::vector<openpgl::SampleData> dataPoints = listParticles.cast<std::vector<openpgl::SampleData>>();
+	//openpgl::StoreSampleData(fileName, dataPoints.data(), dataPoints.size());
     asmFactory->fit(model, K, stats, dataPoints.data(), dataPoints.size(), cfg, fitStats);
     return fitStats;
 }
@@ -62,8 +62,8 @@ static openpgl::VMMAdaptiveSplitAndMergeFactory::ASMFittingStatistics  AdaptiveS
 static openpgl::VMMAdaptiveSplitAndMergeFactory::ASMFittingStatistics  AdaptiveSplitAndMergeFactory_update( openpgl::VMMAdaptiveSplitAndMergeFactory *asmFactory, openpgl::VMM &model, openpgl::VMMAdaptiveSplitAndMergeFactory::ASMStatistics &stats, const py::list &listParticles, openpgl::VMMAdaptiveSplitAndMergeFactory::ASMConfiguration &cfg)
 {
     openpgl::VMMAdaptiveSplitAndMergeFactory::ASMFittingStatistics fitStats;
-    std::vector<openpgl::DirectionalSampleData> dataPoints = listParticles.cast<std::vector<openpgl::DirectionalSampleData>>();
-	//openpgl::StoreDirectionalSampleData(fileName, dataPoints.data(), dataPoints.size());
+    std::vector<openpgl::SampleData> dataPoints = listParticles.cast<std::vector<openpgl::SampleData>>();
+	//openpgl::StoreSampleData(fileName, dataPoints.data(), dataPoints.size());
     asmFactory->update(model, stats, dataPoints.data(), dataPoints.size(), cfg, fitStats);
     return fitStats;
 }
@@ -73,8 +73,8 @@ template< typename WeightedEMVMMFactory, typename VMM>
 static openpgl::VMMWEMFactory::FittingStatistics  WeightedEMVMMFactory_fit( WeightedEMVMMFactory *vmmFactory, VMM &model, const size_t &K, typename WeightedEMVMMFactory::SufficientStatisitcs &stats, const py::list &listParticles, typename WeightedEMVMMFactory::Configuration &cfg)
 {
     openpgl::VMMWEMFactory::FittingStatistics fitStats;
-    std::vector<openpgl::DirectionalSampleData> dataPoints = listParticles.cast<std::vector<openpgl::DirectionalSampleData>>();
-	//openpgl::StoreDirectionalSampleData(fileName, dataPoints.data(), dataPoints.size());
+    std::vector<openpgl::SampleData> dataPoints = listParticles.cast<std::vector<openpgl::SampleData>>();
+	//openpgl::StoreSampleData(fileName, dataPoints.data(), dataPoints.size());
     vmmFactory->fitMixture(model, K, stats, dataPoints.data(), dataPoints.size(), cfg, fitStats);
     return fitStats;
 }
@@ -84,8 +84,8 @@ template< typename WeightedEMVMMFactory, typename VMM>
 static openpgl::VMMWEMFactory::FittingStatistics  WeightedEMVMMFactory_partialUpdate( WeightedEMVMMFactory *vmmFactory, VMM &model, typename WeightedEMVMMFactory::PartialFittingMask &mask, typename WeightedEMVMMFactory::SufficientStatisitcs &stats, const py::list &listParticles, typename WeightedEMVMMFactory::Configuration &cfg)
 {
     openpgl::VMMWEMFactory::FittingStatistics fitStats;
-    std::vector<openpgl::DirectionalSampleData> dataPoints = listParticles.cast<std::vector<openpgl::DirectionalSampleData>>();
-	//openpgl::StoreDirectionalSampleData(fileName, dataPoints.data(), dataPoints.size());
+    std::vector<openpgl::SampleData> dataPoints = listParticles.cast<std::vector<openpgl::SampleData>>();
+	//openpgl::StoreSampleData(fileName, dataPoints.data(), dataPoints.size());
     vmmFactory->partialUpdateMixture(model, mask, stats, dataPoints.data(), dataPoints.size(), cfg, fitStats);
     return fitStats;
 }
@@ -94,8 +94,8 @@ template< typename WeightedEMVMMFactory, typename VMM>
 static openpgl::VMMWEMFactory::FittingStatistics  WeightedEMVMMFactory_update( WeightedEMVMMFactory *vmmFactory, VMM &model, typename WeightedEMVMMFactory::SufficientStatisitcs &stats, const py::list &listParticles, typename WeightedEMVMMFactory::Configuration &cfg)
 {
     openpgl::VMMWEMFactory::FittingStatistics fitStats;
-    std::vector<openpgl::DirectionalSampleData> dataPoints = listParticles.cast<std::vector<openpgl::DirectionalSampleData>>();
-	//openpgl::StoreDirectionalSampleData(fileName, dataPoints.data(), dataPoints.size());
+    std::vector<openpgl::SampleData> dataPoints = listParticles.cast<std::vector<openpgl::SampleData>>();
+	//openpgl::StoreSampleData(fileName, dataPoints.data(), dataPoints.size());
     vmmFactory->updateMixture(model, stats, dataPoints.data(), dataPoints.size(), cfg, fitStats);
     return fitStats;
 }
@@ -103,7 +103,7 @@ static openpgl::VMMWEMFactory::FittingStatistics  WeightedEMVMMFactory_update( W
 template< typename VMMChiSquareComponentSplitter, typename VMM>
 static void  VMMChiSquareComponentSplitter_CalculateSplitStatistics( VMMChiSquareComponentSplitter *vmmSplitter, VMM &model, typename VMMChiSquareComponentSplitter::ComponentSplitStatistics &splitStats, const py::list &listParticles)
 {
-    std::vector<openpgl::DirectionalSampleData> dataPoints = listParticles.cast<std::vector<openpgl::DirectionalSampleData>>();
+    std::vector<openpgl::SampleData> dataPoints = listParticles.cast<std::vector<openpgl::SampleData>>();
     float mcEstimate = 0.0f;
     for (size_t n = 0; n < dataPoints.size(); n++)
     {
@@ -111,14 +111,14 @@ static void  VMMChiSquareComponentSplitter_CalculateSplitStatistics( VMMChiSquar
     }
     mcEstimate /= (float) dataPoints.size();
 
-	//openpgl::StoreDirectionalSampleData(fileName, dataPoints.data(), dataPoints.size());
+	//openpgl::StoreSampleData(fileName, dataPoints.data(), dataPoints.size());
     vmmSplitter->CalculateSplitStatistics(model, splitStats, mcEstimate, dataPoints.data(), dataPoints.size());
 }
 
 template< typename VMMChiSquareComponentSplitter, typename VMM>
 static void  VMMChiSquareComponentSplitter_UpdateSplitStatistics( VMMChiSquareComponentSplitter *vmmSplitter, VMM &model, typename VMMChiSquareComponentSplitter::ComponentSplitStatistics &splitStats, const py::list &listParticles)
 {
-    std::vector<openpgl::DirectionalSampleData> dataPoints = listParticles.cast<std::vector<openpgl::DirectionalSampleData>>();
+    std::vector<openpgl::SampleData> dataPoints = listParticles.cast<std::vector<openpgl::SampleData>>();
     float mcEstimate = 0.0f;
     for (size_t n = 0; n < dataPoints.size(); n++)
     {
@@ -126,7 +126,7 @@ static void  VMMChiSquareComponentSplitter_UpdateSplitStatistics( VMMChiSquareCo
     }
     mcEstimate /= (float) dataPoints.size();
 
-	//openpgl::StoreDirectionalSampleData(fileName, dataPoints.data(), dataPoints.size());
+	//openpgl::StoreSampleData(fileName, dataPoints.data(), dataPoints.size());
     vmmSplitter->UpdateSplitStatistics(model, splitStats, mcEstimate, dataPoints.data(), dataPoints.size());
 }
 
@@ -134,8 +134,8 @@ static void  VMMChiSquareComponentSplitter_UpdateSplitStatistics( VMMChiSquareCo
 template< typename VMMChiSquareComponentSplitter, typename VMM>
 static py::list VMMChiSquareComponentSplitter_GetProjectedLocalDirections( VMMChiSquareComponentSplitter *vmmSplitter, VMM &model, const size_t &idx, const py::list &listParticles)
 {
-    std::vector<openpgl::DirectionalSampleData> dataPoints = listParticles.cast<std::vector<openpgl::DirectionalSampleData>>();
-	//openpgl::StoreDirectionalSampleData(fileName, dataPoints.data(), dataPoints.size());
+    std::vector<openpgl::SampleData> dataPoints = listParticles.cast<std::vector<openpgl::SampleData>>();
+	//openpgl::StoreSampleData(fileName, dataPoints.data(), dataPoints.size());
     openpgl::Vector3 *localDirections2D =new openpgl::Vector3 [dataPoints.size()];
     openpgl::ComponentSplitinfo cmpSplit = vmmSplitter->GetProjectedLocalDirections(model, idx, dataPoints.data(), dataPoints.size(), localDirections2D);
 
@@ -161,7 +161,7 @@ static py::list VMMChiSquareComponentSplitter_GetProjectedLocalDirections( VMMCh
 template< typename VMMChiSquareComponentSplitter, typename VMM>
 static void  VMMChiSquareComponentSplitter_performSplitting( VMMChiSquareComponentSplitter *vmmSplitter, VMM &vmm, const float &splitThreshold, const py::list &listParticles, typename VMMChiSquareComponentSplitter::VMMFactory::Configuration &cfg, const bool &doPartialRefit, const int &maxSplittingItr)
 {
-    std::vector<openpgl::DirectionalSampleData> dataPoints = listParticles.cast<std::vector<openpgl::DirectionalSampleData>>();
+    std::vector<openpgl::SampleData> dataPoints = listParticles.cast<std::vector<openpgl::SampleData>>();
     float mcEstimate = 0.0f;
     for (size_t n = 0; n < dataPoints.size(); n++)
     {
@@ -223,7 +223,7 @@ static void VMM_setWeights( VMM *model, const py::list &listWeights)
 {   
 
     std::cout << "VMM_setWeights: " <<model->_numComponents << std::endl;
-    //std::vector<openpgl::DirectionalSampleData> dataPoints = listParticles.cast<std::vector<openpgl::DirectionalSampleData>>();
+    //std::vector<openpgl::SampleData> dataPoints = listParticles.cast<std::vector<openpgl::SampleData>>();
     std::vector<double> weights = listWeights.cast<std::vector<double>>();
     for ( size_t k = 0; k < model->_numComponents; k++ )
     {
@@ -302,8 +302,8 @@ m.def("toSphericalCoordinates", &openpgl::toSphericalCoordinates);
 m.def("sphericalDirection", &sphericalDirection);
 m.def("squareToUniformSphere", &openpgl::squareToUniformSphere);
 
-m.def("StoreDirectionalSampleData", &DirectionalSampleData_storeDirectionalSampleData);
-m.def("LoadDirectionalSampleData", &DirectionalSampleData_loadDirectionalSampleData);
+m.def("StoreSampleData", &SampleData_storeSampleData);
+m.def("LoadSampleData", &SampleData_loadSampleData);
 
 py::class_< embree::Vec2<float> >(m, "Vector2")
     .def(py::init<>())
@@ -322,14 +322,14 @@ py::class_< embree::Vec3<float> >(m, "Vector3")
     .def("__repr__", &Vector3_toString);
 
 
-py::class_< openpgl::DirectionalSampleData >(m, "DirectionalSampleData")
+py::class_< openpgl::SampleData >(m, "SampleData")
     .def(py::init<>())
-    .def_readwrite("position", &openpgl::DirectionalSampleData::position)
-    .def_readwrite("direction", &openpgl::DirectionalSampleData::direction)
-    .def_readwrite("weight", &openpgl::DirectionalSampleData::weight)
-    .def_readwrite("pdf", &openpgl::DirectionalSampleData::pdf)
-    .def_readwrite("distance", &openpgl::DirectionalSampleData::distance);
- //   .def("__repr__", &openpgl::DirectionalSampleData::toString);
+    .def_readwrite("position", &openpgl::SampleData::position)
+    .def_readwrite("direction", &openpgl::SampleData::direction)
+    .def_readwrite("weight", &openpgl::SampleData::weight)
+    .def_readwrite("pdf", &openpgl::SampleData::pdf)
+    .def_readwrite("distance", &openpgl::SampleData::distance);
+ //   .def("__repr__", &openpgl::SampleData::toString);
 
 
 py::class_< openpgl::ComponentSplitinfo >(m, "ComponentSplitinfo")

@@ -5,7 +5,7 @@
 
 #include "../openpgl_common.h"
 #include "VMM.h"
-#include "../data/DirectionalSampleData.h"
+#include "../data/SampleData.h"
 
 #include "WeightedEMVMMFactory.h"
 #include "WeightedEMParallaxAwareVMMFactory.h"
@@ -102,9 +102,9 @@ public:
         std::string toString() const;
     };
 
-    void fit(VMM &vmm, size_t numComponents, ASMStatistics &stats, const DirectionalSampleData* samples, const size_t numSamples, const ASMConfiguration &cfg, ASMFittingStatistics &fitStats) const;
+    void fit(VMM &vmm, size_t numComponents, ASMStatistics &stats, const SampleData* samples, const size_t numSamples, const ASMConfiguration &cfg, ASMFittingStatistics &fitStats) const;
 
-    void update(VMM &vmm, ASMStatistics &stats, const DirectionalSampleData* samples, const size_t numSamples, const ASMConfiguration &cfg, ASMFittingStatistics &fitStats) const;
+    void update(VMM &vmm, ASMStatistics &stats, const SampleData* samples, const size_t numSamples, const ASMConfiguration &cfg, ASMFittingStatistics &fitStats) const;
 
     std::string toString() const{
         std::ostringstream oss;
@@ -257,7 +257,7 @@ std::string AdaptiveSplitAndMergeFactory<TVMMDistribution>::ASMConfiguration::to
 }
 
 template<class TVMMDistribution>
-void AdaptiveSplitAndMergeFactory<TVMMDistribution>::fit(VMM &vmm, size_t numComponents, ASMStatistics &stats, const DirectionalSampleData* samples, const size_t numSamples, const ASMConfiguration &cfg, ASMFittingStatistics &fitStats) const
+void AdaptiveSplitAndMergeFactory<TVMMDistribution>::fit(VMM &vmm, size_t numComponents, ASMStatistics &stats, const SampleData* samples, const size_t numSamples, const ASMConfiguration &cfg, ASMFittingStatistics &fitStats) const
 {
     stats.clear(numComponents);
     // intial fit
@@ -305,7 +305,7 @@ void AdaptiveSplitAndMergeFactory<TVMMDistribution>::fit(VMM &vmm, size_t numCom
 
 
 template<class TVMMDistribution>
-void AdaptiveSplitAndMergeFactory<TVMMDistribution>::update(VMM &vmm, ASMStatistics &stats, const DirectionalSampleData* samples, const size_t numSamples, const ASMConfiguration &cfg, ASMFittingStatistics &fitStats) const
+void AdaptiveSplitAndMergeFactory<TVMMDistribution>::update(VMM &vmm, ASMStatistics &stats, const SampleData* samples, const size_t numSamples, const ASMConfiguration &cfg, ASMFittingStatistics &fitStats) const
 {
     OPENPGL_ASSERT(vmm.isValid());
     OPENPGL_ASSERT(vmm.getNumComponents() == stats.getNumComponents());

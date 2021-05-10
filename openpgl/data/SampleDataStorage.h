@@ -5,7 +5,7 @@
 
 #include "../openpgl_common.h"
 
-#include "DirectionalSampleData.h"
+#include "SampleData.h"
 #include "../sampler/Sampler.h"
 
 #include <tbb/concurrent_vector.h>
@@ -15,11 +15,11 @@ namespace openpgl
 
 struct SampleDataStorage
 {
-    typedef tbb::concurrent_vector<DirectionalSampleData> SampleDataContainer;
+    typedef tbb::concurrent_vector<SampleData> SampleDataContainer;
     SampleDataContainer m_surfaceContainer;
     SampleDataContainer m_volumeContainer;
 
-    inline void addSample(DirectionalSampleData sample)
+    inline void addSample(SampleData sample)
     {
         if(isInsideVolume(sample))
         {
@@ -31,7 +31,7 @@ struct SampleDataStorage
         }
     }
 
-    inline void addSamples(const std::vector<DirectionalSampleData> &samples)
+    inline void addSamples(const std::vector<SampleData> &samples)
     {
         for (auto& sample : samples)
         {
@@ -56,7 +56,7 @@ struct SampleDataStorage
 
     void sortSurface()
     {
-        std::sort(m_surfaceContainer.begin(), m_surfaceContainer.end(), DirectionalSampleDataLess);
+        std::sort(m_surfaceContainer.begin(), m_surfaceContainer.end(), SampleDataLess);
     }
 
     inline void reserveVolume(const size_t &size)
@@ -76,7 +76,7 @@ struct SampleDataStorage
 
     void sortVolume()
     {
-        std::sort(m_volumeContainer.begin(), m_volumeContainer.end(), DirectionalSampleDataLess);
+        std::sort(m_volumeContainer.begin(), m_volumeContainer.end(), SampleDataLess);
     }
 
 
@@ -103,16 +103,16 @@ struct SampleDataStorage
         stream.write(reinterpret_cast<const char*>(&num_surface_samples), sizeof(size_t));
         for ( size_t n = 0; n < num_surface_samples; n++)
         {
-            DirectionalSampleData dsd = m_surfaceContainer[n];
-            stream.write(reinterpret_cast<const char*>(&dsd), sizeof(DirectionalSampleData));
+            SampleData dsd = m_surfaceContainer[n];
+            stream.write(reinterpret_cast<const char*>(&dsd), sizeof(SampleData));
         }
 
         size_t num_volume_samples = m_volumeContainer.size();
         stream.write(reinterpret_cast<const char*>(&num_volume_samples), sizeof(size_t));
         for ( size_t n = 0; n < num_volume_samples; n++)
         {
-            DirectionalSampleData dsd = m_volumeContainer[n];
-            stream.write(reinterpret_cast<const char*>(&dsd), sizeof(DirectionalSampleData));
+            SampleData dsd = m_volumeContainer[n];
+            stream.write(reinterpret_cast<const char*>(&dsd), sizeof(SampleData));
         }
     }
 
@@ -123,8 +123,8 @@ struct SampleDataStorage
         m_surfaceContainer.reserve(num_surface_samples);
         for ( size_t n = 0; n < num_surface_samples; n++)
         {
-            DirectionalSampleData dsd;
-            stream.read(reinterpret_cast<char*>(&dsd), sizeof(DirectionalSampleData));
+            SampleData dsd;
+            stream.read(reinterpret_cast<char*>(&dsd), sizeof(SampleData));
             m_surfaceContainer.push_back(dsd);
         }
 
@@ -133,8 +133,8 @@ struct SampleDataStorage
         m_volumeContainer.reserve(num_volume_samples);
         for ( size_t n = 0; n < num_volume_samples; n++)
         {
-            DirectionalSampleData dsd;
-            stream.read(reinterpret_cast<char*>(&dsd), sizeof(DirectionalSampleData));
+            SampleData dsd;
+            stream.read(reinterpret_cast<char*>(&dsd), sizeof(SampleData));
             m_volumeContainer.push_back(dsd);
         }
     }
@@ -143,7 +143,7 @@ struct SampleDataStorage
 
     void exportSamplesToObj(std::ofstream &objFile, const SampleDataContainer &sampleContainer, bool pointsOnly = true)
     {
-        std::vector<DirectionalSampleData> subSampledData;
+        std::vector<SampleData> subSampledData;
         subSampledData.reserve(sampleContainer.size());
         for (size_t i =0; i < sampleContainer.size(); i++)
         {
