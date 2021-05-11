@@ -108,6 +108,8 @@ public:
     {
         m_totalSPP += spp;
         ++m_iteration;
+        m_surfaceField.addTrainingIteration(spp);
+        m_volumeField.addTrainingIteration(spp);
     }
 
     size_t getTotalSPP() const override

@@ -5,6 +5,7 @@
 
 #include "../openpgl.h"
 #include "Region.h"
+#include "Field.h"
 
 namespace openpgl
 {
@@ -19,7 +20,10 @@ namespace cpp
 
 struct VolumeSamplingDistribution
 {
-    VolumeSamplingDistribution();
+    //VolumeSamplingDistribution();
+
+    VolumeSamplingDistribution(const Field* field);
+    
     ~VolumeSamplingDistribution();
 
     VolumeSamplingDistribution(const VolumeSamplingDistribution&) = delete;
@@ -62,27 +66,36 @@ struct VolumeSamplingDistribution
      * @param pos the position inside the Region 
      * @param useParallaxCompensation if the local approximation should be adjusted to @ref pos
      */
-    void Init(const Region& region, const pgl_point3f& pos, const bool useParallaxCompensation = true);
+    //void Init(const Region& region, const pgl_point3f& pos, const bool useParallaxCompensation = true);
+
+    bool Init(const Field* field, const pgl_point3f& pos, const float sample1D, const bool useParallaxCompensation = true);
 
 
     ///////////////////////////////////////
     /// Future plans
     ///////////////////////////////////////
 
-    /*
+/*
     void ApplySingleLobeHGProduct(const float meanCosine);
 
     void ApplyDualLobeHGProduct(const float meanCosine0, const float meanCosine1, const float mixWeight);
-    */
+*/
 
-
+    friend class Field;
     private:
         PGLVolumeSamplingDistribution m_volumeSamplingDistributionHandle{nullptr};
 };
 
+/*
 VolumeSamplingDistribution::VolumeSamplingDistribution()
 {
     m_volumeSamplingDistributionHandle = pglNewVolumeSamplingDistribution();
+}
+*/
+
+VolumeSamplingDistribution::VolumeSamplingDistribution(const Field* field)
+{
+    m_volumeSamplingDistributionHandle = pglFieldNewVolumeSamplingDistribution(field->m_fieldHandle);
 }
 
 VolumeSamplingDistribution::~VolumeSamplingDistribution()
@@ -117,11 +130,21 @@ void VolumeSamplingDistribution::Clear()
     return pglVolumeSamplingDistributionClear(m_volumeSamplingDistributionHandle);
 }
 
+/*
 void VolumeSamplingDistribution::Init(const Region& region, const pgl_point3f& pos, const bool useParallaxCompensation)
 {
     OPENPGL_ASSERT(m_volumeSamplingDistributionHandle);
     pglVolumeSamplingDistributionInit(m_volumeSamplingDistributionHandle, region.m_regionHandle, pos, useParallaxCompensation);
 }
+*/
+
+bool VolumeSamplingDistribution::Init(const Field* field, const pgl_point3f& pos, const float sample1D, const bool useParallaxCompensation)
+{
+    OPENPGL_ASSERT(m_volumeSamplingDistributionHandle);
+    OPENPGL_ASSERT(field->m_fieldHandle);
+    return pglFieldInitVolumeSamplingDistriubtion(field->m_fieldHandle, m_volumeSamplingDistributionHandle, pos, sample1D, useParallaxCompensation);
+}
+
 
 }
 }

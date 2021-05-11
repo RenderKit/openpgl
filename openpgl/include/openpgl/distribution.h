@@ -44,11 +44,11 @@ bool pglDistributionIsValid(PGLDistribution distribution);
 
 //void pglGetDistribution(PGLRegion region, pgl_point3f samplePosition, const bool &useParallaxComp);
 
-PGLSurfaceSamplingDistribution pglNewSurfaceSamplingDistribution();
+//PGLSurfaceSamplingDistribution pglNewSurfaceSamplingDistribution();
 
 void pglReleaseSurfaceSamplingDistribution(PGLSurfaceSamplingDistribution SurfaceSamplingDistribution);
 
-void pglSurfaceSamplingDistributionInit(PGLSurfaceSamplingDistribution SurfaceSamplingDistribution, PGLRegion region, pgl_point3f samplePosition, bool useParallaxComp = true);
+//void pglSurfaceSamplingDistributionInit(PGLSurfaceSamplingDistribution SurfaceSamplingDistribution, PGLRegion region, pgl_point3f samplePosition, bool useParallaxComp = true);
 
 void pglSurfaceSamplingDistributionApplyCosineProduct(PGLSurfaceSamplingDistribution surfaceSamplingDistribution, pgl_vec3f normal);
 
@@ -60,11 +60,11 @@ bool pglSurfaceSamplingDistributionIsValid(PGLSurfaceSamplingDistribution Surfac
 
 void pglSurfaceSamplingDistributionClear(PGLSurfaceSamplingDistribution SurfaceSamplingDistribution);
 
-PGLVolumeSamplingDistribution pglNewVolumeSamplingDistribution();
+//PGLVolumeSamplingDistribution pglNewVolumeSamplingDistribution();
 
 void pglReleaseVolumeSamplingDistribution(PGLVolumeSamplingDistribution VolumeSamplingDistribution);
 
-void pglVolumeSamplingDistributionInit(PGLVolumeSamplingDistribution VolumeSamplingDistribution, PGLRegion region, pgl_point3f samplePosition, bool useParallaxComp = true);
+//void pglVolumeSamplingDistributionInit(PGLVolumeSamplingDistribution VolumeSamplingDistribution, PGLRegion region, pgl_point3f samplePosition, bool useParallaxComp = true);
 
 pgl_vec3f pglVolumeSamplingDistributionSample(PGLVolumeSamplingDistribution VolumeSamplingDistribution, pgl_point2f sample);
 

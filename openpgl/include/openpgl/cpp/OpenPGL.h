@@ -14,5 +14,5 @@
 #include "Sampler.h"
 #include "SampleStorage.h"
 #include "SurfaceSamplingDistribution.h"
-#include "VolumeSamplingDistriubtion.h"
+#include "VolumeSamplingDistribution.h"
 

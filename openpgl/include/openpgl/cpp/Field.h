@@ -93,6 +93,8 @@ struct Field
      */
     Region GetVolumeRegion(pgl_point3f position, Sampler* sampler);
 
+    friend class SurfaceSamplingDistribution;
+    friend class VolumeSamplingDistribution;
     private:
         PGLField m_fieldHandle {nullptr};
 };

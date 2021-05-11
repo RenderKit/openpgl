@@ -5,6 +5,7 @@
 
 #include "../openpgl.h"
 #include "Region.h"
+#include "Field.h"
 
 namespace openpgl
 {
@@ -17,7 +18,10 @@ namespace cpp
  */
 struct SurfaceSamplingDistribution
 {
-    SurfaceSamplingDistribution();
+    //SurfaceSamplingDistribution();
+
+    SurfaceSamplingDistribution(const Field* field);
+
     ~SurfaceSamplingDistribution();
 
     SurfaceSamplingDistribution(const SurfaceSamplingDistribution&) = delete;
@@ -61,7 +65,10 @@ struct SurfaceSamplingDistribution
      * @param useParallaxCompensation 
      * @param useCosineProduct 
      */
-    void Init(const Region& region, const pgl_point3f& pos, const bool useParallaxCompensation = true);
+    //void Init(const Region& region, const pgl_point3f& pos, const bool useParallaxCompensation = true);
+
+
+    bool Init(const Field* field, const pgl_point3f& pos, const float sample1D, const bool useParallaxCompensation = true);
 
     /**
      * @brief Applies the product with the cosine to the sampling distriubtion.
@@ -88,10 +95,15 @@ struct SurfaceSamplingDistribution
     private:
         PGLSurfaceSamplingDistribution m_surfaceSamplingDistributionHandle{nullptr};
 };
-
+/*
 SurfaceSamplingDistribution::SurfaceSamplingDistribution()
 {
     m_surfaceSamplingDistributionHandle = pglNewSurfaceSamplingDistribution();
+}
+*/
+SurfaceSamplingDistribution::SurfaceSamplingDistribution(const Field* field)
+{
+    m_surfaceSamplingDistributionHandle = pglFieldNewSurfaceSamplingDistribution(field->m_fieldHandle);
 }
 
 SurfaceSamplingDistribution::~SurfaceSamplingDistribution()
@@ -126,11 +138,18 @@ void SurfaceSamplingDistribution::Clear()
     OPENPGL_ASSERT(m_surfaceSamplingDistributionHandle);
     return pglSurfaceSamplingDistributionClear(m_surfaceSamplingDistributionHandle);
 }
-
+/*
 void SurfaceSamplingDistribution::Init(const Region& region, const pgl_point3f& pos, const bool useParallaxCompensation)
 {
     OPENPGL_ASSERT(m_surfaceSamplingDistributionHandle);
     pglSurfaceSamplingDistributionInit(m_surfaceSamplingDistributionHandle, region.m_regionHandle, pos, useParallaxCompensation);
+}
+*/
+bool SurfaceSamplingDistribution::Init(const Field* field, const pgl_point3f& pos, const float sample1D, const bool useParallaxCompensation)
+{
+    OPENPGL_ASSERT(m_surfaceSamplingDistributionHandle);
+    OPENPGL_ASSERT(field->m_fieldHandle);
+    return pglFieldInitSurfaceSamplingDistriubtion(field->m_fieldHandle, m_surfaceSamplingDistributionHandle, pos, sample1D, useParallaxCompensation);
 }
 
 void SurfaceSamplingDistribution::ApplyCosineProduct(const pgl_vec3f& normal)
@@ -138,6 +157,5 @@ void SurfaceSamplingDistribution::ApplyCosineProduct(const pgl_vec3f& normal)
     OPENPGL_ASSERT(m_surfaceSamplingDistributionHandle);
     pglSurfaceSamplingDistributionApplyCosineProduct(m_surfaceSamplingDistributionHandle, normal);
 }
-
 }
 }
