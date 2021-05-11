@@ -23,6 +23,7 @@ struct AdaptiveSplitAndMergeFactory
 {
 
 public:
+    typedef TVMMDistribution Distribution;
     typedef TVMMDistribution VMM;
 
     //typedef WeightedEMVonMisesFisherFactory<VMM> WeightedEMFactory;

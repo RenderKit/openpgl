@@ -364,11 +364,7 @@ struct KDTree
     }
 
     template<typename TRegion, typename TRange>
-#ifdef  USE_TBB
     void exportSampleBoundsToObj(std::string objFileName, const tbb::concurrent_vector< std::pair<TRegion, TRange> > &dataStorage) const
-#else
-    void exportSampleBoundsToObj(std::string objFileName, const AtomicallyGrowingVector< std::pair<TRegion, TRange> > &dataStorage) const
-#endif
     {
         std::ofstream objFile;
         objFile.open(objFileName.c_str());
@@ -381,11 +377,8 @@ struct KDTree
     }
 
     template<typename TRegion, typename TRange>
-#ifdef  USE_TBB
+
     void exportSampleBoundToObj(std::ofstream &objFile, const KDNode &node, BBox bbox, uint32_t &vertexIDOffset, const tbb::concurrent_vector< std::pair<TRegion, TRange> > &dataStorage) const
-#else
-    void exportSampleBoundToObj(std::ofstream &objFile, const KDNode &node, BBox bbox, uint32_t &vertexIDOffset, const AtomicallyGrowingVector< std::pair<TRegion, TRange> > &dataStorage) const
-#endif
     {
         if(!node.isLeaf())
         {

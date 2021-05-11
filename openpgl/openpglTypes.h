@@ -10,7 +10,8 @@
 #include "data/PathSegmentData.h"
 
 #include "data/SampleDataStorage.h"
-#include "field/SurfaceVolumeFieldParallaxAwareVMM.h"
+//#include "field/SurfaceVolumeFieldParallaxAwareVMM.h"
+#include "field/SurfaceVolumeField2.h"
 #include "directional/ISurfaceSamplingDistribution.h"
 #include "directional/IVolumeSamplingDistribution.h"
 #include "directional/vmm/ParallaxAwareVMM.h"
@@ -19,11 +20,18 @@
 #include "directional/vmm/VMMVolumeSamplingDistribution.h"
 #include "sampler/Sampler.h"
 
+#include "spatial/kdtree/KDTreeBuilder.h"
+
 namespace openpgl
 {
-    typedef SurfaceVolumeFieldParallaxAwareVMM<4, 32, SampleDataStorage::SampleDataContainer> GuidingField;
+    //typedef  SpatialStructureBuilder;
+    typedef AdaptiveSplitAndMergeFactory<ParallaxAwareVonMisesFisherMixture<4, 32>> DirectionalDistriubtionFactory;
+
+    //typedef SurfaceVolumeField2<DirectionalDistriubtionFactory, KDTreePartitionBuilder, SampleDataStorage::SampleDataContainer> GuidingField;
+    typedef SurfaceVolumeField2<DirectionalDistriubtionFactory, KDTreePartitionBuilder> GuidingField;
+    
     typedef GuidingField::RegionType GuidingRegion;
-    typedef GuidingField::DistributionType GuidingDistribution;
+    typedef GuidingField::DirectionalDistribution GuidingDistribution;
     typedef VMMBSDFSamplingDistribution<GuidingDistribution> GuidedSurfaceSamplingDistribution;
     typedef VMMPhaseFunctionSamplingDistribution<GuidingDistribution> GuidedVolumeSamplingDistribution;
     typedef GuidingField::Settings GuidingFieldProperties;

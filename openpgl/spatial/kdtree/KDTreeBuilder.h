@@ -26,6 +26,8 @@ template<typename TRegion, typename TRange>
 struct KDTreePartitionBuilder
 {
 
+    typedef KDTree SpatialStructure;
+
     struct Settings
     {
         size_t minSamples {100};
