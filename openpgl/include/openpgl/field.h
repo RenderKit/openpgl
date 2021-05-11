@@ -16,6 +16,7 @@
 #include "sampler.h"
 #include "samplestorage.h"
 #include "region.h"
+#include "distribution.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -50,6 +51,15 @@ size_t pglFieldGetTotalSPP(PGLField field);
 PGLRegion pglFieldGetSurfaceRegion(PGLField field, pgl_point3f position, PGLSampler* sampler);
 
 PGLRegion pglFieldGetVolumeRegion(PGLField field, pgl_point3f position, PGLSampler* sampler);
+
+PGLSurfaceSamplingDistribution pglFieldNewSurfaceSamplingDistribution(PGLField field);
+
+bool pglFieldInitSurfaceSamplingDistriubtion(PGLField field, PGLSurfaceSamplingDistribution surfaceSamplingDistriubtion, pgl_point3f position, const float sample1D, const bool useParallaxComp);
+
+PGLVolumeSamplingDistribution pglFieldNewVolumeSamplingDistribution(PGLField field);
+
+bool pglFieldInitVolumeSamplingDistriubtion(PGLField field, PGLVolumeSamplingDistribution volumeSamplingDistriubtion, pgl_point3f position, const float sample1D, const bool useParallaxComp);
+
 
 #ifdef __cplusplus
 }  // extern "C"

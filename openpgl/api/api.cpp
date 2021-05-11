@@ -79,35 +79,35 @@ extern "C" PGLField pglNewField(PGLFieldArguments args)OPENPGL_CATCH_BEGIN
     gFieldSettings.distributionFactorySettings.minSamplesForMerging = directionalDistributionArguments->minSamplesForMerging;
 
     gFieldSettings.useParallaxCompensation = args.useParallaxCompensation;
-    GuidingField* gField = new GuidingField(gFieldSettings);
+    IGuidingField* gField = new GuidingField(gFieldSettings);
     return (PGLField) gField;
 }
 OPENPGL_CATCH_END(nullptr)
 
 extern "C" void pglReleaseField(PGLField field)OPENPGL_CATCH_BEGIN
 {
-    auto *gField = (GuidingField *)field;
+    auto *gField = (IGuidingField *)field;
     delete gField;
 }
 OPENPGL_CATCH_END()
 
 extern "C" size_t pglFieldGetIteration(PGLField field)OPENPGL_CATCH_BEGIN
 {
-    auto *gField = (GuidingField *)field;
+    auto *gField = (IGuidingField *)field;
     return gField->getIteration();
 }
 OPENPGL_CATCH_END(0)
 
 extern "C" size_t pglFieldGetTotalSPP(PGLField field)OPENPGL_CATCH_BEGIN
 {
-    auto *gField = (GuidingField *)field;
+    auto *gField = (IGuidingField *)field;
     return gField->getTotalSPP();
 }
 OPENPGL_CATCH_END(0)
 
 extern "C" void pglFieldSetSceneBounds(PGLField field, pgl_box3f bounds)
 {
-    auto *gField = (GuidingField *)field;
+    auto *gField = (IGuidingField *)field;
     openpgl::BBox sceneBounds;
     sceneBounds.lower = openpgl::Vector3(bounds.lower.x,bounds.lower.y,bounds.lower.z);
     sceneBounds.upper = openpgl::Vector3(bounds.upper.x,bounds.upper.y,bounds.upper.z);
@@ -127,7 +127,7 @@ extern "C" pgl_box3f pglFieldGetSceneBounds(PGLField field)
 
 extern "C"  void pglFieldUpdate(PGLField field, PGLSampleStorage sampleStorage, size_t numPerPixelSamples)OPENPGL_CATCH_BEGIN
 {
-    auto *gField = (GuidingField *)field;
+    auto *gField = (IGuidingField *)field;
     auto *gSampleStorage = (openpgl::SampleDataStorage *)sampleStorage;
     if (gField->getIteration() == 0)
     {
@@ -146,8 +146,9 @@ extern "C"  PGLRegion pglFieldGetSurfaceRegion(PGLField field, pgl_point3f posit
 {
     const openpgl::Point3 pos(position.x, position.y, position.z);
     GuidingSampler gSampler(sampler);
+    float sample1D = gSampler.next1D();
     auto *gField = (GuidingField *)field;
-    const GuidingRegion* gRegion = gField->getSurfaceGuidingRegion(pos, &gSampler);
+    const GuidingRegion* gRegion = gField->getSurfaceGuidingRegion(pos, sample1D);
     return (PGLRegion) gRegion;
 }
 OPENPGL_CATCH_END(nullptr)
@@ -156,11 +157,45 @@ extern "C"  PGLRegion pglFieldGetVolumeRegion(PGLField field, pgl_point3f positi
 {
     const openpgl::Point3 pos(position.x, position.y, position.z);
     GuidingSampler gSampler(sampler);
+    float sample1D = gSampler.next1D();
     auto *gField = (GuidingField *)field;
-    const GuidingRegion* gRegion = gField->getVolumeGuidingRegion(pos, &gSampler);
+    const GuidingRegion* gRegion = gField->getVolumeGuidingRegion(pos, sample1D);
     return (PGLRegion) gRegion;
 }
 OPENPGL_CATCH_END(nullptr)
+
+
+extern "C"  PGLSurfaceSamplingDistribution pglFieldNewSurfaceSamplingDistribution(PGLField field)OPENPGL_CATCH_BEGIN
+{
+    auto *gField = (IGuidingField *)field;
+    ISurfaceSamplingDistribution* surfaceSamplingDistribution = gField->newSurfaceSamplingDistribution();
+    return (PGLSurfaceSamplingDistribution) surfaceSamplingDistribution;
+}
+OPENPGL_CATCH_END(nullptr)
+
+extern "C"  bool pglFieldInitSurfaceSamplingDistriubtion(PGLField field, PGLSurfaceSamplingDistribution surfaceSamplingDistriubtion, pgl_point3f position, const float sample1D, const bool useParallaxComp)
+{
+    const openpgl::Point3 pos(position.x, position.y, position.z);
+    auto *gField = (IGuidingField *)field;
+    ISurfaceSamplingDistribution* gSurfaceSamplingDistribution = (ISurfaceSamplingDistribution*)surfaceSamplingDistriubtion;
+    return gField->initSurfaceSamplingDistribution(gSurfaceSamplingDistribution, pos, sample1D, useParallaxComp);
+}
+extern "C"  PGLVolumeSamplingDistribution pglFieldNewVolumeSamplingDistribution(PGLField field)OPENPGL_CATCH_BEGIN
+{
+    auto *gField = (IGuidingField *)field;
+    IVolumeSamplingDistribution* volumeSamplingDistribution = gField->newVolumeSamplingDistribution();
+    return (PGLVolumeSamplingDistribution) volumeSamplingDistribution;
+}
+OPENPGL_CATCH_END(nullptr)
+
+extern "C"  bool pglFieldInitVolumeSamplingDistriubtion(PGLField field, PGLVolumeSamplingDistribution volumeSamplingDistriubtion, pgl_point3f position, const float sample1D, const bool useParallaxComp)
+{
+    const openpgl::Point3 pos(position.x, position.y, position.z);
+    auto *gField = (IGuidingField *)field;
+    IVolumeSamplingDistribution* gVolumeSamplingDistribution = (IVolumeSamplingDistribution*)volumeSamplingDistriubtion;
+    return gField->initVolumeSamplingDistribution(gVolumeSamplingDistribution, pos, sample1D, useParallaxComp);
+}
+
 
 ///////////////////////////////////////////////////////////////////////////////
 // Region /////////////////////////////////////////////////////////////////////

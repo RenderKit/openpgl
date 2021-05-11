@@ -11,6 +11,7 @@
 
 #include "data/SampleDataStorage.h"
 //#include "field/SurfaceVolumeFieldParallaxAwareVMM.h"
+#include "field/ISurfaceVolumeField2.h"
 #include "field/SurfaceVolumeField2.h"
 #include "directional/ISurfaceSamplingDistribution.h"
 #include "directional/IVolumeSamplingDistribution.h"
@@ -28,12 +29,12 @@ namespace openpgl
     typedef AdaptiveSplitAndMergeFactory<ParallaxAwareVonMisesFisherMixture<4, 32>> DirectionalDistriubtionFactory;
 
     //typedef SurfaceVolumeField2<DirectionalDistriubtionFactory, KDTreePartitionBuilder, SampleDataStorage::SampleDataContainer> GuidingField;
-    typedef SurfaceVolumeField2<DirectionalDistriubtionFactory, KDTreePartitionBuilder> GuidingField;
-    
+    typedef SurfaceVolumeField2<DirectionalDistriubtionFactory, KDTreePartitionBuilder, VMMSurfaceSamplingDistribution<DirectionalDistriubtionFactory::Distribution>, VMMVolumeSamplingDistribution<DirectionalDistriubtionFactory::Distribution>> GuidingField;
+    typedef ISurfaceVolumeField2 IGuidingField;
     typedef GuidingField::RegionType GuidingRegion;
     typedef GuidingField::DirectionalDistribution GuidingDistribution;
-    typedef VMMBSDFSamplingDistribution<GuidingDistribution> GuidedSurfaceSamplingDistribution;
-    typedef VMMPhaseFunctionSamplingDistribution<GuidingDistribution> GuidedVolumeSamplingDistribution;
+    typedef VMMSurfaceSamplingDistribution<GuidingDistribution> GuidedSurfaceSamplingDistribution;
+    typedef VMMVolumeSamplingDistribution<GuidingDistribution> GuidedVolumeSamplingDistribution;
     typedef GuidingField::Settings GuidingFieldProperties;
     typedef SamplerC GuidingSampler;
 }

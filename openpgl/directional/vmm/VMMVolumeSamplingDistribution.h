@@ -9,11 +9,11 @@ namespace openpgl
 {
 
 template<class TVMMDistribution>
-struct VMMPhaseFunctionSamplingDistribution: public IVolumeSamplingDistribution
+struct VMMVolumeSamplingDistribution: public IVolumeSamplingDistribution
 {
     
-    VMMPhaseFunctionSamplingDistribution() = default;
-    ~VMMPhaseFunctionSamplingDistribution() = default;
+    VMMVolumeSamplingDistribution() = default;
+    ~VMMVolumeSamplingDistribution() = default;
 
     typedef std::integral_constant<size_t, 2> MaxNumProductDistributions;
 

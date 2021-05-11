@@ -11,11 +11,11 @@ namespace openpgl
 {
 
 template<class TVMMDistribution>
-struct VMMBSDFSamplingDistribution: public ISurfaceSamplingDistribution
+struct VMMSurfaceSamplingDistribution: public ISurfaceSamplingDistribution
 {
     
-    VMMBSDFSamplingDistribution() = default;
-    ~VMMBSDFSamplingDistribution() = default;
+    VMMSurfaceSamplingDistribution() = default;
+    ~VMMSurfaceSamplingDistribution() = default;
     
     typedef std::integral_constant<size_t, 2> MaxNumProductDistributions;
 

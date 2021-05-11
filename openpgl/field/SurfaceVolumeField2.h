@@ -3,14 +3,15 @@
 
 #pragma once
 
+#include "ISurfaceVolumeField2.h"
 #include "Field2.h"
 
 namespace openpgl
 {
 
 
-template<class TDirectionalDistributionFactory, template<typename, typename> class TSpatialStructureBuilder>
-struct SurfaceVolumeField2
+template<class TDirectionalDistributionFactory, template<typename, typename> class TSpatialStructureBuilder, typename TSurfaceSamplingDistribution, typename TVolumeSamplingDistribution>
+struct SurfaceVolumeField2: public ISurfaceVolumeField2
 {
 
 private:
@@ -32,49 +33,89 @@ public:
     {
     }
 
-    void setSceneBounds(const openpgl::BBox &sceneBounds)
+    ~SurfaceVolumeField2() override
+    {} 
+
+    ISurfaceSamplingDistribution* newSurfaceSamplingDistribution() const override
+    {
+        return new TSurfaceSamplingDistribution();
+    }
+
+    bool initSurfaceSamplingDistribution(ISurfaceSamplingDistribution* surfaceSamplingDistribution, const Point3& position, const float sample1D, const bool useParrallaxComp) const override
+    {
+        TSurfaceSamplingDistribution* _surfaceSamplingDistribution = (TSurfaceSamplingDistribution*)surfaceSamplingDistribution;
+        const RegionType* region = this->getSurfaceGuidingRegion(position, sample1D);
+        if(!region || !region->valid)
+        {
+            return false;
+        }
+        DirectionalDistribution distribution = region->getDistribution(position, useParrallaxComp);
+        _surfaceSamplingDistribution->init(&distribution);
+        return true;
+    }
+
+    IVolumeSamplingDistribution* newVolumeSamplingDistribution() const override
+    {
+        return new TVolumeSamplingDistribution();    
+    }
+
+    bool initVolumeSamplingDistribution(IVolumeSamplingDistribution* volumeSamplingDistribution, const Point3& position, const float sample1D, const bool useParrallaxComp) const override
+    {
+        TVolumeSamplingDistribution* _volumeSamplingDistribution = (TVolumeSamplingDistribution*)volumeSamplingDistribution;
+        const RegionType* region = this->getVolumeGuidingRegion(position, sample1D);
+        if(!region || !region->valid)
+        {
+            return false;
+        }
+        DirectionalDistribution distribution = region->getDistribution(position, useParrallaxComp);
+        _volumeSamplingDistribution->init(&distribution);
+        return true;
+    }
+
+    void setSceneBounds(const openpgl::BBox &sceneBounds) override
     {
         m_surfaceField.setSceneBounds(sceneBounds);
         m_volumeField.setSceneBounds(sceneBounds);
     }
 
 
-    const RegionType *getSurfaceGuidingRegion( const openpgl::Point3 &p, openpgl::Sampler *sampler) const
+    const RegionType *getSurfaceGuidingRegion( const openpgl::Point3 &p, const float sample1D) const
     {
-        return m_surfaceField.getGuidingRegion(p, sampler);
+        return m_surfaceField.getGuidingRegion(p, sample1D);
     }
 
 
-    const RegionType *getVolumeGuidingRegion( const openpgl::Point3 &p, openpgl::Sampler *sampler) const
+    const RegionType *getVolumeGuidingRegion( const openpgl::Point3 &p, const float sample1D) const
     {
-        return m_volumeField.getGuidingRegion(p, sampler);
+        return m_volumeField.getGuidingRegion(p, sample1D);
     }
 
 
-    void buildField(SampleContainer& samplesSurface, SampleContainer& samplesVolume)
+    void buildField(SampleContainer& samplesSurface, SampleContainer& samplesVolume) override
     {
         m_surfaceField.buildField(samplesSurface);
         m_volumeField.buildField(samplesVolume);
     }
 
-    void updateField(SampleContainer& samplesSurface, SampleContainer& samplesVolume)
+    void updateField(SampleContainer& samplesSurface, SampleContainer& samplesVolume) override
     {
         m_surfaceField.updateField(samplesSurface);
         m_volumeField.updateField(samplesVolume);
     }
 
 
-    void addTrainingIteration(size_t spp) {
+    void addTrainingIteration(size_t spp) override
+    {
         m_totalSPP += spp;
         ++m_iteration;
     }
 
-    size_t getTotalSPP() const
+    size_t getTotalSPP() const override
     {
         return m_totalSPP;
     }
 
-    size_t getIteration() const
+    size_t getIteration() const override
     {
         return m_iteration;
     }

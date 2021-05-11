@@ -78,13 +78,13 @@ public:
         m_isSceneBoundsSet = true;
     }
 
-    inline const RegionType *getGuidingRegion(const openpgl::Point3 &p, openpgl::Sampler *sampler) const
+    inline const RegionType *getGuidingRegion(const openpgl::Point3 &p, const float sample1D) const
     {
         if (m_iteration >0 && embree::inside(m_spatialSubdiv.getBounds(), p))
         {
-            if(sampler && m_useStochasticNNLookUp)
+            if(m_useStochasticNNLookUp)
             {
-                uint32_t regionIdx =  getClosestRegionIdx(m_regionKNNSearchTree, p, sampler->next1D());
+                uint32_t regionIdx =  getClosestRegionIdx(m_regionKNNSearchTree, p, sample1D);
                 if(regionIdx != -1)
                 {
                     return &m_regionStorageContainer[regionIdx].first;
