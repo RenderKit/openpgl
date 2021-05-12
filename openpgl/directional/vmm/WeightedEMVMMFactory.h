@@ -157,7 +157,7 @@ public:
 
     WeightedEMVonMisesFisherFactory();
 
-    virtual void fitMixture(VMM &vmm, size_t numComponents, SufficientStatisitcs &stats, const SampleData* samples, const size_t numSamples, const Configuration &cfg, FittingStatistics &fitStats) const;
+    virtual void fitMixture(VMM &vmm, SufficientStatisitcs &stats, const SampleData* samples, const size_t numSamples, const Configuration &cfg, FittingStatistics &fitStats) const;
 
     virtual void updateMixture(VMM &vmm, SufficientStatisitcs &previousStats, const SampleData* samples, const size_t numSamples, const Configuration &cfg, FittingStatistics &fitStats) const;
 
@@ -237,8 +237,9 @@ typename WeightedEMVonMisesFisherFactory< TVMMDistribution>::VMM WeightedEMVonMi
 
 
 template<class TVMMDistribution>
-void WeightedEMVonMisesFisherFactory< TVMMDistribution>::fitMixture(VMM &vmm, size_t numComponents, SufficientStatisitcs &stats, const SampleData* samples, const size_t numSamples, const Configuration &cfg, FittingStatistics &fitStats) const
+void WeightedEMVonMisesFisherFactory< TVMMDistribution>::fitMixture(VMM &vmm, SufficientStatisitcs &stats, const SampleData* samples, const size_t numSamples, const Configuration &cfg, FittingStatistics &fitStats) const
 {
+    const size_t numComponents = cfg.initK;
     //VonMisesFisherFactory< TVMMDistribution>::InitUniformVMM( vmm, numComponents, 5.0f);
     this->InitUniformVMM( vmm, numComponents, 5.0f);
     //OPENPGL_ASSERT(vmm.isValid());

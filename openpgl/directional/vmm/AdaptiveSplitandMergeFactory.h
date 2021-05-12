@@ -103,7 +103,7 @@ public:
         std::string toString() const;
     };
 
-    void fit(VMM &vmm, size_t numComponents, ASMStatistics &stats, const SampleData* samples, const size_t numSamples, const ASMConfiguration &cfg, ASMFittingStatistics &fitStats) const;
+    void fit(VMM &vmm, ASMStatistics &stats, const SampleData* samples, const size_t numSamples, const ASMConfiguration &cfg, ASMFittingStatistics &fitStats) const;
 
     void update(VMM &vmm, ASMStatistics &stats, const SampleData* samples, const size_t numSamples, const ASMConfiguration &cfg, ASMFittingStatistics &fitStats) const;
 
@@ -258,13 +258,14 @@ std::string AdaptiveSplitAndMergeFactory<TVMMDistribution>::ASMConfiguration::to
 }
 
 template<class TVMMDistribution>
-void AdaptiveSplitAndMergeFactory<TVMMDistribution>::fit(VMM &vmm, size_t numComponents, ASMStatistics &stats, const SampleData* samples, const size_t numSamples, const ASMConfiguration &cfg, ASMFittingStatistics &fitStats) const
+void AdaptiveSplitAndMergeFactory<TVMMDistribution>::fit(VMM &vmm, ASMStatistics &stats, const SampleData* samples, const size_t numSamples, const ASMConfiguration &cfg, ASMFittingStatistics &fitStats) const
 {
+    const size_t numComponents = cfg.weightedEMCfg.initK;
     stats.clear(numComponents);
     // intial fit
     WeightedEMFactory factory = WeightedEMFactory();
     typename WeightedEMFactory::FittingStatistics wemFitStats;
-    factory.fitMixture(vmm, numComponents, stats.sufficientStatistics, samples, numSamples, cfg.weightedEMCfg, wemFitStats);
+    factory.fitMixture(vmm, stats.sufficientStatistics, samples, numSamples, cfg.weightedEMCfg, wemFitStats);
     factory.initComponentDistances(vmm, stats.sufficientStatistics, samples, numSamples);
     OPENPGL_ASSERT(vmm.isValid());
     OPENPGL_ASSERT(vmm.getNumComponents() == stats.sufficientStatistics.getNumComponents());

@@ -156,7 +156,7 @@ private:
             if (dataPoints.size() > 0)
             {
                 typename DistributionFactory::ASMFittingStatistics fittingStats;
-                m_distributionFactory.fit(regionStorage.first.distribution, m_distributionFactorySettings.weightedEMCfg.initK, regionStorage.first.trainingStatistics, dataPoints.data(), dataPoints.size(), m_distributionFactorySettings, fittingStats);
+                m_distributionFactory.fit(regionStorage.first.distribution, regionStorage.first.trainingStatistics, dataPoints.data(), dataPoints.size(), m_distributionFactorySettings, fittingStats);
                 regionStorage.first.distribution._pivotPosition = sampleMean;
                 regionStorage.first.valid = regionStorage.first.distribution.isValid();
                 if(!regionStorage.first.valid)

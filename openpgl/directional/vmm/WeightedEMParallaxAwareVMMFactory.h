@@ -87,7 +87,7 @@ struct WeightedEMParallaxAwareVonMisesFisherFactory: public WeightedEMVonMisesFi
 
 
 public:
-    void fitMixture(VMM &vmm, size_t numComponents, SufficientStatisitcs &stats, const SampleData* samples, const size_t numSamples, const Configuration &cfg, FittingStatistics &fitStats) const;
+    void fitMixture(VMM &vmm, SufficientStatisitcs &stats, const SampleData* samples, const size_t numSamples, const Configuration &cfg, FittingStatistics &fitStats) const;
 
     void updateMixture(VMM &vmm, SufficientStatisitcs &previousStats, const SampleData* samples, const size_t numSamples, const Configuration &cfg, FittingStatistics &fitStats) const;
 
@@ -278,9 +278,9 @@ void WeightedEMParallaxAwareVonMisesFisherFactory< TVMMDistribution>::Sufficient
 ////////////////////////////////////////////////////////////
 
 template<class TVMMDistribution>
-void WeightedEMParallaxAwareVonMisesFisherFactory< TVMMDistribution>::fitMixture(VMM &vmm, size_t numComponents, SufficientStatisitcs &stats, const SampleData* samples, const size_t numSamples, const Configuration &cfg, FittingStatistics &fitStats) const
+void WeightedEMParallaxAwareVonMisesFisherFactory< TVMMDistribution>::fitMixture(VMM &vmm, SufficientStatisitcs &stats, const SampleData* samples, const size_t numSamples, const Configuration &cfg, FittingStatistics &fitStats) const
 {
-    WeightedEMVonMisesFisherFactory< TVMMDistribution>::fitMixture( vmm, numComponents, stats.wEMSufficientStatisitcs, samples, numSamples, cfg, fitStats);
+    WeightedEMVonMisesFisherFactory< TVMMDistribution>::fitMixture( vmm, stats.wEMSufficientStatisitcs, samples, numSamples, cfg, fitStats);
     /*
     // TODO: implement an init function
     const vfloat<VMM::VectorSize> zeros(0.0f);
