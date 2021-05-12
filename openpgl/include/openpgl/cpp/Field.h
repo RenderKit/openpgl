@@ -82,7 +82,7 @@ struct Field
      * @param sampler 
      * @return Region 
      */
-    Region GetSurfaceRegion(pgl_point3f position, Sampler* sampler);
+    //Region GetSurfaceRegion(pgl_point3f position, Sampler* sampler);
 
     /**
      * @brief Returns the spatial volume Region containing the approximation of the local incident radiance distriubtion. 
@@ -91,7 +91,10 @@ struct Field
      * @param sampler 
      * @return Region 
      */
-    Region GetVolumeRegion(pgl_point3f position, Sampler* sampler);
+    //Region GetVolumeRegion(pgl_point3f position, Sampler* sampler);
+
+
+    
 
     friend class SurfaceSamplingDistribution;
     friend class VolumeSamplingDistribution;
@@ -135,6 +138,7 @@ OPENPGL_INLINE void Field::Update(const SampleStorage& sampleStorage, const size
     pglFieldUpdate(m_fieldHandle, sampleStorage.m_sampleStorageHandle, numPerPixelSamples);
 }
 
+/*
 OPENPGL_INLINE Region Field::GetSurfaceRegion(pgl_point3f position, Sampler* sampler)
 {
     OPENPGL_ASSERT(m_fieldHandle);
@@ -152,7 +156,7 @@ OPENPGL_INLINE Region Field::GetVolumeRegion(pgl_point3f position, Sampler* samp
     PGLRegion regionHandle = pglFieldGetVolumeRegion(m_fieldHandle, position, &sampler->m_samplerHandle);
     return Region(regionHandle);
 }
-
+*/
 
 
 } // api

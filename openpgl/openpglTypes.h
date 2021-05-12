@@ -31,10 +31,4 @@ namespace openpgl
     //typedef SurfaceVolumeField2<DirectionalDistriubtionFactory, KDTreePartitionBuilder, SampleDataStorage::SampleDataContainer> GuidingField;
     typedef SurfaceVolumeField2<DirectionalDistriubtionFactory, KDTreePartitionBuilder, VMMSurfaceSamplingDistribution<DirectionalDistriubtionFactory::Distribution>, VMMVolumeSamplingDistribution<DirectionalDistriubtionFactory::Distribution>> GuidingField;
     typedef ISurfaceVolumeField2 IGuidingField;
-    typedef GuidingField::RegionType GuidingRegion;
-    typedef GuidingField::DirectionalDistribution GuidingDistribution;
-    typedef VMMSurfaceSamplingDistribution<GuidingDistribution> GuidedSurfaceSamplingDistribution;
-    typedef VMMVolumeSamplingDistribution<GuidingDistribution> GuidedVolumeSamplingDistribution;
-    typedef GuidingField::Settings GuidingFieldProperties;
-    typedef SamplerC GuidingSampler;
 }

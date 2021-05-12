@@ -141,14 +141,14 @@ extern "C"  void pglFieldUpdate(PGLField field, PGLSampleStorage sampleStorage, 
     gField->addTrainingIteration(numPerPixelSamples);
 }
 OPENPGL_CATCH_END()
-
+/*
 extern "C"  PGLRegion pglFieldGetSurfaceRegion(PGLField field, pgl_point3f position, PGLSampler* sampler)OPENPGL_CATCH_BEGIN
 {
     const openpgl::Point3 pos(position.x, position.y, position.z);
-    GuidingSampler gSampler(sampler);
+    SamplerC gSampler(sampler);
     float sample1D = gSampler.next1D();
     auto *gField = (GuidingField *)field;
-    const GuidingRegion* gRegion = gField->getSurfaceGuidingRegion(pos, sample1D);
+    const IRegion* gRegion = gField->getSurfaceGuidingRegion(pos, sample1D);
     return (PGLRegion) gRegion;
 }
 OPENPGL_CATCH_END(nullptr)
@@ -156,14 +156,14 @@ OPENPGL_CATCH_END(nullptr)
 extern "C"  PGLRegion pglFieldGetVolumeRegion(PGLField field, pgl_point3f position, PGLSampler* sampler)OPENPGL_CATCH_BEGIN
 {
     const openpgl::Point3 pos(position.x, position.y, position.z);
-    GuidingSampler gSampler(sampler);
+    SamplerC gSampler(sampler);
     float sample1D = gSampler.next1D();
     auto *gField = (GuidingField *)field;
-    const GuidingRegion* gRegion = gField->getVolumeGuidingRegion(pos, sample1D);
+    const IRegion* gRegion = gField->getVolumeGuidingRegion(pos, sample1D);
     return (PGLRegion) gRegion;
 }
 OPENPGL_CATCH_END(nullptr)
-
+*/
 
 extern "C"  PGLSurfaceSamplingDistribution pglFieldNewSurfaceSamplingDistribution(PGLField field)OPENPGL_CATCH_BEGIN
 {
@@ -200,17 +200,18 @@ extern "C"  bool pglFieldInitVolumeSamplingDistriubtion(PGLField field, PGLVolum
 ///////////////////////////////////////////////////////////////////////////////
 // Region /////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-
+/*
 extern "C" bool pglRegionGetValid(PGLRegion region)
 {
-    auto *gRegion = (GuidingRegion *)region;
+    auto *gRegion = (IRegion *)region;
     return gRegion->valid;
 }
+*/
 /*
 extern "C" PGLDistribution pglRegionGetDistribution(PGLRegion region, pgl_point3f samplePosition, const bool &useParallaxComp)
 {
     const openpgl::Point3 samplePos(samplePosition.x, samplePosition.y, samplePosition.z);
-    auto *gRegion = (GuidingRegion *)region; 
+    auto *gRegion = (IRegion *)region; 
 
     GuidingDistribution gDistribution;
     gRegion->getDistribution(gDistribution, samplePos, useParallaxComp);
@@ -324,40 +325,40 @@ extern "C" void pglSampleDataSetFlags(PGLSampleData sampleData, const int flags)
 
 extern "C" PGLPathSegmentStorage pglNewPathSegmentStorage()OPENPGL_CATCH_BEGIN
 {
-    openpgl::PathSegmentDataStorage<openpgl::GuidingRegion>* pathSegmentStorage = new openpgl::PathSegmentDataStorage<openpgl::GuidingRegion>();
+    openpgl::PathSegmentDataStorage* pathSegmentStorage = new openpgl::PathSegmentDataStorage();
     return (PGLPathSegmentStorage) pathSegmentStorage;
 }
 OPENPGL_CATCH_END(nullptr)
 
 extern "C" void pglReleasePathSegmentStorage(PGLPathSegmentStorage pathSegmentStorage)OPENPGL_CATCH_BEGIN
 {
-    auto *gPathSegmentStorage = (openpgl::PathSegmentDataStorage<openpgl::GuidingRegion> *)pathSegmentStorage;
+    auto *gPathSegmentStorage = (openpgl::PathSegmentDataStorage *)pathSegmentStorage;
     delete gPathSegmentStorage;
 }
 OPENPGL_CATCH_END()
 
 extern "C" void pglPathSegmentStorageReserve(PGLPathSegmentStorage pathSegmentStorage, size_t size)
 {
-    auto *gPathSegmentStorage = (openpgl::PathSegmentDataStorage<openpgl::GuidingRegion> *)pathSegmentStorage;
+    auto *gPathSegmentStorage = (openpgl::PathSegmentDataStorage *)pathSegmentStorage;
     gPathSegmentStorage->reserve(size);
 }
 
 extern "C" void pglPathSegmentStorageClear(PGLPathSegmentStorage pathSegmentStorage)
 {
-    auto *gPathSegmentStorage = (openpgl::PathSegmentDataStorage<openpgl::GuidingRegion> *)pathSegmentStorage;
+    auto *gPathSegmentStorage = (openpgl::PathSegmentDataStorage *)pathSegmentStorage;
     gPathSegmentStorage->clear();
 }
 
 extern "C" size_t pglPathSegmentStoragePrepareSamples(PGLPathSegmentStorage pathSegmentStorage,const bool &spaltSamples, PGLSampler* sampler,  const bool useNEEMiWeights, const bool guideDirectLight)
 {
-    auto *gPathSegmentStorage = (openpgl::PathSegmentDataStorage<openpgl::GuidingRegion> *)pathSegmentStorage;
-    GuidingSampler gSampler(sampler);
+    auto *gPathSegmentStorage = (openpgl::PathSegmentDataStorage *)pathSegmentStorage;
+    SamplerC gSampler(sampler);
     return gPathSegmentStorage->prepareSamples(spaltSamples, &gSampler, useNEEMiWeights, guideDirectLight);
 }
 
 extern "C" const PGLSampleData* pglPathSegmentStorageGetSamples(PGLPathSegmentStorage pathSegmentStorage, size_t &nSamples)
 {
-    auto *gPathSegmentStorage = (openpgl::PathSegmentDataStorage<openpgl::GuidingRegion> *)pathSegmentStorage;
+    auto *gPathSegmentStorage = (openpgl::PathSegmentDataStorage *)pathSegmentStorage;
     const std::vector<openpgl::SampleData> &opglSamples = gPathSegmentStorage->getSamples();
     nSamples = opglSamples.size();
     return (PGLSampleData*)opglSamples.data();
@@ -367,20 +368,20 @@ extern "C" const PGLSampleData* pglPathSegmentStorageGetSamples(PGLPathSegmentSt
 /*
 extern "C" void pglPathSegmentStorageAddSegment(PGLPathSegmentStorage pathSegmentStorage, PGLPathSegment pathSegment)
 {
-    //auto *gPathSegmentStorage = (openpgl::PathSegmentDataStorage<openpgl::GuidingRegion> *)pathSegmentStorage;
+    //auto *gPathSegmentStorage = (openpgl::PathSegmentDataStorage *)pathSegmentStorage;
     //gPathSegmentStorage->
 }
 */
 extern "C" void pglPathSegmentStorageAddSample(PGLPathSegmentStorage pathSegmentStorage, PGLSampleData sample)
 {
-    auto *gPathSegmentStorage = (openpgl::PathSegmentDataStorage<openpgl::GuidingRegion> *)pathSegmentStorage;
+    auto *gPathSegmentStorage = (openpgl::PathSegmentDataStorage *)pathSegmentStorage;
     gPathSegmentStorage->addSample(sample);
 }
 
 
 extern "C" PGLPathSegment pglPathSegmentNextSegment(PGLPathSegmentStorage pathSegmentStorage)
 {
-    auto *gPathSegmentStorage = (openpgl::PathSegmentDataStorage<openpgl::GuidingRegion> *)pathSegmentStorage;
+    auto *gPathSegmentStorage = (openpgl::PathSegmentDataStorage *)pathSegmentStorage;
     return (PGLPathSegment)gPathSegmentStorage->next();
 
 }
@@ -489,13 +490,13 @@ extern "C" void pglPathSegmentSetTransmittanceWeight(PGLPathSegment pathSegment,
 ///////////////////////////////////////////////////////////////////////////////
 // Distribution ///// /////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-
+/*
 extern "C" bool pglDistributionIsValid(PGLDistribution distribution)
 {
     auto *gDistribution = (GuidingDistribution *)distribution;
     return gDistribution->isValid();
 }
-
+*/
 /*
 extern "C" PGLSurfaceSamplingDistribution pglNewSurfaceSamplingDistribution()OPENPGL_CATCH_BEGIN
 {
@@ -515,7 +516,7 @@ OPENPGL_CATCH_END()
 extern "C" void pglSurfaceSamplingDistributionInit(PGLSurfaceSamplingDistribution surfaceSamplingDistribution, PGLRegion region, pgl_point3f samplePosition, bool useParallaxComp)
 {
     ISurfaceSamplingDistribution* gSurfaceSamplingDistribution =  (ISurfaceSamplingDistribution*)surfaceSamplingDistribution;
-    GuidingRegion *gRegion = (GuidingRegion*)region;
+    IRegion *gRegion = (IRegion*)region;
     openpgl::Vector3 opglSamplePosition(samplePosition.x, samplePosition.y, samplePosition.z);
     GuidingDistribution distriubtion = gRegion->getDistribution(opglSamplePosition, useParallaxComp);
     gSurfaceSamplingDistribution->init(&distriubtion);
@@ -555,6 +556,14 @@ extern "C" void pglSurfaceSamplingDistributionClear(PGLSurfaceSamplingDistributi
     ISurfaceSamplingDistribution* gSurfaceSamplingDistribution =  (ISurfaceSamplingDistribution*)surfaceSamplingDistribution;
     gSurfaceSamplingDistribution->clear();
 }
+
+extern "C" PGLRegion pglSurfaceSamplingGetRegion(PGLSurfaceSamplingDistribution surfaceSamplingDistribution)
+{
+    ISurfaceSamplingDistribution* gSurfaceSamplingDistribution =  (ISurfaceSamplingDistribution*)surfaceSamplingDistribution;
+    const IRegion* gRegion = gSurfaceSamplingDistribution->getRegion();
+    return (PGLRegion) gRegion;
+}
+
 /*
 extern "C" PGLVolumeSamplingDistribution pglNewVolumeSamplingDistribution()OPENPGL_CATCH_BEGIN
 {
@@ -573,7 +582,7 @@ OPENPGL_CATCH_END()
 extern "C" void pglVolumeSamplingDistributionInit(PGLVolumeSamplingDistribution volumeSamplingDistribution, PGLRegion region, pgl_point3f samplePosition, bool useParallaxComp)
 {
     IVolumeSamplingDistribution* gVolumeSamplingDistribution =  (IVolumeSamplingDistribution*)volumeSamplingDistribution;
-    GuidingRegion *gRegion = (GuidingRegion*)region;
+    IRegion *gRegion = (IRegion*)region;
     openpgl::Vector3 opglSamplePosition(samplePosition.x, samplePosition.y, samplePosition.z);
     GuidingDistribution distriubtion = gRegion->getDistribution(opglSamplePosition, useParallaxComp);
     gVolumeSamplingDistribution->init(&distriubtion);

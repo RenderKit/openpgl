@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include "../spatial/IRegion.h"
+
 namespace openpgl
 {
 struct ISurfaceSamplingDistribution
@@ -22,5 +24,24 @@ struct ISurfaceSamplingDistribution
     virtual void clear() = 0;
 
     virtual std::string toString() const = 0;
+
+    void setRegion(const IRegion* region);
+
+    const IRegion* getRegion() const;
+
+private:
+
+    const IRegion* m_region {nullptr};
 };
+
+const IRegion* ISurfaceSamplingDistribution::getRegion() const
+{
+    return m_region;
+}
+
+void ISurfaceSamplingDistribution::setRegion(const IRegion* region)
+{
+    m_region = region;
+}
+
 }

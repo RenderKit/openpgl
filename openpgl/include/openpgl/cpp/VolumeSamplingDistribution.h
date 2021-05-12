@@ -71,6 +71,8 @@ struct VolumeSamplingDistribution
     bool Init(const Field* field, const pgl_point3f& pos, const float sample1D, const bool useParallaxCompensation = true);
 
 
+    Region GetRegion() const;
+
     ///////////////////////////////////////
     /// Future plans
     ///////////////////////////////////////
@@ -145,6 +147,14 @@ bool VolumeSamplingDistribution::Init(const Field* field, const pgl_point3f& pos
     return pglFieldInitVolumeSamplingDistriubtion(field->m_fieldHandle, m_volumeSamplingDistributionHandle, pos, sample1D, useParallaxCompensation);
 }
 
+OPENPGL_INLINE Region VolumeSamplingDistribution::GetRegion() const
+{
+    OPENPGL_ASSERT(m_volumeSamplingDistributionHandle);
+    //OPENPGL_ASSERT(sampler);
+    //OPENPGL_ASSERT(&sampler->m_samplerHandle);
+    PGLRegion regionHandle = pglVolumeSamplingGetRegion(m_volumeSamplingDistributionHandle);
+    return Region(regionHandle);
+}
 
 }
 }

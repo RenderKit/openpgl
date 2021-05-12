@@ -22,3 +22,5 @@
 #include "samplestorage.h"
 #include "pathsegmentstorage.h"
 #include "field.h"
+#include "surfacesamplingdistribution.h"
+#include "volumesamplingdistribution.h"

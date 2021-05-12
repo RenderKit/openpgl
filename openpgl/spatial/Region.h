@@ -5,17 +5,19 @@
 
 #include "../openpgl_common.h"
 #include "../data/SampleStatistics.h"
+#include "IRegion.h"
+
 namespace openpgl
 {
     template <typename TDistribution , typename TTrainingStatistics>
-    struct Region
+    struct Region: public IRegion
     {
         TDistribution distribution;
         BBox regionBounds;
         TTrainingStatistics trainingStatistics;
         SampleStatistics sampleStatistics;
         bool splitFlag {false};
-        bool valid{true};
+        //bool valid{true};
 
         inline const BBox &getRegionBounds() const
         {

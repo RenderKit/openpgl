@@ -7,10 +7,10 @@
 #include "PathSegmentData.h"
 #include "SampleData.h"
 #include "../sampler/Sampler.h"
+#include "../spatial/Region.h"
 
 namespace openpgl
 {
-template <typename TRegion>
 struct PathSegmentDataStorage
 {
     PathSegmentDataStorage() = default;
@@ -93,7 +93,7 @@ struct PathSegmentDataStorage
                 openpgl::Vector3 dir = currentPathSegment.directionIn;
                 float pdf = std::max(minPDF,currentPathSegment.pdfDirectionIn);
                 uint32_t flags{0};
-                const TRegion* regionPtr = (const TRegion*)currentPathSegment.regionPtr;
+                const IRegion* regionPtr = (const IRegion*)currentPathSegment.regionPtr;
                 //OPENPGL_ASSERT(regionPtr != nullptr);
                 bool insideVolume = currentPathSegment.volumeScatter;
                 if(insideVolume)

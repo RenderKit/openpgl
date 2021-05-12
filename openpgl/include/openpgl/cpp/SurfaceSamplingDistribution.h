@@ -92,6 +92,9 @@ struct SurfaceSamplingDistribution
     //void ApplyCosineProduct(const pgl_vec3f& normal, const bool opaque, const pgl_vec3f transmission);
     
 
+
+    Region GetRegion() const;
+
     private:
         PGLSurfaceSamplingDistribution m_surfaceSamplingDistributionHandle{nullptr};
 };
@@ -157,5 +160,15 @@ void SurfaceSamplingDistribution::ApplyCosineProduct(const pgl_vec3f& normal)
     OPENPGL_ASSERT(m_surfaceSamplingDistributionHandle);
     pglSurfaceSamplingDistributionApplyCosineProduct(m_surfaceSamplingDistributionHandle, normal);
 }
+
+OPENPGL_INLINE Region SurfaceSamplingDistribution::GetRegion() const
+{
+    OPENPGL_ASSERT(m_surfaceSamplingDistributionHandle);
+    //OPENPGL_ASSERT(sampler);
+    //OPENPGL_ASSERT(&sampler->m_samplerHandle);
+    PGLRegion regionHandle = pglSurfaceSamplingGetRegion(m_surfaceSamplingDistributionHandle);
+    return Region(regionHandle);
+}
+
 }
 }

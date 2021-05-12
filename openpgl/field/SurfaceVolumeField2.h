@@ -51,6 +51,7 @@ public:
         }
         DirectionalDistribution distribution = region->getDistribution(position, useParrallaxComp);
         _surfaceSamplingDistribution->init(&distribution);
+        _surfaceSamplingDistribution->setRegion(region);
         return true;
     }
 
@@ -69,6 +70,7 @@ public:
         }
         DirectionalDistribution distribution = region->getDistribution(position, useParrallaxComp);
         _volumeSamplingDistribution->init(&distribution);
+        _volumeSamplingDistribution->setRegion(region);
         return true;
     }
 

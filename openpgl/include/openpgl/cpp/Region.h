@@ -30,7 +30,7 @@ struct Region
      * @return true 
      * @return false 
      */
-    bool GetValid() const;
+    //bool GetValid() const;
 
     /**
      * @brief Returns a copy of the approximation of the local radiance Distribution stored inside the spatial Region.
@@ -41,7 +41,7 @@ struct Region
      * @param useParallaxComp if parallax compensation (if supported) should be used
      * @return Distribution 
      */
-    Distribution GetDistribution(pgl_point3f samplePosition, const bool &useParallaxComp) const;
+    //Distribution GetDistribution(pgl_point3f samplePosition, const bool &useParallaxComp) const;
 
     friend class PathSegment;
     friend class SurfaceSamplingDistribution;
@@ -54,7 +54,7 @@ OPENPGL_INLINE Region::Region(PGLRegion regionHandle)
 {
     m_regionHandle = regionHandle;
 }
-
+/*
 OPENPGL_INLINE bool Region::GetValid()const
 {
     if(m_regionHandle)
@@ -63,12 +63,13 @@ OPENPGL_INLINE bool Region::GetValid()const
         return false;
 }
 
+
 OPENPGL_INLINE Distribution Region::GetDistribution(pgl_point3f samplePosition, const bool &useParallaxComp) const
 {
     OPENPGL_ASSERT(m_regionHandle);
     PGLDistribution distributionHandle = pglRegionGetDistribution(m_regionHandle, samplePosition, useParallaxComp);
     return Distribution(distributionHandle);
 }
-
+*/
 }
 }
