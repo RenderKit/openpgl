@@ -78,7 +78,7 @@ public:
         m_isSceneBoundsSet = true;
     }
 
-    inline const RegionType *getGuidingRegion(const openpgl::Point3 &p, const float sample1D) const
+    inline const RegionType *getRegion(const openpgl::Point3 &p, const float sample1D) const
     {
         if (m_iteration >0 && embree::inside(m_spatialSubdiv.getBounds(), p))
         {

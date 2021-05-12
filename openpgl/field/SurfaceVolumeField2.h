@@ -44,7 +44,7 @@ public:
     bool initSurfaceSamplingDistribution(ISurfaceSamplingDistribution* surfaceSamplingDistribution, const Point3& position, const float sample1D, const bool useParrallaxComp) const override
     {
         TSurfaceSamplingDistribution* _surfaceSamplingDistribution = (TSurfaceSamplingDistribution*)surfaceSamplingDistribution;
-        const RegionType* region = this->getSurfaceGuidingRegion(position, sample1D);
+        const RegionType* region = m_surfaceField.getRegion(position, sample1D);
         if(!region || !region->valid)
         {
             return false;
@@ -63,7 +63,7 @@ public:
     bool initVolumeSamplingDistribution(IVolumeSamplingDistribution* volumeSamplingDistribution, const Point3& position, const float sample1D, const bool useParrallaxComp) const override
     {
         TVolumeSamplingDistribution* _volumeSamplingDistribution = (TVolumeSamplingDistribution*)volumeSamplingDistribution;
-        const RegionType* region = this->getVolumeGuidingRegion(position, sample1D);
+        const RegionType* region = m_volumeField.getRegion(position, sample1D);
         if(!region || !region->valid)
         {
             return false;
@@ -79,19 +79,6 @@ public:
         m_surfaceField.setSceneBounds(sceneBounds);
         m_volumeField.setSceneBounds(sceneBounds);
     }
-
-
-    const RegionType *getSurfaceGuidingRegion( const openpgl::Point3 &p, const float sample1D) const
-    {
-        return m_surfaceField.getGuidingRegion(p, sample1D);
-    }
-
-
-    const RegionType *getVolumeGuidingRegion( const openpgl::Point3 &p, const float sample1D) const
-    {
-        return m_volumeField.getGuidingRegion(p, sample1D);
-    }
-
 
     void buildField(SampleContainer& samplesSurface, SampleContainer& samplesVolume) override
     {
