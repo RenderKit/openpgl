@@ -11,8 +11,8 @@
 
 #include "data/SampleDataStorage.h"
 //#include "field/SurfaceVolumeFieldParallaxAwareVMM.h"
-#include "field/ISurfaceVolumeField2.h"
-#include "field/SurfaceVolumeField2.h"
+#include "field/ISurfaceVolumeField.h"
+#include "field/SurfaceVolumeField.h"
 #include "directional/ISurfaceSamplingDistribution.h"
 #include "directional/IVolumeSamplingDistribution.h"
 #include "directional/vmm/ParallaxAwareVMM.h"
@@ -29,6 +29,6 @@ namespace openpgl
     typedef AdaptiveSplitAndMergeFactory<ParallaxAwareVonMisesFisherMixture<4, 32>> DirectionalDistriubtionFactory;
 
     //typedef SurfaceVolumeField2<DirectionalDistriubtionFactory, KDTreePartitionBuilder, SampleDataStorage::SampleDataContainer> GuidingField;
-    typedef SurfaceVolumeField2<DirectionalDistriubtionFactory, KDTreePartitionBuilder, VMMSurfaceSamplingDistribution<DirectionalDistriubtionFactory::Distribution>, VMMVolumeSamplingDistribution<DirectionalDistriubtionFactory::Distribution>> GuidingField;
-    typedef ISurfaceVolumeField2 IGuidingField;
+    typedef SurfaceVolumeField<DirectionalDistriubtionFactory, KDTreePartitionBuilder, VMMSurfaceSamplingDistribution<DirectionalDistriubtionFactory::Distribution>, VMMVolumeSamplingDistribution<DirectionalDistriubtionFactory::Distribution>> GuidingField;
+    typedef ISurfaceVolumeField IGuidingField;
 }

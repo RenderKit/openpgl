@@ -10,12 +10,12 @@
 
 namespace openpgl
 {
-struct ISurfaceVolumeField2
+struct ISurfaceVolumeField
 {
 
     using SampleContainer = SampleDataStorage::SampleDataContainer;
 
-    virtual ~ISurfaceVolumeField2(){};
+    virtual ~ISurfaceVolumeField(){};
 
     virtual ISurfaceSamplingDistribution* newSurfaceSamplingDistribution() const = 0;
 
