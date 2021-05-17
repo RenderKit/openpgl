@@ -32,7 +32,7 @@ public:
     typedef VonMisesFisherChiSquareComponentMerger<WeightedEMFactory> Merger;
 
 
-    struct ASMConfiguration
+    struct Configuration
     {
         typename WeightedEMFactory::Configuration weightedEMCfg;
 
@@ -56,7 +56,7 @@ public:
     };
 
 
-    struct ASMStatistics
+    struct Statistics
     {
         typename WeightedEMFactory::SufficientStatisitcs sufficientStatistics;
         typename Splitter::ComponentSplitStatistics splittingStatistics;
@@ -66,7 +66,7 @@ public:
         size_t numSamplesAfterLastSplit {0};
         size_t numSamplesAfterLastMerge {0};
 
-        ASMStatistics() = default;
+        Statistics() = default;
 
         void clear(const size_t &_numComponents);
         void clearAll();
@@ -89,7 +89,7 @@ public:
 
     };
 
-    struct ASMFittingStatistics
+    struct FittingStatistics
     {
         size_t numSamples {0};
         size_t numSplits {0};
@@ -103,9 +103,9 @@ public:
         std::string toString() const;
     };
 
-    void fit(VMM &vmm, ASMStatistics &stats, const SampleData* samples, const size_t numSamples, const ASMConfiguration &cfg, ASMFittingStatistics &fitStats) const;
+    void fit(VMM &vmm, Statistics &stats, const SampleData* samples, const size_t numSamples, const Configuration &cfg, FittingStatistics &fitStats) const;
 
-    void update(VMM &vmm, ASMStatistics &stats, const SampleData* samples, const size_t numSamples, const ASMConfiguration &cfg, ASMFittingStatistics &fitStats) const;
+    void update(VMM &vmm, Statistics &stats, const SampleData* samples, const size_t numSamples, const Configuration &cfg, FittingStatistics &fitStats) const;
 
     std::string toString() const{
         std::ostringstream oss;
@@ -120,7 +120,7 @@ public:
 };
 
 template<class TVMMDistribution>
-void AdaptiveSplitAndMergeFactory<TVMMDistribution>::ASMStatistics::serialize(std::ostream& stream) const
+void AdaptiveSplitAndMergeFactory<TVMMDistribution>::Statistics::serialize(std::ostream& stream) const
 {
     sufficientStatistics.serialize(stream);
     splittingStatistics.serialize(stream);
@@ -131,7 +131,7 @@ void AdaptiveSplitAndMergeFactory<TVMMDistribution>::ASMStatistics::serialize(st
 }
 
 template<class TVMMDistribution>
-void AdaptiveSplitAndMergeFactory<TVMMDistribution>::ASMStatistics::deserialize(std::istream& stream)
+void AdaptiveSplitAndMergeFactory<TVMMDistribution>::Statistics::deserialize(std::istream& stream)
 {
     sufficientStatistics.deserialize(stream);
     splittingStatistics.deserialize(stream);
@@ -142,7 +142,7 @@ void AdaptiveSplitAndMergeFactory<TVMMDistribution>::ASMStatistics::deserialize(
 }
 
 template<class TVMMDistribution>
-void AdaptiveSplitAndMergeFactory<TVMMDistribution>::ASMStatistics::decay(const float &alpha)
+void AdaptiveSplitAndMergeFactory<TVMMDistribution>::Statistics::decay(const float &alpha)
 {
     sufficientStatistics.decay(alpha);
     splittingStatistics.decay(alpha);
@@ -150,7 +150,7 @@ void AdaptiveSplitAndMergeFactory<TVMMDistribution>::ASMStatistics::decay(const 
 
 
 template<class TVMMDistribution>
-bool AdaptiveSplitAndMergeFactory<TVMMDistribution>::ASMStatistics::isValid() const
+bool AdaptiveSplitAndMergeFactory<TVMMDistribution>::Statistics::isValid() const
 {
     bool valid = true;
     valid &= sufficientStatistics.isValid();
@@ -166,10 +166,10 @@ bool AdaptiveSplitAndMergeFactory<TVMMDistribution>::ASMStatistics::isValid() co
 }
 
 template<class TVMMDistribution>
-std::string AdaptiveSplitAndMergeFactory<TVMMDistribution>::ASMStatistics::toString() const
+std::string AdaptiveSplitAndMergeFactory<TVMMDistribution>::Statistics::toString() const
 {
     std::stringstream ss;
-    ss << "ASMStatistics:" << std::endl;
+    ss << "Statistics:" << std::endl;
     ss << "\tsufficientStatistics:" << sufficientStatistics.toString() << std::endl;
     ss << "\tsplittingStatistics:" << splittingStatistics.toString() << std::endl;
     ss << "\tnumSamplesAfterLastSplit = " << numSamplesAfterLastSplit << std::endl;
@@ -178,10 +178,10 @@ std::string AdaptiveSplitAndMergeFactory<TVMMDistribution>::ASMStatistics::toStr
 }
 
 template<class TVMMDistribution>
-std::string AdaptiveSplitAndMergeFactory<TVMMDistribution>::ASMFittingStatistics::toString() const
+std::string AdaptiveSplitAndMergeFactory<TVMMDistribution>::FittingStatistics::toString() const
 {
     std::stringstream ss;
-    ss << "ASMFittingStatistics:" << std::endl;
+    ss << "FittingStatistics:" << std::endl;
     ss << "\tnumSamples:" << numSamples << std::endl;
     ss << "\tnumSplits:" << numSplits << std::endl;
     ss << "\tnumMerges:" << numMerges << std::endl;
@@ -192,7 +192,7 @@ std::string AdaptiveSplitAndMergeFactory<TVMMDistribution>::ASMFittingStatistics
 }
 
 template<class TVMMDistribution>
-void AdaptiveSplitAndMergeFactory<TVMMDistribution>::ASMStatistics::clear(const size_t &_numComponents)
+void AdaptiveSplitAndMergeFactory<TVMMDistribution>::Statistics::clear(const size_t &_numComponents)
 {
     sufficientStatistics.clear(_numComponents);
     splittingStatistics.clear(_numComponents);
@@ -203,13 +203,13 @@ void AdaptiveSplitAndMergeFactory<TVMMDistribution>::ASMStatistics::clear(const 
 }
 
 template<class TVMMDistribution>
-void AdaptiveSplitAndMergeFactory<TVMMDistribution>::ASMStatistics::clearAll()
+void AdaptiveSplitAndMergeFactory<TVMMDistribution>::Statistics::clearAll()
 {
     clear(VMM::MaxComponents);
 }
 
 template<class TVMMDistribution>
-void AdaptiveSplitAndMergeFactory<TVMMDistribution>::ASMConfiguration::serialize(std::ostream& stream) const
+void AdaptiveSplitAndMergeFactory<TVMMDistribution>::Configuration::serialize(std::ostream& stream) const
 {
     weightedEMCfg.serialize(stream);
 
@@ -225,7 +225,7 @@ void AdaptiveSplitAndMergeFactory<TVMMDistribution>::ASMConfiguration::serialize
 }
 
 template<class TVMMDistribution>
-void AdaptiveSplitAndMergeFactory<TVMMDistribution>::ASMConfiguration::deserialize(std::istream& stream)
+void AdaptiveSplitAndMergeFactory<TVMMDistribution>::Configuration::deserialize(std::istream& stream)
 {
     weightedEMCfg.deserialize(stream);
 
@@ -241,10 +241,10 @@ void AdaptiveSplitAndMergeFactory<TVMMDistribution>::ASMConfiguration::deseriali
 }
 
 template<class TVMMDistribution>
-std::string AdaptiveSplitAndMergeFactory<TVMMDistribution>::ASMConfiguration::toString() const
+std::string AdaptiveSplitAndMergeFactory<TVMMDistribution>::Configuration::toString() const
 {
     std::stringstream ss;
-    ss << "ASMConfiguration:" << std::endl;
+    ss << "Configuration:" << std::endl;
     ss << "\tweightedEMCfg = " << weightedEMCfg.toString() << std::endl;
     ss << "\tsplittingThreshold = " << splittingThreshold << std::endl;
     ss << "\tmergingThreshold = " << mergingThreshold << std::endl;
@@ -258,7 +258,7 @@ std::string AdaptiveSplitAndMergeFactory<TVMMDistribution>::ASMConfiguration::to
 }
 
 template<class TVMMDistribution>
-void AdaptiveSplitAndMergeFactory<TVMMDistribution>::fit(VMM &vmm, ASMStatistics &stats, const SampleData* samples, const size_t numSamples, const ASMConfiguration &cfg, ASMFittingStatistics &fitStats) const
+void AdaptiveSplitAndMergeFactory<TVMMDistribution>::fit(VMM &vmm, Statistics &stats, const SampleData* samples, const size_t numSamples, const Configuration &cfg, FittingStatistics &fitStats) const
 {
     const size_t numComponents = cfg.weightedEMCfg.initK;
     stats.clear(numComponents);
@@ -307,7 +307,7 @@ void AdaptiveSplitAndMergeFactory<TVMMDistribution>::fit(VMM &vmm, ASMStatistics
 
 
 template<class TVMMDistribution>
-void AdaptiveSplitAndMergeFactory<TVMMDistribution>::update(VMM &vmm, ASMStatistics &stats, const SampleData* samples, const size_t numSamples, const ASMConfiguration &cfg, ASMFittingStatistics &fitStats) const
+void AdaptiveSplitAndMergeFactory<TVMMDistribution>::update(VMM &vmm, Statistics &stats, const SampleData* samples, const size_t numSamples, const Configuration &cfg, FittingStatistics &fitStats) const
 {
     OPENPGL_ASSERT(vmm.isValid());
     OPENPGL_ASSERT(vmm.getNumComponents() == stats.getNumComponents());

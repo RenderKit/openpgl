@@ -3,14 +3,14 @@
 
 #include <openpgl/openpgl_common.h>
 #include <openpgl/data/SampleData.h>
-#include <openpgl/vmm/ParallaxAwareVMM.h>
-#include <openpgl/vmm/VMM.h>
-#include <openpgl/vmm/VMMFactory.h>
-#include <openpgl/vmm/WeightedEMVMMFactory.h>
-#include <openpgl/vmm/WeightedEMParallaxAwareVMMFactory.h>
-#include <openpgl/vmm/VMMChiSquareComponentMerger.h>
-#include <openpgl/vmm/VMMChiSquareComponentSplitter.h>
-#include <openpgl/vmm/AdaptiveSplitandMergeFactory.h>
+#include <openpgl/directional/vmm/ParallaxAwareVMM.h>
+#include <openpgl/directional/vmm/VMM.h>
+#include <openpgl/directional/vmm/VMMFactory.h>
+#include <openpgl/directional/vmm/WeightedEMVMMFactory.h>
+#include <openpgl/directional/vmm/WeightedEMParallaxAwareVMMFactory.h>
+#include <openpgl/directional/vmm/VMMChiSquareComponentMerger.h>
+#include <openpgl/directional/vmm/VMMChiSquareComponentSplitter.h>
+#include <openpgl/directional/vmm/AdaptiveSplitandMergeFactory.h>
 
 namespace py = pybind11;
 
@@ -50,18 +50,18 @@ static py::list SampleData_loadSampleData(const std::string& fileName){
 	return list;
 }
 
-static openpgl::VMMAdaptiveSplitAndMergeFactory::ASMFittingStatistics  AdaptiveSplitAndMergeFactory_fit( openpgl::VMMAdaptiveSplitAndMergeFactory *asmFactory, openpgl::VMM &model, const size_t &K, openpgl::VMMAdaptiveSplitAndMergeFactory::ASMStatistics &stats, const py::list &listParticles, openpgl::VMMAdaptiveSplitAndMergeFactory::ASMConfiguration &cfg)
+static openpgl::VMMAdaptiveSplitAndMergeFactory::FittingStatistics  AdaptiveSplitAndMergeFactory_fit( openpgl::VMMAdaptiveSplitAndMergeFactory *asmFactory, openpgl::VMM &model, const size_t &K, openpgl::VMMAdaptiveSplitAndMergeFactory::Statistics &stats, const py::list &listParticles, openpgl::VMMAdaptiveSplitAndMergeFactory::Configuration &cfg)
 {
-    openpgl::VMMAdaptiveSplitAndMergeFactory::ASMFittingStatistics fitStats;
+    openpgl::VMMAdaptiveSplitAndMergeFactory::FittingStatistics fitStats;
     std::vector<openpgl::SampleData> dataPoints = listParticles.cast<std::vector<openpgl::SampleData>>();
 	//openpgl::StoreSampleData(fileName, dataPoints.data(), dataPoints.size());
-    asmFactory->fit(model, K, stats, dataPoints.data(), dataPoints.size(), cfg, fitStats);
+    asmFactory->fit(model, stats, dataPoints.data(), dataPoints.size(), cfg, fitStats);
     return fitStats;
 }
 
-static openpgl::VMMAdaptiveSplitAndMergeFactory::ASMFittingStatistics  AdaptiveSplitAndMergeFactory_update( openpgl::VMMAdaptiveSplitAndMergeFactory *asmFactory, openpgl::VMM &model, openpgl::VMMAdaptiveSplitAndMergeFactory::ASMStatistics &stats, const py::list &listParticles, openpgl::VMMAdaptiveSplitAndMergeFactory::ASMConfiguration &cfg)
+static openpgl::VMMAdaptiveSplitAndMergeFactory::FittingStatistics  AdaptiveSplitAndMergeFactory_update( openpgl::VMMAdaptiveSplitAndMergeFactory *asmFactory, openpgl::VMM &model, openpgl::VMMAdaptiveSplitAndMergeFactory::Statistics &stats, const py::list &listParticles, openpgl::VMMAdaptiveSplitAndMergeFactory::Configuration &cfg)
 {
-    openpgl::VMMAdaptiveSplitAndMergeFactory::ASMFittingStatistics fitStats;
+    openpgl::VMMAdaptiveSplitAndMergeFactory::FittingStatistics fitStats;
     std::vector<openpgl::SampleData> dataPoints = listParticles.cast<std::vector<openpgl::SampleData>>();
 	//openpgl::StoreSampleData(fileName, dataPoints.data(), dataPoints.size());
     asmFactory->update(model, stats, dataPoints.data(), dataPoints.size(), cfg, fitStats);
@@ -75,7 +75,7 @@ static openpgl::VMMWEMFactory::FittingStatistics  WeightedEMVMMFactory_fit( Weig
     openpgl::VMMWEMFactory::FittingStatistics fitStats;
     std::vector<openpgl::SampleData> dataPoints = listParticles.cast<std::vector<openpgl::SampleData>>();
 	//openpgl::StoreSampleData(fileName, dataPoints.data(), dataPoints.size());
-    vmmFactory->fitMixture(model, K, stats, dataPoints.data(), dataPoints.size(), cfg, fitStats);
+    vmmFactory->fitMixture(model, stats, dataPoints.data(), dataPoints.size(), cfg, fitStats);
     return fitStats;
 }
 
@@ -461,37 +461,37 @@ auto AdaptiveSplitAndMergeFactory = py::class_< openpgl::VMMAdaptiveSplitAndMerg
     .def("update", &AdaptiveSplitAndMergeFactory_update);
 
 
-py::class_< openpgl::VMMAdaptiveSplitAndMergeFactory::ASMConfiguration >(AdaptiveSplitAndMergeFactory, "ASMConfiguration")
+py::class_< openpgl::VMMAdaptiveSplitAndMergeFactory::Configuration >(AdaptiveSplitAndMergeFactory, "Configuration")
     .def(py::init<>())
-    .def_readwrite("weightedEMCfg", &openpgl::VMMAdaptiveSplitAndMergeFactory::ASMConfiguration::weightedEMCfg)
-    .def_readwrite("splittingThreshold", &openpgl::VMMAdaptiveSplitAndMergeFactory::ASMConfiguration::splittingThreshold)
-    .def_readwrite("mergingThreshold", &openpgl::VMMAdaptiveSplitAndMergeFactory::ASMConfiguration::mergingThreshold)
-    .def_readwrite("partialReFit", &openpgl::VMMAdaptiveSplitAndMergeFactory::ASMConfiguration::partialReFit)
-    .def_readwrite("maxSplitItr", &openpgl::VMMAdaptiveSplitAndMergeFactory::ASMConfiguration::maxSplitItr)
-    .def_readwrite("minSamplesForSplitting", &openpgl::VMMAdaptiveSplitAndMergeFactory::ASMConfiguration::minSamplesForSplitting)
-    .def_readwrite("minSamplesForPartialRefitting", &openpgl::VMMAdaptiveSplitAndMergeFactory::ASMConfiguration::minSamplesForPartialRefitting)
-    .def_readwrite("minSamplesForMerging", &openpgl::VMMAdaptiveSplitAndMergeFactory::ASMConfiguration::minSamplesForMerging)
-    .def("__repr__", &openpgl::VMMAdaptiveSplitAndMergeFactory::ASMConfiguration::toString);
+    .def_readwrite("weightedEMCfg", &openpgl::VMMAdaptiveSplitAndMergeFactory::Configuration::weightedEMCfg)
+    .def_readwrite("splittingThreshold", &openpgl::VMMAdaptiveSplitAndMergeFactory::Configuration::splittingThreshold)
+    .def_readwrite("mergingThreshold", &openpgl::VMMAdaptiveSplitAndMergeFactory::Configuration::mergingThreshold)
+    .def_readwrite("partialReFit", &openpgl::VMMAdaptiveSplitAndMergeFactory::Configuration::partialReFit)
+    .def_readwrite("maxSplitItr", &openpgl::VMMAdaptiveSplitAndMergeFactory::Configuration::maxSplitItr)
+    .def_readwrite("minSamplesForSplitting", &openpgl::VMMAdaptiveSplitAndMergeFactory::Configuration::minSamplesForSplitting)
+    .def_readwrite("minSamplesForPartialRefitting", &openpgl::VMMAdaptiveSplitAndMergeFactory::Configuration::minSamplesForPartialRefitting)
+    .def_readwrite("minSamplesForMerging", &openpgl::VMMAdaptiveSplitAndMergeFactory::Configuration::minSamplesForMerging)
+    .def("__repr__", &openpgl::VMMAdaptiveSplitAndMergeFactory::Configuration::toString);
 
-py::class_< openpgl::VMMAdaptiveSplitAndMergeFactory::ASMStatistics >(AdaptiveSplitAndMergeFactory, "ASMStatistics")
+py::class_< openpgl::VMMAdaptiveSplitAndMergeFactory::Statistics >(AdaptiveSplitAndMergeFactory, "Statistics")
     .def(py::init<>())
-    .def_readwrite("sufficientStatistics", &openpgl::VMMAdaptiveSplitAndMergeFactory::ASMStatistics::sufficientStatistics)
-    .def_readwrite("splittingStatistics", &openpgl::VMMAdaptiveSplitAndMergeFactory::ASMStatistics::splittingStatistics)
-    .def("decay", &openpgl::VMMAdaptiveSplitAndMergeFactory::ASMStatistics::decay)
-    //.def_readwrite("clear", &openpgl::VMMAdaptiveSplitAndMergeFactory::ASMStatistics::clear)
-    //.def_readwrite("clearAll", &openpgl::VMMAdaptiveSplitAndMergeFactory::ASMStatistics::clearAll)
-    .def("__repr__", &openpgl::VMMAdaptiveSplitAndMergeFactory::ASMStatistics::toString);
+    .def_readwrite("sufficientStatistics", &openpgl::VMMAdaptiveSplitAndMergeFactory::Statistics::sufficientStatistics)
+    .def_readwrite("splittingStatistics", &openpgl::VMMAdaptiveSplitAndMergeFactory::Statistics::splittingStatistics)
+    .def("decay", &openpgl::VMMAdaptiveSplitAndMergeFactory::Statistics::decay)
+    //.def_readwrite("clear", &openpgl::VMMAdaptiveSplitAndMergeFactory::Statistics::clear)
+    //.def_readwrite("clearAll", &openpgl::VMMAdaptiveSplitAndMergeFactory::Statistics::clearAll)
+    .def("__repr__", &openpgl::VMMAdaptiveSplitAndMergeFactory::Statistics::toString);
 
 
-py::class_< openpgl::VMMAdaptiveSplitAndMergeFactory::ASMFittingStatistics >(AdaptiveSplitAndMergeFactory, "ASMFittingStatistics")
+py::class_< openpgl::VMMAdaptiveSplitAndMergeFactory::FittingStatistics >(AdaptiveSplitAndMergeFactory, "FittingStatistics")
     .def(py::init<>())
-    .def_readwrite("numSamples", &openpgl::VMMAdaptiveSplitAndMergeFactory::ASMFittingStatistics::numSamples)
-    .def_readwrite("numSplits", &openpgl::VMMAdaptiveSplitAndMergeFactory::ASMFittingStatistics::numSplits)
-    .def_readwrite("numMerges", &openpgl::VMMAdaptiveSplitAndMergeFactory::ASMFittingStatistics::numMerges)
-    .def_readwrite("numComponents", &openpgl::VMMAdaptiveSplitAndMergeFactory::ASMFittingStatistics::numComponents)
-    .def_readwrite("numUpdateWEMIterations", &openpgl::VMMAdaptiveSplitAndMergeFactory::ASMFittingStatistics::numUpdateWEMIterations)
-    .def_readwrite("numPartialUpdateWEMIterations", &openpgl::VMMAdaptiveSplitAndMergeFactory::ASMFittingStatistics::numPartialUpdateWEMIterations)
-    .def("__repr__", &openpgl::VMMAdaptiveSplitAndMergeFactory::ASMFittingStatistics::toString);
+    .def_readwrite("numSamples", &openpgl::VMMAdaptiveSplitAndMergeFactory::FittingStatistics::numSamples)
+    .def_readwrite("numSplits", &openpgl::VMMAdaptiveSplitAndMergeFactory::FittingStatistics::numSplits)
+    .def_readwrite("numMerges", &openpgl::VMMAdaptiveSplitAndMergeFactory::FittingStatistics::numMerges)
+    .def_readwrite("numComponents", &openpgl::VMMAdaptiveSplitAndMergeFactory::FittingStatistics::numComponents)
+    .def_readwrite("numUpdateWEMIterations", &openpgl::VMMAdaptiveSplitAndMergeFactory::FittingStatistics::numUpdateWEMIterations)
+    .def_readwrite("numPartialUpdateWEMIterations", &openpgl::VMMAdaptiveSplitAndMergeFactory::FittingStatistics::numPartialUpdateWEMIterations)
+    .def("__repr__", &openpgl::VMMAdaptiveSplitAndMergeFactory::FittingStatistics::toString);
 
 #ifdef VERSION_INFO
     m.attr("__version__") = VERSION_INFO;

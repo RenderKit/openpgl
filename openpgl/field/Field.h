@@ -22,12 +22,12 @@ struct Field
 public:
     
     using DirectionalDistributionFactory = TDirectionalDistributionFactory;
-    using DirectionalDistributionFactorySettings = typename TDirectionalDistributionFactory::ASMConfiguration;
+    using DirectionalDistributionFactorySettings = typename TDirectionalDistributionFactory::Configuration;
     using DirectionalDistribution = typename TDirectionalDistributionFactory::Distribution;
     
     using SampleContainer = SampleDataStorage::SampleDataContainer;
 
-    typedef Region<DirectionalDistribution, typename TDirectionalDistributionFactory::ASMStatistics> RegionType;
+    typedef Region<DirectionalDistribution, typename TDirectionalDistributionFactory::Statistics> RegionType;
     typedef openpgl::Range<SampleDataStorage::SampleDataContainer> RangeType;
     typedef std::pair<RegionType, RangeType > RegionStorageType;
     typedef tbb::concurrent_vector< RegionStorageType > RegionStorageContainerType;
@@ -235,7 +235,7 @@ private:
             }
             if (dataPoints.size() > 0)
             {
-                typename DirectionalDistributionFactory::ASMFittingStatistics fittingStats;
+                typename DirectionalDistributionFactory::FittingStatistics fittingStats;
                 m_distributionFactory.fit(regionStorage.first.distribution, regionStorage.first.trainingStatistics, dataPoints.data(), dataPoints.size(), m_distributionFactorySettings, fittingStats);
                 regionStorage.first.distribution._pivotPosition = sampleMean;
                 regionStorage.first.valid = regionStorage.first.distribution.isValid();
@@ -295,7 +295,7 @@ private:
                     OPENPGL_ASSERT(regionStorage.first.distribution.isValid());
                     OPENPGL_ASSERT(regionStorage.first.trainingStatistics.sufficientStatistics.isValid());
                 }
-                typename DirectionalDistributionFactory::ASMFittingStatistics fittingStats;
+                typename DirectionalDistributionFactory::FittingStatistics fittingStats;
                 m_distributionFactory.update(regionStorage.first.distribution, regionStorage.first.trainingStatistics, dataPoints.data(), dataPoints.size(), m_distributionFactorySettings, fittingStats);
                 //regionStorage.first.valid = regionStorage.first.distribution.isValid();
                 regionStorage.first.valid = regionStorage.first.isValid();
