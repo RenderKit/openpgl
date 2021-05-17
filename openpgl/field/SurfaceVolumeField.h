@@ -76,8 +76,10 @@ public:
 
     void setSceneBounds(const openpgl::BBox &sceneBounds) override
     {
-        m_surfaceField.setSceneBounds(sceneBounds);
-        m_volumeField.setSceneBounds(sceneBounds);
+        openpgl::BBox scaledSceneBounds = sceneBounds;
+        scaledSceneBounds.enlarge_by(1.01f);
+        m_surfaceField.setSceneBounds(scaledSceneBounds);
+        m_volumeField.setSceneBounds(scaledSceneBounds);
     }
 
     void buildField(SampleContainer& samplesSurface, SampleContainer& samplesVolume) override
