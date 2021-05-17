@@ -3,6 +3,19 @@
 
 #pragma once
 
+#ifdef _WIN32
+#  ifdef openpgl_EXPORTS
+#    define OPENPGL_INTERFACE __declspec(dllexport)
+#  else
+#    define OPENPGL_INTERFACE __declspec(dllimport)
+#  endif
+#  define OPENPGL_DLLEXPORT __declspec(dllexport)
+#else
+#  define OPENPGL_INTERFACE
+#  define OPENPGL_DLLEXPORT __attribute__ ((visibility ("default")))
+#endif
+
+#define OPENPGL_CORE_INTERFACE OPENPGL_INTERFACE
 
 #define PGL_VECTOR_SIZE 4
 #define PGL_VMM_MAX_COMPONENTS 32

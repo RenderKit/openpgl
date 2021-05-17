@@ -32,21 +32,21 @@ typedef SampleStorage *PGLSampleStorage;
 
 typedef PGLSampleData PGLSampleData;
 
-PGLSampleStorage pglNewSampleStorage();
+OPENPGL_CORE_INTERFACE PGLSampleStorage pglNewSampleStorage();
 
-void pglReleaseSampleStorage(PGLSampleStorage sampleStorage);
+OPENPGL_CORE_INTERFACE void pglReleaseSampleStorage(PGLSampleStorage sampleStorage);
 
-void pglSampleStorageAddSample(PGLSampleStorage sampleStorage, PGLSampleData& sample);
+OPENPGL_CORE_INTERFACE void pglSampleStorageAddSample(PGLSampleStorage sampleStorage, PGLSampleData& sample);
 
-void pglSampleStorageAddSamples(PGLSampleStorage sampleStorage, const PGLSampleData* samples, size_t numSamples);
+OPENPGL_CORE_INTERFACE void pglSampleStorageAddSamples(PGLSampleStorage sampleStorage, const PGLSampleData* samples, size_t numSamples);
 
-void pglSampleStorageReserve(PGLSampleStorage sampleStorage, const size_t sizeSurface, const size_t sizeVolume);
+OPENPGL_CORE_INTERFACE void pglSampleStorageReserve(PGLSampleStorage sampleStorage, const size_t sizeSurface, const size_t sizeVolume);
 
-void pglSampleStorageClear(PGLSampleStorage sampleStorage);
+OPENPGL_CORE_INTERFACE void pglSampleStorageClear(PGLSampleStorage sampleStorage);
 
-size_t pglSampleStorageGetSizeSurface(PGLSampleStorage sampleStorage);
+OPENPGL_CORE_INTERFACE size_t pglSampleStorageGetSizeSurface(PGLSampleStorage sampleStorage);
 
-size_t pglSampleStorageGetSizeVolume(PGLSampleStorage sampleStorage);
+OPENPGL_CORE_INTERFACE size_t pglSampleStorageGetSizeVolume(PGLSampleStorage sampleStorage);
 
 #ifdef __cplusplus
 }  // extern "C"

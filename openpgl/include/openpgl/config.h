@@ -87,7 +87,7 @@ struct PGLFieldArguments
 
 
 
-void pglFieldArgumentsSetDefaults(PGLFieldArguments &fieldArguments);
+OPENPGL_CORE_INTERFACE void pglFieldArgumentsSetDefaults(PGLFieldArguments &fieldArguments);
 
 
 #ifdef __cplusplus
