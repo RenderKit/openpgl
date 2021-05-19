@@ -12,6 +12,8 @@
 #include <embreeSrc/common/math/bbox.h>
 
 #include <cmath>
+#include <algorithm>
+
 #if defined(__WIN32__) || defined(__MACOSX__)
 
 inline void sincosf(const float theta, float* sin, float* cos)
