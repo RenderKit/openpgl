@@ -166,6 +166,11 @@ public:
 
     //void deserialize(std::istream& stream);
 
+    inline bool getUseParallaxCompensation() const
+    {
+        return m_useParallaxCompensation;
+    }
+
 private:
 
     void estimateSceneBounds(const SampleContainer& samples)

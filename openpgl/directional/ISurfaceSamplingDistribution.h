@@ -9,9 +9,17 @@ namespace openpgl
 {
 struct ISurfaceSamplingDistribution
 {
+    ISurfaceSamplingDistribution() = delete;
+    
+    ISurfaceSamplingDistribution(const bool useParallaxCompensation)
+        :m_useParallaxCompensation(useParallaxCompensation)
+        ,m_region{nullptr}
+    {
+    }
+    
     virtual ~ISurfaceSamplingDistribution() {};
     
-    virtual void init(const void* distribution) = 0;
+    virtual void init(const void* distribution, Point3 samplePosition) = 0;
     
     virtual void applyCosineProduct(const Vector3& normal) = 0;
     
@@ -29,8 +37,8 @@ struct ISurfaceSamplingDistribution
 
     const IRegion* getRegion() const;
 
-private:
-
+protected:
+    bool m_useParallaxCompensation{true};
     const IRegion* m_region {nullptr};
 };
 

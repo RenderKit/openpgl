@@ -29,6 +29,7 @@ namespace openpgl
             return sampleStatistics.sampleBounds;
         }
 
+/*
         TDistribution getDistribution(Point3 samplePosition, const bool &useParallaxComp) const
         {
             TDistribution pDistribution = distribution;
@@ -38,6 +39,12 @@ namespace openpgl
                 pDistribution.performRelativeParallaxShift(pivotPosition - samplePosition);
             }
             return pDistribution;
+        }
+*/
+
+        const TDistribution* getDistribution(Point3 samplePosition) const
+        {
+           return &distribution;
         }
 
         /*

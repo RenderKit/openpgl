@@ -2,7 +2,26 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include "../include/openpgl/openpgl.h"
-#include "../openpglTypes.h"
+//#include "../openpglTypes.h"
+
+#include "openpgl_common.h"
+
+#include "data/PathSegmentDataStorage.h"
+#include "data/PathSegmentData.h"
+#include "data/SampleData.h"
+#include "data/SampleDataStorage.h"
+
+#include "field/ISurfaceVolumeField.h"
+#include "field/SurfaceVolumeField.h"
+#include "directional/ISurfaceSamplingDistribution.h"
+#include "directional/IVolumeSamplingDistribution.h"
+#include "directional/vmm/ParallaxAwareVMM.h"
+#include "directional/vmm/AdaptiveSplitandMergeFactory.h"
+#include "directional/vmm/VMMSurfaceSamplingDistribution.h"
+#include "directional/vmm/VMMVolumeSamplingDistribution.h"
+#include "sampler/Sampler.h"
+
+#include "spatial/kdtree/KDTreeBuilder.h"
 
 using namespace openpgl;
 
@@ -36,6 +55,9 @@ using namespace openpgl;
     return a;                                                       \
   }
 
+typedef ISurfaceVolumeField IGuidingField;
+
+
 ///////////////////////////////////////////////////////////////////////////////
 // Field //////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
@@ -43,43 +65,58 @@ using namespace openpgl;
 extern "C" OPENPGL_DLLEXPORT PGLField pglNewField(PGLFieldArguments args)OPENPGL_CATCH_BEGIN
 {
     
-    GuidingField::Settings gFieldSettings;
+    IGuidingField* gField = nullptr;
     
-    gFieldSettings.settings.decayOnSpatialSplit   = 0.25f;
-    gFieldSettings.settings.deterministic         = false;
+    if (args.spatialStructureType == PGL_SPATIAL_STRUCTURE_KDTREE && 
+        args.directionalDistributionType ==  PGL_DIRECTIONAL_DISTRIBUTION_PARALLAX_AWARE_VMM )
+    {
+        using DirectionalDistriubtionFactory = AdaptiveSplitAndMergeFactory<ParallaxAwareVonMisesFisherMixture<4, 32>>;
+        using GuidingField = SurfaceVolumeField<DirectionalDistriubtionFactory, KDTreePartitionBuilder, VMMSurfaceSamplingDistribution<DirectionalDistriubtionFactory::Distribution>, VMMVolumeSamplingDistribution<DirectionalDistriubtionFactory::Distribution>>;
+        
+        GuidingField::Settings gFieldSettings;
+        gFieldSettings.settings.decayOnSpatialSplit   = 0.25f;
+        gFieldSettings.settings.deterministic         = false;
 
-    PGLKDTreeArguments *spatialSturctureArguments = (PGLKDTreeArguments*)args.spatialSturctureArguments;
-    gFieldSettings.settings.useStochasticNNLookUp = spatialSturctureArguments->knnLookup;
-    gFieldSettings.settings.spatialSubdivBuilderSettings.minSamples = spatialSturctureArguments->minSamples;
-    gFieldSettings.settings.spatialSubdivBuilderSettings.maxSamples = spatialSturctureArguments->maxSamples;
-    gFieldSettings.settings.spatialSubdivBuilderSettings.maxDepth   = spatialSturctureArguments->maxDepth;
+        PGLKDTreeArguments *spatialSturctureArguments = (PGLKDTreeArguments*)args.spatialSturctureArguments;
+        gFieldSettings.settings.useStochasticNNLookUp = spatialSturctureArguments->knnLookup;
+        gFieldSettings.settings.spatialSubdivBuilderSettings.minSamples = spatialSturctureArguments->minSamples;
+        gFieldSettings.settings.spatialSubdivBuilderSettings.maxSamples = spatialSturctureArguments->maxSamples;
+        gFieldSettings.settings.spatialSubdivBuilderSettings.maxDepth   = spatialSturctureArguments->maxDepth;
 
-    PGLVMMFactoryArguments *directionalDistributionArguments = (PGLVMMFactoryArguments*)args.directionalDistributionArguments;
-    gFieldSettings.distributionFactorySettings.weightedEMCfg.initK = directionalDistributionArguments->initK;
-    gFieldSettings.distributionFactorySettings.weightedEMCfg.maxK = directionalDistributionArguments->maxK;
-    gFieldSettings.distributionFactorySettings.weightedEMCfg.maxEMIterrations = directionalDistributionArguments->maxEMIterrations;
+        PGLVMMFactoryArguments *directionalDistributionArguments = (PGLVMMFactoryArguments*)args.directionalDistributionArguments;
+        gFieldSettings.distributionFactorySettings.weightedEMCfg.initK = directionalDistributionArguments->initK;
+        gFieldSettings.distributionFactorySettings.weightedEMCfg.maxK = directionalDistributionArguments->maxK;
+        gFieldSettings.distributionFactorySettings.weightedEMCfg.maxEMIterrations = directionalDistributionArguments->maxEMIterrations;
 
-    gFieldSettings.distributionFactorySettings.weightedEMCfg.maxKappa = directionalDistributionArguments->maxKappa;
-    gFieldSettings.distributionFactorySettings.weightedEMCfg.maxMeanCosine = openpgl::KappaToMeanCosine<float>(gFieldSettings.distributionFactorySettings.weightedEMCfg.maxKappa);
-    gFieldSettings.distributionFactorySettings.weightedEMCfg.convergenceThreshold = directionalDistributionArguments->convergenceThreshold;
-    gFieldSettings.distributionFactorySettings.weightedEMCfg.weightPrior = directionalDistributionArguments->weightPrior;
-    gFieldSettings.distributionFactorySettings.weightedEMCfg.meanCosinePriorStrength = directionalDistributionArguments->meanCosinePriorStrength;
-    gFieldSettings.distributionFactorySettings.weightedEMCfg.meanCosinePrior = directionalDistributionArguments->meanCosinePrior;
+        gFieldSettings.distributionFactorySettings.weightedEMCfg.maxKappa = directionalDistributionArguments->maxKappa;
+        gFieldSettings.distributionFactorySettings.weightedEMCfg.maxMeanCosine = openpgl::KappaToMeanCosine<float>(gFieldSettings.distributionFactorySettings.weightedEMCfg.maxKappa);
+        gFieldSettings.distributionFactorySettings.weightedEMCfg.convergenceThreshold = directionalDistributionArguments->convergenceThreshold;
+        gFieldSettings.distributionFactorySettings.weightedEMCfg.weightPrior = directionalDistributionArguments->weightPrior;
+        gFieldSettings.distributionFactorySettings.weightedEMCfg.meanCosinePriorStrength = directionalDistributionArguments->meanCosinePriorStrength;
+        gFieldSettings.distributionFactorySettings.weightedEMCfg.meanCosinePrior = directionalDistributionArguments->meanCosinePrior;
 
-    gFieldSettings.distributionFactorySettings.splittingThreshold = directionalDistributionArguments->splittingThreshold;
-    gFieldSettings.distributionFactorySettings.mergingThreshold = directionalDistributionArguments->mergingThreshold;
+        gFieldSettings.distributionFactorySettings.splittingThreshold = directionalDistributionArguments->splittingThreshold;
+        gFieldSettings.distributionFactorySettings.mergingThreshold = directionalDistributionArguments->mergingThreshold;
 
 
-    gFieldSettings.distributionFactorySettings.partialReFit = directionalDistributionArguments->partialReFit;
-    gFieldSettings.distributionFactorySettings.maxSplitItr = directionalDistributionArguments->maxSplitItr;
+        gFieldSettings.distributionFactorySettings.partialReFit = directionalDistributionArguments->partialReFit;
+        gFieldSettings.distributionFactorySettings.maxSplitItr = directionalDistributionArguments->maxSplitItr;
 
-    gFieldSettings.distributionFactorySettings.useSplitAndMerge = directionalDistributionArguments->useSplitAndMerge;
-    gFieldSettings.distributionFactorySettings.minSamplesForSplitting = directionalDistributionArguments->minSamplesForSplitting;
-    gFieldSettings.distributionFactorySettings.minSamplesForPartialRefitting = directionalDistributionArguments->minSamplesForPartialRefitting;
-    gFieldSettings.distributionFactorySettings.minSamplesForMerging = directionalDistributionArguments->minSamplesForMerging;
+        gFieldSettings.distributionFactorySettings.useSplitAndMerge = directionalDistributionArguments->useSplitAndMerge;
+        gFieldSettings.distributionFactorySettings.minSamplesForSplitting = directionalDistributionArguments->minSamplesForSplitting;
+        gFieldSettings.distributionFactorySettings.minSamplesForPartialRefitting = directionalDistributionArguments->minSamplesForPartialRefitting;
+        gFieldSettings.distributionFactorySettings.minSamplesForMerging = directionalDistributionArguments->minSamplesForMerging;
 
-    gFieldSettings.useParallaxCompensation = args.useParallaxCompensation;
-    IGuidingField* gField = new GuidingField(gFieldSettings);
+        gFieldSettings.useParallaxCompensation = args.useParallaxCompensation;
+        gField = new GuidingField(gFieldSettings);
+    }else if(args.spatialStructureType == PGL_SPATIAL_STRUCTURE_KDTREE && 
+        args.directionalDistributionType ==  PGL_DIRECTIONAL_DISTRIBUTION_QUADTREE )
+    {
+        // TODO
+    }
+    
+    
+
     return (PGLField) gField;
 }
 OPENPGL_CATCH_END(nullptr)
@@ -617,13 +654,36 @@ extern "C" OPENPGL_DLLEXPORT void pglVolumeSamplingDistributionClear(PGLVolumeSa
 }
 
 
-extern "C" OPENPGL_DLLEXPORT void pglFieldArgumentsSetDefaults(PGLFieldArguments &fieldArguments)
+extern "C" OPENPGL_DLLEXPORT void pglFieldArgumentsSetDefaults(PGLFieldArguments &fieldArguments, const PGL_SPATIAL_STRUCTURE_TYPE spatialType, const PGL_DIRECTIONAL_DISTRIBUTION_TYPE directionalType)
 {
-    fieldArguments.spatialStructureType = PGL_SPATIAL_STRUCTURE_KDTREE;
-    fieldArguments.spatialSturctureArguments = new PGLKDTreeArguments();
+    switch (spatialType)
+    {
+    case PGL_SPATIAL_STRUCTURE_TYPE::PGL_SPATIAL_STRUCTURE_KDTREE:
+        fieldArguments.spatialStructureType = PGL_SPATIAL_STRUCTURE_KDTREE;
+        fieldArguments.spatialSturctureArguments = new PGLKDTreeArguments();
+        break;
+    
+    default:
+        fieldArguments.spatialStructureType = PGL_SPATIAL_STRUCTURE_KDTREE;
+        fieldArguments.spatialSturctureArguments = new PGLKDTreeArguments();
+        break;
+    }
 
-    fieldArguments.directionalDistributionType = PGL_DIRECTIONAL_DISTRIBUTION_PARALLAX_AWARE_VMM;
-    fieldArguments.directionalDistributionArguments = new PGLVMMFactoryArguments();
 
-    fieldArguments.useParallaxCompensation = true;
+    switch (directionalType)
+    {
+    case PGL_DIRECTIONAL_DISTRIBUTION_TYPE::PGL_DIRECTIONAL_DISTRIBUTION_PARALLAX_AWARE_VMM:
+        fieldArguments.directionalDistributionType = PGL_DIRECTIONAL_DISTRIBUTION_PARALLAX_AWARE_VMM;
+        fieldArguments.directionalDistributionArguments = new PGLVMMFactoryArguments();
+        fieldArguments.useParallaxCompensation = true;
+        break;
+    
+    default:
+        fieldArguments.directionalDistributionType = PGL_DIRECTIONAL_DISTRIBUTION_PARALLAX_AWARE_VMM;
+        fieldArguments.directionalDistributionArguments = new PGLVMMFactoryArguments();
+        fieldArguments.useParallaxCompensation = true;
+        break;
+    }
+
+
 }

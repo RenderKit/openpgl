@@ -14,7 +14,8 @@ template<class TVMMDistribution>
 struct VMMSurfaceSamplingDistribution: public ISurfaceSamplingDistribution
 {
     
-    VMMSurfaceSamplingDistribution() = default;
+    VMMSurfaceSamplingDistribution(const bool useParallaxCompensation):ISurfaceSamplingDistribution(useParallaxCompensation)
+    {};
     ~VMMSurfaceSamplingDistribution() = default;
     
     typedef std::integral_constant<size_t, 2> MaxNumProductDistributions;
@@ -31,11 +32,16 @@ struct VMMSurfaceSamplingDistribution: public ISurfaceSamplingDistribution
     /// guiding cosine/BSDF product integral (= irradiance/flux, for cosine)
     float m_productIntegral;
 
-    inline void init(const void* distribution) override
+    inline void init(const void* distribution, Point3 samplePosition) override
     {
         const TVMMDistribution* vmmdistribution = (TVMMDistribution*)distribution;
         // prespare sampling distribution
         this->m_distributions[0] = *vmmdistribution;
+        if(m_useParallaxCompensation)
+        {
+            const Point3 pivotPosition = this->m_distributions[0]._pivotPosition;
+            this->m_distributions[0].performRelativeParallaxShift(pivotPosition - samplePosition);
+        }
         this->m_weights[0] = 1.0f;
         this->m_numDistributions = 1;
         this->m_productIntegral = 1.0f;

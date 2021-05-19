@@ -38,7 +38,7 @@ public:
 
     ISurfaceSamplingDistribution* newSurfaceSamplingDistribution() const override
     {
-        return new TSurfaceSamplingDistribution();
+        return new TSurfaceSamplingDistribution(m_surfaceField.getUseParallaxCompensation());
     }
 
     bool initSurfaceSamplingDistribution(ISurfaceSamplingDistribution* surfaceSamplingDistribution, const Point3& position, const float sample1D, const bool useParrallaxComp) const override
@@ -49,15 +49,15 @@ public:
         {
             return false;
         }
-        DirectionalDistribution distribution = region->getDistribution(position, useParrallaxComp);
-        _surfaceSamplingDistribution->init(&distribution);
+        const DirectionalDistribution* distribution = region->getDistribution(position);
+        _surfaceSamplingDistribution->init(distribution, position);
         _surfaceSamplingDistribution->setRegion(region);
         return true;
     }
 
     IVolumeSamplingDistribution* newVolumeSamplingDistribution() const override
     {
-        return new TVolumeSamplingDistribution();    
+        return new TVolumeSamplingDistribution(m_volumeField.getUseParallaxCompensation());    
     }
 
     bool initVolumeSamplingDistribution(IVolumeSamplingDistribution* volumeSamplingDistribution, const Point3& position, const float sample1D, const bool useParrallaxComp) const override
@@ -68,8 +68,8 @@ public:
         {
             return false;
         }
-        DirectionalDistribution distribution = region->getDistribution(position, useParrallaxComp);
-        _volumeSamplingDistribution->init(&distribution);
+        const DirectionalDistribution* distribution = region->getDistribution(position);
+        _volumeSamplingDistribution->init(distribution, position);
         _volumeSamplingDistribution->setRegion(region);
         return true;
     }
