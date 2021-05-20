@@ -11,7 +11,7 @@ namespace openpgl
     {
         Point3 mean{0.0f};
         Vector3 sampleVariance {0.0f};
-        size_t numSamples {0};
+        float numSamples {0};
 
         BBox sampleBounds{openpgl::Vector3(std::numeric_limits<float>::max()), openpgl::Vector3(-std::numeric_limits<float>::max())};
 
@@ -48,7 +48,7 @@ namespace openpgl
 
         inline Vector3 getVaraince() const
         {
-            OPENPGL_ASSERT( numSamples > 0);
+            OPENPGL_ASSERT( numSamples > 0.f);
             return sampleVariance / float(numSamples);
         }
 
@@ -67,7 +67,7 @@ namespace openpgl
         {
             OPENPGL_ASSERT(decay >0.0f && decay <= 1.0f) ;
 
-            if(numSamples > 0)
+            if(numSamples > 0.f)
             {
                 const float variance = sampleVariance[splitDim] / numSamples;
                 const float stdDerivation = std::sqrt(variance);
@@ -104,8 +104,8 @@ namespace openpgl
             const Vector3 sampleVarianceA = sampleVariance;
             const Vector3 sampleVarianceB = b.sampleVariance;
 
-            const size_t numSamplesA = numSamples;
-            const size_t numSamplesB = b.numSamples;
+            const float numSamplesA = numSamples;
+            const float numSamplesB = b.numSamples;
 
             mean = meanA*(float)numSamplesA + meanB*(float)numSamplesB;
             numSamples += numSamplesB;
@@ -118,15 +118,15 @@ namespace openpgl
         inline bool isValid() const
         {
             bool valid = true;
-            valid &= numSamples >=0.0f;
+            valid = valid && numSamples >=0.0f;
 
-            valid &= embree::isvalid(mean.x);
-            valid &= embree::isvalid(mean.y);
-            valid &= embree::isvalid(mean.z);
+            valid = valid && embree::isvalid(mean.x);
+            valid = valid && embree::isvalid(mean.y);
+            valid = valid && embree::isvalid(mean.z);
 
-            valid &= embree::isvalid(sampleVariance.x);
-            valid &= embree::isvalid(sampleVariance.y);
-            valid &= embree::isvalid(sampleVariance.z);
+            valid = valid && embree::isvalid(sampleVariance.x);
+            valid = valid && embree::isvalid(sampleVariance.y);
+            valid = valid && embree::isvalid(sampleVariance.z);
 
             return valid;
         }
@@ -156,7 +156,7 @@ namespace openpgl
         {
             stream.write(reinterpret_cast<const char*>(&mean), sizeof(Point3));
             stream.write(reinterpret_cast<const char*>(&sampleVariance), sizeof(Vector3));
-            stream.write(reinterpret_cast<const char*>(&numSamples), sizeof(size_t));
+            stream.write(reinterpret_cast<const char*>(&numSamples), sizeof(float));
             stream.write(reinterpret_cast<const char*>(&sampleBounds), sizeof(BBox));
         }
 
@@ -164,7 +164,7 @@ namespace openpgl
         {
             stream.read(reinterpret_cast<char*>(&mean), sizeof(Point3));
             stream.read(reinterpret_cast<char*>(&sampleVariance), sizeof(Vector3));
-            stream.read(reinterpret_cast<char*>(&numSamples), sizeof(size_t));
+            stream.read(reinterpret_cast<char*>(&numSamples), sizeof(float));
             stream.read(reinterpret_cast<char*>(&sampleBounds), sizeof(BBox));
         }
 

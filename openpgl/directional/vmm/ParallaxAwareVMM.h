@@ -22,7 +22,7 @@ public:
 
     embree::vfloat<VecSize> _distances[VMM::NumVectors];
 
-    Point3 _pivotPosition {0.0f};
+    Point3 _pivotPosition {0.0f, 0.0f, 0.0f};
 
     void serialize(std::ostream& stream) const override;
 
@@ -141,14 +141,14 @@ bool ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents>::isValid() const
 
     for(size_t k = 0; k < this->_numComponents; k++){
         const div_t tmpK = div( k, VecSize );
-        valid &= embree::isvalid(_distances[tmpK.quot][tmpK.rem]);
-        valid &= _distances[tmpK.quot][tmpK.rem] >= 0.0f;
+        valid = valid && embree::isvalid(_distances[tmpK.quot][tmpK.rem]);
+        valid = valid && _distances[tmpK.quot][tmpK.rem] >= 0.0f;
         OPENPGL_ASSERT(valid);
     }
     for(size_t k = this->_numComponents; k < maxComponents; k++){
         const div_t tmpK = div( k, VecSize );
-        valid &= embree::isvalid(_distances[tmpK.quot][tmpK.rem]);
-        valid &= _distances[tmpK.quot][tmpK.rem] == 0.0f;
+        valid = valid && embree::isvalid(_distances[tmpK.quot][tmpK.rem]);
+        valid = valid && _distances[tmpK.quot][tmpK.rem] == 0.0f;
         OPENPGL_ASSERT(valid);
     }
     OPENPGL_ASSERT(valid);

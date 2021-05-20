@@ -131,7 +131,7 @@ struct KNearestRegionsSearchTree
                 primID = result.knn.top().primID;
                 result.knn.pop();
             }
-            OPENPGL_ASSERT(primID >= 0 && primID < num_points);
+            OPENPGL_ASSERT(primID < num_points);
             return primID;
         }
         else

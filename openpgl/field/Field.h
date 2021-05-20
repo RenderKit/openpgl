@@ -98,7 +98,7 @@ public:
             {
                 openpgl::BBox regionBounds;
                 uint32_t dataIdx = m_spatialSubdiv.getDataIdxAtPos(p, regionBounds);
-                OPENPGL_ASSERT(dataIdx >= 0);
+                OPENPGL_ASSERT(dataIdx < m_regionStorageContainer.size());
                 return &m_regionStorageContainer[dataIdx].first;
             }
         }

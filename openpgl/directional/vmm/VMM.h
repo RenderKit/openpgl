@@ -140,14 +140,12 @@ std::string VonMisesFisherMixture<VecSize, maxComponents>::SoftAssignment::toStr
     ss << "SoftAssignment:" << std::endl;
     ss << "size: " << size << std::endl;
     ss << "pdf: " << pdf << std::endl;
-    float sumWeights = 0.0f;
     for ( int k = 0; k < size; k++)
     {
         const div_t tmp = div(k, static_cast<int>(VecSize));
         ss << "assign[" << k << "]: " << assignments[tmp.quot][tmp.rem];
         ss << std::endl;
     }
-    //ss << "sumWeights: " << sumWeights << std::endl;
     return ss.str();
 }
 
@@ -155,19 +153,19 @@ template<int VecSize, int maxComponents>
 bool VonMisesFisherMixture<VecSize, maxComponents>::SoftAssignment::isValid() const{
     bool valid = true;
 
-    valid &= size > 0;
-    valid &= size <= maxComponents;
+    valid = valid && size > 0;
+    valid = valid && size <= maxComponents;
     OPENPGL_ASSERT(valid);
 
-    valid &= pdf >= 0;    
-    valid &= embree::isvalid(pdf);
+    valid = valid && pdf >= 0;    
+    valid = valid && embree::isvalid(pdf);
     OPENPGL_ASSERT(valid);
 
     for ( int k = 0; k < size; k++)
     {
         const div_t tmpK = div(k, static_cast<int>(VecSize));
-        valid &= assignments[tmpK.quot][tmpK.rem] >= 0.0f;
-        valid &= embree::isvalid(assignments[tmpK.quot][tmpK.rem]);
+        valid = valid && assignments[tmpK.quot][tmpK.rem] >= 0.0f;
+        valid = valid && embree::isvalid(assignments[tmpK.quot][tmpK.rem]);
         OPENPGL_ASSERT(valid);
     }
     OPENPGL_ASSERT(valid);
@@ -242,76 +240,76 @@ bool VonMisesFisherMixture<VecSize, maxComponents>::isValid() const
         const div_t tmpK = div( k, VecSize );
         sumWeights += _weights[tmpK.quot][tmpK.rem];
 
-        valid &= embree::isvalid(_weights[tmpK.quot][tmpK.rem]);
-        valid &= _weights[tmpK.quot][tmpK.rem] >= 0.0f;
-        valid &= _weights[tmpK.quot][tmpK.rem] <= 1.0f + 1e-6f;
+        valid = valid && embree::isvalid(_weights[tmpK.quot][tmpK.rem]);
+        valid = valid && _weights[tmpK.quot][tmpK.rem] >= 0.0f;
+        valid = valid && _weights[tmpK.quot][tmpK.rem] <= 1.0f + 1e-6f;
         OPENPGL_ASSERT(valid);
 
-        valid &= embree::isvalid(_kappas[tmpK.quot][tmpK.rem]);
-        valid &= _kappas[tmpK.quot][tmpK.rem] >= 0.0f;
+        valid = valid && embree::isvalid(_kappas[tmpK.quot][tmpK.rem]);
+        valid = valid && _kappas[tmpK.quot][tmpK.rem] >= 0.0f;
         OPENPGL_ASSERT(valid);
 
-        valid &= embree::isvalid(_meanCosines[tmpK.quot][tmpK.rem]);
-        valid &= _meanCosines[tmpK.quot][tmpK.rem] >= 0.0f;
-        valid &= _meanCosines[tmpK.quot][tmpK.rem] <= 1.0f;
+        valid = valid && embree::isvalid(_meanCosines[tmpK.quot][tmpK.rem]);
+        valid = valid && _meanCosines[tmpK.quot][tmpK.rem] >= 0.0f;
+        valid = valid && _meanCosines[tmpK.quot][tmpK.rem] <= 1.0f;
         OPENPGL_ASSERT(valid);
 
-        valid &= embree::isvalid(_meanDirections[tmpK.quot].x[tmpK.rem]);
-        valid &= _meanDirections[tmpK.quot].x[tmpK.rem] >= -1.0f;
-        valid &= _meanDirections[tmpK.quot].x[tmpK.rem] <= 1.0f;
+        valid = valid && embree::isvalid(_meanDirections[tmpK.quot].x[tmpK.rem]);
+        valid = valid && _meanDirections[tmpK.quot].x[tmpK.rem] >= -1.0f;
+        valid = valid && _meanDirections[tmpK.quot].x[tmpK.rem] <= 1.0f;
         OPENPGL_ASSERT(valid);
 
-        valid &= embree::isvalid(_meanDirections[tmpK.quot].y[tmpK.rem]);
-        valid &= _meanDirections[tmpK.quot].y[tmpK.rem] >= -1.0f;
-        valid &= _meanDirections[tmpK.quot].y[tmpK.rem] <= 1.0f;
+        valid = valid && embree::isvalid(_meanDirections[tmpK.quot].y[tmpK.rem]);
+        valid = valid && _meanDirections[tmpK.quot].y[tmpK.rem] >= -1.0f;
+        valid = valid && _meanDirections[tmpK.quot].y[tmpK.rem] <= 1.0f;
         OPENPGL_ASSERT(valid);
 
-        valid &= embree::isvalid(_meanDirections[tmpK.quot].z[tmpK.rem]);
-        valid &= _meanDirections[tmpK.quot].z[tmpK.rem] >= -1.0f;
-        valid &= _meanDirections[tmpK.quot].z[tmpK.rem] <= 1.0f;
+        valid = valid && embree::isvalid(_meanDirections[tmpK.quot].z[tmpK.rem]);
+        valid = valid && _meanDirections[tmpK.quot].z[tmpK.rem] >= -1.0f;
+        valid = valid && _meanDirections[tmpK.quot].z[tmpK.rem] <= 1.0f;
         OPENPGL_ASSERT(valid);
 
-        valid &= embree::isvalid(_normalizations[tmpK.quot][tmpK.rem]);
-        valid &= _normalizations[tmpK.quot][tmpK.rem] >= 0.0f;
+        valid = valid && embree::isvalid(_normalizations[tmpK.quot][tmpK.rem]);
+        valid = valid && _normalizations[tmpK.quot][tmpK.rem] >= 0.0f;
         OPENPGL_ASSERT(valid);
 
-        valid &= embree::isvalid(_eMinus2Kappa[tmpK.quot][tmpK.rem]);
+        valid = valid && embree::isvalid(_eMinus2Kappa[tmpK.quot][tmpK.rem]);
         OPENPGL_ASSERT(valid);
     }
 
     // check unused componets
-    for(size_t k = _numComponents; k < MaxComponents; k++){
+    for(int k = _numComponents; k < MaxComponents; k++){
         const div_t tmpK = div( k, VecSize );
-        valid &= embree::isvalid(_weights[tmpK.quot][tmpK.rem]);
-        valid &= _weights[tmpK.quot][tmpK.rem] == 0.0f;
+        valid = valid && embree::isvalid(_weights[tmpK.quot][tmpK.rem]);
+        valid = valid && _weights[tmpK.quot][tmpK.rem] == 0.0f;
         OPENPGL_ASSERT(valid);
 
-        valid &= embree::isvalid(_kappas[tmpK.quot][tmpK.rem]);
-        valid &= _kappas[tmpK.quot][tmpK.rem] == 0.0f;
+        valid = valid && embree::isvalid(_kappas[tmpK.quot][tmpK.rem]);
+        valid = valid && _kappas[tmpK.quot][tmpK.rem] == 0.0f;
         OPENPGL_ASSERT(valid);
 
-        valid &= embree::isvalid(_meanDirections[tmpK.quot].x[tmpK.rem]);
-        valid &= _meanDirections[tmpK.quot].x[tmpK.rem] == 0.0f;
+        valid = valid && embree::isvalid(_meanDirections[tmpK.quot].x[tmpK.rem]);
+        valid = valid && _meanDirections[tmpK.quot].x[tmpK.rem] == 0.0f;
         OPENPGL_ASSERT(valid);
 
-        valid &= embree::isvalid(_meanDirections[tmpK.quot].y[tmpK.rem]);
-        valid &= _meanDirections[tmpK.quot].y[tmpK.rem] == 0.0f;
+        valid = valid && embree::isvalid(_meanDirections[tmpK.quot].y[tmpK.rem]);
+        valid = valid && _meanDirections[tmpK.quot].y[tmpK.rem] == 0.0f;
         OPENPGL_ASSERT(valid);
 
-        valid &= embree::isvalid(_meanDirections[tmpK.quot].z[tmpK.rem]);
-        valid &= _meanDirections[tmpK.quot].z[tmpK.rem] == 1.0f;
+        valid = valid && embree::isvalid(_meanDirections[tmpK.quot].z[tmpK.rem]);
+        valid = valid && _meanDirections[tmpK.quot].z[tmpK.rem] == 1.0f;
         OPENPGL_ASSERT(valid);
 
-        valid &= embree::isvalid(_meanCosines[tmpK.quot][tmpK.rem]);
-        valid &= _meanCosines[tmpK.quot][tmpK.rem] == 0.0f;
+        valid = valid && embree::isvalid(_meanCosines[tmpK.quot][tmpK.rem]);
+        valid = valid && _meanCosines[tmpK.quot][tmpK.rem] == 0.0f;
         OPENPGL_ASSERT(valid);
 
-        valid &= embree::isvalid(_normalizations[tmpK.quot][tmpK.rem]);
-        valid &= std::fabs(_normalizations[tmpK.quot][tmpK.rem] - ONE_OVER_FOUR_PI) < 1e-6f;
+        valid = valid && embree::isvalid(_normalizations[tmpK.quot][tmpK.rem]);
+        valid = valid && std::fabs(_normalizations[tmpK.quot][tmpK.rem] - ONE_OVER_FOUR_PI) < 1e-6f;
         OPENPGL_ASSERT(valid);
 
-        valid &= embree::isvalid(_eMinus2Kappa[tmpK.quot][tmpK.rem]);
-        valid &= _eMinus2Kappa[tmpK.quot][tmpK.rem] == 1.0f;
+        valid = valid && embree::isvalid(_eMinus2Kappa[tmpK.quot][tmpK.rem]);
+        valid = valid && _eMinus2Kappa[tmpK.quot][tmpK.rem] == 1.0f;
         OPENPGL_ASSERT(valid);
     }
 

@@ -927,10 +927,10 @@ bool VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::ComponentSplitStatis
 
     }
 
-    valid &= embree::any(validVec);
+    valid = valid && embree::any(validVec);
     OPENPGL_ASSERT(valid);
-    valid &= numComponents > 0;
-    valid &= numComponents <= VMM::MaxComponents;
+    valid = valid && numComponents > 0;
+    valid = valid && numComponents <= VMM::MaxComponents;
     OPENPGL_ASSERT(valid);
 
     return valid;

@@ -83,9 +83,9 @@ namespace openpgl
         bool isValid() const
         {
             bool valid = true;
-            valid &= distribution.isValid();
-            valid &= trainingStatistics.isValid();
-//            valid &= sampleStatistics.isValid();
+            valid = valid && distribution.isValid();
+            valid = valid && trainingStatistics.isValid();
+//            valid = valid && sampleStatistics.isValid();
             return valid;
         }
 

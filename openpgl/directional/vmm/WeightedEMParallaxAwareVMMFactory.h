@@ -140,16 +140,16 @@ bool WeightedEMParallaxAwareVonMisesFisherFactory< TVMMDistribution>::Sufficient
     for(size_t k = 0; k < wEMSufficientStatisitcs.numComponents; k++)
     {
         const div_t tmpK = div( k, VMM::VectorSize );
-        valid &= embree::isvalid(sumOfDistanceWeightes[tmpK.quot][tmpK.rem]);
-        valid &= sumOfDistanceWeightes[tmpK.quot][tmpK.rem] >= 0.0f;
+        valid = valid && embree::isvalid(sumOfDistanceWeightes[tmpK.quot][tmpK.rem]);
+        valid = valid && sumOfDistanceWeightes[tmpK.quot][tmpK.rem] >= 0.0f;
         OPENPGL_ASSERT(valid);
     }
 
     for(size_t k = wEMSufficientStatisitcs.numComponents; k < VMM::MaxComponents; k++)
     {
         const div_t tmpK = div( k, VMM::VectorSize );
-        valid &= embree::isvalid(sumOfDistanceWeightes[tmpK.quot][tmpK.rem]);
-        valid &= sumOfDistanceWeightes[tmpK.quot][tmpK.rem] == 0.0f;
+        valid = valid && embree::isvalid(sumOfDistanceWeightes[tmpK.quot][tmpK.rem]);
+        valid = valid && sumOfDistanceWeightes[tmpK.quot][tmpK.rem] == 0.0f;
         OPENPGL_ASSERT(valid);
     }
 

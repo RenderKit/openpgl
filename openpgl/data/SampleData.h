@@ -25,15 +25,15 @@ namespace openpgl
     inline bool isValid(const SampleData& dsd)
     {
         bool valid = true;
-        valid &= embree::isvalid(dsd.position.x);
-        valid &= embree::isvalid(dsd.position.y);
-        valid &= embree::isvalid(dsd.position.z);
-        valid &= embree::isvalid(dsd.direction.x);
-        valid &= embree::isvalid(dsd.direction.y);
-        valid &= embree::isvalid(dsd.direction.z);
-        valid &= dsd.weight >=0.f;
-        valid &= dsd.pdf >0.f;
-        valid &= dsd.distance >0.f;
+        valid = valid && embree::isvalid(dsd.position.x);
+        valid = valid && embree::isvalid(dsd.position.y);
+        valid = valid && embree::isvalid(dsd.position.z);
+        valid = valid && embree::isvalid(dsd.direction.x);
+        valid = valid && embree::isvalid(dsd.direction.y);
+        valid = valid && embree::isvalid(dsd.direction.z);
+        valid = valid && dsd.weight >=0.f;
+        valid = valid && dsd.pdf >0.f;
+        valid = valid && dsd.distance >0.f;
         return valid;
     }
 

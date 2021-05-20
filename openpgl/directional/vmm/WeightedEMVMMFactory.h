@@ -146,7 +146,7 @@ struct WeightedEMVonMisesFisherFactory: public VonMisesFisherFactory< TVMMDistri
     struct UnassignedSamplesStatistics
     {
         float sumOfUnassignedWeights{0.0f};
-        Vector3 sumUnassignedWeightedDirections{0.0f};
+        Vector3 sumUnassignedWeightedDirections{0.0f, 0.0f, 0.0f};
         void clear();
         bool isValid() const;
     };
@@ -205,13 +205,13 @@ template<class TVMMDistribution>
 bool WeightedEMVonMisesFisherFactory< TVMMDistribution>::UnassignedSamplesStatistics::isValid() const
 {
     bool valid = true;
-    valid &= embree::isvalid(sumOfUnassignedWeights);
-    valid &= sumOfUnassignedWeights>=0.f;
+    valid = valid && embree::isvalid(sumOfUnassignedWeights);
+    valid = valid && sumOfUnassignedWeights>=0.f;
     OPENPGL_ASSERT(valid);
 
-    valid &= embree::isvalid(sumUnassignedWeightedDirections.x);
-    valid &= embree::isvalid(sumUnassignedWeightedDirections.y);
-    valid &= embree::isvalid(sumUnassignedWeightedDirections.z);
+    valid = valid && embree::isvalid(sumUnassignedWeightedDirections.x);
+    valid = valid && embree::isvalid(sumUnassignedWeightedDirections.y);
+    valid = valid && embree::isvalid(sumUnassignedWeightedDirections.z);
     OPENPGL_ASSERT(valid);
     return valid;
 }
@@ -493,45 +493,45 @@ bool WeightedEMVonMisesFisherFactory< TVMMDistribution>::SufficientStatisitcs::i
     for(size_t k = 0; k < numComponents; k++)
     {
         const div_t tmpK = div( k, VMM::VectorSize );
-        valid &= embree::isvalid(sumOfWeightedDirections[tmpK.quot].x[tmpK.rem]);
-        //valid &= sumOfWeightedDirections[tmpK.quot][tmpK.rem] >= 0.0f;
+        valid = valid && embree::isvalid(sumOfWeightedDirections[tmpK.quot].x[tmpK.rem]);
+        //valid = valid && sumOfWeightedDirections[tmpK.quot][tmpK.rem] >= 0.0f;
         OPENPGL_ASSERT(valid);
 
-        valid &= embree::isvalid(sumOfWeightedDirections[tmpK.quot].y[tmpK.rem]);
-        //valid &= sumOfWeightedDirections[tmpK.quot][tmpK.rem] >= 0.0f;
+        valid = valid && embree::isvalid(sumOfWeightedDirections[tmpK.quot].y[tmpK.rem]);
+        //valid = valid && sumOfWeightedDirections[tmpK.quot][tmpK.rem] >= 0.0f;
         OPENPGL_ASSERT(valid);
 
-        valid &= embree::isvalid(sumOfWeightedDirections[tmpK.quot].z[tmpK.rem]);
-        //valid &= sumOfWeightedDirections[tmpK.quot][tmpK.rem] >= 0.0f;
+        valid = valid && embree::isvalid(sumOfWeightedDirections[tmpK.quot].z[tmpK.rem]);
+        //valid = valid && sumOfWeightedDirections[tmpK.quot][tmpK.rem] >= 0.0f;
         OPENPGL_ASSERT(valid);
 
-        valid &= embree::isvalid(sumOfWeightedStats[tmpK.quot][tmpK.rem]);
-        valid &= sumOfWeightedStats[tmpK.quot][tmpK.rem] >= 0.0f;
+        valid = valid && embree::isvalid(sumOfWeightedStats[tmpK.quot][tmpK.rem]);
+        valid = valid && sumOfWeightedStats[tmpK.quot][tmpK.rem] >= 0.0f;
         OPENPGL_ASSERT(valid);
     }
 
     for(size_t k = numComponents; k < VMM::MaxComponents; k++)
     {
         const div_t tmpK = div( k, VMM::VectorSize );
-        valid &= sumOfWeightedDirections[tmpK.quot].x[tmpK.rem] == 0.0f;
+        valid = valid && sumOfWeightedDirections[tmpK.quot].x[tmpK.rem] == 0.0f;
         OPENPGL_ASSERT(valid);
 
-        valid &= sumOfWeightedDirections[tmpK.quot].y[tmpK.rem] == 0.0f;
+        valid = valid && sumOfWeightedDirections[tmpK.quot].y[tmpK.rem] == 0.0f;
         OPENPGL_ASSERT(valid);
 
-        valid &= sumOfWeightedDirections[tmpK.quot].z[tmpK.rem] == 0.0f;
+        valid = valid && sumOfWeightedDirections[tmpK.quot].z[tmpK.rem] == 0.0f;
         OPENPGL_ASSERT(valid);
 
-        valid &= sumOfWeightedStats[tmpK.quot][tmpK.rem] == 0.0f;
+        valid = valid && sumOfWeightedStats[tmpK.quot][tmpK.rem] == 0.0f;
         OPENPGL_ASSERT(valid);
     }
 
-    valid &= embree::isvalid(numSamples);
-    valid &= numSamples >= 0.0f;
+    valid = valid && embree::isvalid(numSamples);
+    valid = valid && numSamples >= 0.0f;
     OPENPGL_ASSERT(valid);
 
-    valid &= embree::isvalid(sumWeights);
-    valid &= sumWeights >= 0.0f;
+    valid = valid && embree::isvalid(sumWeights);
+    valid = valid && sumWeights >= 0.0f;
     OPENPGL_ASSERT(valid);
 
     return valid;

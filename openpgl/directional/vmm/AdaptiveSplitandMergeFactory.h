@@ -153,13 +153,13 @@ template<class TVMMDistribution>
 bool AdaptiveSplitAndMergeFactory<TVMMDistribution>::Statistics::isValid() const
 {
     bool valid = true;
-    valid &= sufficientStatistics.isValid();
+    valid = valid && sufficientStatistics.isValid();
     OPENPGL_ASSERT(valid);
-    valid &= splittingStatistics.isValid();
+    valid = valid && splittingStatistics.isValid();
     OPENPGL_ASSERT(valid);
-    valid &= embree::isvalid(numSamplesAfterLastSplit);
+    valid = valid && embree::isvalid(numSamplesAfterLastSplit);
     OPENPGL_ASSERT(valid);
-    valid &= embree::isvalid(numSamplesAfterLastMerge);
+    valid = valid && embree::isvalid(numSamplesAfterLastMerge);
     OPENPGL_ASSERT(valid);
 
     return valid;
