@@ -28,11 +28,11 @@ public:
     using SampleContainer = SampleDataStorage::SampleDataContainer;
 
     typedef Region<DirectionalDistribution, typename TDirectionalDistributionFactory::Statistics> RegionType;
-    typedef openpgl::Range<SampleDataStorage::SampleDataContainer> RangeType;
+    typedef openpgl::Range RangeType;
     typedef std::pair<RegionType, RangeType > RegionStorageType;
     typedef tbb::concurrent_vector< RegionStorageType > RegionStorageContainerType;
 
-    using SpatialStructureBuilder = TSpatialStructureBuilder<RegionType,RangeType>;
+    using SpatialStructureBuilder = TSpatialStructureBuilder<RegionType,SampleDataStorage::SampleDataContainer>;
     using SpatialStructure = typename SpatialStructureBuilder::SpatialStructure;
     using SpatialBuilderSettings = typename SpatialStructureBuilder::Settings;
 
@@ -127,7 +127,7 @@ public:
         }
         
         buildSpatialStructure(m_sceneBounds, samples);
-        fitRegions();
+        fitRegions(samples);
     }
 
     void updateField(SampleContainer& samples)
@@ -141,7 +141,7 @@ public:
         }
 
         updateSpatialStructure(samples);
-        updateRegions();
+        updateRegions(samples);
     }
 
 
@@ -213,7 +213,7 @@ private:
         }
     }
 
-    inline void fitRegions()
+    inline void fitRegions(SampleContainer& samples)
     {
         size_t nGuidingRegions = m_regionStorageContainer.size();
         std::cout << "fitRegion: "<< (m_isSurface? "surface":"volume") << "\tnGuidingRegions = " << nGuidingRegions << std::endl;
@@ -229,8 +229,9 @@ private:
             RegionStorageType &regionStorage = m_regionStorageContainer[n];
             openpgl::Point3 sampleMean = regionStorage.first.sampleStatistics.mean;
             std::vector<openpgl::SampleData> dataPoints;
-            for (auto& sample : regionStorage.second)
+            for (auto i = regionStorage.second.m_begin; i < regionStorage.second.m_end; i++)
             {
+                auto &sample = samples[i];
                 if(m_useParallaxCompensation)
                 {
                     reorientSample(sample, sampleMean);
@@ -259,7 +260,7 @@ private:
 #endif
     }
 
-    void updateRegions()
+    void updateRegions(SampleContainer& samples)
     {
         size_t nGuidingRegions = m_regionStorageContainer.size();
         std::cout << "updateRegion: " << (m_isSurface? "surface":"volume") << "\tnGuidingRegions = " << nGuidingRegions << std::endl;
@@ -281,8 +282,9 @@ private:
 
             openpgl::Point3 sampleMean = regionStorage.first.sampleStatistics.mean;
             std::vector<openpgl::SampleData> dataPoints;
-            for (auto& sample : regionStorage.second)
+            for (auto i = regionStorage.second.m_begin; i < regionStorage.second.m_end; i++)
             {
+                auto &sample = samples[i];
                 if(m_useParallaxCompensation)
                 {
                     reorientSample(sample, sampleMean);

@@ -23,7 +23,7 @@
 namespace openpgl
 {
 
-template<typename TRegion, typename TRange>
+template<typename TRegion, typename TContainer>
 struct KDTreePartitionBuilder
 {
 
@@ -40,7 +40,7 @@ struct KDTreePartitionBuilder
         std::string toString() const;
     };
 
-    void build(KDTree &kdTree, const BBox &bounds, typename TRange::Container &samples, tbb::concurrent_vector< std::pair<TRegion, TRange> > &dataStorage, const Settings &buildSettings, const size_t &nCores) const
+    void build(KDTree &kdTree, const BBox &bounds, TContainer &samples, tbb::concurrent_vector< std::pair<TRegion, Range> > &dataStorage, const Settings &buildSettings, const size_t &nCores) const
     {
 
         kdTree.init(bounds, 4096);
@@ -51,7 +51,7 @@ struct KDTreePartitionBuilder
         updateTree(kdTree, samples, dataStorage, buildSettings, nCores);
     }
 
-    void updateTree(KDTree &kdTree, typename TRange::Container &samples, tbb::concurrent_vector< std::pair<TRegion, TRange> > &dataStorage, const Settings &buildSettings, const uint32_t &nCores) const
+    void updateTree(KDTree &kdTree, TContainer &samples, tbb::concurrent_vector< std::pair<TRegion, Range> > &dataStorage, const Settings &buildSettings, const uint32_t &nCores) const
     {
         int numEstLeafs = dataStorage.size() + (samples.size()*2)/buildSettings.maxSamples+32;
         kdTree.m_nodes.reserve(4*numEstLeafs);
@@ -61,7 +61,10 @@ struct KDTreePartitionBuilder
         SampleStatistics sampleStats;
         sampleStats.clear();
 
-        TRange sampleRange(samples);
+        Range sampleRange;
+        sampleRange.m_begin = 0;
+        sampleRange.m_end = samples.size();
+
         size_t depth =1;
 
 
@@ -94,7 +97,7 @@ struct KDTreePartitionBuilder
 #endif
 */
 #endif
-        updateTreeNode(&kdTree, root, depth, sampleRange, sampleStats, &dataStorage, buildSettings);
+        updateTreeNode(&kdTree, root, depth, samples, sampleRange, sampleStats, &dataStorage, buildSettings);
 
     }
 
@@ -102,12 +105,11 @@ struct KDTreePartitionBuilder
 
 private:
 
-    inline typename TRange::Container::iterator pivotSplitSamples(typename TRange::Container::iterator begin,
-                                                                           typename TRange::Container::iterator end,
-                                                                            uint8_t splitDimension, float pivot) const
+    inline typename TContainer::iterator pivotSplitSamples(typename TContainer::iterator begin, typename TContainer::iterator end,
+                                                                        uint8_t splitDimension, float pivot) const
     {
-        std::function<bool(typename TRange::DataType)> pivotSplitPredicate
-                = [splitDimension, pivot](typename TRange::DataType sample) -> bool
+        std::function<bool(typename TContainer::value_type)> pivotSplitPredicate
+                = [splitDimension, pivot](typename TContainer::value_type sample) -> bool
         {
             const Vector3 samplePosition(sample.position.x, sample.position.y, sample.position.z);
             return samplePosition[splitDimension] < pivot;
@@ -117,12 +119,11 @@ private:
     }
 
 
-    inline typename TRange::Container::iterator pivotSplitSamplesWithStats(typename TRange::Container::iterator begin,
-                                                                           typename TRange::Container::iterator end,
+    inline typename TContainer::iterator pivotSplitSamplesWithStats(typename TContainer::iterator begin, typename TContainer::iterator end,
                                                                             uint8_t splitDimension, float pivot, SampleStatistics &statsLeft, SampleStatistics &statsRight) const
     {
-        std::function<bool(typename TRange::DataType)> pivotSplitPredicate
-                = [splitDimension, pivot, &statsLeft, &statsRight](typename TRange::DataType sample) -> bool
+        std::function<bool(typename TContainer::value_type)> pivotSplitPredicate
+                = [splitDimension, pivot, &statsLeft, &statsRight](typename TContainer::value_type sample) -> bool
         {
             const Vector3 samplePosition(sample.position.x, sample.position.y, sample.position.z);
             bool left = samplePosition[splitDimension] < pivot;
@@ -152,7 +153,7 @@ private:
     }
 
 
-    void updateTreeNode(KDTree *kdTree, KDNode &node, size_t depth, const TRange sampleRange, const SampleStatistics sampleStats, tbb::concurrent_vector< std::pair<TRegion, TRange> > *dataStorage, const Settings &buildSettings) const
+    void updateTreeNode(KDTree *kdTree, KDNode &node, size_t depth, TContainer &samples, const Range sampleRange, const SampleStatistics sampleStats, tbb::concurrent_vector< std::pair<TRegion, Range> > *dataStorage, const Settings &buildSettings) const
     {
         if(sampleRange.size() == 0)
         {
@@ -162,13 +163,13 @@ private:
         float splitPos = {0.0f};
 
         uint32_t nodeIdsLeftRight[2];
-        TRange sampleRangeLeftRight[2];
+        Range sampleRangeLeftRight[2];
         SampleStatistics sampleStatsLeftRight[2];
 
         if (node.isLeaf())
         {
             uint32_t dataIdx = node.getDataIdx();
-            std::pair<TRegion, TRange> &regionAndRangeData = dataStorage->operator[](dataIdx);
+            std::pair<TRegion, Range> &regionAndRangeData = dataStorage->operator[](dataIdx);
             if(depth < buildSettings.maxDepth && regionAndRangeData.first.sampleStatistics.numSamples + sampleRange.size() > buildSettings.maxSamples)
             {
                 getSplitDimensionAndPosition(sampleStats, splitDim, splitPos);
@@ -221,22 +222,20 @@ private:
         sampleStatsLeftRight[0].clear();
         sampleStatsLeftRight[1].clear();
 
-        typename TRange::Container::iterator rPivotItr;
+        typename TContainer::iterator rPivotItr;
 
+        auto begin = samples.begin() + sampleRange.m_begin, end = samples.begin() + sampleRange.m_end;
         if(kdTree->getNode(nodeIdsLeftRight[0]).isLeaf() || kdTree->getNode(nodeIdsLeftRight[1]).isLeaf() )
         {
-            rPivotItr = pivotSplitSamplesWithStats(sampleRange.begin(), sampleRange.end(), splitDim, splitPos, sampleStatsLeftRight[0], sampleStatsLeftRight[1]);
+            rPivotItr = pivotSplitSamplesWithStats(begin, end, splitDim, splitPos, sampleStatsLeftRight[0], sampleStatsLeftRight[1]);
         }
         else
         {
-            rPivotItr = pivotSplitSamples(sampleRange.begin(), sampleRange.end(), splitDim, splitPos);
+            rPivotItr = pivotSplitSamples(begin, end, splitDim, splitPos);
         }
 
-        sampleRangeLeftRight[0].m_start = sampleRange.begin();
-        sampleRangeLeftRight[0].m_end = rPivotItr;
-
-        sampleRangeLeftRight[1].m_start = rPivotItr;
-        sampleRangeLeftRight[1].m_end = sampleRange.end();
+        sampleRangeLeftRight[0] = Range(sampleRange.m_begin, std::distance(samples.begin(), rPivotItr));
+        sampleRangeLeftRight[1] = Range(std::distance(samples.begin(), rPivotItr), sampleRange.m_end);
 
         OPENPGL_ASSERT(sampleRangeLeftRight[0].size() > 1);
         OPENPGL_ASSERT(sampleRangeLeftRight[1].size() > 1);
@@ -247,8 +246,8 @@ private:
         updateTreeNode(kdTree, kdTree->getNode(nodeIdsLeftRight[1]), depth + 1, sampleRangeLeftRight[1], sampleStatsLeftRight[1], dataStorage, buildSettings);
 #else
     tbb::parallel_invoke(
-        [&]{updateTreeNode(kdTree, kdTree->getNode(nodeIdsLeftRight[0]), depth + 1, sampleRangeLeftRight[0], sampleStatsLeftRight[0], dataStorage, buildSettings);},
-        [&]{updateTreeNode(kdTree, kdTree->getNode(nodeIdsLeftRight[1]), depth + 1, sampleRangeLeftRight[1], sampleStatsLeftRight[1], dataStorage, buildSettings);}
+        [&]{updateTreeNode(kdTree, kdTree->getNode(nodeIdsLeftRight[0]), depth + 1, samples, sampleRangeLeftRight[0], sampleStatsLeftRight[0], dataStorage, buildSettings);},
+        [&]{updateTreeNode(kdTree, kdTree->getNode(nodeIdsLeftRight[1]), depth + 1, samples, sampleRangeLeftRight[1], sampleStatsLeftRight[1], dataStorage, buildSettings);}
     );
 #endif
     }
@@ -256,16 +255,16 @@ private:
 };
 
 
-template<class TRegion, typename TRange>
-inline std::string KDTreePartitionBuilder<TRegion, TRange>::toString() const
+template<class TRegion, typename TContainer>
+inline std::string KDTreePartitionBuilder<TRegion, TContainer>::toString() const
 {
     std::stringstream ss;
     ss << "KDTreePartitionBuilder" << std::endl;
     return ss.str();
 }
 
-template<class TRegion, typename TRange>
-inline std::string KDTreePartitionBuilder<TRegion, TRange>::Settings::toString() const
+template<class TRegion, typename TContainer>
+inline std::string KDTreePartitionBuilder<TRegion, TContainer>::Settings::toString() const
 {
     std::stringstream ss;
     ss << "KDTreePartitionBuilder::Settings:" << std::endl;
@@ -277,16 +276,16 @@ inline std::string KDTreePartitionBuilder<TRegion, TRange>::Settings::toString()
 }
 
 
-template<class TRegion, typename TRange>
-inline void KDTreePartitionBuilder<TRegion, TRange>::Settings::serialize(std::ostream& stream)const
+template<class TRegion, typename TContainer>
+inline void KDTreePartitionBuilder<TRegion, TContainer>::Settings::serialize(std::ostream& stream)const
     {
         stream.write(reinterpret_cast<const char*>(&minSamples), sizeof(size_t));
         stream.write(reinterpret_cast<const char*>(&maxSamples), sizeof(size_t));
         stream.write(reinterpret_cast<const char*>(&maxDepth), sizeof(size_t));
     }
 
-template<class TRegion, typename TRange>
-inline void KDTreePartitionBuilder<TRegion, TRange>::Settings::deserialize(std::istream& stream)
+template<class TRegion, typename TContainer>
+inline void KDTreePartitionBuilder<TRegion, TContainer>::Settings::deserialize(std::istream& stream)
     {
         stream.read(reinterpret_cast<char*>(&minSamples), sizeof(size_t));
         stream.read(reinterpret_cast<char*>(&maxSamples), sizeof(size_t));
