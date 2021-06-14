@@ -87,6 +87,12 @@ struct VMMSurfaceSamplingDistribution: public ISurfaceSamplingDistribution
         return pdf;
     }
 
+    inline float samplePdf(const Point2 sample, Vector3 &dir) const override
+    {
+        dir = this->sample(sample);
+        return pdf(dir);
+    }
+
     inline bool valid() const override
     {
         return m_numDistributions > 0;

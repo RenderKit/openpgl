@@ -46,6 +46,16 @@ struct VolumeSamplingDistribution
     float PDF(const pgl_vec3f& direction) const;
 
     /**
+     * @brief Combined importance sampling and PDF calculation.
+     * Can be more efficient to use for some distributions (e.g. DirectionQuadtree)
+     * 
+     * @param sample2D a 2D random variable
+     * @param direction importance sampled direction
+     * @return float the PDF for sampling @ref direction
+     */
+    float SamplePDF(const pgl_point2f& sample2D, pgl_vec3f& direction) const;
+
+    /**
      * @brief Checks if the current guiding distribution is valid or not.
      * 
      * @return true 
@@ -118,6 +128,12 @@ float VolumeSamplingDistribution::PDF(const pgl_vec3f& direction) const
 {
     OPENPGL_ASSERT(m_volumeSamplingDistributionHandle);
     return pglVolumeSamplingDistributionPDF(m_volumeSamplingDistributionHandle, direction);
+}
+
+float VolumeSamplingDistribution::SamplePDF(const pgl_point2f& sample2D, pgl_vec3f& direction) const
+{
+    OPENPGL_ASSERT(m_volumeSamplingDistributionHandle);
+    return pglVolumeSamplingDistributionSamplePDF(m_volumeSamplingDistributionHandle, sample2D, direction);    
 }
 
 bool VolumeSamplingDistribution::IsValid() const

@@ -42,6 +42,16 @@ struct SurfaceSamplingDistribution
      */
     float PDF(const pgl_vec3f& direction) const;
 
+
+    /**
+     * @brief 
+     * 
+     * @param sample2D 
+     * @param direction
+     * @return float 
+     */
+    float SamplePDF(const pgl_point2f& sample2D, pgl_vec3f& direction) const;
+
     /**
      * @brief 
      * 
@@ -128,6 +138,12 @@ float SurfaceSamplingDistribution::PDF(const pgl_vec3f& direction) const
 {
     OPENPGL_ASSERT(m_surfaceSamplingDistributionHandle);
     return pglSurfaceSamplingDistributionPDF(m_surfaceSamplingDistributionHandle, direction);
+}
+
+float SurfaceSamplingDistribution::SamplePDF(const pgl_point2f& sample2D, pgl_vec3f& direction) const
+{
+    OPENPGL_ASSERT(m_surfaceSamplingDistributionHandle);
+    return pglSurfaceSamplingDistributionSamplePDF(m_surfaceSamplingDistributionHandle, sample2D, direction);    
 }
 
 bool SurfaceSamplingDistribution::IsValid() const
