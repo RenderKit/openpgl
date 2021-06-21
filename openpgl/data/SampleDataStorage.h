@@ -10,14 +10,63 @@
 
 #include <tbb/concurrent_vector.h>
 
+#define SAMPLE_DATA_STORAGE_FILE_HEADER_STRING "OPENPGL_" OPENPGL_VERSION_STRING "_SAMPLE_STORAGE"
+
 namespace openpgl
 {
 
 struct SampleDataStorage
 {
+
     typedef tbb::concurrent_vector<SampleData> SampleDataContainer;
     SampleDataContainer m_surfaceContainer;
     SampleDataContainer m_volumeContainer;
+
+    static SampleDataStorage* newSampleDataStorage()
+    {
+        return new openpgl::SampleDataStorage();
+    }
+
+    static SampleDataStorage* newSampleDataStorageFromFile(const std::string sampleDataStorageFileName)
+    {
+        std::filebuf fb;
+        fb.open (sampleDataStorageFileName, std::ios::in | std::ios::binary);
+        if (!fb.is_open()) throw std::runtime_error("error: couldn't open file");
+        std::istream is(&fb);
+
+        auto size = strlen(SAMPLE_DATA_STORAGE_FILE_HEADER_STRING) + 1;
+        OPENPGL_ASSERT(size <= 256);
+        char buf[256];
+        is.read(&buf[0], size);
+        if (!is) throw std::runtime_error("error: invalid file header");
+        for (auto i = 0; i < size; i++)
+        {
+            if (buf[i] != SAMPLE_DATA_STORAGE_FILE_HEADER_STRING[i])
+                throw std::runtime_error("error: invalid file header");
+        }
+
+        openpgl::SampleDataStorage* gSampleStorage = new openpgl::SampleDataStorage();
+        gSampleStorage->deserialize(is);
+
+        fb.close();
+
+        return gSampleStorage;
+    }
+
+    static void storeSampleDataStorageToFile(SampleDataStorage* gSampleDataStorage, const std::string sampleDataStorageFileName)
+    {
+        std::filebuf fb;
+        fb.open (sampleDataStorageFileName, std::ios::out | std::ios::binary);
+        if (!fb.is_open()) throw std::runtime_error("error: couldn't open file!");
+        std::ostream os(&fb);
+
+        os.write(SAMPLE_DATA_STORAGE_FILE_HEADER_STRING, strlen(SAMPLE_DATA_STORAGE_FILE_HEADER_STRING) + 1);
+
+        gSampleDataStorage->serialize(os);
+
+        os.flush();
+        fb.close();
+    }
 
     inline void addSample(SampleData sample)
     {

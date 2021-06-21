@@ -19,10 +19,10 @@ private:
     using FieldType = Field<TDirectionalDistributionFactory, TSpatialStructureBuilder>;
     using SampleContainer = SampleDataStorage::SampleDataContainer;
 public:
-    
+
     using Settings = typename FieldType::Settings;
     using RegionType = typename FieldType::RegionType;
-    using DirectionalDistribution = typename FieldType::DirectionalDistribution; 
+    using DirectionalDistribution = typename FieldType::DirectionalDistribution;
 public:
 
     SurfaceVolumeField() = default;
@@ -30,11 +30,10 @@ public:
     SurfaceVolumeField(const Settings &settings):
         m_surfaceField(settings),
         m_volumeField(settings)
-    {
-    }
+    { }
 
     ~SurfaceVolumeField() override
-    {} 
+    {}
 
     ISurfaceSamplingDistribution* newSurfaceSamplingDistribution() const override
     {
@@ -57,7 +56,7 @@ public:
 
     IVolumeSamplingDistribution* newVolumeSamplingDistribution() const override
     {
-        return new TVolumeSamplingDistribution(m_volumeField.getUseParallaxCompensation());    
+        return new TVolumeSamplingDistribution(m_volumeField.getUseParallaxCompensation());
     }
 
     bool initVolumeSamplingDistribution(IVolumeSamplingDistribution* volumeSamplingDistribution, const Point3& position, const float sample1D, const bool useParrallaxComp) const override
@@ -103,6 +102,14 @@ public:
         m_volumeField.addTrainingIteration(spp);
     }
 
+    PGL_SPATIAL_STRUCTURE_TYPE getSpatialStructureType() const override {
+        return FieldType::SpatialStructureBuilder::SPATIAL_STRUCTURE_TYPE;
+    }
+
+    PGL_DIRECTIONAL_DISTRIBUTION_TYPE getDirectionalDistributionType() const override {
+        return FieldType::DirectionalDistributionFactory::DIRECTIONAL_DISTRIBUTION_TYPE;
+    }
+
     size_t getTotalSPP() const override
     {
         return m_totalSPP;
@@ -113,6 +120,21 @@ public:
         return m_iteration;
     }
 
+    void serialize(std::ostream &os) const override
+    {
+        os.write(reinterpret_cast<const char*>(&m_iteration), sizeof(m_iteration));
+        os.write(reinterpret_cast<const char*>(&m_totalSPP), sizeof(m_totalSPP));
+        m_surfaceField.serialize(os);
+        m_volumeField.serialize(os);
+    }
+
+    void deserialize(std::istream &is) override
+    {
+        is.read(reinterpret_cast<char*>(&m_iteration), sizeof(m_iteration));
+        is.read(reinterpret_cast<char*>(&m_totalSPP), sizeof(m_totalSPP));
+        m_surfaceField.deserialize(is);
+        m_volumeField.deserialize(is);
+    }
 
 private:
     size_t m_iteration {0};

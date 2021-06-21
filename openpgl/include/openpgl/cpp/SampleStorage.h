@@ -22,10 +22,20 @@ namespace cpp
 struct SampleStorage
 {
     SampleStorage();
+    
+    /**
+     * @brief Construct a new Field object from its serialized representation
+     *
+     * @param fieldFileName path to serialized representation
+     */
+	SampleStorage(const std::string& sampleStorageFileName);
+
     ~SampleStorage();
 
     SampleStorage(const SampleStorage&) = delete;
-    
+
+    bool Store(const std::string& sampleStorageFileName) const;
+
     /**
      * @brief Adds a single sample to the storage container.
      * 
@@ -69,11 +79,24 @@ OPENPGL_INLINE SampleStorage::SampleStorage()
     m_sampleStorageHandle = pglNewSampleStorage();
 }
 
+OPENPGL_INLINE SampleStorage::SampleStorage(const std::string& sampleStorageFileName)
+{
+    m_sampleStorageHandle = pglNewSampleStorageFromFile(sampleStorageFileName.c_str());
+    if (!m_sampleStorageHandle)
+        throw std::runtime_error("could not load field from file!");
+}
+
 OPENPGL_INLINE SampleStorage::~SampleStorage()
 {
     OPENPGL_ASSERT(m_sampleStorageHandle);
     pglReleaseSampleStorage(m_sampleStorageHandle);
     m_sampleStorageHandle = nullptr;
+}
+
+OPENPGL_INLINE bool SampleStorage::Store(const std::string& sampleStorageFileName) const
+{
+    OPENPGL_ASSERT(m_sampleStorageHandle);
+    return pglSampleStorageStoreToFile(m_sampleStorageHandle, sampleStorageFileName.c_str());
 }
 
     

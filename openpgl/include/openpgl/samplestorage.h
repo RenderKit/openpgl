@@ -34,7 +34,11 @@ typedef PGLSampleData PGLSampleData;
 
 OPENPGL_CORE_INTERFACE PGLSampleStorage pglNewSampleStorage();
 
+OPENPGL_CORE_INTERFACE PGLSampleStorage pglNewSampleStorageFromFile(const char* sampleStorageFileName);
+
 OPENPGL_CORE_INTERFACE void pglReleaseSampleStorage(PGLSampleStorage sampleStorage);
+
+OPENPGL_CORE_INTERFACE bool pglSampleStorageStoreToFile(PGLSampleStorage sampleStorage, const char* sampleStorageFileName);
 
 OPENPGL_CORE_INTERFACE void pglSampleStorageAddSample(PGLSampleStorage sampleStorage, PGLSampleData& sample);
 

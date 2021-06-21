@@ -20,11 +20,11 @@ struct Field
 {
 
 public:
-    
+
     using DirectionalDistributionFactory = TDirectionalDistributionFactory;
     using DirectionalDistributionFactorySettings = typename TDirectionalDistributionFactory::Configuration;
     using DirectionalDistribution = typename TDirectionalDistributionFactory::Distribution;
-    
+
     using SampleContainer = SampleDataStorage::SampleDataContainer;
 
     typedef Region<DirectionalDistribution, typename TDirectionalDistributionFactory::Statistics> RegionType;
@@ -67,7 +67,7 @@ public:
         m_deterministic = settings.settings.deterministic;
         m_useStochasticNNLookUp = settings.settings.useStochasticNNLookUp;
         m_spatialSubdivBuilderSettings = settings.settings.spatialSubdivBuilderSettings;
-        
+
         m_distributionFactorySettings = settings.distributionFactorySettings;
         m_useParallaxCompensation = settings.useParallaxCompensation;
     }
@@ -125,7 +125,7 @@ public:
         {
             estimateSceneBounds(samples);
         }
-        
+
         buildSpatialStructure(m_sceneBounds, samples);
         fitRegions(samples);
     }
@@ -171,13 +171,66 @@ public:
         return m_useParallaxCompensation;
     }
 
+    void serialize(std::ostream &os) const {
+        os.write(reinterpret_cast<const char*>(&m_isSurface), sizeof(m_isSurface));
+        os.write(reinterpret_cast<const char*>(&m_decayOnSpatialSplit), sizeof(m_decayOnSpatialSplit));
+        os.write(reinterpret_cast<const char*>(&m_useParallaxCompensation), sizeof(m_useParallaxCompensation));
+        os.write(reinterpret_cast<const char*>(&m_iteration), sizeof(m_iteration));
+        os.write(reinterpret_cast<const char*>(&m_totalSPP), sizeof(m_totalSPP));
+        os.write(reinterpret_cast<const char*>(&m_nCores), sizeof(m_nCores));
+        os.write(reinterpret_cast<const char*>(&m_deterministic), sizeof(m_deterministic));
+        os.write(reinterpret_cast<const char*>(&m_isSceneBoundsSet), sizeof(m_isSceneBoundsSet));
+        os.write(reinterpret_cast<const char*>(&m_sceneBounds), sizeof(m_sceneBounds));
+
+        m_distributionFactorySettings.serialize(os);
+        m_spatialSubdivBuilderSettings.serialize(os);
+        m_spatialSubdiv.serialize(os);
+        size_t size = m_regionStorageContainer.size();
+        os.write(reinterpret_cast<const char*>(&size), sizeof(size));
+        for (size_t i = 0; i < size; i++) {
+            m_regionStorageContainer[i].first.serialize(os);
+            m_regionStorageContainer[i].second.serialize(os);
+        }
+        os.write(reinterpret_cast<const char*>(&m_useStochasticNNLookUp), sizeof(m_useStochasticNNLookUp));
+        m_regionKNNSearchTree.serialize(os);
+    }
+
+    void deserialize(std::istream& is)
+    {
+        is.read(reinterpret_cast<char*>(&m_isSurface), sizeof(m_isSurface));
+        is.read(reinterpret_cast<char*>(&m_decayOnSpatialSplit), sizeof(m_decayOnSpatialSplit));
+        is.read(reinterpret_cast<char*>(&m_useParallaxCompensation), sizeof(m_useParallaxCompensation));
+        is.read(reinterpret_cast<char*>(&m_iteration), sizeof(m_iteration));
+        is.read(reinterpret_cast<char*>(&m_totalSPP), sizeof(m_totalSPP));
+        is.read(reinterpret_cast<char*>(&m_nCores), sizeof(m_nCores));
+        is.read(reinterpret_cast<char*>(&m_deterministic), sizeof(m_deterministic));
+        is.read(reinterpret_cast<char*>(&m_isSceneBoundsSet), sizeof(m_isSceneBoundsSet));
+        is.read(reinterpret_cast<char*>(&m_sceneBounds), sizeof(m_sceneBounds));
+
+        m_distributionFactorySettings.deserialize(is);
+        m_spatialSubdivBuilderSettings.deserialize(is);
+        m_spatialSubdiv.deserialize(is);
+        size_t size;
+        is.read(reinterpret_cast<char*>(&size), sizeof(size));
+        m_regionStorageContainer.clear();
+        m_regionStorageContainer.reserve(size);
+        for (size_t i = 0; i < size; i++) {
+            m_regionStorageContainer.emplace_back();
+            m_regionStorageContainer[i].first.deserialize(is);
+            m_regionStorageContainer[i].second.deserialize(is);
+
+        }
+        is.read(reinterpret_cast<char*>(&m_useStochasticNNLookUp), sizeof(m_useStochasticNNLookUp));
+        m_regionKNNSearchTree.deserialize(is);
+    }
+
 private:
 
     void estimateSceneBounds(const SampleContainer& samples)
     {
         m_sceneBounds.lower = Vector3(std::numeric_limits<float>::max());
         m_sceneBounds.upper = Vector3(std::numeric_limits<float>::min());
-        
+
         // TODO parallize this part (also use some stats?)
         for (const auto& sample : samples)
         {
@@ -223,7 +276,7 @@ private:
 #else
         tbb::parallel_for( tbb::blocked_range<int>(0,nGuidingRegions), [&](tbb::blocked_range<int> r)
         {
-        for (int n = r.begin(); n<r.end(); ++n) 
+        for (int n = r.begin(); n<r.end(); ++n)
 #endif
         {
             RegionStorageType &regionStorage = m_regionStorageContainer[n];
@@ -419,7 +472,7 @@ private:
 
     SpatialStructureBuilder m_spatialSubdivBuilder;
     SpatialBuilderSettings m_spatialSubdivBuilderSettings;
-    
+
     SpatialStructure m_spatialSubdiv;
     RegionStorageContainerType m_regionStorageContainer;
 

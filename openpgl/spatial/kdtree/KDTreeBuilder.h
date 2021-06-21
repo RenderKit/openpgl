@@ -7,6 +7,8 @@
 #include "KDTree.h"
 #include "../../data/SampleStatistics.h"
 #include "../../data/Range.h"
+#include "../../include/openpgl/types.h"
+
 /*
 #if !defined(__WIN32__) and !defined(__MACOSX__)
     #include <tbb/task_scheduler_init.h>
@@ -26,6 +28,7 @@ namespace openpgl
 template<typename TRegion, typename TContainer>
 struct KDTreePartitionBuilder
 {
+    const static PGL_SPATIAL_STRUCTURE_TYPE SPATIAL_STRUCTURE_TYPE = PGL_SPATIAL_STRUCTURE_KDTREE;
 
     typedef KDTree SpatialStructure;
 

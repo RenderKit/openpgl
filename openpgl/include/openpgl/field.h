@@ -35,7 +35,11 @@ typedef Field *PGLField;
 
 OPENPGL_CORE_INTERFACE PGLField pglNewField(PGLFieldArguments args);
 
+OPENPGL_CORE_INTERFACE PGLField pglNewFieldFromFile(const char* fieldFileName);
+
 OPENPGL_CORE_INTERFACE void pglReleaseField(PGLField field);
+
+OPENPGL_CORE_INTERFACE bool pglFieldStoreToFile(PGLField field, const char* fieldFileName);
 
 OPENPGL_CORE_INTERFACE size_t pglFieldGetIteration(PGLField field);
 

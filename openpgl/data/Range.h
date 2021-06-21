@@ -19,5 +19,16 @@ namespace openpgl
         {
             return m_end - m_begin;
         }
+
+        void serialize(std::ostream &os) const {
+            os.write(reinterpret_cast<const char*>(&m_begin), sizeof(m_begin));
+            os.write(reinterpret_cast<const char*>(&m_end), sizeof(m_end));
+        }
+
+        void deserialize(std::istream& is)
+        {
+            is.read(reinterpret_cast<char*>(&m_begin), sizeof(m_begin));
+            is.read(reinterpret_cast<char*>(&m_end), sizeof(m_end));
+        }
     };
 }

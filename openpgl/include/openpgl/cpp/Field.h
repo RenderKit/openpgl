@@ -9,25 +9,27 @@
 #include "Sampler.h"
 #include "SampleStorage.h"
 
+#include <string>
+
 namespace openpgl
 {
 namespace cpp
 {
 
 /**
- * @brief 
- * 
+ * @brief
+ *
  */
 using FieldArguments = PGLFieldArguments;
 
 /**
  * @brief Key component of the guiding libary which holds the guind information
  * (e.g., approximation of the incidance radiance field) for a scene
- * 
+ *
  * This class is responsible for storing, learning and accessing the guiding information for a scene.
  * This information can be the incidence radiance field accros the whole scene learned from several training
  * iterations during rendering or from a preprocessing step. The field usually holds seperate approxiamtions
- * for the surface and volumetric radiance field which can be accessed individually. 
+ * for the surface and volumetric radiance field which can be accessed individually.
  * Based on the used representation the Field separates the positional and directional componetns of the 5D
  * radiance field using a spatial subdivision structure, where each spatial leaf node (a.k.a. Region) contains a directional representation
  * for the local incident radiance distribtuion.
@@ -36,21 +38,36 @@ struct Field
 {
     /**
      * @brief Construct a new Field object
-     * 
-     * @param args 
+     *
+     * @param args
      */
     Field(PGLFieldArguments args);
+
+    /**
+     * @brief Construct a new Field object from its serialized representation
+     *
+     * @param fieldFileName path to serialized representation
+     */
+	Field(const std::string& fieldFileName);
 
     ~Field();
 
     Field(const Field&) = delete;
 
     /**
+     * @brief Stores Field as serialized representation to file on disk
+     *
+     * @param fieldFileName path where to store serialized representation
+     * @return if field could be stored to file
+     */
+    bool Store(const std::string& fieldFileName) const;
+
+    /**
      * @brief Sets the bounding box of the scenes.
-     * 
+     *
      * Sets the bounding box of the scene. This bounding box is used as
-     * bounds for the spatial subdivision structures for the surface and 
-     * volume guiding fields. If no scene bounding box is set before 
+     * bounds for the spatial subdivision structures for the surface and
+     * volume guiding fields. If no scene bounding box is set before
      * @ref Update is called the first time the scene bounds are estimated
      * using the first sample batch.
      * @param bounds
@@ -60,10 +77,10 @@ struct Field
 
     /**
      * @brief Upadates the current approximation of the radiance field.
-     * 
-     * 
-     * 
-     * @param sampleStorage 
+     *
+     *
+     *
+     * @param sampleStorage
      * @param numPerPixelSamples the number of sample per pixels used to generate the training data
      */
     void Update(const SampleStorage& sampleStorage, const size_t& numPerPixelSamples);
@@ -76,25 +93,25 @@ struct Field
     size_t GetTotalSPP() const;
 
     /**
-     * @brief Returns the spatial surface Region containing the approximation of the local incident radiance distriubtion. 
-     * 
-     * @param position 
-     * @param sampler 
-     * @return Region 
+     * @brief Returns the spatial surface Region containing the approximation of the local incident radiance distriubtion.
+     *
+     * @param position
+     * @param sampler
+     * @return Region
      */
     //Region GetSurfaceRegion(pgl_point3f position, Sampler* sampler);
 
     /**
-     * @brief Returns the spatial volume Region containing the approximation of the local incident radiance distriubtion. 
-     * 
-     * @param position 
-     * @param sampler 
-     * @return Region 
+     * @brief Returns the spatial volume Region containing the approximation of the local incident radiance distriubtion.
+     *
+     * @param position
+     * @param sampler
+     * @return Region
      */
     //Region GetVolumeRegion(pgl_point3f position, Sampler* sampler);
 
 
-    
+
 
     friend class SurfaceSamplingDistribution;
     friend class VolumeSamplingDistribution;
@@ -107,11 +124,24 @@ OPENPGL_INLINE Field::Field(PGLFieldArguments args)
     m_fieldHandle = pglNewField(args);
 }
 
+OPENPGL_INLINE Field::Field(const std::string& fieldFileName)
+{
+    m_fieldHandle = pglNewFieldFromFile(fieldFileName.c_str());
+    if (!m_fieldHandle)
+        throw std::runtime_error("could not load field from file!");
+}
+
 OPENPGL_INLINE Field::~Field()
 {
     OPENPGL_ASSERT(m_fieldHandle);
     pglReleaseField(m_fieldHandle);
     m_fieldHandle = nullptr;
+}
+
+OPENPGL_INLINE bool Field::Store(const std::string& fieldFileName) const
+{
+    OPENPGL_ASSERT(m_fieldHandle);
+    return pglFieldStoreToFile(m_fieldHandle, fieldFileName.c_str());
 }
 
 OPENPGL_INLINE size_t Field::GetIteration() const

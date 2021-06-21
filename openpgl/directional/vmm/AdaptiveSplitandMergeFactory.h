@@ -6,6 +6,7 @@
 #include "../../openpgl_common.h"
 #include "VMM.h"
 #include "../../data/SampleData.h"
+#include "../../include/openpgl/types.h"
 
 #include "WeightedEMVMMFactory.h"
 #include "WeightedEMParallaxAwareVMMFactory.h"
@@ -23,6 +24,8 @@ struct AdaptiveSplitAndMergeFactory
 {
 
 public:
+    const static PGL_DIRECTIONAL_DISTRIBUTION_TYPE DIRECTIONAL_DISTRIBUTION_TYPE = PGL_DIRECTIONAL_DISTRIBUTION_PARALLAX_AWARE_VMM;
+
     typedef TVMMDistribution Distribution;
     typedef TVMMDistribution VMM;
 

@@ -62,22 +62,22 @@ namespace openpgl
 
         void serialize(std::ostream& stream) const
         {
+            stream.write(reinterpret_cast<const char*>(&valid), sizeof(valid));
             distribution.serialize(stream);
-            stream.write(reinterpret_cast<const char*>(&regionBounds), sizeof(BBox));
+            stream.write(reinterpret_cast<const char*>(&regionBounds), sizeof(regionBounds));
             trainingStatistics.serialize(stream);
             sampleStatistics.serialize(stream);
-            stream.write(reinterpret_cast<const char*>(&splitFlag), sizeof(bool));
-            stream.write(reinterpret_cast<const char*>(&valid), sizeof(bool));
+            stream.write(reinterpret_cast<const char*>(&splitFlag), sizeof(splitFlag));
         }
 
         void deserialize(std::istream& stream)
         {
+            stream.read(reinterpret_cast<char*>(&valid), sizeof(valid));
             distribution.deserialize(stream);
-            stream.read(reinterpret_cast<char*>(&regionBounds), sizeof(BBox));
+            stream.read(reinterpret_cast<char*>(&regionBounds), sizeof(regionBounds));
             trainingStatistics.deserialize(stream);
             sampleStatistics.deserialize(stream);
-            stream.read(reinterpret_cast<char*>(&splitFlag), sizeof(bool));
-            stream.read(reinterpret_cast<char*>(&valid), sizeof(bool));
+            stream.read(reinterpret_cast<char*>(&splitFlag), sizeof(splitFlag));
         }
 
         bool isValid() const
@@ -95,7 +95,7 @@ namespace openpgl
             const Vector3 sampleDisplacement = boundsExtents * squareToUniformSphere(sample2D);
             const Point3 samplePosition(sample.position.x, sample.position.y, sample.position.z);
             Vector3 sampleDirection(sample.direction.x, sample.direction.y, sample.direction.z);
-            
+
             Point3 splattedPosition = samplePosition + sampleDisplacement;
             if (!embree::inside(regionBounds, splattedPosition))
             {

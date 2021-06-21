@@ -6,22 +6,19 @@
 
 #include "openpgl_common.h"
 
+#include "field/FieldFactory.h"
+#include "field/ISurfaceVolumeField.h"
+#include "directional/ISurfaceSamplingDistribution.h"
+#include "directional/IVolumeSamplingDistribution.h"
+
 #include "data/PathSegmentDataStorage.h"
 #include "data/PathSegmentData.h"
 #include "data/SampleData.h"
 #include "data/SampleDataStorage.h"
 
-#include "field/ISurfaceVolumeField.h"
-#include "field/SurfaceVolumeField.h"
-#include "directional/ISurfaceSamplingDistribution.h"
-#include "directional/IVolumeSamplingDistribution.h"
-#include "directional/vmm/ParallaxAwareVMM.h"
-#include "directional/vmm/AdaptiveSplitandMergeFactory.h"
-#include "directional/vmm/VMMSurfaceSamplingDistribution.h"
-#include "directional/vmm/VMMVolumeSamplingDistribution.h"
 #include "sampler/Sampler.h"
 
-#include "spatial/kdtree/KDTreeBuilder.h"
+#include <cstring>
 
 using namespace openpgl;
 
@@ -62,62 +59,18 @@ typedef ISurfaceVolumeField IGuidingField;
 // Field //////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
+#define OPENPGL_FIELD_STRING "OPENPGL_" OPENPGL_VERSION_STRING "_FIELD"
+
 extern "C" OPENPGL_DLLEXPORT PGLField pglNewField(PGLFieldArguments args)OPENPGL_CATCH_BEGIN
 {
-    
-    IGuidingField* gField = nullptr;
-    
-    if (args.spatialStructureType == PGL_SPATIAL_STRUCTURE_KDTREE && 
-        args.directionalDistributionType ==  PGL_DIRECTIONAL_DISTRIBUTION_PARALLAX_AWARE_VMM )
-    {
-        using DirectionalDistriubtionFactory = AdaptiveSplitAndMergeFactory<ParallaxAwareVonMisesFisherMixture<4, 32>>;
-        using GuidingField = SurfaceVolumeField<DirectionalDistriubtionFactory, KDTreePartitionBuilder, VMMSurfaceSamplingDistribution<DirectionalDistriubtionFactory::Distribution>, VMMVolumeSamplingDistribution<DirectionalDistriubtionFactory::Distribution>>;
-        
-        GuidingField::Settings gFieldSettings;
-        gFieldSettings.settings.decayOnSpatialSplit   = 0.25f;
-        gFieldSettings.settings.deterministic         = false;
+    return (PGLField) FieldFactory::newField(args);
+}
+OPENPGL_CATCH_END(nullptr)
 
-        PGLKDTreeArguments *spatialSturctureArguments = (PGLKDTreeArguments*)args.spatialSturctureArguments;
-        gFieldSettings.settings.useStochasticNNLookUp = spatialSturctureArguments->knnLookup;
-        gFieldSettings.settings.spatialSubdivBuilderSettings.minSamples = spatialSturctureArguments->minSamples;
-        gFieldSettings.settings.spatialSubdivBuilderSettings.maxSamples = spatialSturctureArguments->maxSamples;
-        gFieldSettings.settings.spatialSubdivBuilderSettings.maxDepth   = spatialSturctureArguments->maxDepth;
-
-        PGLVMMFactoryArguments *directionalDistributionArguments = (PGLVMMFactoryArguments*)args.directionalDistributionArguments;
-        gFieldSettings.distributionFactorySettings.weightedEMCfg.initK = directionalDistributionArguments->initK;
-        gFieldSettings.distributionFactorySettings.weightedEMCfg.maxK = directionalDistributionArguments->maxK;
-        gFieldSettings.distributionFactorySettings.weightedEMCfg.maxEMIterrations = directionalDistributionArguments->maxEMIterrations;
-
-        gFieldSettings.distributionFactorySettings.weightedEMCfg.maxKappa = directionalDistributionArguments->maxKappa;
-        gFieldSettings.distributionFactorySettings.weightedEMCfg.maxMeanCosine = openpgl::KappaToMeanCosine<float>(gFieldSettings.distributionFactorySettings.weightedEMCfg.maxKappa);
-        gFieldSettings.distributionFactorySettings.weightedEMCfg.convergenceThreshold = directionalDistributionArguments->convergenceThreshold;
-        gFieldSettings.distributionFactorySettings.weightedEMCfg.weightPrior = directionalDistributionArguments->weightPrior;
-        gFieldSettings.distributionFactorySettings.weightedEMCfg.meanCosinePriorStrength = directionalDistributionArguments->meanCosinePriorStrength;
-        gFieldSettings.distributionFactorySettings.weightedEMCfg.meanCosinePrior = directionalDistributionArguments->meanCosinePrior;
-
-        gFieldSettings.distributionFactorySettings.splittingThreshold = directionalDistributionArguments->splittingThreshold;
-        gFieldSettings.distributionFactorySettings.mergingThreshold = directionalDistributionArguments->mergingThreshold;
-
-
-        gFieldSettings.distributionFactorySettings.partialReFit = directionalDistributionArguments->partialReFit;
-        gFieldSettings.distributionFactorySettings.maxSplitItr = directionalDistributionArguments->maxSplitItr;
-
-        gFieldSettings.distributionFactorySettings.useSplitAndMerge = directionalDistributionArguments->useSplitAndMerge;
-        gFieldSettings.distributionFactorySettings.minSamplesForSplitting = directionalDistributionArguments->minSamplesForSplitting;
-        gFieldSettings.distributionFactorySettings.minSamplesForPartialRefitting = directionalDistributionArguments->minSamplesForPartialRefitting;
-        gFieldSettings.distributionFactorySettings.minSamplesForMerging = directionalDistributionArguments->minSamplesForMerging;
-
-        gFieldSettings.useParallaxCompensation = args.useParallaxCompensation;
-        gField = new GuidingField(gFieldSettings);
-    }else if(args.spatialStructureType == PGL_SPATIAL_STRUCTURE_KDTREE && 
-        args.directionalDistributionType ==  PGL_DIRECTIONAL_DISTRIBUTION_QUADTREE )
-    {
-        // TODO
-    }
-    
-    
-
-    return (PGLField) gField;
+extern "C" OPENPGL_DLLEXPORT PGLField pglNewFieldFromFile(const char* fieldFileName)OPENPGL_CATCH_BEGIN
+{
+    THROW_IF_NULL_STRING(fieldFileName);
+    return (PGLField)FieldFactory::newFieldFromFile(fieldFileName);
 }
 OPENPGL_CATCH_END(nullptr)
 
@@ -127,6 +80,15 @@ extern "C" OPENPGL_DLLEXPORT void pglReleaseField(PGLField field)OPENPGL_CATCH_B
     delete gField;
 }
 OPENPGL_CATCH_END()
+
+extern "C" OPENPGL_DLLEXPORT bool pglFieldStoreToFile(PGLField field, const char* fieldFileName)OPENPGL_CATCH_BEGIN
+{
+    THROW_IF_NULL_OBJECT(field);
+    THROW_IF_NULL_STRING(fieldFileName);
+    FieldFactory::storeFieldToFile((IGuidingField *)field, fieldFileName);
+    return true;
+}
+OPENPGL_CATCH_END(false)
 
 extern "C" OPENPGL_DLLEXPORT size_t pglFieldGetIteration(PGLField field)OPENPGL_CATCH_BEGIN
 {
@@ -248,7 +210,7 @@ extern "C" OPENPGL_DLLEXPORT bool pglRegionGetValid(PGLRegion region)
 extern "C" OPENPGL_DLLEXPORT PGLDistribution pglRegionGetDistribution(PGLRegion region, pgl_point3f samplePosition, const bool &useParallaxComp)
 {
     const openpgl::Point3 samplePos(samplePosition.x, samplePosition.y, samplePosition.z);
-    auto *gRegion = (IRegion *)region; 
+    auto *gRegion = (IRegion *)region;
 
     GuidingDistribution gDistribution;
     gRegion->getDistribution(gDistribution, samplePos, useParallaxComp);
@@ -261,11 +223,18 @@ extern "C" OPENPGL_DLLEXPORT PGLDistribution pglRegionGetDistribution(PGLRegion 
 // SampleStorage //////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
+#define OPENPGL_SAMPLE_STORAGE_STRING "OPENPGL_" OPENPGL_VERSION_STRING "_SAMPLE_STORAGE"
 
 extern "C" OPENPGL_DLLEXPORT PGLSampleStorage pglNewSampleStorage()OPENPGL_CATCH_BEGIN
 {
-    openpgl::SampleDataStorage* sampleStorage = new openpgl::SampleDataStorage();
-    return (PGLSampleStorage) sampleStorage;
+    return (PGLSampleStorage) SampleDataStorage::newSampleDataStorage();
+}
+OPENPGL_CATCH_END(nullptr)
+
+extern "C" OPENPGL_DLLEXPORT PGLSampleStorage pglNewSampleStorageFromFile(const char* sampleStorageFileName)OPENPGL_CATCH_BEGIN
+{
+    THROW_IF_NULL_STRING(sampleStorageFileName);
+    return (PGLSampleStorage)openpgl::SampleDataStorage::newSampleDataStorageFromFile(sampleStorageFileName);
 }
 OPENPGL_CATCH_END(nullptr)
 
@@ -275,11 +244,20 @@ extern "C" OPENPGL_DLLEXPORT void pglReleaseSampleStorage(PGLSampleStorage sampl
     delete gSampleStorage;
 }
 
+extern "C" OPENPGL_DLLEXPORT bool pglSampleStorageStoreToFile(PGLSampleStorage sampleStorage, const char* sampleStorageFileName)OPENPGL_CATCH_BEGIN
+{
+    THROW_IF_NULL_OBJECT(sampleStorage);
+    THROW_IF_NULL_STRING(sampleStorageFileName);
+    openpgl::SampleDataStorage::storeSampleDataStorageToFile((openpgl::SampleDataStorage *)sampleStorage, sampleStorageFileName);
+    return true;
+}
+OPENPGL_CATCH_END(false)
+
 extern "C" OPENPGL_DLLEXPORT void pglSampleStorageAddSample(PGLSampleStorage sampleStorage, PGLSampleData& sample)
 {
     auto *gSampleStorage = (openpgl::SampleDataStorage *)sampleStorage;
     openpgl::SampleData opglSample = /**(openpgl::SampleData*)*/sample;
-    gSampleStorage->addSample(opglSample); 
+    gSampleStorage->addSample(opglSample);
 }
 
 extern "C" OPENPGL_DLLEXPORT void pglSampleStorageAddSamples(PGLSampleStorage sampleStorage, const PGLSampleData* samples, size_t numSamples)
@@ -290,7 +268,7 @@ extern "C" OPENPGL_DLLEXPORT void pglSampleStorageAddSamples(PGLSampleStorage sa
     for(size_t n =0; n < numSamples; n++)
     {
         openpgl::SampleData opglSample = opglSamples[n];
-        gSampleStorage->addSample(opglSample); 
+        gSampleStorage->addSample(opglSample);
     }
 }
 
@@ -568,7 +546,7 @@ extern "C" OPENPGL_DLLEXPORT void pglSurfaceSamplingDistributionApplyCosineProdu
 
 extern "C" OPENPGL_DLLEXPORT pgl_vec3f pglSurfaceSamplingDistributionSample(PGLSurfaceSamplingDistribution surfaceSamplingDistribution, pgl_point2f sample)
 {
-    ISurfaceSamplingDistribution* gSurfaceSamplingDistribution =  (ISurfaceSamplingDistribution*)surfaceSamplingDistribution;   
+    ISurfaceSamplingDistribution* gSurfaceSamplingDistribution =  (ISurfaceSamplingDistribution*)surfaceSamplingDistribution;
     openpgl::Point2 opglSample(sample.x, sample.y);
     openpgl::Vector3 opglDirection = gSurfaceSamplingDistribution->sample(opglSample);
     pgl_vec3f pglDirection;
@@ -593,7 +571,7 @@ extern "C" OPENPGL_DLLEXPORT float pglSurfaceSamplingDistributionSamplePDF(PGLSu
 
 extern "C" OPENPGL_DLLEXPORT bool pglSurfaceSamplingDistributionIsValid(PGLSurfaceSamplingDistribution surfaceSamplingDistribution)
 {
-    ISurfaceSamplingDistribution* gSurfaceSamplingDistribution =  (ISurfaceSamplingDistribution*)surfaceSamplingDistribution; 
+    ISurfaceSamplingDistribution* gSurfaceSamplingDistribution =  (ISurfaceSamplingDistribution*)surfaceSamplingDistribution;
     return gSurfaceSamplingDistribution->valid();
 }
 
@@ -636,7 +614,7 @@ extern "C" OPENPGL_DLLEXPORT void pglVolumeSamplingDistributionInit(PGLVolumeSam
 */
 extern "C" OPENPGL_DLLEXPORT pgl_vec3f pglVolumeSamplingDistributionSample(PGLVolumeSamplingDistribution volumeSamplingDistribution, pgl_point2f sample)
 {
-    IVolumeSamplingDistribution* gVolumeSamplingDistribution =  (IVolumeSamplingDistribution*)volumeSamplingDistribution; 
+    IVolumeSamplingDistribution* gVolumeSamplingDistribution =  (IVolumeSamplingDistribution*)volumeSamplingDistribution;
     openpgl::Point2 opglSample(sample.x, sample.y);
     openpgl::Vector3 opglDirection = gVolumeSamplingDistribution->sample(opglSample);
     pgl_vec3f pglDirection;
@@ -680,7 +658,7 @@ extern "C" OPENPGL_DLLEXPORT void pglFieldArgumentsSetDefaults(PGLFieldArguments
         fieldArguments.spatialStructureType = PGL_SPATIAL_STRUCTURE_KDTREE;
         fieldArguments.spatialSturctureArguments = new PGLKDTreeArguments();
         break;
-    
+
     default:
         fieldArguments.spatialStructureType = PGL_SPATIAL_STRUCTURE_KDTREE;
         fieldArguments.spatialSturctureArguments = new PGLKDTreeArguments();
@@ -695,7 +673,7 @@ extern "C" OPENPGL_DLLEXPORT void pglFieldArgumentsSetDefaults(PGLFieldArguments
         fieldArguments.directionalDistributionArguments = new PGLVMMFactoryArguments();
         fieldArguments.useParallaxCompensation = true;
         break;
-    
+
     default:
         fieldArguments.directionalDistributionType = PGL_DIRECTIONAL_DISTRIBUTION_PARALLAX_AWARE_VMM;
         fieldArguments.directionalDistributionArguments = new PGLVMMFactoryArguments();
