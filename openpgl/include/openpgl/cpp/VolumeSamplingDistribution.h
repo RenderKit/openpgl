@@ -105,12 +105,12 @@ VolumeSamplingDistribution::VolumeSamplingDistribution()
 }
 */
 
-VolumeSamplingDistribution::VolumeSamplingDistribution(const Field* field)
+OPENPGL_INLINE VolumeSamplingDistribution::VolumeSamplingDistribution(const Field* field)
 {
     m_volumeSamplingDistributionHandle = pglFieldNewVolumeSamplingDistribution(field->m_fieldHandle);
 }
 
-VolumeSamplingDistribution::~VolumeSamplingDistribution()
+OPENPGL_INLINE VolumeSamplingDistribution::~VolumeSamplingDistribution()
 {
     OPENPGL_ASSERT(m_volumeSamplingDistributionHandle);
     if(m_volumeSamplingDistributionHandle)
@@ -118,31 +118,31 @@ VolumeSamplingDistribution::~VolumeSamplingDistribution()
     m_volumeSamplingDistributionHandle = nullptr;
 }
 
-pgl_vec3f VolumeSamplingDistribution::Sample(const pgl_point2f& sample2D)const
+OPENPGL_INLINE pgl_vec3f VolumeSamplingDistribution::Sample(const pgl_point2f& sample2D)const
 {
     OPENPGL_ASSERT(m_volumeSamplingDistributionHandle);
     return pglVolumeSamplingDistributionSample(m_volumeSamplingDistributionHandle, sample2D);
 }
 
-float VolumeSamplingDistribution::PDF(const pgl_vec3f& direction) const
+OPENPGL_INLINE float VolumeSamplingDistribution::PDF(const pgl_vec3f& direction) const
 {
     OPENPGL_ASSERT(m_volumeSamplingDistributionHandle);
     return pglVolumeSamplingDistributionPDF(m_volumeSamplingDistributionHandle, direction);
 }
 
-float VolumeSamplingDistribution::SamplePDF(const pgl_point2f& sample2D, pgl_vec3f& direction) const
+OPENPGL_INLINE float VolumeSamplingDistribution::SamplePDF(const pgl_point2f& sample2D, pgl_vec3f& direction) const
 {
     OPENPGL_ASSERT(m_volumeSamplingDistributionHandle);
     return pglVolumeSamplingDistributionSamplePDF(m_volumeSamplingDistributionHandle, sample2D, direction);    
 }
 
-bool VolumeSamplingDistribution::IsValid() const
+OPENPGL_INLINE bool VolumeSamplingDistribution::IsValid() const
 {
     OPENPGL_ASSERT(m_volumeSamplingDistributionHandle);
     return pglVolumeSamplingDistributionIsValid(m_volumeSamplingDistributionHandle);
 }
 
-void VolumeSamplingDistribution::Clear()
+OPENPGL_INLINE void VolumeSamplingDistribution::Clear()
 {
     OPENPGL_ASSERT(m_volumeSamplingDistributionHandle);
     return pglVolumeSamplingDistributionClear(m_volumeSamplingDistributionHandle);
@@ -156,7 +156,7 @@ void VolumeSamplingDistribution::Init(const Region& region, const pgl_point3f& p
 }
 */
 
-bool VolumeSamplingDistribution::Init(const Field* field, const pgl_point3f& pos, const float sample1D, const bool useParallaxCompensation)
+OPENPGL_INLINE bool VolumeSamplingDistribution::Init(const Field* field, const pgl_point3f& pos, const float sample1D, const bool useParallaxCompensation)
 {
     OPENPGL_ASSERT(m_volumeSamplingDistributionHandle);
     OPENPGL_ASSERT(field->m_fieldHandle);

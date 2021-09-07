@@ -3,6 +3,9 @@
 
 #pragma once
 
+#include <stdexcept>
+#include <string>
+
 #include "../openpgl.h"
 
 #include "Common.h"
