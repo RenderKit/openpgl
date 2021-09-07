@@ -45,7 +45,7 @@ struct PathSegmentStorage
      * @param guideDirectLight 
      * @return size_t 
      */
-    size_t PrepareSamples(const bool& splatSamples, Sampler& sampler, const bool useNEEMiWeights = false, const bool guideDirectLight = false);
+    size_t PrepareSamples(const bool& splatSamples = false, Sampler* sampler = nullptr, const bool useNEEMiWeights = false, const bool guideDirectLight = false);
 
     /**
      * @brief Get the Samples object
@@ -97,11 +97,14 @@ OPENPGL_INLINE void PathSegmentStorage::Clear()
     pglPathSegmentStorageClear(m_pathSegmentStorageHandle);
 }
 
-OPENPGL_INLINE size_t PathSegmentStorage::PrepareSamples(const bool& splatSamples, Sampler& sampler, const bool useNEEMiWeights, const bool guideDirectLight)
+OPENPGL_INLINE size_t PathSegmentStorage::PrepareSamples(const bool& splatSamples, Sampler* sampler, const bool useNEEMiWeights, const bool guideDirectLight)
 {
     OPENPGL_ASSERT(m_pathSegmentStorageHandle);
-    OPENPGL_ASSERT(&sampler.m_samplerHandle);
-    return pglPathSegmentStoragePrepareSamples(m_pathSegmentStorageHandle, splatSamples, &sampler.m_samplerHandle, useNEEMiWeights, guideDirectLight);
+    //OPENPGL_ASSERT(&sampler.m_samplerHandle);
+    if(sampler)
+        return pglPathSegmentStoragePrepareSamples(m_pathSegmentStorageHandle, splatSamples, &sampler->m_samplerHandle, useNEEMiWeights, guideDirectLight);
+    else
+        return pglPathSegmentStoragePrepareSamples(m_pathSegmentStorageHandle, splatSamples, nullptr, useNEEMiWeights, guideDirectLight);
 }
 
 OPENPGL_INLINE const SampleData* PathSegmentStorage::GetSamples(size_t &nSamples)
