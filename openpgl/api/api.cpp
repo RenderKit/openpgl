@@ -654,12 +654,8 @@ extern "C" OPENPGL_DLLEXPORT void pglFieldArgumentsSetDefaults(PGLFieldArguments
 {
     switch (spatialType)
     {
-    case PGL_SPATIAL_STRUCTURE_TYPE::PGL_SPATIAL_STRUCTURE_KDTREE:
-        fieldArguments.spatialStructureType = PGL_SPATIAL_STRUCTURE_KDTREE;
-        fieldArguments.spatialSturctureArguments = new PGLKDTreeArguments();
-        break;
-
     default:
+    case PGL_SPATIAL_STRUCTURE_TYPE::PGL_SPATIAL_STRUCTURE_KDTREE:
         fieldArguments.spatialStructureType = PGL_SPATIAL_STRUCTURE_KDTREE;
         fieldArguments.spatialSturctureArguments = new PGLKDTreeArguments();
         break;
@@ -668,17 +664,16 @@ extern "C" OPENPGL_DLLEXPORT void pglFieldArgumentsSetDefaults(PGLFieldArguments
 
     switch (directionalType)
     {
+    default:
     case PGL_DIRECTIONAL_DISTRIBUTION_TYPE::PGL_DIRECTIONAL_DISTRIBUTION_PARALLAX_AWARE_VMM:
         fieldArguments.directionalDistributionType = PGL_DIRECTIONAL_DISTRIBUTION_PARALLAX_AWARE_VMM;
         fieldArguments.directionalDistributionArguments = new PGLVMMFactoryArguments();
         fieldArguments.useParallaxCompensation = true;
         break;
-
-    default:
-        fieldArguments.directionalDistributionType = PGL_DIRECTIONAL_DISTRIBUTION_PARALLAX_AWARE_VMM;
-        fieldArguments.directionalDistributionArguments = new PGLVMMFactoryArguments();
-        fieldArguments.useParallaxCompensation = true;
-        break;
+    case PGL_DIRECTIONAL_DISTRIBUTION_TYPE::PGL_DIRECTIONAL_DISTRIBUTION_QUADTREE:
+        fieldArguments.directionalDistributionType = PGL_DIRECTIONAL_DISTRIBUTION_QUADTREE;
+        fieldArguments.directionalDistributionArguments = new PGLDQTFactoryArguments();
+        fieldArguments.useParallaxCompensation = false;
     }
 
 

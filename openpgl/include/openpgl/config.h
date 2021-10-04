@@ -62,6 +62,25 @@ struct PGLVMMFactoryArguments
     int minSamplesForMerging { 32000/4 };
 };
 
+enum PGLDQTLeafEstimator
+{
+    REJECTION_SAMPLING = 0,
+    PER_LEAF
+};
+
+enum PGLDQTSplitMetric
+{
+    MEAN = 0,
+    SECOND_MOMENT
+};
+
+struct PGLDQTFactoryArguments
+{
+    PGLDQTLeafEstimator leafEstimator { PGLDQTLeafEstimator::REJECTION_SAMPLING };
+    PGLDQTSplitMetric splitMetric { PGLDQTSplitMetric::MEAN };
+    float splitThreshold { 0.01 };
+    float footprintFactor { 1 };
+};
 
 struct PGLFieldArguments
 {

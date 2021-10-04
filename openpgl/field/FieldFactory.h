@@ -11,6 +11,11 @@
 #include "directional/vmm/AdaptiveSplitandMergeFactory.h"
 #include "directional/vmm/VMMSurfaceSamplingDistribution.h"
 #include "directional/vmm/VMMVolumeSamplingDistribution.h"
+#include "directional/dqt/DQT.h"
+#include "directional/dqt/DQTFactory.h"
+#include "directional/dqt/DQTSurfaceSamplingDistribution.h"
+#include "directional/dqt/DQTVolumeSamplingDistribution.h"
+#include "directional/dqt/SphereToSquare.h"
 
 #include "spatial/kdtree/KDTreeBuilder.h"
 
@@ -67,7 +72,28 @@ struct FieldFactory {
 
             gFieldSettings.useParallaxCompensation = args.useParallaxCompensation;
             gField = new GuidingField(gFieldSettings);
-        } else {
+        } else if (args.spatialStructureType == PGL_SPATIAL_STRUCTURE_KDTREE &&
+                   args.directionalDistributionType ==  PGL_DIRECTIONAL_DISTRIBUTION_QUADTREE )
+        {
+            using DirectionalDistriubtionFactory = DirectionalQuadtreeFactory<DirectionalQuadtree<SphereToSquareCylindrical>>;
+            using GuidingField = SurfaceVolumeField<DirectionalDistriubtionFactory, KDTreePartitionBuilder, DQTSurfaceSamplingDistribution<DirectionalDistriubtionFactory::Distribution>, DQTVolumeSamplingDistribution<DirectionalDistriubtionFactory::Distribution>>;
+
+            GuidingField::Settings gFieldSettings;
+            PGLKDTreeArguments *spatialSturctureArguments = (PGLKDTreeArguments*)args.spatialSturctureArguments;
+            gFieldSettings.settings.useStochasticNNLookUp = spatialSturctureArguments->knnLookup;
+            gFieldSettings.settings.spatialSubdivBuilderSettings.minSamples = spatialSturctureArguments->minSamples;
+            gFieldSettings.settings.spatialSubdivBuilderSettings.maxSamples = spatialSturctureArguments->maxSamples;
+            gFieldSettings.settings.spatialSubdivBuilderSettings.maxDepth   = spatialSturctureArguments->maxDepth;
+
+            PGLDQTFactoryArguments *directionalDistributionArguments = (PGLDQTFactoryArguments*)args.directionalDistributionArguments;
+            gFieldSettings.distributionFactorySettings.leafEstimator = (LeafEstimator)directionalDistributionArguments->leafEstimator;
+            gFieldSettings.distributionFactorySettings.splitMetric = (SplitMetric)directionalDistributionArguments->splitMetric;
+            gFieldSettings.distributionFactorySettings.splitThreshold = directionalDistributionArguments->splitThreshold;
+            gFieldSettings.distributionFactorySettings.footprintFactor = directionalDistributionArguments->footprintFactor;
+
+            gFieldSettings.useParallaxCompensation = false;
+            gField = new GuidingField(gFieldSettings);
+        }else {
             throw std::runtime_error("error: unrecognized field type");
         }
 
@@ -102,6 +128,13 @@ struct FieldFactory {
         {
             using DirectionalDistriubtionFactory = AdaptiveSplitAndMergeFactory<ParallaxAwareVonMisesFisherMixture<4, 32>>;
             using GuidingField = SurfaceVolumeField<DirectionalDistriubtionFactory, KDTreePartitionBuilder, VMMSurfaceSamplingDistribution<DirectionalDistriubtionFactory::Distribution>, VMMVolumeSamplingDistribution<DirectionalDistriubtionFactory::Distribution>>;
+
+            gField = (ISurfaceVolumeField *)new GuidingField();
+        } else if (spatialStructureType == PGL_SPATIAL_STRUCTURE_KDTREE &&
+                   directionalDistributionType == PGL_DIRECTIONAL_DISTRIBUTION_QUADTREE)
+        {
+            using DirectionalDistriubtionFactory = DirectionalQuadtreeFactory<DirectionalQuadtree<SphereToSquareCylindrical>>;
+            using GuidingField = SurfaceVolumeField<DirectionalDistriubtionFactory, KDTreePartitionBuilder, DQTSurfaceSamplingDistribution<DirectionalDistriubtionFactory::Distribution>, DQTVolumeSamplingDistribution<DirectionalDistriubtionFactory::Distribution>>;
 
             gField = (ISurfaceVolumeField *)new GuidingField();
         } else {
