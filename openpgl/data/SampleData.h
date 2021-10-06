@@ -28,12 +28,20 @@ namespace openpgl
         valid = valid && embree::isvalid(dsd.position.x);
         valid = valid && embree::isvalid(dsd.position.y);
         valid = valid && embree::isvalid(dsd.position.z);
+        OPENPGL_ASSERT(valid);
         valid = valid && embree::isvalid(dsd.direction.x);
         valid = valid && embree::isvalid(dsd.direction.y);
         valid = valid && embree::isvalid(dsd.direction.z);
+        OPENPGL_ASSERT(valid);
+        valid = valid && embree::isvalid(dsd.weight);
         valid = valid && dsd.weight >=0.f;
+        OPENPGL_ASSERT(valid);
+        valid = valid && embree::isvalid(dsd.pdf);
         valid = valid && dsd.pdf >0.f;
+        OPENPGL_ASSERT(valid);
+        valid = valid && embree::isvalid(dsd.distance);
         valid = valid && dsd.distance >0.f;
+        OPENPGL_ASSERT(valid);
         return valid;
     }
 

@@ -107,15 +107,19 @@ struct PathSegmentDataStorage
                 {
                     const openpgl::PathSegmentData &nextPathSegment = m_segmentStorage[j];
                     throughput = throughput * nextPathSegment.transmittanceWeight;
+                    OPENPGL_ASSERT(embree::isvalid(throughput));
+                    OPENPGL_ASSERT(throughput[0] >= 0.f && throughput[1] >= 0.f && throughput[2] >= 0.f)
                     openpgl::Vector3 clampedThroughput = embree::min(throughput, maxThroughput);
                     contribution += clampedThroughput * nextPathSegment.scatteredContribution;
                     OPENPGL_ASSERT(embree::isvalid(contribution));
+                    OPENPGL_ASSERT(contribution[0] >= 0.f && contribution[1] >= 0.f && contribution[2] >= 0.f);
                     if(j == i+1 && !useNEEMiWeights)
                     {
                         if(guideDirectLight)
                         {
                             contribution += clampedThroughput * nextPathSegment.directContribution;
                             OPENPGL_ASSERT(embree::isvalid(contribution));
+                            OPENPGL_ASSERT(contribution[0] >= 0.f && contribution[1] >= 0.f && contribution[2] >= 0.f);
                         }
                     }
                     else
@@ -124,19 +128,25 @@ struct PathSegmentDataStorage
                         {
                             contribution += clampedThroughput * nextPathSegment.miWeight * nextPathSegment.directContribution;
                             OPENPGL_ASSERT(embree::isvalid(contribution));
+                            OPENPGL_ASSERT(contribution[0] >= 0.f && contribution[1] >= 0.f && contribution[2] >= 0.f);
                         }
                     }
                     throughput = throughput * nextPathSegment.scatteringWeight;
                     throughput /= nextPathSegment.russianRouletteProbability;
+
+                    OPENPGL_ASSERT(embree::isvalid(throughput));
+                    OPENPGL_ASSERT(throughput[0] >= 0.f && throughput[1] >= 0.f && throughput[2] >= 0.f)
                 }
 
 				OPENPGL_ASSERT(embree::isvalid(contribution));
+                OPENPGL_ASSERT(contribution[0] >= 0.f && contribution[1] >= 0.f && contribution[2] >= 0.f);
                 if (contribution[0] > 0.0f || contribution[1] > 0.0f || contribution[2] > 0.0f )
                 {
 					OPENPGL_ASSERT(embree::isvalid(distance));
                     if(distance>0){
                         const float weight = OPENPGL_SPECTRUM_TO_FLOAT(contribution)/pdf;
                         OPENPGL_ASSERT(embree::isvalid(weight));
+                        OPENPGL_ASSERT(weight >= 0.f);
                         SampleData dsd;
                         dsd.position.x = pos[0];
                         dsd.position.y = pos[1];
@@ -177,6 +187,52 @@ struct PathSegmentDataStorage
         OPENPGL_ASSERT(sampleData.distance > 0);
         OPENPGL_ASSERT(embree::isvalid(sampleData.distance));
         m_sampleStorage.push_back(sampleData);
+    }
+
+    bool samplesValid() const
+    {
+        bool valid = true;
+        for ( int s = 0; s < m_sampleStorage.size(); s++)
+        {
+            SampleData sample = m_sampleStorage[s];
+            valid = valid && isValid(sample);
+            OPENPGL_ASSERT(valid);
+        }
+        return valid;
+    }
+
+    bool segmentsValid() const
+    {
+        bool valid = true;
+        for ( int s = 0; s < m_segmentStorage.size(); s++)
+        {
+            PathSegmentData psd = m_segmentStorage[s];
+            valid = valid && isValid(psd);
+            OPENPGL_ASSERT(valid);
+        }
+        return valid;
+    }
+
+    std::string toString() const
+    {
+        std::stringstream ss;
+        ss << "PathSegmentDataStorage:" << std::endl;
+        ss << "segment storage: size = "<< m_segmentStorage.size() << std::endl;
+        for ( int s = 0; s < m_segmentStorage.size(); s++)
+        {
+            PathSegmentData psd = m_segmentStorage[s];
+            ss << "seg[" << s << "]: " << psd.toString() ;
+            ss << std::endl;
+        }
+
+        for ( int s = 0; s < m_sampleStorage.size(); s++)
+        {
+            SampleData sample = m_sampleStorage[s];
+            ss << "sample[" << s << "]: " << isValid(sample) ;
+            ss << std::endl;
+        }
+
+        return ss.str();
     }
 
 private:

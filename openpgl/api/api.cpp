@@ -403,8 +403,22 @@ extern "C" OPENPGL_DLLEXPORT PGLPathSegment pglPathSegmentNextSegment(PGLPathSeg
 {
     auto *gPathSegmentStorage = (openpgl::PathSegmentDataStorage *)pathSegmentStorage;
     return (PGLPathSegment)gPathSegmentStorage->next();
+}
+
+extern "C" OPENPGL_DLLEXPORT bool pglPathSegmentStorageSamplesValid(PGLPathSegmentStorage pathSegmentStorage)
+{
+    auto *gPathSegmentStorage = (openpgl::PathSegmentDataStorage *)pathSegmentStorage;
+    return gPathSegmentStorage->samplesValid();
 
 }
+
+extern "C" OPENPGL_DLLEXPORT bool pglPathSegmentStorageSegmentsValid(PGLPathSegmentStorage pathSegmentStorage)
+{
+    auto *gPathSegmentStorage = (openpgl::PathSegmentDataStorage *)pathSegmentStorage;
+    return gPathSegmentStorage->segmentsValid();
+
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // PathSegment ////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////

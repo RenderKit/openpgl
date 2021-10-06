@@ -52,6 +52,10 @@ OPENPGL_CORE_INTERFACE void pglPathSegmentStorageAddSample(PGLPathSegmentStorage
 
 OPENPGL_CORE_INTERFACE PGLPathSegment pglPathSegmentNextSegment(PGLPathSegmentStorage pathSegmentStorage);
 
+OPENPGL_CORE_INTERFACE bool pglPathSegmentStorageSamplesValid(PGLPathSegmentStorage pathSegmentStorage);
+
+OPENPGL_CORE_INTERFACE bool  pglPathSegmentStorageSegmentsValid(PGLPathSegmentStorage pathSegmentStorage);
+
 //OPENPGL_CORE_INTERFACE void pglAddSamples(PGLSampleStorage sampleStorage, PGLSampleData* samples, size_t numSamples);
 
 OPENPGL_CORE_INTERFACE void pglPathSegmentSetPosition(PGLPathSegment pathSegmentStorage, pgl_point3f position);

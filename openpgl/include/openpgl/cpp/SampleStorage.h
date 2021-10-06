@@ -83,7 +83,7 @@ OPENPGL_INLINE SampleStorage::SampleStorage(const std::string& sampleStorageFile
 {
     m_sampleStorageHandle = pglNewSampleStorageFromFile(sampleStorageFileName.c_str());
     if (!m_sampleStorageHandle)
-        throw std::runtime_error("could not load field from file!");
+        throw std::runtime_error("could not load sample storage from file: " + sampleStorageFileName);
 }
 
 OPENPGL_INLINE SampleStorage::~SampleStorage()
