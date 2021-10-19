@@ -32,6 +32,7 @@ struct PGLVMMFactoryArguments
 {
     // weighted EM arguments
     size_t initK {PGL_VMM_MAX_COMPONENTS/2};
+    float initKappa {0.5f};
 
     size_t maxK {PGL_VMM_MAX_COMPONENTS};
     size_t maxEMIterrations {100};

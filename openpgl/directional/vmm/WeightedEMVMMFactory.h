@@ -29,6 +29,7 @@ struct WeightedEMVonMisesFisherFactory: public VonMisesFisherFactory< TVMMDistri
     struct Configuration
     {
         size_t initK {VMM::VectorSize};
+        float initKappa {5.0f};
 
         size_t maxK {VMM::MaxComponents};
         size_t maxEMIterrations {100};
@@ -241,7 +242,7 @@ void WeightedEMVonMisesFisherFactory< TVMMDistribution>::fitMixture(VMM &vmm, Su
 {
     const size_t numComponents = cfg.initK;
     //VonMisesFisherFactory< TVMMDistribution>::InitUniformVMM( vmm, numComponents, 5.0f);
-    this->InitUniformVMM( vmm, numComponents, 5.0f);
+    this->InitUniformVMM( vmm, numComponents, cfg.initKappa);
     //OPENPGL_ASSERT(vmm.isValid());
     //SufficientStatisitcs stats;
     stats.clear(numComponents);
@@ -371,6 +372,7 @@ template<class TVMMDistribution>
 void WeightedEMVonMisesFisherFactory< TVMMDistribution>::Configuration::serialize(std::ostream& stream) const
 {
     stream.write(reinterpret_cast<const char*>(&initK), sizeof(size_t));
+    stream.write(reinterpret_cast<const char*>(&initKappa), sizeof(float));
     stream.write(reinterpret_cast<const char*>(&maxK), sizeof(size_t));
     stream.write(reinterpret_cast<const char*>(&maxEMIterrations), sizeof(size_t));
 
@@ -388,6 +390,7 @@ template<class TVMMDistribution>
 void WeightedEMVonMisesFisherFactory< TVMMDistribution>::Configuration::deserialize(std::istream& stream)
 {
     stream.read(reinterpret_cast<char*>(&initK), sizeof(size_t));
+    stream.read(reinterpret_cast<char*>(&initKappa), sizeof(float));
     stream.read(reinterpret_cast<char*>(&maxK), sizeof(size_t));
     stream.read(reinterpret_cast<char*>(&maxEMIterrations), sizeof(size_t));
 
