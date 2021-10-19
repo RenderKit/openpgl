@@ -30,6 +30,7 @@ include(openpgl_macros)
 
 option(BUILD_PYTHON "Build python wrapper 'pyopenpgl'."  OFF)
 option(USE_OMP_THREADING "Use omp instead of tbb for threading." OFF)
+option(BUILD_STATIC "Build OpenPGL as static library." OFF)
 
 find_package(embree 3.6.1 REQUIRED)
 

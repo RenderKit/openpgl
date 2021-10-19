@@ -2,10 +2,18 @@
 ## SPDX-License-Identifier: Apache-2.0
 
 
+if(BUILD_STATIC)
+add_library(${PROJECT_NAME} STATIC
+  api/api.cpp
+  ../third-party/embreeSrc/common/simd/sse.cpp
+)
+else()
 add_library(${PROJECT_NAME} SHARED
   api/api.cpp
   ../third-party/embreeSrc/common/simd/sse.cpp
 )
+endif()
+
 
 target_compile_definitions(${PROJECT_NAME} PRIVATE OPENPGL_VERSION_MAJOR=${PROJECT_VERSION_MAJOR} OPENPGL_VERSION_MINOR=${PROJECT_VERSION_MINOR} OPENPGL_VERSION_PATCH=${PROJECT_VERSION_PATCH})
 target_compile_definitions(${PROJECT_NAME} PRIVATE OPENPGL_VERSION_STRING="${PROJECT_VERSION}")
@@ -15,8 +23,9 @@ if(WIN32)
   set(OPENPGL_RELEASE_OPTIONS ${OPENPGL_RELEASE_OPTIONS} -ftree-vectorize -mfpmath=sse -funsafe-math-optimizations -fno-rounding-math -fno-signaling-nans -fno-math-errno -fomit-frame-pointer )
 else()
   set(OPENPGL_RELEASE_OPTIONS -O3 -Wall -msse2 -msse4.1)
-  set(OPENPGL_RELEASE_OPTIONS ${OPENPGL_RELEASE_OPTIONS} -fno-strict-aliasing -Wno-padded -ftree-vectorize -mfpmath=sse -funsafe-math-optimizations -fno-rounding-math -fno-signaling-nans -fno-math-errno -fomit-frame-pointer )
-endif()
+  #set(OPENPGL_RELEASE_OPTIONS ${OPENPGL_RELEASE_OPTIONS} -fno-strict-aliasing -Wno-padded -ftree-vectorize -mfpmath=sse -funsafe-math-optimizations -fno-rounding-math -fno-signaling-nans -fno-math-errno -fomit-frame-pointer )
+  #set(OPENPGL_RELEASE_OPTIONS ${OPENPGL_RELEASE_OPTIONS} -fno-strict-aliasing -Wno-padded -ftree-vectorize -mfpmath=sse)
+  endif()
 
 
 if(USE_OMP_THREADING)
