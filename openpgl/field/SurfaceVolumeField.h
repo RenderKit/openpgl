@@ -83,14 +83,18 @@ public:
 
     void buildField(SampleContainer& samplesSurface, SampleContainer& samplesVolume) override
     {
-        m_surfaceField.buildField(samplesSurface);
-        m_volumeField.buildField(samplesVolume);
+        if(samplesSurface.size() > 0)
+            m_surfaceField.buildField(samplesSurface);
+        if(samplesVolume.size() > 0)
+            m_volumeField.buildField(samplesVolume);
     }
 
     void updateField(SampleContainer& samplesSurface, SampleContainer& samplesVolume) override
     {
-        m_surfaceField.updateField(samplesSurface);
-        m_volumeField.updateField(samplesVolume);
+        if(samplesSurface.size() > 0)
+            m_surfaceField.updateField(samplesSurface);
+        if(samplesVolume.size() > 0)
+            m_volumeField.updateField(samplesVolume);
     }
 
 
