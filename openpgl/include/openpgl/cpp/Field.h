@@ -92,6 +92,8 @@ struct Field
     /// Return the over all number of sample per pixel used across all trainin iterations.
     size_t GetTotalSPP() const;
 
+    bool IsValid() const;
+
     /**
      * @brief Returns the spatial surface Region containing the approximation of the local incident radiance distriubtion.
      *
@@ -166,6 +168,12 @@ OPENPGL_INLINE void Field::Update(const SampleStorage& sampleStorage, const size
 {
     OPENPGL_ASSERT(m_fieldHandle);
     pglFieldUpdate(m_fieldHandle, sampleStorage.m_sampleStorageHandle, numPerPixelSamples);
+}
+
+OPENPGL_INLINE bool Field::IsValid() const
+{
+    OPENPGL_ASSERT(m_fieldHandle);
+    return pglFieldIsValid(m_fieldHandle);
 }
 
 /*

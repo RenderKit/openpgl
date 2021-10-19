@@ -40,7 +40,7 @@ public:
         return new TSurfaceSamplingDistribution(m_surfaceField.getUseParallaxCompensation());
     }
 
-    bool initSurfaceSamplingDistribution(ISurfaceSamplingDistribution* surfaceSamplingDistribution, const Point3& position, const float sample1D, const bool useParrallaxComp) const override
+    bool initSurfaceSamplingDistribution(ISurfaceSamplingDistribution* surfaceSamplingDistribution, const Point3& position, float* sample1D, const bool useParrallaxComp) const override
     {
         TSurfaceSamplingDistribution* _surfaceSamplingDistribution = (TSurfaceSamplingDistribution*)surfaceSamplingDistribution;
         const RegionType* region = m_surfaceField.getRegion(position, sample1D);
@@ -59,7 +59,7 @@ public:
         return new TVolumeSamplingDistribution(m_volumeField.getUseParallaxCompensation());
     }
 
-    bool initVolumeSamplingDistribution(IVolumeSamplingDistribution* volumeSamplingDistribution, const Point3& position, const float sample1D, const bool useParrallaxComp) const override
+    bool initVolumeSamplingDistribution(IVolumeSamplingDistribution* volumeSamplingDistribution, const Point3& position, float* sample1D, const bool useParrallaxComp) const override
     {
         TVolumeSamplingDistribution* _volumeSamplingDistribution = (TVolumeSamplingDistribution*)volumeSamplingDistribution;
         const RegionType* region = m_volumeField.getRegion(position, sample1D);
@@ -134,6 +134,16 @@ public:
         is.read(reinterpret_cast<char*>(&m_totalSPP), sizeof(m_totalSPP));
         m_surfaceField.deserialize(is);
         m_volumeField.deserialize(is);
+    }
+
+    virtual bool isValid(const bool checkSurface, const bool checkVolume) const override
+    {
+        bool valid = true;
+        if(m_surfaceField.isInitialized())
+            valid = valid & m_surfaceField.isValid();
+        if(m_volumeField.isInitialized())
+            valid = valid & m_volumeField.isValid();
+        return valid;
     }
 
 private:

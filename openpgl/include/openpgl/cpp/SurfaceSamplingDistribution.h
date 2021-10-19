@@ -78,7 +78,7 @@ struct SurfaceSamplingDistribution
     //void Init(const Region& region, const pgl_point3f& pos, const bool useParallaxCompensation = true);
 
 
-    bool Init(const Field* field, const pgl_point3f& pos, const float sample1D, const bool useParallaxCompensation = true);
+    bool Init(const Field* field, const pgl_point3f& pos, float& sample1D, const bool useParallaxCompensation = true);
 
     /**
      * @brief Applies the product with the cosine to the sampling distriubtion.
@@ -164,11 +164,11 @@ void SurfaceSamplingDistribution::Init(const Region& region, const pgl_point3f& 
     pglSurfaceSamplingDistributionInit(m_surfaceSamplingDistributionHandle, region.m_regionHandle, pos, useParallaxCompensation);
 }
 */
-OPENPGL_INLINE bool SurfaceSamplingDistribution::Init(const Field* field, const pgl_point3f& pos, const float sample1D, const bool useParallaxCompensation)
+OPENPGL_INLINE bool SurfaceSamplingDistribution::Init(const Field* field, const pgl_point3f& pos, float& sample1D, const bool useParallaxCompensation)
 {
     OPENPGL_ASSERT(m_surfaceSamplingDistributionHandle);
     OPENPGL_ASSERT(field->m_fieldHandle);
-    return pglFieldInitSurfaceSamplingDistriubtion(field->m_fieldHandle, m_surfaceSamplingDistributionHandle, pos, sample1D, useParallaxCompensation);
+    return pglFieldInitSurfaceSamplingDistriubtion(field->m_fieldHandle, m_surfaceSamplingDistributionHandle, pos, &sample1D, useParallaxCompensation);
 }
 
 OPENPGL_INLINE void SurfaceSamplingDistribution::ApplyCosineProduct(const pgl_vec3f& normal)

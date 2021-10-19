@@ -78,7 +78,7 @@ public:
         m_isSceneBoundsSet = true;
     }
 
-    inline const RegionType *getRegion(const openpgl::Point3 &p, const float sample1D) const
+    inline const RegionType *getRegion(const openpgl::Point3 &p, float *sample1D) const
     {
         if (m_iteration >0 && embree::inside(m_spatialSubdiv.getBounds(), p))
         {
@@ -132,16 +132,19 @@ public:
 
     void updateField(SampleContainer& samples)
     {
-        //std::cout << "updateField: samplesSurface = " << samplesSurface.size() << "\t samplesVolume = " << samplesVolume.size() << std::endl;
-        if (m_deterministic)
+        if(samples.size() > 0)
         {
-            //std::cout << "SurfaceVolumeField::buildField(): deterministic = " << m_deterministic << std::endl;
-            std::sort(samples.begin(), samples.end(), SampleDataLess);
-            //std::sort(samplesVolume.begin(), samplesVolume.end(), SampleDataLess);
-        }
+            //std::cout << "updateField: samplesSurface = " << samplesSurface.size() << "\t samplesVolume = " << samplesVolume.size() << std::endl;
+            if (m_deterministic)
+            {
+                //std::cout << "SurfaceVolumeField::buildField(): deterministic = " << m_deterministic << std::endl;
+                std::sort(samples.begin(), samples.end(), SampleDataLess);
+                //std::sort(samplesVolume.begin(), samplesVolume.end(), SampleDataLess);
+            }
 
-        updateSpatialStructure(samples);
-        updateRegions(samples);
+            updateSpatialStructure(samples);
+            updateRegions(samples);
+        }
     }
 
 
@@ -181,6 +184,7 @@ public:
         os.write(reinterpret_cast<const char*>(&m_deterministic), sizeof(m_deterministic));
         os.write(reinterpret_cast<const char*>(&m_isSceneBoundsSet), sizeof(m_isSceneBoundsSet));
         os.write(reinterpret_cast<const char*>(&m_sceneBounds), sizeof(m_sceneBounds));
+        os.write(reinterpret_cast<const char*>(&m_initialized), sizeof(m_initialized));
 
         m_distributionFactorySettings.serialize(os);
         m_spatialSubdivBuilderSettings.serialize(os);
@@ -206,6 +210,7 @@ public:
         is.read(reinterpret_cast<char*>(&m_deterministic), sizeof(m_deterministic));
         is.read(reinterpret_cast<char*>(&m_isSceneBoundsSet), sizeof(m_isSceneBoundsSet));
         is.read(reinterpret_cast<char*>(&m_sceneBounds), sizeof(m_sceneBounds));
+        is.read(reinterpret_cast<char*>(&m_initialized), sizeof(m_initialized));
 
         m_distributionFactorySettings.deserialize(is);
         m_spatialSubdivBuilderSettings.deserialize(is);
@@ -224,24 +229,45 @@ public:
         m_regionKNNSearchTree.deserialize(is);
     }
 
+    bool isValid() const
+    {
+        bool valid = true;
+        size_t nGuidingRegions = m_regionStorageContainer.size();
+        for (int n = 0; n < nGuidingRegions; n++)
+        {
+            valid = valid & m_regionStorageContainer[n].first.isValid() & m_regionStorageContainer[n].first.valid;
+        }
+        return valid;
+    }
+
+    bool isInitialized() const
+    {
+        return m_initialized;
+    }
+
 private:
 
     void estimateSceneBounds(const SampleContainer& samples)
     {
         m_sceneBounds.lower = Vector3(std::numeric_limits<float>::max());
         m_sceneBounds.upper = Vector3(std::numeric_limits<float>::min());
+        m_isSceneBoundsSet = false;
 
-        // TODO parallize this part (also use some stats?)
-        for (const auto& sample : samples)
+        if(samples.size() > 0)
         {
-            m_sceneBounds.extend(Vector3(sample.position.x, sample.position.y, sample.position.z));
+            // TODO parallize this part (also use some stats?)
+            for (const auto& sample : samples)
+            {
+                m_sceneBounds.extend(Vector3(sample.position.x, sample.position.y, sample.position.z));
+            }
+            Vector3 center = m_sceneBounds.center();
+            m_sceneBounds.lower = center + 3.0f * (m_sceneBounds.lower - center); 
+            m_sceneBounds.upper = center + 3.0f * (m_sceneBounds.upper - center);
+            m_isSceneBoundsSet = true;
         }
-
-        m_sceneBounds.enlarge_by(3.0f);
-        m_isSceneBoundsSet = true;
     }
 
-    inline uint32_t getClosestRegionIdx(const KNearestRegionsSearchTree &knnTree, const openpgl::Point3 &p, float sample) const
+    inline uint32_t getClosestRegionIdx(const KNearestRegionsSearchTree &knnTree, const openpgl::Point3 &p, float *sample) const
     {
         OPENPGL_ASSERT(knnTree.isBuild());
         const uint32_t regionIdx = knnTree.sampleClosestRegionIdx(p, sample);
@@ -284,12 +310,12 @@ private:
             std::vector<openpgl::SampleData> dataPoints;
             for (auto i = regionStorage.second.m_begin; i < regionStorage.second.m_end; i++)
             {
-                auto &sample = samples[i];
+                auto sample = samples[i];
                 if(m_useParallaxCompensation)
                 {
                     reorientSample(sample, sampleMean);
                 }
-                OPENPGL_ASSERT(isValid(sample));
+                //OPENPGL_ASSERT(isValid(sample));
                 dataPoints.push_back(sample);
             }
             if (dataPoints.size() > 0)
@@ -311,6 +337,7 @@ private:
 #if !defined (OPENPGL_USE_OMP_THREADING)
         });
 #endif
+        m_initialized = true;
     }
 
     void updateRegions(SampleContainer& samples)
@@ -337,12 +364,13 @@ private:
             std::vector<openpgl::SampleData> dataPoints;
             for (auto i = regionStorage.second.m_begin; i < regionStorage.second.m_end; i++)
             {
-                auto &sample = samples[i];
+                auto sample = samples[i];
+                //OPENPGL_ASSERT(isValid(sample));
                 if(m_useParallaxCompensation)
                 {
                     reorientSample(sample, sampleMean);
                 }
-                OPENPGL_ASSERT(isValid(sample));
+                //OPENPGL_ASSERT(isValid(sample));
                 dataPoints.push_back(sample);
             }
             if (dataPoints.size() > 0)
@@ -394,7 +422,7 @@ private:
         regionBeforeUpdate.serialize(dumpStream);
         fbDump.close();
     }
-
+public:
     static void loadInvalidRegionData(const std::string &fileName, RegionType &regionBeforeUpdate, std::vector<SampleData> &samples, DirectionalDistributionFactorySettings &factorySettings)
     {
         std::filebuf fbDumpIn;
@@ -414,7 +442,7 @@ private:
         regionBeforeUpdate.deserialize(dumpIStream);
         fbDumpIn.close();
     }
-
+private:
     void reorientSample(openpgl::SampleData &sample, const openpgl::Point3 &pivotPoint) const
     {
 
@@ -463,6 +491,7 @@ private:
     bool m_isSceneBoundsSet{false};
     BBox m_sceneBounds;
 
+    bool m_initialized {false};
 
     DirectionalDistributionFactory m_distributionFactory;
     DirectionalDistributionFactorySettings m_distributionFactorySettings;

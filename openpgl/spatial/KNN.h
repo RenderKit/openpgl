@@ -114,7 +114,7 @@ struct KNearestRegionsSearchTree
         _isBuild = true;
     }
 
-    uint32_t sampleClosestRegionIdx(const openpgl::Point3 &p, float sample) const
+    uint32_t sampleClosestRegionIdx(const openpgl::Point3 &p, float* sample) const
     {
         embree::Vec3fa q = embree::Vec3fa(p[0], p[1], p[2]);
         KNNResult result(embree_points);
@@ -123,8 +123,10 @@ struct KNearestRegionsSearchTree
 
         if (!result.knn.empty())
         {
-
-            int randomNeighbor = (sample * NUM_KNN);
+            int randomNeighbor = (*sample * NUM_KNN);
+            const float sampleProb = 1.f / float(NUM_KNN);
+            *sample = (*sample - randomNeighbor * sampleProb) * embree::rcp(sampleProb);
+            OPENPGL_ASSERT(*sample >= 0.f && *sample < 1.0f);
             unsigned int primID;
             for (size_t k = 0; k <= randomNeighbor; k++)
             {

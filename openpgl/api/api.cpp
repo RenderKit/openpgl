@@ -172,7 +172,7 @@ extern "C" OPENPGL_DLLEXPORT  PGLSurfaceSamplingDistribution pglFieldNewSurfaceS
 }
 OPENPGL_CATCH_END(nullptr)
 
-extern "C" OPENPGL_DLLEXPORT  bool pglFieldInitSurfaceSamplingDistriubtion(PGLField field, PGLSurfaceSamplingDistribution surfaceSamplingDistriubtion, pgl_point3f position, const float sample1D, const bool useParallaxComp)
+extern "C" OPENPGL_DLLEXPORT  bool pglFieldInitSurfaceSamplingDistriubtion(PGLField field, PGLSurfaceSamplingDistribution surfaceSamplingDistriubtion, pgl_point3f position, float* sample1D, const bool useParallaxComp)
 {
     const openpgl::Point3 pos(position.x, position.y, position.z);
     auto *gField = (IGuidingField *)field;
@@ -187,7 +187,7 @@ extern "C" OPENPGL_DLLEXPORT  PGLVolumeSamplingDistribution pglFieldNewVolumeSam
 }
 OPENPGL_CATCH_END(nullptr)
 
-extern "C" OPENPGL_DLLEXPORT  bool pglFieldInitVolumeSamplingDistriubtion(PGLField field, PGLVolumeSamplingDistribution volumeSamplingDistriubtion, pgl_point3f position, const float sample1D, const bool useParallaxComp)
+extern "C" OPENPGL_DLLEXPORT  bool pglFieldInitVolumeSamplingDistriubtion(PGLField field, PGLVolumeSamplingDistribution volumeSamplingDistriubtion, pgl_point3f position, float* sample1D, const bool useParallaxComp)
 {
     const openpgl::Point3 pos(position.x, position.y, position.z);
     auto *gField = (IGuidingField *)field;
@@ -195,6 +195,11 @@ extern "C" OPENPGL_DLLEXPORT  bool pglFieldInitVolumeSamplingDistriubtion(PGLFie
     return gField->initVolumeSamplingDistribution(gVolumeSamplingDistribution, pos, sample1D, useParallaxComp);
 }
 
+extern "C" OPENPGL_DLLEXPORT  bool pglFieldIsValid(PGLField field)
+{
+    const auto *gField = (const IGuidingField *)field;
+    return gField->isValid(true, true);
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 // Region /////////////////////////////////////////////////////////////////////
