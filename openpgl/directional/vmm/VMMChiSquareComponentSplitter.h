@@ -533,6 +533,7 @@ bool VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::SplitComponent(VMM &
     float numAssignedSamples = splitStats.sumAssignedSamples[tmpK.quot][tmpK.rem];
 
     float inv_sumWeights = embree::rcp(splitStats.sumWeights[tmpK.quot][tmpK.rem]);
+    OPENPGL_ASSERT(embree::isvalid(inv_sumWeights));
     splitInfo.mean = Vector2(splitStats.splitMeans[tmpK.quot].x[tmpK.rem], splitStats.splitMeans[tmpK.quot].y[tmpK.rem]);
 
     splitInfo.covariance.x = splitStats.splitWeightedSampleCovariances[tmpK.quot].x[tmpK.rem] * inv_sumWeights;
@@ -590,7 +591,14 @@ bool VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::SplitComponent(VMM &
     {
         Vector2 meanDir2D0 = splitInfo.mean + (splitInfo.eigenVector0 * splitInfo.eigenValue0 * 0.5f);
         meanDirection0 =  embree::frame(meanDirection) * Map2DTo3D<Vector3, Vector2, float>(meanDir2D0);
-        newMeanCosine0 = meanCosine / dot(meanDirection, meanDirection0);
+        newMeanCosine0 = meanCosine / std::abs(dot(meanDirection, meanDirection0));
+        
+        //TODO: further investigate:
+        //newMeanCosine0 = meanCosine / dot(meanDirection, meanDirection0);
+        
+        OPENPGL_ASSERT(meanCosine >= 0.f);
+        OPENPGL_ASSERT(std::abs(dot(meanDirection, meanDirection0)) > 0.f);
+        OPENPGL_ASSERT(newMeanCosine0 >= 0.f);
         // ensure that the new mean cosine is in a valid range (i.e., < 1.0 and < the mean cosine of max kappa)
         newMeanCosine0 = std::min(newMeanCosine0, KappaToMeanCosine<float>(OPENPGL_MAX_KAPPA));
         newMeanCosine1 = newMeanCosine0;
@@ -983,7 +991,7 @@ void VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::ComponentSplitStatis
     Vector2 meanDirection2DItoK = Map3DTo2D<Vector3, Vector2, float> (inv_transformK * meanDirectionI3D);
     Vector2 meanDirection2DJtoK = Map3DTo2D<Vector3, Vector2, float> (inv_transformK * meanDirectionJ3D);
 
-    const float inv_weightK = embree::rcp(weightK);
+    const float inv_weightK = (weightK > 0.f) ? embree::rcp(weightK) : 1.f;
 
     const float sumWeightsI = sumWeights[tmpI.quot][tmpI.rem];
     const float sumWeightsJ = sumWeights[tmpJ.quot][tmpJ.rem];
@@ -993,8 +1001,8 @@ void VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::ComponentSplitStatis
     //std::cout << "\tnumSamplesI: " << numSamples[tmpI.quot][tmpI.rem] << "\tsumWeightsJ: " << numSamples[tmpJ.quot][tmpJ.rem] << std::endl;
 
 
-    const Vector3 covarianceI = Vector3(splitWeightedSampleCovariances[tmpI.quot].x[tmpI.rem], splitWeightedSampleCovariances[tmpI.quot].y[tmpI.rem], splitWeightedSampleCovariances[tmpI.quot].z[tmpI.rem]) * embree::rcp(sumWeightsI);
-    const Vector3 covarianceJ = Vector3(splitWeightedSampleCovariances[tmpJ.quot].x[tmpJ.rem], splitWeightedSampleCovariances[tmpJ.quot].y[tmpJ.rem], splitWeightedSampleCovariances[tmpJ.quot].z[tmpJ.rem]) * embree::rcp(sumWeightsJ);
+    const Vector3 covarianceI = (sumWeightsI > 0.f) ? Vector3(splitWeightedSampleCovariances[tmpI.quot].x[tmpI.rem], splitWeightedSampleCovariances[tmpI.quot].y[tmpI.rem], splitWeightedSampleCovariances[tmpI.quot].z[tmpI.rem]) * embree::rcp(sumWeightsI) : Vector3(0.f);
+    const Vector3 covarianceJ = (sumWeightsJ > 0.f) ? Vector3(splitWeightedSampleCovariances[tmpJ.quot].x[tmpJ.rem], splitWeightedSampleCovariances[tmpJ.quot].y[tmpJ.rem], splitWeightedSampleCovariances[tmpJ.quot].z[tmpJ.rem]) * embree::rcp(sumWeightsJ) : Vector3(0.f);
 
 #ifdef OPENPGL_ZERO_MEAN
     const Vector2 meanDirectionK2D(0.f);
@@ -1010,6 +1018,9 @@ void VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::ComponentSplitStatis
     covarianceK -= meanKK;
 #endif
     const Vector3 sampleCovarianceK = covarianceK * sumWeightsK;
+    OPENPGL_ASSERT(embree::isvalid(sampleCovarianceK.x));
+    OPENPGL_ASSERT(embree::isvalid(sampleCovarianceK.y));
+    OPENPGL_ASSERT(embree::isvalid(sampleCovarianceK.z));
 
     // merge additional stats
     const float sumAssignedSamplesK = sumAssignedSamples[tmpI.quot][tmpI.rem] + sumAssignedSamples[tmpJ.quot][tmpJ.rem];

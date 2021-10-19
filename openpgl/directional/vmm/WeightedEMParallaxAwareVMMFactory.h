@@ -126,6 +126,7 @@ void WeightedEMParallaxAwareVonMisesFisherFactory< TVMMDistribution>::Sufficient
 
         suffDirections /= embree::length(suffDirections);
         suffDirections *= suffMeanCosines;
+        suffDirections = select(suffMeanCosines > 0.0f, suffDirections, wEMSufficientStatisitcs.sumOfWeightedDirections[k]);
         wEMSufficientStatisitcs.sumOfWeightedDirections[k] = select(vmm._distances[k] > 0.0f, suffDirections, wEMSufficientStatisitcs.sumOfWeightedDirections[k]);
     }
 }
