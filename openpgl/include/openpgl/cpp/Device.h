@@ -34,10 +34,7 @@ struct Device
 
     Device(const Device&) = delete;
 
-    Field NewField(PGLFieldArguments &args) const;
-
-    Field NewFieldFromFile(const std::string& fieldFileName) const;
-
+    friend class Field;
     private:
         PGLDevice m_deviceHandle {nullptr};
 };
@@ -52,22 +49,6 @@ OPENPGL_INLINE Device::~Device()
     OPENPGL_ASSERT(m_deviceHandle);
     pglReleaseDevice(m_deviceHandle);
     m_deviceHandle = nullptr;
-}
-
-OPENPGL_INLINE Field Device::NewField(PGLFieldArguments &args) const
-{
-    OPENPGL_ASSERT(m_deviceHandle);
-    auto fieldHandle = pglDeviceNewField(m_deviceHandle, args);
-    return {fieldHandle};
-}
-
-OPENPGL_INLINE Field Device::NewFieldFromFile(const std::string& fieldFileName) const
-{
-    OPENPGL_ASSERT(m_deviceHandle);
-    auto fieldHandle = pglDeviceNewFieldFromFile(m_deviceHandle, fieldFileName.c_str());
-    if (!fieldHandle)
-        throw std::runtime_error("could not load field from file!");
-    return {fieldHandle};
 }
 
 } // api

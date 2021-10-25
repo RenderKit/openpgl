@@ -6,6 +6,7 @@
 #include "../openpgl.h"
 
 #include "Region.h"
+#include "Device.h"
 #include "Sampler.h"
 #include "SampleStorage.h"
 
@@ -41,14 +42,14 @@ struct Field
      *
      * @param args
      */
-    Field(PGLFieldArguments args);
+    Field(Device *device, PGLFieldArguments args);
 
     /**
      * @brief Construct a new Field object from its serialized representation
      *
      * @param fieldFileName path to serialized representation
      */
-	Field(const std::string& fieldFileName);
+	Field(Device *device, const std::string& fieldFileName);
 
     ~Field();
 
@@ -112,17 +113,27 @@ struct Field
      */
     //Region GetVolumeRegion(pgl_point3f position, Sampler* sampler);
 
-    friend class Device;
     friend class SurfaceSamplingDistribution;
     friend class VolumeSamplingDistribution;
     private:
-        Field::Field(PGLField fieldHandle) {
-            OPENPGL_ASSERT(m_fieldHandle);
-            m_fieldHandle = fieldHandle;
-        }
-
         PGLField m_fieldHandle {nullptr};
 };
+
+Field::Field(Device *device, PGLFieldArguments args)
+{
+    OPENPGL_ASSERT(device);
+    OPENPGL_ASSERT(device->m_deviceHandle);
+    m_fieldHandle = pglDeviceNewField(device->m_deviceHandle, args);
+}
+
+Field::Field(Device *device, const std::string& fieldFileName)
+{
+    OPENPGL_ASSERT(device);
+    OPENPGL_ASSERT(device->m_deviceHandle);
+    m_fieldHandle = pglDeviceNewFieldFromFile(device->m_deviceHandle, fieldFileName.c_str());
+    if (!m_fieldHandle)
+        throw std::runtime_error("could not load field from file!");
+}
 
 OPENPGL_INLINE Field::~Field()
 {
