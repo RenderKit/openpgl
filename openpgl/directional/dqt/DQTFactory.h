@@ -54,7 +54,7 @@ public:
         // A footprint of 0 denotes that all radiance is accumulated into the single leaf in which the sample falls.
         float footprintFactor = 0;
 
-        uint32_t maxLevels = 10;
+        uint32_t maxLevels = 12;
 
         void serialize(std::ostream& stream) const {
             stream.write(reinterpret_cast<const char*>(this), sizeof(*this));
