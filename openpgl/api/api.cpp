@@ -6,7 +6,7 @@
 
 #include "openpgl_common.h"
 
-#include "field/FieldFactory.h"
+#include "field/Device.h"
 #include "field/ISurfaceVolumeField.h"
 #include "directional/ISurfaceSamplingDistribution.h"
 #include "directional/IVolumeSamplingDistribution.h"
@@ -61,16 +61,39 @@ typedef ISurfaceVolumeField IGuidingField;
 
 #define OPENPGL_FIELD_STRING "OPENPGL_" OPENPGL_VERSION_STRING "_FIELD"
 
-extern "C" OPENPGL_DLLEXPORT PGLField pglNewField(PGLFieldArguments args)OPENPGL_CATCH_BEGIN
+extern "C" OPENPGL_DLLEXPORT PGLDevice pglNewDevice(PGLVectorSize vectorSize)OPENPGL_CATCH_BEGIN
 {
-    return (PGLField) FieldFactory::newField(args);
+    if (vectorSize == PGLVectorSize::VECTOR_SIZE_4)
+        return (PGLDevice) newDevice4();
+    else if (vectorSize == PGLVectorSize::VECTOR_SIZE_8)
+        return (PGLDevice) newDevice8();
+    else if (vectorSize == PGLVectorSize::VECTOR_SIZE_16)
+        return (PGLDevice) newDevice16();
+    else
+        throw std::runtime_error("invalid vectorSize parameter!");
 }
 OPENPGL_CATCH_END(nullptr)
 
-extern "C" OPENPGL_DLLEXPORT PGLField pglNewFieldFromFile(const char* fieldFileName)OPENPGL_CATCH_BEGIN
+extern "C" OPENPGL_DLLEXPORT void pglReleaseDevice(PGLDevice device)
 {
+    auto *gDevice = (IDevice *)device;
+    delete gDevice;
+}
+
+extern "C" OPENPGL_DLLEXPORT PGLField pglDeviceNewField(PGLDevice device, PGLFieldArguments args)OPENPGL_CATCH_BEGIN
+{
+    THROW_IF_NULL_OBJECT(device);
+    auto *gDevice = (IDevice *)device;
+    return (PGLField) gDevice->newField(args);
+}
+OPENPGL_CATCH_END(nullptr)
+
+extern "C" OPENPGL_DLLEXPORT PGLField pglDeviceNewFieldFromFile(PGLDevice device, const char* fieldFileName)OPENPGL_CATCH_BEGIN
+{
+    THROW_IF_NULL_OBJECT(device);
     THROW_IF_NULL_STRING(fieldFileName);
-    return (PGLField)FieldFactory::newFieldFromFile(fieldFileName);
+    auto *gDevice = (IDevice *)device;
+    return (PGLField) gDevice->newFieldFromFile(fieldFileName);
 }
 OPENPGL_CATCH_END(nullptr)
 
@@ -85,7 +108,7 @@ extern "C" OPENPGL_DLLEXPORT bool pglFieldStoreToFile(PGLField field, const char
 {
     THROW_IF_NULL_OBJECT(field);
     THROW_IF_NULL_STRING(fieldFileName);
-    FieldFactory::storeFieldToFile((IGuidingField *)field, fieldFileName);
+    ((IGuidingField *)field)->storeToFile(fieldFileName);
     return true;
 }
 OPENPGL_CATCH_END(false)

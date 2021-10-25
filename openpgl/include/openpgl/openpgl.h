@@ -21,6 +21,7 @@
 #include "region.h"
 #include "samplestorage.h"
 #include "pathsegmentstorage.h"
+#include "device.h"
 #include "field.h"
 #include "surfacesamplingdistribution.h"
 #include "volumesamplingdistribution.h"

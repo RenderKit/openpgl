@@ -112,26 +112,17 @@ struct Field
      */
     //Region GetVolumeRegion(pgl_point3f position, Sampler* sampler);
 
-
-
-
+    friend class Device;
     friend class SurfaceSamplingDistribution;
     friend class VolumeSamplingDistribution;
     private:
+        Field::Field(PGLField fieldHandle) {
+            OPENPGL_ASSERT(m_fieldHandle);
+            m_fieldHandle = fieldHandle;
+        }
+
         PGLField m_fieldHandle {nullptr};
 };
-
-OPENPGL_INLINE Field::Field(PGLFieldArguments args)
-{
-    m_fieldHandle = pglNewField(args);
-}
-
-OPENPGL_INLINE Field::Field(const std::string& fieldFileName)
-{
-    m_fieldHandle = pglNewFieldFromFile(fieldFileName.c_str());
-    if (!m_fieldHandle)
-        throw std::runtime_error("could not load field from file!");
-}
 
 OPENPGL_INLINE Field::~Field()
 {

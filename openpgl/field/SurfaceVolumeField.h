@@ -6,6 +6,8 @@
 #include "ISurfaceVolumeField.h"
 #include "Field.h"
 
+#define FIELD_FILE_HEADER_STRING "OPENPGL_" OPENPGL_VERSION_STRING "_FIELD"
+
 namespace openpgl
 {
 
@@ -148,6 +150,25 @@ public:
         if(m_volumeField.isInitialized())
             valid = valid & m_volumeField.isValid();
         return valid;
+    }
+
+    void storeToFile(const std::string fieldFileName) const override {
+        std::filebuf fb;
+        fb.open (fieldFileName, std::ios::out | std::ios::binary);
+        if (!fb.is_open()) throw std::runtime_error("error: couldn't open file!");
+        std::ostream os(&fb);
+
+        os.write(FIELD_FILE_HEADER_STRING, strlen(FIELD_FILE_HEADER_STRING) + 1);
+
+        auto spatialStructureType = FieldType::SpatialStructureBuilder::SPATIAL_STRUCTURE_TYPE;
+        os.write(reinterpret_cast<const char*>(&spatialStructureType), sizeof(spatialStructureType));
+        auto directionalDistributionType = FieldType::DirectionalDistributionFactory::DIRECTIONAL_DISTRIBUTION_TYPE;
+        os.write(reinterpret_cast<const char*>(&directionalDistributionType), sizeof(directionalDistributionType));
+
+        serialize(os);
+
+        os.flush();
+        fb.close();
     }
 
 private:

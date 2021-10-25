@@ -4,6 +4,8 @@
 #pragma once
 
 #include "../openpgl_common.h"
+#include "data/SampleData.h"
+
 namespace openpgl
 {
     

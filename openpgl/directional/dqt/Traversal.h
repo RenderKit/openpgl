@@ -7,7 +7,7 @@
 
 namespace openpgl {
 
-bool rescale(float thresh, float &random) {
+static bool rescale(float thresh, float &random) {
     OPENPGL_ASSERT(0 <= thresh && thresh <= 1 && 0 <= random && random <= 1);
 
     if (random < thresh) {
@@ -20,7 +20,7 @@ bool rescale(float thresh, float &random) {
     }
 }
 
-uint32_t rescaleChild(Vector2 &point) {
+static uint32_t rescaleChild(Vector2 &point) {
     OPENPGL_ASSERT(0 <= point.x && point.x <= 1 && 0 <= point.y && point.y <= 1);
 
     uint32_t offset = 0;

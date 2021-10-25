@@ -20,6 +20,13 @@ extern "C" {
 
 #include "types.h"
 
+enum PGLVectorSize
+{
+    VECTOR_SIZE_4,
+    VECTOR_SIZE_8,
+    VECTOR_SIZE_16
+};
+
 struct PGLKDTreeArguments
 {
     bool knnLookup {true};

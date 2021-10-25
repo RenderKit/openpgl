@@ -19,22 +19,26 @@
 
 #include "spatial/kdtree/KDTreeBuilder.h"
 
-
-#define FIELD_FILE_HEADER_STRING "OPENPGL_" OPENPGL_VERSION_STRING "_FIELD"
-
 namespace openpgl {
 
-struct FieldFactory {
-    static ISurfaceVolumeField* newField(PGLFieldArguments args) {
+struct IDevice {
+    virtual ~IDevice() {};
+    virtual ISurfaceVolumeField* newField(PGLFieldArguments args) const = 0;
+    virtual ISurfaceVolumeField* newFieldFromFile(const std::string fieldFileName) const = 0;
+};
+
+template<int VecSize>
+struct Device: public IDevice {
+    ISurfaceVolumeField* newField(PGLFieldArguments args) const override {
         ISurfaceVolumeField* gField;
 
         if (args.spatialStructureType == PGL_SPATIAL_STRUCTURE_KDTREE &&
             args.directionalDistributionType ==  PGL_DIRECTIONAL_DISTRIBUTION_PARALLAX_AWARE_VMM )
         {
-            using DirectionalDistriubtionFactory = AdaptiveSplitAndMergeFactory<ParallaxAwareVonMisesFisherMixture<4, 32>>;
-            using GuidingField = SurfaceVolumeField<DirectionalDistriubtionFactory, KDTreePartitionBuilder, VMMSurfaceSamplingDistribution<DirectionalDistriubtionFactory::Distribution>, VMMVolumeSamplingDistribution<DirectionalDistriubtionFactory::Distribution>>;
+            using DirectionalDistriubtionFactory = AdaptiveSplitAndMergeFactory<ParallaxAwareVonMisesFisherMixture<VecSize, 32>>;
+            using GuidingField = SurfaceVolumeField<DirectionalDistriubtionFactory, KDTreePartitionBuilder, VMMSurfaceSamplingDistribution<typename DirectionalDistriubtionFactory::Distribution>, VMMVolumeSamplingDistribution<typename DirectionalDistriubtionFactory::Distribution>>;
 
-            GuidingField::Settings gFieldSettings;
+            typename GuidingField::Settings gFieldSettings;
             gFieldSettings.settings.decayOnSpatialSplit   = 0.25f;
             gFieldSettings.settings.deterministic         = false;
 
@@ -102,7 +106,7 @@ struct FieldFactory {
         return gField;
     }
 
-    static ISurfaceVolumeField* newFieldFromFile(const std::string fieldFileName) {
+    ISurfaceVolumeField* newFieldFromFile(const std::string fieldFileName) const override {
         std::filebuf fb;
         fb.open (fieldFileName, std::ios::in | std::ios::binary);
         if (!fb.is_open()) throw std::runtime_error("error: couldn't open file");
@@ -128,8 +132,8 @@ struct FieldFactory {
 
         if (spatialStructureType == PGL_SPATIAL_STRUCTURE_KDTREE && directionalDistributionType == PGL_DIRECTIONAL_DISTRIBUTION_PARALLAX_AWARE_VMM)
         {
-            using DirectionalDistriubtionFactory = AdaptiveSplitAndMergeFactory<ParallaxAwareVonMisesFisherMixture<4, 32>>;
-            using GuidingField = SurfaceVolumeField<DirectionalDistriubtionFactory, KDTreePartitionBuilder, VMMSurfaceSamplingDistribution<DirectionalDistriubtionFactory::Distribution>, VMMVolumeSamplingDistribution<DirectionalDistriubtionFactory::Distribution>>;
+            using DirectionalDistriubtionFactory = AdaptiveSplitAndMergeFactory<ParallaxAwareVonMisesFisherMixture<VecSize, 32>>;
+            using GuidingField = SurfaceVolumeField<DirectionalDistriubtionFactory, KDTreePartitionBuilder, VMMSurfaceSamplingDistribution<typename DirectionalDistriubtionFactory::Distribution>, VMMVolumeSamplingDistribution<typename DirectionalDistriubtionFactory::Distribution>>;
 
             gField = (ISurfaceVolumeField *)new GuidingField();
         } else if (spatialStructureType == PGL_SPATIAL_STRUCTURE_KDTREE &&
@@ -150,26 +154,11 @@ struct FieldFactory {
 
         return gField;
     }
-
-    static void storeFieldToFile(ISurfaceVolumeField* gField, const std::string fieldFileName) {
-        std::filebuf fb;
-        fb.open (fieldFileName, std::ios::out | std::ios::binary);
-        if (!fb.is_open()) throw std::runtime_error("error: couldn't open file!");
-        std::ostream os(&fb);
-
-        os.write(FIELD_FILE_HEADER_STRING, strlen(FIELD_FILE_HEADER_STRING) + 1);
-
-        auto spatialStructureType = gField->getSpatialStructureType();
-        os.write(reinterpret_cast<const char*>(&spatialStructureType), sizeof(spatialStructureType));
-        auto directionalDistributionType = gField->getDirectionalDistributionType();
-        os.write(reinterpret_cast<const char*>(&directionalDistributionType), sizeof(directionalDistributionType));
-
-        gField->serialize(os);
-
-        os.flush();
-        fb.close();
-    }
 };
+
+IDevice* newDevice4();
+IDevice* newDevice8();
+IDevice* newDevice16();
 
 }
 

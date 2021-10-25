@@ -44,14 +44,4 @@ protected:
     const IRegion* m_region {nullptr};
 };
 
-const IRegion* ISurfaceSamplingDistribution::getRegion() const
-{
-    return m_region;
-}
-
-void ISurfaceSamplingDistribution::setRegion(const IRegion* region)
-{
-    m_region = region;
-}
-
 }

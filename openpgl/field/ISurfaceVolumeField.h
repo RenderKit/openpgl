@@ -46,5 +46,7 @@ struct ISurfaceVolumeField
     virtual void deserialize(std::istream &is) = 0;
 
     virtual bool isValid(const bool checkSurface, const bool checkVolume) const = 0;
+
+    virtual void storeToFile(const std::string fieldFileName) const = 0;
 };
 }
