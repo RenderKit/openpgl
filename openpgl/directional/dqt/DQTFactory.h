@@ -54,6 +54,8 @@ public:
         // A footprint of 0 denotes that all radiance is accumulated into the single leaf in which the sample falls.
         float footprintFactor = 0;
 
+        uint32_t maxLevels = 10;
+
         void serialize(std::ostream& stream) const {
             stream.write(reinterpret_cast<const char*>(this), sizeof(*this));
         };
@@ -266,22 +268,22 @@ private:
         }
     }
 
-    void buildRecursive(Context &ctx, std::vector<StatsNode> &old_nodes, Rect<float> rect, uint32_t i, uint32_t j) {
+    void buildRecursive(Context &ctx, std::vector<StatsNode> &old_nodes, Rect<float> rect, uint32_t i, uint32_t j, uint32_t level = 0) {
         StatsNode &old_node = old_nodes[i];
         ctx.stats->nodes[j] = old_node;
-        if (old_node.splitWeight > (ctx.cfg->splitThreshold * old_nodes[0].splitWeight)) {
+        if (level < ctx.cfg->maxLevels && old_node.splitWeight > (ctx.cfg->splitThreshold * old_nodes[0].splitWeight)) {
             ctx.stats->nodes[j].offsetChildren = ctx.stats->nodes.size();
             for (uint32_t c = 0; c < 4; c++) ctx.stats->nodes.emplace_back();
             if (old_node.offsetChildren > 0) {
                 for (uint32_t c = 0; c < 4; c++)
-                    buildRecursive(ctx, old_nodes, rect.child(c), old_node.offsetChildren + c, ctx.stats->nodes[j].offsetChildren + c);
+                    buildRecursive(ctx, old_nodes, rect.child(c), old_node.offsetChildren + c, ctx.stats->nodes[j].offsetChildren + c, level + 1);
             }
             else {
                 // If we have encountered a leaf node that we want to split,
                 // we continue with buildSplit to potentially further split the node
                 ctx.fitStats->numSplits++;
                 for (uint32_t c = 0; c < 4; c++)
-                    buildSplit(ctx, rect.child(c), j, ctx.stats->nodes[j].offsetChildren + c);
+                    buildSplit(ctx, rect.child(c), j, ctx.stats->nodes[j].offsetChildren + c, level + 1);
             }
         } else {
             ctx.stats->nodes[j].offsetChildren = 0;
@@ -296,7 +298,7 @@ private:
         }
     }
 
-    void buildSplit(Context &ctx, Rect<float> rect, uint32_t p, uint32_t i) {
+    void buildSplit(Context &ctx, Rect<float> rect, uint32_t p, uint32_t i, uint32_t level) {
         const auto &parent = ctx.stats->nodes[p];
         auto &node = ctx.stats->nodes[i];
 
@@ -309,13 +311,13 @@ private:
 
         return; // TODO splitting further seems to lead to overfitting
 
-        if (node.splitWeight > (ctx.cfg->splitThreshold * ctx.stats->nodes[0].splitWeight)) {
+        if (level < ctx.cfg->maxLevels && node.splitWeight > (ctx.cfg->splitThreshold * ctx.stats->nodes[0].splitWeight)) {
             ctx.fitStats->numSplits++;
             uint32_t offsetChildren = ctx.stats->nodes.size();
             node.offsetChildren = offsetChildren;
             for (uint32_t c = 0; c < 4; c++) ctx.stats->nodes.emplace_back();
             for (uint32_t c = 0; c < 4; c++)
-                buildSplit(ctx, rect.child(c), i, offsetChildren + c);
+                buildSplit(ctx, rect.child(c), i, offsetChildren + c, level + 1);
         }
     }
 };

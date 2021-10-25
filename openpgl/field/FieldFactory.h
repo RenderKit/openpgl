@@ -90,6 +90,7 @@ struct FieldFactory {
             gFieldSettings.distributionFactorySettings.splitMetric = (SplitMetric)directionalDistributionArguments->splitMetric;
             gFieldSettings.distributionFactorySettings.splitThreshold = directionalDistributionArguments->splitThreshold;
             gFieldSettings.distributionFactorySettings.footprintFactor = directionalDistributionArguments->footprintFactor;
+            gFieldSettings.distributionFactorySettings.maxLevels = directionalDistributionArguments->maxLevels;
 
             gFieldSettings.useParallaxCompensation = false;
             gField = new GuidingField(gFieldSettings);

@@ -80,6 +80,7 @@ struct PGLDQTFactoryArguments
     PGLDQTSplitMetric splitMetric { PGLDQTSplitMetric::MEAN };
     float splitThreshold { 0.01 };
     float footprintFactor { 1 };
+    uint32_t maxLevels = 10;
 };
 
 struct PGLFieldArguments
