@@ -19,7 +19,7 @@ typedef ManagedObject Device;
 
 typedef Device *PGLDevice;
 
-OPENPGL_CORE_INTERFACE PGLDevice pglNewDevice(PGLVectorSize vectorSize);
+OPENPGL_CORE_INTERFACE PGLDevice pglNewDevice(PGL_DEVICE_TYPE deviceType);
 
 OPENPGL_CORE_INTERFACE PGLField pglDeviceNewField(PGLDevice device, PGLFieldArguments args);
 

@@ -20,11 +20,11 @@ extern "C" {
 
 #include "types.h"
 
-enum PGLVectorSize
+enum PGL_DEVICE_TYPE
 {
-    VECTOR_SIZE_4,
-    VECTOR_SIZE_8,
-    VECTOR_SIZE_16
+    PGL_DEVICE_TYPE_CPU_4,
+    PGL_DEVICE_TYPE_CPU_8,
+    PGL_DEVICE_TYPE_CPU_16,
 };
 
 struct PGLKDTreeArguments

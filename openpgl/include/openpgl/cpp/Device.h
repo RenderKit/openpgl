@@ -19,8 +19,6 @@ namespace cpp
  * @brief
  *
  */
-using VectorSize = PGLVectorSize;
-
 struct Device
 {
     /**
@@ -28,7 +26,7 @@ struct Device
      *
      * @param args
      */
-    Device(VectorSize vectorSize);
+    Device(PGL_DEVICE_TYPE deviceType);
 
     ~Device();
 
@@ -39,9 +37,9 @@ struct Device
         PGLDevice m_deviceHandle {nullptr};
 };
 
-OPENPGL_INLINE Device::Device(VectorSize vectorSize)
+OPENPGL_INLINE Device::Device(PGL_DEVICE_TYPE deviceType)
 {
-    m_deviceHandle = pglNewDevice(vectorSize);
+    m_deviceHandle = pglNewDevice(deviceType);
 }
 
 OPENPGL_INLINE Device::~Device()
