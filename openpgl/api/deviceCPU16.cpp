@@ -1,8 +1,8 @@
-#include "field/Device.h"
+#include "device/Device.h"
 
 namespace openpgl {
 
-IDevice* newDevice16() {
+IDevice* newDeviceCPU16() {
     return (IDevice*) new Device<16>();
 }
 

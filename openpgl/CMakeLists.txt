@@ -10,9 +10,9 @@ add_library(${PROJECT_NAME} STATIC
 else()
 add_library(${PROJECT_NAME} SHARED
   api/api.cpp
-  api/device4.cpp
-  api/device8.cpp
-  api/device16.cpp
+  api/deviceCPU4.cpp
+  api/deviceCPU8.cpp
+  api/deviceCPU16.cpp
   directional/ISurfaceSamplingDistribution.cpp
   directional/IVolumeSamplingDistribution.cpp
   ../third-party/embreeSrc/common/simd/sse.cpp
@@ -23,9 +23,9 @@ endif()
 target_compile_definitions(${PROJECT_NAME} PRIVATE OPENPGL_VERSION_MAJOR=${PROJECT_VERSION_MAJOR} OPENPGL_VERSION_MINOR=${PROJECT_VERSION_MINOR} OPENPGL_VERSION_PATCH=${PROJECT_VERSION_PATCH})
 target_compile_definitions(${PROJECT_NAME} PRIVATE OPENPGL_VERSION_STRING="${PROJECT_VERSION}")
 
-set_source_files_properties(api/device4.cpp PROPERTIES COMPILE_FLAGS "-msse2 -msse4.1")
-set_source_files_properties(api/device8.cpp PROPERTIES COMPILE_FLAGS "-msse2 -msse4.1 -mf16c -mavx2 -mfma -mlzcnt -mbmi -mbmi2")
-set_source_files_properties(api/device16.cpp PROPERTIES COMPILE_FLAGS "-msse2 -msse4.1 -mavx512f -mavx512dq -mavx512cd -mavx512bw -mavx512vl -mf16c -mavx2 -mfma -mlzcnt -mbmi -mbmi2 -mprefer-vector-width=256")
+set_source_files_properties(api/deviceCPU4.cpp PROPERTIES COMPILE_FLAGS "-msse2 -msse4.1")
+set_source_files_properties(api/deviceCPU8.cpp PROPERTIES COMPILE_FLAGS "-msse2 -msse4.1 -mf16c -mavx2 -mfma -mlzcnt -mbmi -mbmi2")
+set_source_files_properties(api/deviceCPU16.cpp PROPERTIES COMPILE_FLAGS "-msse2 -msse4.1 -mavx512f -mavx512dq -mavx512cd -mavx512bw -mavx512vl -mf16c -mavx2 -mfma -mlzcnt -mbmi -mbmi2 -mprefer-vector-width=256")
 
 if(WIN32)
   set(OPENPGL_RELEASE_OPTIONS -O3 -Wall -msse2 -msse4.1)

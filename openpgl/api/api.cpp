@@ -6,7 +6,7 @@
 
 #include "openpgl_common.h"
 
-#include "field/Device.h"
+#include "device/Device.h"
 #include "field/ISurfaceVolumeField.h"
 #include "directional/ISurfaceSamplingDistribution.h"
 #include "directional/IVolumeSamplingDistribution.h"
@@ -64,11 +64,11 @@ typedef ISurfaceVolumeField IGuidingField;
 extern "C" OPENPGL_DLLEXPORT PGLDevice pglNewDevice(PGL_DEVICE_TYPE deviceType)OPENPGL_CATCH_BEGIN
 {
     if (deviceType == PGL_DEVICE_TYPE_CPU_4)
-        return (PGLDevice) newDevice4();
+        return (PGLDevice) newDeviceCPU4();
     else if (deviceType == PGL_DEVICE_TYPE_CPU_8)
-        return (PGLDevice) newDevice8();
+        return (PGLDevice) newDeviceCPU8();
     else if (deviceType == PGL_DEVICE_TYPE_CPU_16)
-        return (PGLDevice) newDevice16();
+        return (PGLDevice) newDeviceCPU16();
     else
         throw std::runtime_error("invalid vectorSize parameter!");
 }

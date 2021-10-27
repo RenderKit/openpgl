@@ -4,8 +4,8 @@
 
 #include "../openpgl_common.h"
 
-#include "ISurfaceVolumeField.h"
-#include "SurfaceVolumeField.h"
+#include "field/ISurfaceVolumeField.h"
+#include "field/SurfaceVolumeField.h"
 
 #include "directional/vmm/ParallaxAwareVMM.h"
 #include "directional/vmm/AdaptiveSplitandMergeFactory.h"
@@ -156,9 +156,9 @@ struct Device: public IDevice {
     }
 };
 
-IDevice* newDevice4();
-IDevice* newDevice8();
-IDevice* newDevice16();
+IDevice* newDeviceCPU4();
+IDevice* newDeviceCPU8();
+IDevice* newDeviceCPU16();
 
 }
 
