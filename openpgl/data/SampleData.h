@@ -50,20 +50,18 @@ namespace openpgl
         return (dsd.flags & EInsideVolume);
     }
 
-    struct {
-        inline bool operator() (const PGLSampleData &compA,  const PGLSampleData &compB )
-        {
-            return compA.weight < compB.weight ||
-                    ( compA.weight        == compB.weight          &&  ( compA.pdf       < compB.pdf              ||
-                    ( compA.pdf           == compB.pdf             &&  ( compA.distance < compB.distance          ||
-                    ( compA.distance      == compB.distance        &&  ( compA.position.x < compB.position.x    ||
-                    (compA.position.x    == compB.position.x    &&  ( compA.position.y < compB.position.y    ||
-                    (compA.position.y    == compB.position.y     &&  ( compA.position.z < compB.position.z   ||
-                    (compA.position.z    == compB.position.z     &&  ( compA.direction.x < compB.direction.x  ||
-                    (compA.direction.x    == compB.direction.x   &&  ( compA.direction.y < compB.direction.y  ||
-                    (compA.direction.y    == compB.direction.y   &&  ( compA.direction.z < compB.direction.z  ))))))))))))))));
-        }
-    } SampleDataLess;
+inline bool SampleDataLess(const PGLSampleData &compA,  const PGLSampleData &compB )
+{
+    return compA.weight < compB.weight ||
+            ( compA.weight        == compB.weight          &&  ( compA.pdf       < compB.pdf              ||
+            ( compA.pdf           == compB.pdf             &&  ( compA.distance < compB.distance          ||
+            ( compA.distance      == compB.distance        &&  ( compA.position.x < compB.position.x    ||
+            (compA.position.x    == compB.position.x    &&  ( compA.position.y < compB.position.y    ||
+            (compA.position.y    == compB.position.y     &&  ( compA.position.z < compB.position.z   ||
+            (compA.position.z    == compB.position.z     &&  ( compA.direction.x < compB.direction.x  ||
+            (compA.direction.x    == compB.direction.x   &&  ( compA.direction.y < compB.direction.y  ||
+            (compA.direction.y    == compB.direction.y   &&  ( compA.direction.z < compB.direction.z  ))))))))))))))));
+}
 
 inline SampleData *LoadSampleData(const std::string fileName, size_t &numData){
 

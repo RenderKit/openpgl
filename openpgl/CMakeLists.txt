@@ -2,17 +2,23 @@
 ## SPDX-License-Identifier: Apache-2.0
 
 
+set(DEVICE_SRC api/deviceCPU4.cpp
+                api/deviceCPU8.cpp)
+
+if(ISA_AVX512)
+  set(DEVICE_SRC ${DEVICE_SRC} api/deviceCPU16.cpp)
+endif()
+
 if(BUILD_STATIC)
 add_library(${PROJECT_NAME} STATIC
   api/api.cpp
+  ${DEVICE_SRC}
   ../third-party/embreeSrc/common/simd/sse.cpp
 )
 else()
 add_library(${PROJECT_NAME} SHARED
   api/api.cpp
-  api/deviceCPU4.cpp
-  api/deviceCPU8.cpp
-  api/deviceCPU16.cpp
+  ${DEVICE_SRC}
   directional/ISurfaceSamplingDistribution.cpp
   directional/IVolumeSamplingDistribution.cpp
   ../third-party/embreeSrc/common/simd/sse.cpp
@@ -22,19 +28,29 @@ endif()
 
 target_compile_definitions(${PROJECT_NAME} PRIVATE OPENPGL_VERSION_MAJOR=${PROJECT_VERSION_MAJOR} OPENPGL_VERSION_MINOR=${PROJECT_VERSION_MINOR} OPENPGL_VERSION_PATCH=${PROJECT_VERSION_PATCH})
 target_compile_definitions(${PROJECT_NAME} PRIVATE OPENPGL_VERSION_STRING="${PROJECT_VERSION}")
-
-set_source_files_properties(api/deviceCPU4.cpp PROPERTIES COMPILE_FLAGS "-msse2 -msse4.1")
-set_source_files_properties(api/deviceCPU8.cpp PROPERTIES COMPILE_FLAGS "-msse2 -msse4.1 -mf16c -mavx2 -mfma -mlzcnt -mbmi -mbmi2")
-set_source_files_properties(api/deviceCPU16.cpp PROPERTIES COMPILE_FLAGS "-msse2 -msse4.1 -mavx512f -mavx512dq -mavx512cd -mavx512bw -mavx512vl -mf16c -mavx2 -mfma -mlzcnt -mbmi -mbmi2")
+if(ISA_AVX512)
+target_compile_definitions(${PROJECT_NAME} PRIVATE OPENPGL_ISA_AVX512)
+endif()
 
 if(WIN32)
-  set(OPENPGL_RELEASE_OPTIONS -O3 -Wall -msse2 -msse4.1)
-  set(OPENPGL_RELEASE_OPTIONS ${OPENPGL_RELEASE_OPTIONS} -ftree-vectorize -mfpmath=sse -funsafe-math-optimizations -fno-rounding-math -fno-signaling-nans -fno-math-errno -fomit-frame-pointer )
-else()
-  set(OPENPGL_RELEASE_OPTIONS -O3 -Wall -msse2 -msse4.1)
-  #set(OPENPGL_RELEASE_OPTIONS ${OPENPGL_RELEASE_OPTIONS} -fno-strict-aliasing -Wno-padded -ftree-vectorize -mfpmath=sse -funsafe-math-optimizations -fno-rounding-math -fno-signaling-nans -fno-math-errno -fomit-frame-pointer )
-  #set(OPENPGL_RELEASE_OPTIONS ${OPENPGL_RELEASE_OPTIONS} -fno-strict-aliasing -Wno-padded -ftree-vectorize -mfpmath=sse)
+  set(OPENPGL_RELEASE_OPTIONS /Ox /Oi /D__SSE__ /D__SSE2__ /D__SSE3__ /D__SSE4_1__ /D__SSE4_2__)
+  #set(OPENPGL_RELEASE_OPTIONS ${OPENPGL_RELEASE_OPTIONS} -ftree-vectorize -mfpmath=sse -funsafe-math-optimizations -fno-rounding-math -fno-signaling-nans -fno-math-errno -fomit-frame-pointer )
+  set_source_files_properties(api/deviceCPU4.cpp PROPERTIES COMPILE_FLAGS "/D__SSE__ /D__SSE2__ /D__SSE3__ /D__SSE4_1__ /D__SSE4_2__")
+  set_source_files_properties(api/deviceCPU8.cpp PROPERTIES COMPILE_FLAGS "/D__SSE__ /D__SSE2__ /D__SSE3__ /D__SSE4_1__ /D__SSE4_2__ /arch:AVX /arch:AVX2")
+  if(ISA_AVX512)
+    set_source_files_properties(api/deviceCPU16.cpp PROPERTIES COMPILE_FLAGS "/D__SSE__ /D__SSE2__ /D__SSE3__ /D__SSE4_1__ /D__SSE4_2__ /arch:AVX /arch:AVX2 /arch:AVX512")
   endif()
+
+else()
+    set(OPENPGL_RELEASE_OPTIONS -O3 -Wall -msse2 -msse4.1)
+    set_source_files_properties(api/deviceCPU4.cpp PROPERTIES COMPILE_FLAGS "-msse2 -msse4.1")
+    set_source_files_properties(api/deviceCPU8.cpp PROPERTIES COMPILE_FLAGS "-msse2 -msse4.1 -mf16c -mavx2 -mfma -mlzcnt -mbmi -mbmi2")
+    if(ISA_AVX512)
+      set_source_files_properties(api/deviceCPU16.cpp PROPERTIES COMPILE_FLAGS "-msse2 -msse4.1 -mavx512f -mavx512dq -mavx512cd -mavx512bw -mavx512vl -mf16c -mavx2 -mfma -mlzcnt -mbmi -mbmi2")
+    endif()
+    #set(OPENPGL_RELEASE_OPTIONS ${OPENPGL_RELEASE_OPTIONS} -fno-strict-aliasing -Wno-padded -ftree-vectorize -mfpmath=sse -funsafe-math-optimizations -fno-rounding-math -fno-signaling-nans -fno-math-errno -fomit-frame-pointer )
+    #set(OPENPGL_RELEASE_OPTIONS ${OPENPGL_RELEASE_OPTIONS} -fno-strict-aliasing -Wno-padded -ftree-vectorize -mfpmath=sse)
+endif()
 
 
 if(USE_OMP_THREADING)

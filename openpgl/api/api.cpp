@@ -67,8 +67,10 @@ extern "C" OPENPGL_DLLEXPORT PGLDevice pglNewDevice(PGL_DEVICE_TYPE deviceType)O
         return (PGLDevice) newDeviceCPU4();
     else if (deviceType == PGL_DEVICE_TYPE_CPU_8)
         return (PGLDevice) newDeviceCPU8();
+#ifdef OPENPGL_ISA_AVX512
     else if (deviceType == PGL_DEVICE_TYPE_CPU_16)
         return (PGLDevice) newDeviceCPU16();
+#endif
     else
         throw std::runtime_error("invalid vectorSize parameter!");
 }

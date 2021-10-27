@@ -158,7 +158,9 @@ struct Device: public IDevice {
 
 IDevice* newDeviceCPU4();
 IDevice* newDeviceCPU8();
+#ifdef OPENPGL_ISA_AVX512
 IDevice* newDeviceCPU16();
+#endif
 
 }
 
