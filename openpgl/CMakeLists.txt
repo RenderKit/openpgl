@@ -25,7 +25,7 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE OPENPGL_VERSION_STRING="${PRO
 
 set_source_files_properties(api/deviceCPU4.cpp PROPERTIES COMPILE_FLAGS "-msse2 -msse4.1")
 set_source_files_properties(api/deviceCPU8.cpp PROPERTIES COMPILE_FLAGS "-msse2 -msse4.1 -mf16c -mavx2 -mfma -mlzcnt -mbmi -mbmi2")
-set_source_files_properties(api/deviceCPU16.cpp PROPERTIES COMPILE_FLAGS "-msse2 -msse4.1 -mavx512f -mavx512dq -mavx512cd -mavx512bw -mavx512vl -mf16c -mavx2 -mfma -mlzcnt -mbmi -mbmi2 -mprefer-vector-width=256")
+set_source_files_properties(api/deviceCPU16.cpp PROPERTIES COMPILE_FLAGS "-msse2 -msse4.1 -mavx512f -mavx512dq -mavx512cd -mavx512bw -mavx512vl -mf16c -mavx2 -mfma -mlzcnt -mbmi -mbmi2")
 
 if(WIN32)
   set(OPENPGL_RELEASE_OPTIONS -O3 -Wall -msse2 -msse4.1)
