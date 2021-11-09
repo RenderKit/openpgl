@@ -22,10 +22,12 @@ if(BUILD_STATIC)
 add_library(${PROJECT_NAME} STATIC
   ${OPENPGL_SRC}
 )
+target_compile_definitions(${PROJECT_NAME} PRIVATE BUILD_STATIC)
 else()
 add_library(${PROJECT_NAME} SHARED
   ${OPENPGL_SRC}
 )
+target_compile_definitions(${PROJECT_NAME} PRIVATE BUILD_SHARED)
 endif()
 
 
