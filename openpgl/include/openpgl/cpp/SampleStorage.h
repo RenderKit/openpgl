@@ -69,7 +69,7 @@ struct SampleStorage
     /// Returns the number of volume samples currently stored inside the storage container.
     size_t GetSizeVolume() const;
 
-    friend class Field;
+    friend struct Field;
     private:
         PGLSampleStorage m_sampleStorageHandle{nullptr};
 };

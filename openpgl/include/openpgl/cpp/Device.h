@@ -32,7 +32,7 @@ struct Device
 
     Device(const Device&) = delete;
 
-    friend struct Field;
+    friend struct openpgl::cpp::Field;
     private:
         PGLDevice m_deviceHandle {nullptr};
 };

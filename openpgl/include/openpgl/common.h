@@ -3,16 +3,21 @@
 
 #pragma once
 
-#ifdef _WIN32
-#  ifdef openpgl_EXPORTS
-#    define OPENPGL_INTERFACE __declspec(dllexport)
-#  else
-#    define OPENPGL_INTERFACE __declspec(dllimport)
-#  endif
-#  define OPENPGL_DLLEXPORT __declspec(dllexport)
+#ifdef BUILD_SHARED
+  #ifdef _WIN32
+  #  ifdef openpgl_EXPORTS
+  #    define OPENPGL_INTERFACE __declspec(dllexport)
+  #  else
+  #    define OPENPGL_INTERFACE __declspec(dllimport)
+  #  endif
+  #  define OPENPGL_DLLEXPORT __declspec(dllexport)
+  #else
+  #  define OPENPGL_INTERFACE
+  #  define OPENPGL_DLLEXPORT __attribute__ ((visibility ("default")))
+  #endif
 #else
-#  define OPENPGL_INTERFACE
-#  define OPENPGL_DLLEXPORT __attribute__ ((visibility ("default")))
+  #define OPENPGL_INTERFACE
+  #define OPENPGL_DLLEXPORT
 #endif
 
 #define OPENPGL_CORE_INTERFACE OPENPGL_INTERFACE

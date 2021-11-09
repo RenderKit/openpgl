@@ -9,12 +9,14 @@ namespace openpgl
 {
 namespace cpp
 {
+    struct Field;
+    struct PathSegmentStorage;
 struct Sampler
 {
     Sampler(PGLSampler samplerHandle);
 
-    friend class Field;
-    friend class PathSegmentStorage;
+    friend struct openpgl::cpp::Field;
+    friend struct openpgl::cpp::PathSegmentStorage;
     private:
         PGLSampler m_samplerHandle{nullptr};
 };

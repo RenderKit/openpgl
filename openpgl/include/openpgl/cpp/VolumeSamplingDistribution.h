@@ -102,7 +102,7 @@ struct VolumeSamplingDistribution
     void ApplyDualLobeHGProduct(const float meanCosine0, const float meanCosine1, const float mixWeight);
 */
 
-    friend class Field;
+    friend struct openpgl::cpp::Field;
     private:
         PGLVolumeSamplingDistribution m_volumeSamplingDistributionHandle{nullptr};
 };

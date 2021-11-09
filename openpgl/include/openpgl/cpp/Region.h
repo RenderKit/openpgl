@@ -14,7 +14,8 @@ namespace cpp
 
 using PathSegment = PGLPathSegmentData;
 void SetRegion(PathSegment* pathSegment, const Region &region);
-
+struct SurfaceSamplingDistribution;
+struct VolumeSamplingDistribution;
 /**
  * @brief 
  * 
@@ -46,8 +47,8 @@ struct Region
      */
     //Distribution GetDistribution(pgl_point3f samplePosition, const bool &useParallaxComp) const;
 
-    friend class SurfaceSamplingDistribution;
-    friend class VolumeSamplingDistribution;
+    friend struct openpgl::cpp::SurfaceSamplingDistribution;
+    friend struct openpgl::cpp::VolumeSamplingDistribution;
     friend OPENPGL_INLINE void SetRegion(PathSegment* pathSegment, const Region &region);
     private:
         PGLRegion m_regionHandle{nullptr};
