@@ -119,14 +119,14 @@ struct Field
         PGLField m_fieldHandle {nullptr};
 };
 
-Field::Field(Device *device, PGLFieldArguments args)
+OPENPGL_INLINE Field::Field(Device *device, PGLFieldArguments args)
 {
     OPENPGL_ASSERT(device);
     OPENPGL_ASSERT(device->m_deviceHandle);
     m_fieldHandle = pglDeviceNewField(device->m_deviceHandle, args);
 }
 
-Field::Field(Device *device, const std::string& fieldFileName)
+OPENPGL_INLINE Field::Field(Device *device, const std::string& fieldFileName)
 {
     OPENPGL_ASSERT(device);
     OPENPGL_ASSERT(device->m_deviceHandle);
@@ -177,27 +177,6 @@ OPENPGL_INLINE bool Field::IsValid() const
     OPENPGL_ASSERT(m_fieldHandle);
     return pglFieldIsValid(m_fieldHandle);
 }
-
-/*
-OPENPGL_INLINE Region Field::GetSurfaceRegion(pgl_point3f position, Sampler* sampler)
-{
-    OPENPGL_ASSERT(m_fieldHandle);
-    //OPENPGL_ASSERT(sampler);
-    //OPENPGL_ASSERT(&sampler->m_samplerHandle);
-    PGLRegion regionHandle = pglFieldGetSurfaceRegion(m_fieldHandle, position, &sampler->m_samplerHandle);
-    return Region(regionHandle);
-}
-
-OPENPGL_INLINE Region Field::GetVolumeRegion(pgl_point3f position, Sampler* sampler)
-{
-    OPENPGL_ASSERT(m_fieldHandle);
-    //OPENPGL_ASSERT(sampler);
-    //OPENPGL_ASSERT(&sampler->m_samplerHandle);
-    PGLRegion regionHandle = pglFieldGetVolumeRegion(m_fieldHandle, position, &sampler->m_samplerHandle);
-    return Region(regionHandle);
-}
-*/
-
 
 } // api
 } // openpgl

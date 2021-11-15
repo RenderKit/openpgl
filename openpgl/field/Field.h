@@ -78,6 +78,11 @@ public:
         m_isSceneBoundsSet = true;
     }
 
+    void setIsSurface(const bool isSurface)
+    {
+        m_isSurface = isSurface;
+    }
+
     inline const RegionType *getRegion(const openpgl::Point3 &p, float *sample1D) const
     {
         if (m_iteration >0 && embree::inside(m_spatialSubdiv.getBounds(), p))

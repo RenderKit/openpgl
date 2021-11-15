@@ -32,7 +32,10 @@ public:
     SurfaceVolumeField(const Settings &settings):
         m_surfaceField(settings),
         m_volumeField(settings)
-    { }
+    { 
+        m_surfaceField.setIsSurface(true);
+        m_volumeField.setIsSurface(false);
+    }
 
     ~SurfaceVolumeField() override
     {}

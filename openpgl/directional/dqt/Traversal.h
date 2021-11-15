@@ -21,7 +21,7 @@ inline bool rescale(float thresh, float &random) {
 }
 
 inline uint32_t rescaleChild(Vector2 &point) {
-    OPENPGL_ASSERT(0 <= point.x && point.x <= 1 && 0 <= point.y && point.y <= 1);
+    OPENPGL_ASSERT(0.f <= point.x && point.x <= 1.f && 0.f <= point.y && point.y <= 1.f);
 
     uint32_t offset = 0;
     if (point.x >= 0.5) {
