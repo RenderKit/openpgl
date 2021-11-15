@@ -43,7 +43,6 @@ struct Region
      */
     //Distribution GetDistribution(pgl_point3f samplePosition, const bool &useParallaxComp) const;
 
-    friend class PathSegment;
     friend class SurfaceSamplingDistribution;
     friend class VolumeSamplingDistribution;
     private:

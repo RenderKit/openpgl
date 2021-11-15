@@ -34,16 +34,15 @@ struct PathSegmentDataStorage
         m_sampleStorage.clear();
     }
 
-    PathSegmentData *create_back(const Point3 &pos, const Vector3 &normal, const Vector3 &outDir)
-    {
-       m_segmentStorage.emplace_back(pos, normal, outDir);
-       return &m_segmentStorage.back();
-    }
-
     PathSegmentData *next()
     {
        m_segmentStorage.emplace_back();
        return &m_segmentStorage.back();
+    }
+
+    void addSegment(const PGLPathSegmentData& segment)
+    {
+        m_segmentStorage.push_back(segment);
     }
 
     void push_back(const PathSegmentData &psData)
@@ -63,7 +62,7 @@ struct PathSegmentDataStorage
         for (int i=numSegments-2; i>=0; --i)
         {
             const openpgl::PathSegmentData &currentPathSegment = m_segmentStorage[i];
-            float currentDistance = embree::length(m_segmentStorage[i+1].position - currentPathSegment.position);
+            float currentDistance = embree::length(openpgl::Point3(m_segmentStorage[i+1].position.x, m_segmentStorage[i+1].position.y, m_segmentStorage[i+1].position.z) - openpgl::Point3(currentPathSegment.position.x, currentPathSegment.position.y, currentPathSegment.position.z));
             float distance = currentDistance + lastDistance;
             if(!currentPathSegment.isDelta && currentPathSegment.roughness >=0.3f)
             {
@@ -74,8 +73,8 @@ struct PathSegmentDataStorage
                 lastDistance = distance;
                 if(currentPathSegment.eta!= 1.0f)
                 {
-                    float cosThetaI = embree::dot(currentPathSegment.normal, currentPathSegment.directionOut);
-                    float cosThetaO = embree::dot(currentPathSegment.normal, currentPathSegment.directionIn);
+                    float cosThetaI = embree::dot(openpgl::Vector3(currentPathSegment.normal.x, currentPathSegment.normal.y, currentPathSegment.normal.z), openpgl::Vector3(currentPathSegment.directionOut.x, currentPathSegment.directionOut.y, currentPathSegment.directionOut.z));
+                    float cosThetaO = embree::dot(openpgl::Vector3(currentPathSegment.normal.x, currentPathSegment.normal.y, currentPathSegment.normal.z), openpgl::Vector3(currentPathSegment.directionIn.x, currentPathSegment.directionIn.y, currentPathSegment.directionIn.z));
                     lastDistance *= std::fabs(cosThetaI/(cosThetaO*currentPathSegment.eta));
                 }
             }
@@ -87,10 +86,10 @@ struct PathSegmentDataStorage
 
                 // prepare the current pos, direction, distance, pdf at the current
                 // path vertex
-                openpgl::Point3 pos = currentPathSegment.position;
+                openpgl::Point3 pos = openpgl::Point3(currentPathSegment.position.x, currentPathSegment.position.y, currentPathSegment.position.z);
                 // using the direction directly is numerically more stable than recalcuating
                 // it using position of the next segment when the distance is small. 
-                openpgl::Vector3 dir = currentPathSegment.directionIn;
+                openpgl::Vector3 dir = openpgl::Vector3(currentPathSegment.directionIn.x, currentPathSegment.directionIn.y, currentPathSegment.directionIn.z);
                 float pdf = std::max(minPDF,currentPathSegment.pdfDirectionIn);
                 uint32_t flags{0};
                 const IRegion* regionPtr = (const IRegion*)currentPathSegment.regionPtr;
@@ -100,24 +99,25 @@ struct PathSegmentDataStorage
                 {
                     flags |= SampleData::EInsideVolume;
                 }
+                
                 // evalaute the incident radiance the incident
                 openpgl::Vector3 throughput {1.0f};
                 openpgl::Vector3 contribution {0.0f};
                 for (size_t j = i+1; j < numSegments; ++j)
                 {
                     const openpgl::PathSegmentData &nextPathSegment = m_segmentStorage[j];
-                    throughput = throughput * nextPathSegment.transmittanceWeight;
+                    throughput = throughput * openpgl::Vector3(nextPathSegment.transmittanceWeight.x, nextPathSegment.transmittanceWeight.y, nextPathSegment.transmittanceWeight.z);
                     OPENPGL_ASSERT(embree::isvalid(throughput));
                     OPENPGL_ASSERT(throughput[0] >= 0.f && throughput[1] >= 0.f && throughput[2] >= 0.f)
                     openpgl::Vector3 clampedThroughput = embree::min(throughput, maxThroughput);
-                    contribution += clampedThroughput * nextPathSegment.scatteredContribution;
+                    contribution += clampedThroughput * openpgl::Vector3(nextPathSegment.scatteredContribution.x, nextPathSegment.scatteredContribution.y, nextPathSegment.scatteredContribution.z);
                     OPENPGL_ASSERT(embree::isvalid(contribution));
                     OPENPGL_ASSERT(contribution[0] >= 0.f && contribution[1] >= 0.f && contribution[2] >= 0.f);
                     if(j == i+1 && !useNEEMiWeights)
                     {
                         if(guideDirectLight)
                         {
-                            contribution += clampedThroughput * nextPathSegment.directContribution;
+                            contribution += clampedThroughput * openpgl::Vector3(nextPathSegment.directContribution.x, nextPathSegment.directContribution.y, nextPathSegment.directContribution.z);
                             OPENPGL_ASSERT(embree::isvalid(contribution));
                             OPENPGL_ASSERT(contribution[0] >= 0.f && contribution[1] >= 0.f && contribution[2] >= 0.f);
                         }
@@ -126,12 +126,12 @@ struct PathSegmentDataStorage
                     {
                         if(j>i+1 || guideDirectLight)
                         {
-                            contribution += clampedThroughput * nextPathSegment.miWeight * nextPathSegment.directContribution;
+                            contribution += clampedThroughput * nextPathSegment.miWeight * openpgl::Vector3(nextPathSegment.directContribution.x, nextPathSegment.directContribution.y, nextPathSegment.directContribution.z);
                             OPENPGL_ASSERT(embree::isvalid(contribution));
                             OPENPGL_ASSERT(contribution[0] >= 0.f && contribution[1] >= 0.f && contribution[2] >= 0.f);
                         }
                     }
-                    throughput = throughput * nextPathSegment.scatteringWeight;
+                    throughput = throughput * openpgl::Vector3(nextPathSegment.scatteringWeight.x, nextPathSegment.scatteringWeight.y, nextPathSegment.scatteringWeight.z);
                     throughput /= nextPathSegment.russianRouletteProbability;
 
                     OPENPGL_ASSERT(embree::isvalid(throughput));
@@ -221,7 +221,7 @@ struct PathSegmentDataStorage
         for ( int s = 0; s < m_segmentStorage.size(); s++)
         {
             PathSegmentData psd = m_segmentStorage[s];
-            ss << "seg[" << s << "]: " << psd.toString() ;
+            //ss << "seg[" << s << "]: " << psd.toString() ;
             ss << std::endl;
         }
 

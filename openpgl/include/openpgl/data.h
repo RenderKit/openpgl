@@ -54,13 +54,13 @@ struct PGLSampleData
 struct PGLPathSegmentData
 {
     /// The starting position of the path segment (on a surface or inside a volume)
-    pgl_point3f position;
+    pgl_point3f position {0.f, 0.f, 0.f};
     /// The direction to the starting position of the next path segment
-    pgl_vec3f directionIn;
+    pgl_vec3f directionIn {0.f, 1.f, 0.f};
     /// The direction to the starting position of the previous path segment
-    pgl_vec3f directionOut;
+    pgl_vec3f directionOut {1.f, 0.f, 0.f};
     /// The surface normal at the current @ref position. Inside volumes @ref normal can be an arbritrary valid direction.
-    pgl_vec3f normal;
+    pgl_vec3f normal {0.f, 0.f, 1.f};
 
     //float distance {0.0f};
 

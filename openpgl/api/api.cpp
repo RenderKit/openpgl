@@ -423,11 +423,16 @@ extern "C" OPENPGL_DLLEXPORT void pglPathSegmentStorageAddSample(PGLPathSegmentS
     gPathSegmentStorage->addSample(sample);
 }
 
-
-extern "C" OPENPGL_DLLEXPORT PGLPathSegment pglPathSegmentNextSegment(PGLPathSegmentStorage pathSegmentStorage)
+extern "C" OPENPGL_DLLEXPORT PGLPathSegmentData* pglPathSegmentStorageNextSegment(PGLPathSegmentStorage pathSegmentStorage)
 {
     auto *gPathSegmentStorage = (openpgl::PathSegmentDataStorage *)pathSegmentStorage;
-    return (PGLPathSegment)gPathSegmentStorage->next();
+    return (PGLPathSegmentData*)gPathSegmentStorage->next();
+}
+
+extern "C" OPENPGL_DLLEXPORT void pglPathSegmentStorageAddSegment(PGLPathSegmentStorage pathSegmentStorage, PGLPathSegmentData segment)
+{
+    auto *gPathSegmentStorage = (openpgl::PathSegmentDataStorage *)pathSegmentStorage;
+    gPathSegmentStorage->addSegment(segment);
 }
 
 extern "C" OPENPGL_DLLEXPORT bool pglPathSegmentStorageSamplesValid(PGLPathSegmentStorage pathSegmentStorage)
@@ -443,108 +448,6 @@ extern "C" OPENPGL_DLLEXPORT bool pglPathSegmentStorageSegmentsValid(PGLPathSegm
     return gPathSegmentStorage->segmentsValid();
 
 }
-
-///////////////////////////////////////////////////////////////////////////////
-// PathSegment ////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-
-extern "C" OPENPGL_DLLEXPORT void pglPathSegmentSetPosition(PGLPathSegment pathSegment, pgl_point3f position)
-{
-    pathSegment->position = position;
-}
-
-extern "C" OPENPGL_DLLEXPORT void pglPathSegmentSetNormal(PGLPathSegment pathSegment, pgl_vec3f normal)
-{
-    pathSegment->normal = normal;
-}
-
-extern "C" OPENPGL_DLLEXPORT void pglPathSegmentSetDirectionIn(PGLPathSegment pathSegment, pgl_vec3f directionIn)
-{
-    pathSegment->directionIn = directionIn;
-}
-
-extern "C" OPENPGL_DLLEXPORT pgl_vec3f pglPathSegmentGetDirectionIn(PGLPathSegment pathSegment)
-{
-    return pathSegment->directionIn;
-}
-
-extern "C" OPENPGL_DLLEXPORT void pglPathSegmentSetPDFDirectionIn(PGLPathSegment pathSegment, float pdfDirectionIn)
-{
-    pathSegment->pdfDirectionIn = pdfDirectionIn;
-}
-
-extern "C" OPENPGL_DLLEXPORT void pglPathSegmentSetDirectionOut(PGLPathSegment pathSegment, pgl_vec3f directionOut)
-{
-    pathSegment->directionOut = directionOut;
-}
-
-extern "C" OPENPGL_DLLEXPORT void pglPathSegmentSetVolumeScatter(PGLPathSegment pathSegment, bool volumeScatter)
-{
-    pathSegment->volumeScatter = volumeScatter;
-}
-
-extern "C" OPENPGL_DLLEXPORT void pglPathSegmentSetScatteringWeight(PGLPathSegment pathSegment, pgl_vec3f scatteringWeight)
-{
-    pathSegment->scatteringWeight = scatteringWeight;
-}
-
-extern "C" OPENPGL_DLLEXPORT void pglPathSegmentSetDirectContribution(PGLPathSegment pathSegment, pgl_vec3f directContribution)
-{
-    pathSegment->directContribution = directContribution;
-}
-
-extern "C" OPENPGL_DLLEXPORT void pglPathSegmentAddDirectContribution(PGLPathSegment pathSegment, pgl_vec3f directContribution)
-{
-    pathSegment->directContribution = directContribution;
-}
-
-extern "C" OPENPGL_DLLEXPORT void pglPathSegmentSetScatteredContribution(PGLPathSegment pathSegment, pgl_vec3f scatteredContribution)
-{
-    pathSegment->scatteredContribution = scatteredContribution;
-}
-
-extern "C" OPENPGL_DLLEXPORT void pglPathSegmentAddScatteredContribution(PGLPathSegment pathSegment, pgl_vec3f scatteredContribution)
-{
-    pathSegment->scatteredContribution = scatteredContribution;
-}
-
-extern "C" OPENPGL_DLLEXPORT void pglPathSegmentSetMiWeight(PGLPathSegment pathSegment, float miWeight)
-{
-    pathSegment->miWeight = miWeight;
-}
-
-extern "C" OPENPGL_DLLEXPORT void pglPathSegmentSetRussianRouletteProbability(PGLPathSegment pathSegment, float russianRouletteProbability)
-{
-    pathSegment->russianRouletteProbability = russianRouletteProbability;
-}
-
-extern "C" OPENPGL_DLLEXPORT void pglPathSegmentSetEta(PGLPathSegment pathSegment, float eta)
-{
-    pathSegment->eta = eta;
-}
-
-extern "C" OPENPGL_DLLEXPORT void pglPathSegmentSetIsDelta(PGLPathSegment pathSegment, bool isDelta)
-{
-    pathSegment->isDelta = isDelta;
-}
-
-extern "C" OPENPGL_DLLEXPORT void pglPathSegmentSetRoughness(PGLPathSegment pathSegment, float roughness)
-{
-    pathSegment->roughness = roughness;
-}
-
-extern "C" OPENPGL_DLLEXPORT void pglPathSegmentSetRegion(PGLPathSegment pathSegment, const PGLRegion region)
-{
-    pathSegment->regionPtr = region;
-}
-
-extern "C" OPENPGL_DLLEXPORT void pglPathSegmentSetTransmittanceWeight(PGLPathSegment pathSegment, pgl_vec3f transmittanceWeight)
-{
-    pathSegment->transmittanceWeight = transmittanceWeight;
-}
-
-
-
 
 ///////////////////////////////////////////////////////////////////////////////
 // Distribution ///// /////////////////////////////////////////////////////////

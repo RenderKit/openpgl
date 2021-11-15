@@ -62,13 +62,9 @@ struct PathSegmentStorage
      */
     void AddSample(SampleData sample);
 
-    /**
-     * @brief 
-     * 
-     * @return PathSegment 
-     */
-    PathSegment NextSegment();
+    PathSegment* NextSegment();
 
+    void AddSegment(const PathSegment& segment);
 
     bool IsValid() const;
 
@@ -127,14 +123,17 @@ OPENPGL_INLINE void PathSegmentStorage::AddSample(SampleData sample)
     pglPathSegmentStorageAddSample(m_pathSegmentStorageHandle, sample);
 }
 
-OPENPGL_INLINE PathSegment PathSegmentStorage::NextSegment()
+OPENPGL_INLINE PathSegment* PathSegmentStorage::NextSegment()
 {
     OPENPGL_ASSERT(m_pathSegmentStorageHandle);
-    PGLPathSegment pathSegmentHandle = pglPathSegmentNextSegment(m_pathSegmentStorageHandle);
-    OPENPGL_ASSERT(pathSegmentHandle);
-    return PathSegment(pathSegmentHandle);
+    return pglPathSegmentStorageNextSegment(m_pathSegmentStorageHandle);
 }
 
+OPENPGL_INLINE void PathSegmentStorage::AddSegment(const PathSegment& segment)
+{
+    OPENPGL_ASSERT(m_pathSegmentStorageHandle);
+    pglPathSegmentStorageAddSegment(m_pathSegmentStorageHandle, segment);
+}
 
 OPENPGL_INLINE bool PathSegmentStorage::IsValid() const
 { 

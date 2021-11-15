@@ -48,10 +48,23 @@ inline void pglVec3f(pgl_vec3f &vec, const float x, const float y, const float z
   vec.z = z;
 }
 
+inline void pglVec3fAdd(pgl_vec3f &veca, const pgl_vec3f &vecb)
+{
+  veca.x += vecb.x;
+  veca.y += vecb.y;
+  veca.z += vecb.z;
+}
+
 inline void pglVec2f(pgl_vec2f &vec, const float x, const float y)
 {
   vec.x = x;
   vec.y = y;
+}
+
+inline void pglVec2fAdd(pgl_vec2f &veca, const pgl_vec2f &vecb)
+{
+  veca.x += vecb.x;
+  veca.y += vecb.y;
 }
 
 inline void pglPoint3f(pgl_point3f &vec, const float x, const float y, const float z)

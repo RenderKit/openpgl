@@ -9,19 +9,21 @@ if(ISA_AVX512)
   set(DEVICE_SRC ${DEVICE_SRC} api/deviceCPU16.cpp)
 endif()
 
+set(OPENPGL_SRC
+    api/api.cpp
+    ${DEVICE_SRC}
+    directional/ISurfaceSamplingDistribution.cpp
+    directional/IVolumeSamplingDistribution.cpp
+    ../third-party/embreeSrc/common/simd/sse.cpp
+)
+
 if(BUILD_STATIC)
 add_library(${PROJECT_NAME} STATIC
-  api/api.cpp
-  ${DEVICE_SRC}
-  ../third-party/embreeSrc/common/simd/sse.cpp
+  ${OPENPGL_SRC}
 )
 else()
 add_library(${PROJECT_NAME} SHARED
-  api/api.cpp
-  ${DEVICE_SRC}
-  directional/ISurfaceSamplingDistribution.cpp
-  directional/IVolumeSamplingDistribution.cpp
-  ../third-party/embreeSrc/common/simd/sse.cpp
+  ${OPENPGL_SRC}
 )
 endif()
 
