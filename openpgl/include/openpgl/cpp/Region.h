@@ -12,6 +12,9 @@ namespace openpgl
 namespace cpp
 {
 
+using PathSegment = PGLPathSegmentData;
+void SetRegion(PathSegment* pathSegment, const Region &region);
+
 /**
  * @brief 
  * 
@@ -45,6 +48,7 @@ struct Region
 
     friend class SurfaceSamplingDistribution;
     friend class VolumeSamplingDistribution;
+    friend OPENPGL_INLINE void SetRegion(PathSegment* pathSegment, const Region &region);
     private:
         PGLRegion m_regionHandle{nullptr};
 };

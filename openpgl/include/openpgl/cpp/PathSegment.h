@@ -136,5 +136,12 @@ OPENPGL_INLINE void SetTransmittanceWeight(PathSegment* pathSegment, const pgl_v
     pathSegment->transmittanceWeight = transmittanceWeight;
 }
 
+// This function is deprecated
+OPENPGL_INLINE void SetRegion(PathSegment* pathSegment, const Region &region)
+{
+    OPENPGL_ASSERT(pathSegment);
+    pathSegment->regionPtr = (void*)region.m_regionHandle;
+}
+
 }
 }
