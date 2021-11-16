@@ -240,8 +240,11 @@ private:
         sampleRangeLeftRight[0] = Range(sampleRange.m_begin, std::distance(samples.begin(), rPivotItr));
         sampleRangeLeftRight[1] = Range(std::distance(samples.begin(), rPivotItr), sampleRange.m_end);
 
-        OPENPGL_ASSERT(sampleRangeLeftRight[0].size() > 1);
-        OPENPGL_ASSERT(sampleRangeLeftRight[1].size() > 1);
+		/* This assert is a sanity check which is only valid with the assumption that the number of samples grows at same pace
+		   as the number of spatial nodes: in practice this is not the case (e.g., after many 1spp iterations) 
+		*/
+        //OPENPGL_ASSERT(sampleRangeLeftRight[0].size() > 1);
+        //OPENPGL_ASSERT(sampleRangeLeftRight[1].size() > 1);
 
 #ifdef OPENPGL_USE_OMP_THREADING
     #pragma omp task mergeable
