@@ -50,6 +50,23 @@ namespace openpgl
         return (dsd.flags & EInsideVolume);
     }
 
+    std::string toString(const SampleData& sd)
+    {
+        std::stringstream ss;
+
+        ss << "SampleData: " 
+            << "position = " << sd.position.x << "\t " << sd.position.y << "\t " << sd.position.z << "\t " 
+            << "\t direction = " << sd.direction.x << "\t " << sd.direction.y << "\t " << sd.direction.z << "\t "  
+            << "\t weight = " << sd.weight << "\t " 
+            << "\t pdf = " << sd.pdf << "\t " 
+            << "\t distance = " << sd.distance << "\t " 
+            << "\t flags = " << sd.flags;
+        ss << std::endl;
+        
+        return ss.str();   
+    }
+
+
 inline bool SampleDataLess(const PGLSampleData &compA,  const PGLSampleData &compB )
 {
     return compA.weight < compB.weight ||
