@@ -50,7 +50,7 @@ namespace openpgl
         return (dsd.flags & EInsideVolume);
     }
 
-    std::string toString(const SampleData& sd)
+    inline std::string toString(const SampleData& sd)
     {
         std::stringstream ss;
 
@@ -67,40 +67,40 @@ namespace openpgl
     }
 
 
-inline bool SampleDataLess(const PGLSampleData &compA,  const PGLSampleData &compB )
-{
-    return compA.weight < compB.weight ||
-            ( compA.weight        == compB.weight          &&  ( compA.pdf       < compB.pdf              ||
-            ( compA.pdf           == compB.pdf             &&  ( compA.distance < compB.distance          ||
-            ( compA.distance      == compB.distance        &&  ( compA.position.x < compB.position.x    ||
-            (compA.position.x    == compB.position.x    &&  ( compA.position.y < compB.position.y    ||
-            (compA.position.y    == compB.position.y     &&  ( compA.position.z < compB.position.z   ||
-            (compA.position.z    == compB.position.z     &&  ( compA.direction.x < compB.direction.x  ||
-            (compA.direction.x    == compB.direction.x   &&  ( compA.direction.y < compB.direction.y  ||
-            (compA.direction.y    == compB.direction.y   &&  ( compA.direction.z < compB.direction.z  ))))))))))))))));
-}
+    inline bool SampleDataLess(const PGLSampleData &compA,  const PGLSampleData &compB )
+    {
+        return compA.weight < compB.weight ||
+                ( compA.weight        == compB.weight          &&  ( compA.pdf       < compB.pdf              ||
+                ( compA.pdf           == compB.pdf             &&  ( compA.distance < compB.distance          ||
+                ( compA.distance      == compB.distance        &&  ( compA.position.x < compB.position.x    ||
+                (compA.position.x    == compB.position.x    &&  ( compA.position.y < compB.position.y    ||
+                (compA.position.y    == compB.position.y     &&  ( compA.position.z < compB.position.z   ||
+                (compA.position.z    == compB.position.z     &&  ( compA.direction.x < compB.direction.x  ||
+                (compA.direction.x    == compB.direction.x   &&  ( compA.direction.y < compB.direction.y  ||
+                (compA.direction.y    == compB.direction.y   &&  ( compA.direction.z < compB.direction.z  ))))))))))))))));
+    }
 
-inline SampleData *LoadSampleData(const std::string fileName, size_t &numData){
+    inline SampleData *LoadSampleData(const std::string fileName, size_t &numData){
 
-    std::ifstream file;
-    file.open(fileName, std::ios::binary);
-    file.read((char*)&numData, sizeof(size_t));
+        std::ifstream file;
+        file.open(fileName, std::ios::binary);
+        file.read((char*)&numData, sizeof(size_t));
 
-    SampleData *data = new SampleData[numData];
-    file.read((char*)data, numData*sizeof(SampleData));
-    file.close();
+        SampleData *data = new SampleData[numData];
+        file.read((char*)data, numData*sizeof(SampleData));
+        file.close();
 
-    return data;
-}
+        return data;
+    }
 
-inline void StoreSampleData(const std::string fileName, const SampleData *data, const size_t &numData){
-    std::ofstream file;
-    file.open(fileName, std::ios::binary);
+    inline void StoreSampleData(const std::string fileName, const SampleData *data, const size_t &numData){
+        std::ofstream file;
+        file.open(fileName, std::ios::binary);
 
-    file.write((char*)&numData, sizeof(size_t));
-    file.write((char*)&data, numData * sizeof(SampleData));
-    file.close();
-}
+        file.write((char*)&numData, sizeof(size_t));
+        file.write((char*)&data, numData * sizeof(SampleData));
+        file.close();
+    }
 
 
 }

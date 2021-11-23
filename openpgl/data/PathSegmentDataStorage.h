@@ -106,7 +106,9 @@ struct PathSegmentDataStorage
                 for (size_t j = i+1; j < numSegments; ++j)
                 {
                     const openpgl::PathSegmentData &nextPathSegment = m_segmentStorage[j];
-                    throughput = throughput * openpgl::Vector3(nextPathSegment.transmittanceWeight.x, nextPathSegment.transmittanceWeight.y, nextPathSegment.transmittanceWeight.z);
+
+                    //throughput = throughput * openpgl::Vector3(nextPathSegment.transmittanceWeight.x, nextPathSegment.transmittanceWeight.y, nextPathSegment.transmittanceWeight.z);
+                    throughput = throughput * openpgl::Vector3(m_segmentStorage[j-1].transmittanceWeight.x, m_segmentStorage[j-1].transmittanceWeight.y, m_segmentStorage[j-1].transmittanceWeight.z);
                     OPENPGL_ASSERT(embree::isvalid(throughput));
                     OPENPGL_ASSERT(throughput[0] >= 0.f && throughput[1] >= 0.f && throughput[2] >= 0.f)
                     openpgl::Vector3 clampedThroughput = embree::min(throughput, maxThroughput);
@@ -173,6 +175,8 @@ struct PathSegmentDataStorage
 
             }
         }
+        //std::cout << std::endl;
+        //std::cout << this->toString() << std::endl;
         return m_sampleStorage.size();
     }
 
@@ -221,14 +225,16 @@ struct PathSegmentDataStorage
         for ( int s = 0; s < m_segmentStorage.size(); s++)
         {
             PathSegmentData psd = m_segmentStorage[s];
-            //ss << "seg[" << s << "]: " << psd.toString() ;
+            ss << "seg[" << s << "]: " << openpgl::toString(psd) ;
+			ss << "\t valid = " << isValid(psd);
             ss << std::endl;
         }
 
         for ( int s = 0; s < m_sampleStorage.size(); s++)
         {
             SampleData sample = m_sampleStorage[s];
-            ss << "sample[" << s << "]: " << isValid(sample) ;
+            ss << "sample[" << s << "]: " << openpgl::toString(sample);
+            ss << "\t valid = " << isValid(sample);
             ss << std::endl;
         }
 
