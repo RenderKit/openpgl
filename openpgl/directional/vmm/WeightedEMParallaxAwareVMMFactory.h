@@ -120,7 +120,7 @@ public:
     void updateComponentDistances (VMM &vmm, SufficientStatisitcs &sufficientStats, const SampleData* samples, const size_t numSamples) const;
 
 private:
-    void reprojectSample(openpgl::SampleData &sample, const openpgl::Point3 &pivotPoint) const;
+    void reprojectSample(openpgl::SampleData &sample, const openpgl::Point3 &pivotPoint, const float minDistance) const;
 
 };
 
@@ -298,7 +298,7 @@ void WeightedEMParallaxAwareVonMisesFisherFactory< TVMMDistribution>::Sufficient
 
 
 template<class TVMMDistribution>
-void WeightedEMParallaxAwareVonMisesFisherFactory< TVMMDistribution>::reprojectSample(openpgl::SampleData &sample, const openpgl::Point3 &pivotPoint) const
+void WeightedEMParallaxAwareVonMisesFisherFactory< TVMMDistribution>::reprojectSample(openpgl::SampleData &sample, const openpgl::Point3 &pivotPoint, const float minDistance) const
 {
 
     if (std::isinf(sample.distance))
@@ -313,9 +313,10 @@ void WeightedEMParallaxAwareVonMisesFisherFactory< TVMMDistribution>::reprojectS
         return;
     }
 
+    const float distance = fmaxf(minDistance, sample.distance);
     const openpgl::Point3 samplePosition(sample.position.x, sample.position.y, sample.position.z);
     const openpgl::Vector3 sampleDirection(sample.direction.x, sample.direction.y, sample.direction.z);
-    const openpgl::Point3 originPosition = samplePosition + sampleDirection * sample.distance;
+    const openpgl::Point3 originPosition = samplePosition + sampleDirection * distance;
     openpgl::Vector3 newDirection = originPosition - pivotPoint;
     const float newDistance = embree::length(newDirection);
     newDirection = newDirection / newDistance;
@@ -335,9 +336,11 @@ void WeightedEMParallaxAwareVonMisesFisherFactory< TVMMDistribution>::prepareSam
     if(cfg.parallaxCompensation) 
     {
         openpgl::Vector3 sampleVariance = sampleStatistics.getVaraince();
+        float minDistance = length(sampleVariance);
+        minDistance = 3.f * 3.f * sqrt(minDistance);
         for (size_t n = 0; n < numSamples; n++)
         {
-            reprojectSample(samples[n], sampleStatistics.mean);
+            reprojectSample(samples[n], sampleStatistics.mean, minDistance);
         }
     }
 }
