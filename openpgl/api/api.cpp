@@ -614,7 +614,7 @@ extern "C" OPENPGL_DLLEXPORT void pglFieldArgumentsSetDefaults(PGLFieldArguments
     default:
     case PGL_DIRECTIONAL_DISTRIBUTION_TYPE::PGL_DIRECTIONAL_DISTRIBUTION_PARALLAX_AWARE_VMM:
         fieldArguments.directionalDistributionType = PGL_DIRECTIONAL_DISTRIBUTION_PARALLAX_AWARE_VMM;
-        fieldArguments.directionalDistributionArguments = new PGLVMMFactoryArguments();
+        fieldArguments.directionalDistributionArguments = new PGLVMMFactoryArguments(true);
         fieldArguments.useParallaxCompensation = true;
         break;
     case PGL_DIRECTIONAL_DISTRIBUTION_TYPE::PGL_DIRECTIONAL_DISTRIBUTION_QUADTREE:
@@ -624,7 +624,7 @@ extern "C" OPENPGL_DLLEXPORT void pglFieldArgumentsSetDefaults(PGLFieldArguments
         break;
     case PGL_DIRECTIONAL_DISTRIBUTION_TYPE::PGL_DIRECTIONAL_DISTRIBUTION_VMM:
         fieldArguments.directionalDistributionType = PGL_DIRECTIONAL_DISTRIBUTION_PARALLAX_AWARE_VMM;
-        fieldArguments.directionalDistributionArguments = new PGLVMMFactoryArguments();
+        fieldArguments.directionalDistributionArguments = new PGLVMMFactoryArguments(false);
         fieldArguments.useParallaxCompensation = false;
         break;
     }

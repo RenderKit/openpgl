@@ -134,6 +134,9 @@ public:
         uint32_t numMerges = 0;
     };
 
+    void prepareSamples(SampleData* samples, const size_t numSamples, const SampleStatistics &sampleStatistics, const Configuration &cfg) const 
+    {};
+
     void fit(Distribution &dist, Statistics &stats, const SampleData* samples, const size_t numSamples, const Configuration &cfg, FittingStatistics &fitStats) {
         for (uint32_t i = 0; i < 5; i++) {
             float decay = 0.25;

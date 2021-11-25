@@ -106,6 +106,8 @@ public:
         std::string toString() const;
     };
 
+    void prepareSamples(SampleData* samples, const size_t numSamples, const SampleStatistics &sampleStatistics, const Configuration &cfg) const;
+
     void fit(VMM &vmm, Statistics &stats, const SampleData* samples, const size_t numSamples, const Configuration &cfg, FittingStatistics &fitStats) const;
 
     void update(VMM &vmm, Statistics &stats, const SampleData* samples, const size_t numSamples, const Configuration &cfg, FittingStatistics &fitStats) const;
@@ -258,6 +260,14 @@ std::string AdaptiveSplitAndMergeFactory<TVMMDistribution>::Configuration::toStr
     ss << "\tminSamplesForPartialRefitting = " << minSamplesForPartialRefitting << std::endl;
     ss << "\tminSamplesForMerging = " << minSamplesForMerging << std::endl;
     return ss.str();
+}
+
+
+template<class TVMMDistribution>
+void AdaptiveSplitAndMergeFactory<TVMMDistribution>::prepareSamples(SampleData* samples, const size_t numSamples, const SampleStatistics &sampleStatistics, const Configuration &cfg) const
+{
+    WeightedEMFactory factory = WeightedEMFactory();
+    factory.prepareSamples(samples, numSamples, sampleStatistics, cfg.weightedEMCfg);
 }
 
 template<class TVMMDistribution>

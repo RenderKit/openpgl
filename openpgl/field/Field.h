@@ -312,21 +312,19 @@ private:
         {
             RegionStorageType &regionStorage = m_regionStorageContainer[n];
             openpgl::Point3 sampleMean = regionStorage.first.sampleStatistics.mean;
+			//TODO: we need a better way to do this so that we avoid allocating memory
             std::vector<openpgl::SampleData> dataPoints;
             for (auto i = regionStorage.second.m_begin; i < regionStorage.second.m_end; i++)
             {
                 auto sample = samples[i];
-                if(m_useParallaxCompensation)
-                {
-                    reorientSample(sample, sampleMean);
-                }
-                //OPENPGL_ASSERT(isValid(sample));
                 dataPoints.push_back(sample);
             }
             if (dataPoints.size() > 0)
             {
                 typename DirectionalDistributionFactory::FittingStatistics fittingStats;
+                m_distributionFactory.prepareSamples(dataPoints.data(), dataPoints.size(), regionStorage.first.sampleStatistics, m_distributionFactorySettings);
                 m_distributionFactory.fit(regionStorage.first.distribution, regionStorage.first.trainingStatistics, dataPoints.data(), dataPoints.size(), m_distributionFactorySettings, fittingStats);
+				// TODO: we should move setting the pivot to the factory
                 regionStorage.first.distribution._pivotPosition = sampleMean;
                 regionStorage.first.valid = regionStorage.first.distribution.isValid();
                 if(!regionStorage.first.valid)
@@ -366,21 +364,17 @@ private:
             }
 
             openpgl::Point3 sampleMean = regionStorage.first.sampleStatistics.mean;
+            //TODO: we need a better way to do this so that we avoid allocating memory
             std::vector<openpgl::SampleData> dataPoints;
             for (auto i = regionStorage.second.m_begin; i < regionStorage.second.m_end; i++)
             {
                 auto sample = samples[i];
-                //OPENPGL_ASSERT(isValid(sample));
-                if(m_useParallaxCompensation)
-                {
-                    reorientSample(sample, sampleMean);
-                }
-                //OPENPGL_ASSERT(isValid(sample));
                 dataPoints.push_back(sample);
             }
             if (dataPoints.size() > 0)
             {
                 RegionType oldRegion = regionStorage.first;
+				// TODO: we should move applying the paralax comp to the distriubtion to the factory
                 if(m_useParallaxCompensation)
                 {
                     regionStorage.first.trainingStatistics.sufficientStatistics.applyParallaxShift(regionStorage.first.distribution, regionStorage.first.distribution._pivotPosition - sampleMean);
@@ -389,6 +383,7 @@ private:
                     OPENPGL_ASSERT(regionStorage.first.trainingStatistics.sufficientStatistics.isValid());
                 }
                 typename DirectionalDistributionFactory::FittingStatistics fittingStats;
+                m_distributionFactory.prepareSamples(dataPoints.data(), dataPoints.size(), regionStorage.first.sampleStatistics, m_distributionFactorySettings);
                 m_distributionFactory.update(regionStorage.first.distribution, regionStorage.first.trainingStatistics, dataPoints.data(), dataPoints.size(), m_distributionFactorySettings, fittingStats);
                 //regionStorage.first.valid = regionStorage.first.distribution.isValid();
                 regionStorage.first.valid = regionStorage.first.isValid();
@@ -446,37 +441,6 @@ public:
         }
         regionBeforeUpdate.deserialize(dumpIStream);
         fbDumpIn.close();
-    }
-private:
-    void reorientSample(openpgl::SampleData &sample, const openpgl::Point3 &pivotPoint) const
-    {
-
-        if (std::isinf(sample.distance))
-        {
-            sample.position.x = pivotPoint[0];
-            sample.position.y = pivotPoint[1];
-            sample.position.z = pivotPoint[2];
-            return;
-        }
-        else if (!(sample.distance > 0.0f))
-        {
-            return;
-        }
-
-        const openpgl::Point3 samplePosition(sample.position.x, sample.position.y, sample.position.z);
-        const openpgl::Vector3 sampleDirection(sample.direction.x, sample.direction.y, sample.direction.z);
-        const openpgl::Point3 originPosition = samplePosition + sampleDirection * sample.distance;
-        openpgl::Vector3 newDirection = originPosition - pivotPoint;
-        const float newDistance = embree::length(newDirection);
-        newDirection = newDirection / newDistance;
-
-        sample.position.x = pivotPoint[0];
-        sample.position.y = pivotPoint[1];
-        sample.position.z = pivotPoint[2];
-        sample.distance = newDistance;
-        sample.direction.x = newDirection[0];
-        sample.direction.y = newDirection[1];
-        sample.direction.z = newDirection[2];
     }
 
 private:

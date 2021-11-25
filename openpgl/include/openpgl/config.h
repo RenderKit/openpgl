@@ -37,6 +37,11 @@ struct PGLKDTreeArguments
 
 struct PGLVMMFactoryArguments
 {
+    PGLVMMFactoryArguments(bool parallaxCompensation = true)
+    {
+        this->parallaxCompensation = parallaxCompensation;
+    }
+    
     // weighted EM arguments
     size_t initK {PGL_VMM_MAX_COMPONENTS/2};
     float initKappa {0.5f};
@@ -68,6 +73,8 @@ struct PGLVMMFactoryArguments
     int minSamplesForSplitting { 32000/8 };
     int minSamplesForPartialRefitting { 32000/8 };
     int minSamplesForMerging { 32000/4 };
+
+    bool parallaxCompensation {true};
 };
 
 enum PGLDQTLeafEstimator

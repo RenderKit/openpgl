@@ -20,9 +20,21 @@ struct WeightedEMParallaxAwareVonMisesFisherFactory: public WeightedEMVonMisesFi
 
     using VMM = TVMMDistribution;
     using WEMVMMFactory = WeightedEMVonMisesFisherFactory< TVMMDistribution>;
-    using Configuration = typename WEMVMMFactory::Configuration;
     using FittingStatistics = typename WEMVMMFactory::FittingStatistics;
     using PartialFittingMask = typename WEMVMMFactory:: PartialFittingMask;
+
+    struct Configuration: public WEMVMMFactory::Configuration
+    {
+        bool parallaxCompensation {true};
+
+        void init();
+
+        void serialize(std::ostream& stream) const;
+
+        void deserialize(std::istream& stream);
+
+        std::string toString() const;
+    };
 
     struct SufficientStatisitcs//: public WEMVMMFactory::SufficientStatisitcs
     {
@@ -87,6 +99,8 @@ struct WeightedEMParallaxAwareVonMisesFisherFactory: public WeightedEMVonMisesFi
 
 
 public:
+    void prepareSamples(SampleData* samples, const size_t numSamples, const SampleStatistics &sampleStatistics, const Configuration &cfg) const;
+    
     void fitMixture(VMM &vmm, SufficientStatisitcs &stats, const SampleData* samples, const size_t numSamples, const Configuration &cfg, FittingStatistics &fitStats) const;
 
     void updateMixture(VMM &vmm, SufficientStatisitcs &previousStats, const SampleData* samples, const size_t numSamples, const Configuration &cfg, FittingStatistics &fitStats) const;
@@ -104,6 +118,10 @@ public:
     void initComponentDistances (VMM &vmm, SufficientStatisitcs &sufficientStats, const SampleData* samples, const size_t numSamples) const;
 
     void updateComponentDistances (VMM &vmm, SufficientStatisitcs &sufficientStats, const SampleData* samples, const size_t numSamples) const;
+
+private:
+    void reprojectSample(openpgl::SampleData &sample, const openpgl::Point3 &pivotPoint) const;
+
 };
 
 ////////////////////////////////////////////////////////////
@@ -277,6 +295,52 @@ void WeightedEMParallaxAwareVonMisesFisherFactory< TVMMDistribution>::Sufficient
 ////////////////////////////////////////////////////////////
 /////////            WeightedEMParallaxAwareVonMisesFisherFactory
 ////////////////////////////////////////////////////////////
+
+
+template<class TVMMDistribution>
+void WeightedEMParallaxAwareVonMisesFisherFactory< TVMMDistribution>::reprojectSample(openpgl::SampleData &sample, const openpgl::Point3 &pivotPoint) const
+{
+
+    if (std::isinf(sample.distance))
+    {
+        sample.position.x = pivotPoint[0];
+        sample.position.y = pivotPoint[1];
+        sample.position.z = pivotPoint[2];
+        return;
+    }
+    else if (!(sample.distance > 0.0f))
+    {
+        return;
+    }
+
+    const openpgl::Point3 samplePosition(sample.position.x, sample.position.y, sample.position.z);
+    const openpgl::Vector3 sampleDirection(sample.direction.x, sample.direction.y, sample.direction.z);
+    const openpgl::Point3 originPosition = samplePosition + sampleDirection * sample.distance;
+    openpgl::Vector3 newDirection = originPosition - pivotPoint;
+    const float newDistance = embree::length(newDirection);
+    newDirection = newDirection / newDistance;
+
+    sample.position.x = pivotPoint[0];
+    sample.position.y = pivotPoint[1];
+    sample.position.z = pivotPoint[2];
+    sample.distance = newDistance;
+    sample.direction.x = newDirection[0];
+    sample.direction.y = newDirection[1];
+    sample.direction.z = newDirection[2];
+}
+
+template<class TVMMDistribution>
+void WeightedEMParallaxAwareVonMisesFisherFactory< TVMMDistribution>::prepareSamples(SampleData* samples, const size_t numSamples, const SampleStatistics &sampleStatistics, const Configuration &cfg) const
+{
+    if(cfg.parallaxCompensation) 
+    {
+        openpgl::Vector3 sampleVariance = sampleStatistics.getVaraince();
+        for (size_t n = 0; n < numSamples; n++)
+        {
+            reprojectSample(samples[n], sampleStatistics.mean);
+        }
+    }
+}
 
 template<class TVMMDistribution>
 void WeightedEMParallaxAwareVonMisesFisherFactory< TVMMDistribution>::fitMixture(VMM &vmm, SufficientStatisitcs &stats, const SampleData* samples, const size_t numSamples, const Configuration &cfg, FittingStatistics &fitStats) const
@@ -486,4 +550,34 @@ void WeightedEMParallaxAwareVonMisesFisherFactory< TVMMDistribution>::partialUpd
     }
 }
 */
+
+template<class TVMMDistribution>
+void WeightedEMParallaxAwareVonMisesFisherFactory< TVMMDistribution>::Configuration::init()
+{
+    WEMVMMFactory::Configuration::init();
+}
+
+template<class TVMMDistribution>
+void WeightedEMParallaxAwareVonMisesFisherFactory< TVMMDistribution>::Configuration::serialize(std::ostream& stream) const
+{
+    WEMVMMFactory::Configuration::serialize(stream);
+    stream.write(reinterpret_cast<const char*>(&parallaxCompensation), sizeof(bool));
+}
+
+template<class TVMMDistribution>
+void WeightedEMParallaxAwareVonMisesFisherFactory< TVMMDistribution>::Configuration::deserialize(std::istream& stream)
+{
+    WEMVMMFactory::Configuration::deserialize(stream);
+    stream.read(reinterpret_cast<char*>(&parallaxCompensation), sizeof(bool));
+}
+
+template<class TVMMDistribution>
+std::string WeightedEMParallaxAwareVonMisesFisherFactory< TVMMDistribution>::Configuration::toString() const
+{
+    std::stringstream ss;
+    ss << WEMVMMFactory::Configuration::toString();
+    ss << "\tparallaxCompensation = " << parallaxCompensation << std::endl;
+    return ss.str();
+}
+
 }
