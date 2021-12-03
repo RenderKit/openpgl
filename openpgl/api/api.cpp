@@ -401,6 +401,12 @@ extern "C" OPENPGL_DLLEXPORT size_t pglPathSegmentStoragePrepareSamples(PGLPathS
     return gPathSegmentStorage->prepareSamples(spaltSamples, &gSampler, useNEEMiWeights, guideDirectLight);
 }
 
+extern "C" OPENPGL_DLLEXPORT pgl_vec3f pglPathSegmentStorageCalculatePixelEstimate(PGLPathSegmentStorage pathSegmentStorage)
+{
+    auto *gPathSegmentStorage = (openpgl::PathSegmentDataStorage *)pathSegmentStorage;
+    return gPathSegmentStorage->calculatePixelEstimate();
+}
+
 extern "C" OPENPGL_DLLEXPORT const PGLSampleData* pglPathSegmentStorageGetSamples(PGLPathSegmentStorage pathSegmentStorage, size_t &nSamples)
 {
     auto *gPathSegmentStorage = (openpgl::PathSegmentDataStorage *)pathSegmentStorage;

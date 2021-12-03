@@ -42,7 +42,10 @@ OPENPGL_CORE_INTERFACE void pglPathSegmentStorageReserve(PGLPathSegmentStorage p
 
 OPENPGL_CORE_INTERFACE void pglPathSegmentStorageClear(PGLPathSegmentStorage pathSegmentStorage);
 
-OPENPGL_CORE_INTERFACE size_t pglPathSegmentStoragePrepareSamples(PGLPathSegmentStorage pathSegmentStorage,const bool &spaltSamples, PGLSampler* sampler, const bool useNEEMiWeights = false, const bool guideDirectLight = false);
+OPENPGL_CORE_INTERFACE size_t pglPathSegmentStoragePrepareSamples(PGLPathSegmentStorage pathSegmentStorage, const bool &spaltSamples, PGLSampler* sampler, const bool useNEEMiWeights = false, const bool guideDirectLight = false);
+
+OPENPGL_CORE_INTERFACE pgl_vec3f pglPathSegmentStorageCalculatePixelEstimate(PGLPathSegmentStorage pathSegmentStorage);
+
 
 OPENPGL_CORE_INTERFACE const PGLSampleData* pglPathSegmentStorageGetSamples(PGLPathSegmentStorage pathSegmentStorage, size_t &nSamples);
 

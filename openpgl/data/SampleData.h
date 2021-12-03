@@ -45,9 +45,9 @@ namespace openpgl
         return valid;
     }
 
-    inline bool isInsideVolume(const SampleData& dsd)
+    inline bool isInsideVolume(const SampleData& sd)
     {
-        return (dsd.flags & EInsideVolume);
+        return (sd.flags & EInsideVolume);
     }
 
     inline std::string toString(const SampleData& sd)

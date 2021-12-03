@@ -47,6 +47,8 @@ struct PathSegmentStorage
      */
     size_t PrepareSamples(const bool& splatSamples = false, Sampler* sampler = nullptr, const bool useNEEMiWeights = false, const bool guideDirectLight = false);
 
+    pgl_vec3f CalculatePixelEstimate() const;
+
     /**
      * @brief Get the Samples object
      * 
@@ -108,6 +110,12 @@ OPENPGL_INLINE size_t PathSegmentStorage::PrepareSamples(const bool& splatSample
         return pglPathSegmentStoragePrepareSamples(m_pathSegmentStorageHandle, splatSamples, &sampler->m_samplerHandle, useNEEMiWeights, guideDirectLight);
     else
         return pglPathSegmentStoragePrepareSamples(m_pathSegmentStorageHandle, splatSamples, nullptr, useNEEMiWeights, guideDirectLight);
+}
+
+OPENPGL_INLINE pgl_vec3f PathSegmentStorage::CalculatePixelEstimate() const
+{
+    OPENPGL_ASSERT(m_pathSegmentStorageHandle);
+    return pglPathSegmentStorageCalculatePixelEstimate(m_pathSegmentStorageHandle);
 }
 
 OPENPGL_INLINE const SampleData* PathSegmentStorage::GetSamples(size_t &nSamples)
