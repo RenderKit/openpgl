@@ -243,6 +243,14 @@ struct PathSegmentDataStorage
 
         //std::cout << std::endl;
         //std::cout << this->toString() << std::endl;
+        /*
+        if(finalColor.x > 10.f || finalColor.y > 10.f ||finalColor.z > 10.f )
+        {
+            std::cout << std::endl;
+            std::cout << "Large Color value:"<< std::endl;
+            std::cout << this->toString() << std::endl;
+        }
+        */
         return finalColor;
     }
 
@@ -280,6 +288,13 @@ struct PathSegmentDataStorage
             valid = valid && isValid(psd);
             OPENPGL_ASSERT(valid);
         }
+        /*
+        if(!valid)
+        {
+            std::cout << "Segments not Valid:" << std::endl;
+            std::cout << toString() << std::endl;
+        }
+        */
         return valid;
     }
 

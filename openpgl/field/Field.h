@@ -327,8 +327,10 @@ private:
 				// TODO: we should move setting the pivot to the factory
                 regionStorage.first.distribution._pivotPosition = sampleMean;
                 regionStorage.first.valid = regionStorage.first.distribution.isValid();
+#ifdef OPENPGL_DEBUG_MODE
                 if(!regionStorage.first.valid)
                     std::cout << "!!!! " << (m_isSurface? "Surface":"Volume") << " regionStorage.first.valid !!! " << regionStorage.first.distribution.toString() << std::endl;
+#endif
                 regionStorage.first.splitFlag = false;
             }
             else
@@ -373,7 +375,9 @@ private:
             }
             if (dataPoints.size() > 0)
             {
+#ifdef OPENPGL_DEBUG_MODE
                 RegionType oldRegion = regionStorage.first;
+#endif
 				// TODO: we should move applying the paralax comp to the distriubtion to the factory
                 if(m_useParallaxCompensation)
                 {
@@ -387,11 +391,13 @@ private:
                 m_distributionFactory.update(regionStorage.first.distribution, regionStorage.first.trainingStatistics, dataPoints.data(), dataPoints.size(), m_distributionFactorySettings, fittingStats);
                 //regionStorage.first.valid = regionStorage.first.distribution.isValid();
                 regionStorage.first.valid = regionStorage.first.isValid();
+#ifdef OPENPGL_DEBUG_MODE
                 if(!regionStorage.first.valid)
                 {
                     std::cout << "!!!! " << (m_isSurface? "Surface":"Volume") << " regionStorage.first.valid !!! " << regionStorage.first.distribution.toString() << std::endl;
                     storeInvalidRegionData("regionBeforeUpdate_"+ std::string((m_isSurface? "surf":"vol")) + "_itr" + std::to_string(this->m_iteration) + "_region" + std::to_string(n)+".dump", oldRegion, dataPoints, m_distributionFactorySettings);
                 }
+#endif
             }
             else
             {

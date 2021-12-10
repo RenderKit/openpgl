@@ -799,7 +799,9 @@ float WeightedEMVonMisesFisherFactory< TVMMDistribution>::weightedExpectationSte
         {
             unassignedStats.sumOfUnassignedWeights += sampleData.weight;
             unassignedStats.sumUnassignedWeightedDirections += sampleDirection * sampleData.weight;
+#ifdef OPENPGL_DEBUG_MODE
             std::cout << "continue" << std::endl;
+#endif
             continue;
         }
 
