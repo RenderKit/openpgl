@@ -45,9 +45,9 @@ struct PathSegmentStorage
      * @param guideDirectLight 
      * @return size_t 
      */
-    size_t PrepareSamples(const bool& splatSamples = false, Sampler* sampler = nullptr, const bool useNEEMiWeights = false, const bool guideDirectLight = false);
+    size_t PrepareSamples(const bool& splatSamples = false, Sampler* sampler = nullptr, const bool useNEEMiWeights = false, const bool guideDirectLight = false, const bool rrEffectsDirectContribution = true);
 
-    pgl_vec3f CalculatePixelEstimate() const;
+    pgl_vec3f CalculatePixelEstimate(const bool rrEffectsDirectContribution) const;
 
     /**
      * @brief Get the Samples object
@@ -102,20 +102,20 @@ OPENPGL_INLINE void PathSegmentStorage::Clear()
     pglPathSegmentStorageClear(m_pathSegmentStorageHandle);
 }
 
-OPENPGL_INLINE size_t PathSegmentStorage::PrepareSamples(const bool& splatSamples, Sampler* sampler, const bool useNEEMiWeights, const bool guideDirectLight)
+OPENPGL_INLINE size_t PathSegmentStorage::PrepareSamples(const bool& splatSamples, Sampler* sampler, const bool useNEEMiWeights, const bool guideDirectLight, const bool rrEffectsDirectContribution)
 {
     OPENPGL_ASSERT(m_pathSegmentStorageHandle);
     //OPENPGL_ASSERT(&sampler.m_samplerHandle);
     if(sampler)
-        return pglPathSegmentStoragePrepareSamples(m_pathSegmentStorageHandle, splatSamples, &sampler->m_samplerHandle, useNEEMiWeights, guideDirectLight);
+        return pglPathSegmentStoragePrepareSamples(m_pathSegmentStorageHandle, splatSamples, &sampler->m_samplerHandle, useNEEMiWeights, guideDirectLight, rrEffectsDirectContribution);
     else
-        return pglPathSegmentStoragePrepareSamples(m_pathSegmentStorageHandle, splatSamples, nullptr, useNEEMiWeights, guideDirectLight);
+        return pglPathSegmentStoragePrepareSamples(m_pathSegmentStorageHandle, splatSamples, nullptr, useNEEMiWeights, guideDirectLight, rrEffectsDirectContribution);
 }
 
-OPENPGL_INLINE pgl_vec3f PathSegmentStorage::CalculatePixelEstimate() const
+OPENPGL_INLINE pgl_vec3f PathSegmentStorage::CalculatePixelEstimate(const bool rrEffectsDirectContribution) const
 {
     OPENPGL_ASSERT(m_pathSegmentStorageHandle);
-    return pglPathSegmentStorageCalculatePixelEstimate(m_pathSegmentStorageHandle);
+    return pglPathSegmentStorageCalculatePixelEstimate(m_pathSegmentStorageHandle, rrEffectsDirectContribution);
 }
 
 OPENPGL_INLINE const SampleData* PathSegmentStorage::GetSamples(size_t &nSamples)

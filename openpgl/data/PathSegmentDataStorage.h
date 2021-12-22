@@ -51,7 +51,7 @@ struct PathSegmentDataStorage
     }
 
 
-    size_t prepareSamples(const bool splatSamples, Sampler* sampler, const bool useNEEMiWeights = false, const bool guideDirectLight = false)
+    size_t prepareSamples(const bool splatSamples, Sampler* sampler, const bool useNEEMiWeights = false, const bool guideDirectLight = false, const bool rrEffectsDirectContribution = true)
     {
         const float minPDF {0.1f};
         const openpgl::Vector3 maxThroughput {10.0f};
@@ -103,6 +103,7 @@ struct PathSegmentDataStorage
                 // evalaute the incident radiance the incident
                 openpgl::Vector3 throughput {1.0f};
                 openpgl::Vector3 contribution {0.0f};
+                float previousRR = 1.0f;
                 for (size_t j = i+1; j < numSegments; ++j)
                 {
                     const openpgl::PathSegmentData &nextPathSegment = m_segmentStorage[j];
@@ -115,11 +116,17 @@ struct PathSegmentDataStorage
                     contribution += clampedThroughput * openpgl::Vector3(nextPathSegment.scatteredContribution.x, nextPathSegment.scatteredContribution.y, nextPathSegment.scatteredContribution.z);
                     OPENPGL_ASSERT(embree::isvalid(contribution));
                     OPENPGL_ASSERT(contribution[0] >= 0.f && contribution[1] >= 0.f && contribution[2] >= 0.f);
+                    
+                    openpgl::Vector3 directContribution = openpgl::Vector3(nextPathSegment.directContribution.x, nextPathSegment.directContribution.y, nextPathSegment.directContribution.z);
+                    if(!rrEffectsDirectContribution)
+                    {
+                        directContribution *= previousRR;
+                    }
                     if(j == i+1 && !useNEEMiWeights)
                     {
                         if(guideDirectLight)
                         {
-                            contribution += clampedThroughput * openpgl::Vector3(nextPathSegment.directContribution.x, nextPathSegment.directContribution.y, nextPathSegment.directContribution.z);
+                            contribution += clampedThroughput * directContribution;
                             OPENPGL_ASSERT(embree::isvalid(contribution));
                             OPENPGL_ASSERT(contribution[0] >= 0.f && contribution[1] >= 0.f && contribution[2] >= 0.f);
                         }
@@ -128,13 +135,14 @@ struct PathSegmentDataStorage
                     {
                         if(j>i+1 || guideDirectLight)
                         {
-                            contribution += clampedThroughput * nextPathSegment.miWeight * openpgl::Vector3(nextPathSegment.directContribution.x, nextPathSegment.directContribution.y, nextPathSegment.directContribution.z);
+                            contribution += clampedThroughput * nextPathSegment.miWeight * directContribution;
                             OPENPGL_ASSERT(embree::isvalid(contribution));
                             OPENPGL_ASSERT(contribution[0] >= 0.f && contribution[1] >= 0.f && contribution[2] >= 0.f);
                         }
                     }
                     throughput = throughput * openpgl::Vector3(nextPathSegment.scatteringWeight.x, nextPathSegment.scatteringWeight.y, nextPathSegment.scatteringWeight.z);
                     throughput /= nextPathSegment.russianRouletteProbability;
+                    previousRR = nextPathSegment.russianRouletteProbability;
 
                     OPENPGL_ASSERT(embree::isvalid(throughput));
                     OPENPGL_ASSERT(throughput[0] >= 0.f && throughput[1] >= 0.f && throughput[2] >= 0.f)
@@ -180,7 +188,7 @@ struct PathSegmentDataStorage
         return m_sampleStorage.size();
     }
 
-    pgl_vec3f calculatePixelEstimate()
+    pgl_vec3f calculatePixelEstimate(const bool rrEffectsDirectContribution = true)
     {
         const float minPDF {0.1f};
         const openpgl::Vector3 maxThroughput {10.0f};
@@ -200,6 +208,7 @@ struct PathSegmentDataStorage
         // evalaute the incident radiance the incident
         openpgl::Vector3 throughput {1.0f};
         openpgl::Vector3 contribution {0.0f};
+        float previousRR = 1.0f;
         for (size_t j = 0+1; j < numSegments; ++j)
         {
             const openpgl::PathSegmentData &nextPathSegment = m_segmentStorage[j];
@@ -213,14 +222,18 @@ struct PathSegmentDataStorage
             OPENPGL_ASSERT(embree::isvalid(contribution));
             OPENPGL_ASSERT(contribution[0] >= 0.f && contribution[1] >= 0.f && contribution[2] >= 0.f);
 
-
-            contribution += throughput * nextPathSegment.miWeight * openpgl::Vector3(nextPathSegment.directContribution.x, nextPathSegment.directContribution.y, nextPathSegment.directContribution.z);
+            openpgl::Vector3 directContribution = openpgl::Vector3(nextPathSegment.directContribution.x, nextPathSegment.directContribution.y, nextPathSegment.directContribution.z);
+            if(!rrEffectsDirectContribution)
+            {
+                directContribution *= previousRR;
+            }
+            contribution += throughput * nextPathSegment.miWeight * directContribution;
             OPENPGL_ASSERT(embree::isvalid(contribution));
             OPENPGL_ASSERT(contribution[0] >= 0.f && contribution[1] >= 0.f && contribution[2] >= 0.f);
 
             throughput = throughput * openpgl::Vector3(nextPathSegment.scatteringWeight.x, nextPathSegment.scatteringWeight.y, nextPathSegment.scatteringWeight.z);
             throughput /= nextPathSegment.russianRouletteProbability;
-
+            previousRR = nextPathSegment.russianRouletteProbability;
             OPENPGL_ASSERT(embree::isvalid(throughput));
             OPENPGL_ASSERT(throughput[0] >= 0.f && throughput[1] >= 0.f && throughput[2] >= 0.f)
         }
