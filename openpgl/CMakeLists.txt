@@ -14,6 +14,7 @@ set(OPENPGL_SRC
     ${DEVICE_SRC}
     directional/ISurfaceSamplingDistribution.cpp
     directional/IVolumeSamplingDistribution.cpp
+    directional/vmm/VMMPhaseFunctions.cpp
     ../third-party/embreeSrc/common/simd/sse.cpp
 )
 

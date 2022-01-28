@@ -34,14 +34,14 @@ struct VMMSurfaceSamplingDistribution: public ISurfaceSamplingDistribution
 
     inline void init(const void* distribution, Point3 samplePosition) override
     {
-        const TVMMDistribution* vmmdistribution = (TVMMDistribution*)distribution;
+         m_liDistribution = *(TVMMDistribution*)distribution;
         // prespare sampling distribution
-        this->m_distributions[0] = *vmmdistribution;
         if(m_useParallaxCompensation)
         {
-            const Point3 pivotPosition = this->m_distributions[0]._pivotPosition;
-            this->m_distributions[0].performRelativeParallaxShift(pivotPosition - samplePosition);
+            const Point3 pivotPosition = this->m_liDistribution._pivotPosition;
+            this->m_liDistribution.performRelativeParallaxShift(pivotPosition - samplePosition);
         }
+        this->m_distributions[0] = m_liDistribution;
         this->m_weights[0] = 1.0f;
         this->m_numDistributions = 1;
         this->m_productIntegral = 1.0f;
@@ -51,7 +51,7 @@ struct VMMSurfaceSamplingDistribution: public ISurfaceSamplingDistribution
     {
         if(this->m_numDistributions > 0)
         {
-            this->m_distributions[0].product(1.0f, normal, 2.18853f);
+            this->m_productIntegral = this->m_distributions[0].product(1.0f, normal, 2.18853f);
         }
     }
 

@@ -4,6 +4,7 @@
 #pragma once
 
 #include "../IVolumeSamplingDistribution.h"
+#include "VMMPhaseFunctions.h"
 
 namespace openpgl
 {
@@ -15,7 +16,7 @@ struct VMMVolumeSamplingDistribution: public IVolumeSamplingDistribution
     VMMVolumeSamplingDistribution(const bool useParallaxCompensation): IVolumeSamplingDistribution(useParallaxCompensation){};
     ~VMMVolumeSamplingDistribution() = default;
 
-    typedef std::integral_constant<size_t, 2> MaxNumProductDistributions;
+    typedef std::integral_constant<size_t, OPENPGL_VMM_NUM_PHASE_COMP> MaxNumProductDistributions;
 
     /// the region's Li distribution with applied parallax-compensation
     TVMMDistribution m_liDistribution;
@@ -31,17 +32,48 @@ struct VMMVolumeSamplingDistribution: public IVolumeSamplingDistribution
 
     inline void init(const void* distribution, Point3 samplePosition) override
     {
-        const TVMMDistribution* vmmdistribution = (TVMMDistribution*)distribution;
+        m_liDistribution = *(TVMMDistribution*)distribution;
+
+        //m_liDistribution.uniformInit(0.0);
+
         // prespare sampling distribution
-        this->m_distributions[0] = *vmmdistribution;
         if(m_useParallaxCompensation)
         {
-            const Point3 pivotPosition = this->m_distributions[0]._pivotPosition;
-            this->m_distributions[0].performRelativeParallaxShift(pivotPosition - samplePosition);
+            const Point3 pivotPosition = this->m_liDistribution._pivotPosition;
+            this->m_liDistribution.performRelativeParallaxShift(pivotPosition - samplePosition);
         }
+        this->m_distributions[0] = m_liDistribution;
         this->m_weights[0] = 1.0f;
         this->m_numDistributions = 1;
         this->m_productIntegral = 1.0f;
+    }
+
+    inline void applySingleLobeHenyeyGreensteinProduct(const Vector3& dir, const float meanCosine)
+    {
+        float sumWeights = 0.f;        
+        const VMMPhaseFunctionRepresentation pfRep =VMMSingleLobeHenyeyGreensteinOracle::getPhaseFunctionRepresentation(meanCosine);
+
+        for (int i=0; i < pfRep.K; i++)
+        {
+            this->m_distributions[i] = m_liDistribution;
+            const Vector3 outDir = meanCosine * pfRep.meanCosines[i] > 0.f ? dir: -dir;
+/*     
+            const float absMeanCosine = std::fabs(pfRep.meanCosines[i]);
+            float kappa = MeanCosineToKappa< float >(absMeanCosine);
+            kappa = kappa<= 1e-4f ? 0.0f: kappa;
+            this->m_weights[i] = this->m_distributions[i].product(pfRep.weights[i], outDir, kappa);
+*/            
+            this->m_weights[i] = this->m_distributions[i].product(pfRep.weights[i], outDir, pfRep.kappas[i], pfRep.normalizations[i]);
+            sumWeights += this->m_weights[i];
+        }
+
+        for (int i=0; i< pfRep.K; i++)
+        {
+            this->m_weights[i] /=sumWeights;
+        }
+        
+        this->m_numDistributions = pfRep.K;
+        this->m_productIntegral = sumWeights;
     }
 
 

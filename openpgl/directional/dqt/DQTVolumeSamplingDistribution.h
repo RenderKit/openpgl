@@ -37,6 +37,11 @@ struct DQTVolumeSamplingDistribution: public IVolumeSamplingDistribution {
     inline void clear() override {
     };
 
+    inline void applySingleLobeHenyeyGreensteinProduct(const Vector3& dir, const float meanCosine) override {
+        // not supported by quadtree
+        return;
+    };
+
     std::string toString() const override {
         return "";
     };

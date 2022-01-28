@@ -11,6 +11,7 @@
 #include "directional/vmm/AdaptiveSplitandMergeFactory.h"
 #include "directional/vmm/VMMSurfaceSamplingDistribution.h"
 #include "directional/vmm/VMMVolumeSamplingDistribution.h"
+#include "directional/vmm/VMMPhaseFunctions.h"
 #include "directional/dqt/DQT.h"
 #include "directional/dqt/DQTFactory.h"
 #include "directional/dqt/DQTSurfaceSamplingDistribution.h"
@@ -29,6 +30,10 @@ struct IDevice {
 
 template<int VecSize>
 struct Device: public IDevice {
+    Device(){
+        VMMSingleLobeHenyeyGreensteinOracle::init();
+    }
+
     ISurfaceVolumeField* newField(PGLFieldArguments args) const override {
         ISurfaceVolumeField* gField;
 

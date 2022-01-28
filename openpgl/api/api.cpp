@@ -602,6 +602,12 @@ extern "C" OPENPGL_DLLEXPORT void pglVolumeSamplingDistributionClear(PGLVolumeSa
     gVolumeSamplingDistribution->clear();
 }
 
+extern "C" OPENPGL_DLLEXPORT void pglVolumeSamplingDistributionApplySingleLobeHenyeyGreensteinProduct(PGLVolumeSamplingDistribution volumeSamplingDistribution, pgl_vec3f dir, const float meanCosine)
+{
+    IVolumeSamplingDistribution* gVolumeSamplingDistribution = (IVolumeSamplingDistribution*)volumeSamplingDistribution;
+    openpgl::Vector3 opglDir(dir.x, dir.y, dir.z);
+    gVolumeSamplingDistribution->applySingleLobeHenyeyGreensteinProduct(opglDir, meanCosine);
+}
 
 extern "C" OPENPGL_DLLEXPORT void pglFieldArgumentsSetDefaults(PGLFieldArguments &fieldArguments, const PGL_SPATIAL_STRUCTURE_TYPE spatialType, const PGL_DIRECTIONAL_DISTRIBUTION_TYPE directionalType)
 {

@@ -35,6 +35,8 @@ OPENPGL_CORE_INTERFACE bool pglVolumeSamplingDistributionIsValid(PGLVolumeSampli
 
 OPENPGL_CORE_INTERFACE void pglVolumeSamplingDistributionClear(PGLVolumeSamplingDistribution VolumeSamplingDistribution);
 
+OPENPGL_CORE_INTERFACE void pglVolumeSamplingDistributionApplySingleLobeHenyeyGreensteinProduct(PGLVolumeSamplingDistribution volumeSamplingDistribution, pgl_vec3f dir, const float meanCosine);
+
 OPENPGL_CORE_INTERFACE PGLRegion pglVolumeSamplingGetRegion(PGLVolumeSamplingDistribution VolumeSamplingDistribution);
 
 #ifdef __cplusplus

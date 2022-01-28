@@ -83,6 +83,15 @@ struct VolumeSamplingDistribution
 
     Region GetRegion() const;
 
+
+    /**
+     * @brief Applies the product with the cosine to the sampling distriubtion.
+     * 
+     *  
+     * @param normal 
+     */
+    void ApplySingleLobeHenyeyGreensteinProduct(const pgl_vec3f& dir, const float meanCosine);
+
     ///////////////////////////////////////
     /// Future plans
     ///////////////////////////////////////
@@ -146,6 +155,12 @@ OPENPGL_INLINE void VolumeSamplingDistribution::Clear()
 {
     OPENPGL_ASSERT(m_volumeSamplingDistributionHandle);
     return pglVolumeSamplingDistributionClear(m_volumeSamplingDistributionHandle);
+}
+
+OPENPGL_INLINE void VolumeSamplingDistribution::ApplySingleLobeHenyeyGreensteinProduct(const pgl_vec3f& dir, const float meanCosine)
+{
+    OPENPGL_ASSERT(m_volumeSamplingDistributionHandle);
+    return pglVolumeSamplingDistributionApplySingleLobeHenyeyGreensteinProduct(m_volumeSamplingDistributionHandle, dir, meanCosine);
 }
 
 /*

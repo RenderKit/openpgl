@@ -31,6 +31,8 @@ struct IVolumeSamplingDistribution
 
     virtual void clear() = 0;
 
+    virtual void applySingleLobeHenyeyGreensteinProduct(const Vector3& dir, const float meanCosine) = 0;
+
     virtual std::string toString() const = 0;
 
     void setRegion(const IRegion* region);
