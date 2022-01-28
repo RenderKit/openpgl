@@ -586,9 +586,20 @@ void VonMisesFisherMixture<VecSize, maxComponents>::uniformInit(float kappa){
 
     for(int k = 0; k < cnt;k++){
         _kappas[k] = embree::vfloat<VecSize>(kappa);
-        _weights[k] = embree::vfloat<VecSize>(1.0f/float(maxComponents));
+        _weights[k] = embree::vfloat<VecSize>(1.0f/float(_numComponents));
         _meanDirections[k] = embree::Vec3< embree::vfloat<VecSize> >(0.0, 0.0, 1.0);
     }
+
+    // TODO: find better more efficient way
+    if ( _numComponents % VecSize > 0 )
+    {
+        for (size_t i = _numComponents % VecSize; i < VecSize; i++ )
+        {
+            _weights[cnt-1][i] = 0.0f;
+            _kappas[cnt-1][i] = 0.0f;
+        }
+    }
+
     _calculateNormalization();
     _calculateMeanCosines();
 }
