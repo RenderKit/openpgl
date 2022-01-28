@@ -60,7 +60,6 @@ struct KNearestRegionsSearchTree
     {
         KNNResult(const Point *_points)
         {
-            visited.reserve(2 * NUM_KNN);
             points = _points;
         }
 
@@ -72,7 +71,6 @@ struct KNearestRegionsSearchTree
         unsigned int k;
         const Point* points = nullptr;
         std::priority_queue<Neighbour, std::vector<Neighbour>> knn;
-        std::vector<unsigned int> visited; // primIDs of all visited points
     };
 
     KNearestRegionsSearchTree()
@@ -156,8 +154,6 @@ struct KNearestRegionsSearchTree
         Point* points = (Point*) result->points;
         const Point& point = points[primID];
         const float d = distance(point.p, q);
-
-        result->visited.push_back(primID);
 
         if (d < query->radius && (result->knn.size() < result->k || d < result->knn.top().d))
         {
