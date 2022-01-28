@@ -295,11 +295,7 @@ extern "C" OPENPGL_DLLEXPORT void pglSampleStorageAddSamples(PGLSampleStorage sa
     auto *gSampleStorage = (openpgl::SampleDataStorage *)sampleStorage;
 
     openpgl::SampleData* opglSamples = (openpgl::SampleData*)samples;
-    for(size_t n =0; n < numSamples; n++)
-    {
-        openpgl::SampleData opglSample = opglSamples[n];
-        gSampleStorage->addSample(opglSample);
-    }
+    gSampleStorage->addSamples(opglSamples, numSamples);    
 }
 
 extern "C" OPENPGL_DLLEXPORT void pglSampleStorageReserve(PGLSampleStorage sampleStorage, const size_t sizeSurface, const size_t sizeVolume)
@@ -410,9 +406,9 @@ extern "C" OPENPGL_DLLEXPORT pgl_vec3f pglPathSegmentStorageCalculatePixelEstima
 extern "C" OPENPGL_DLLEXPORT const PGLSampleData* pglPathSegmentStorageGetSamples(PGLPathSegmentStorage pathSegmentStorage, size_t &nSamples)
 {
     auto *gPathSegmentStorage = (openpgl::PathSegmentDataStorage *)pathSegmentStorage;
-    const std::vector<openpgl::SampleData> &opglSamples = gPathSegmentStorage->getSamples();
-    nSamples = opglSamples.size();
-    return (PGLSampleData*)opglSamples.data();
+    const openpgl::SampleData* opglSamples = gPathSegmentStorage->getSamples();
+    nSamples = gPathSegmentStorage->getNumSamples();
+    return (PGLSampleData*)opglSamples;
 }
 
 
@@ -643,3 +639,4 @@ extern "C" OPENPGL_DLLEXPORT void pglFieldArgumentsSetDefaults(PGLFieldArguments
 
 
 }
+

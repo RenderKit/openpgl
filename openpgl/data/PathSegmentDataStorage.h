@@ -9,45 +9,121 @@
 #include "../sampler/Sampler.h"
 #include "../spatial/Region.h"
 
+#define OPENPGL_PATHSEGMENT_STORAGE_USE_ARRAY 
+
 namespace openpgl
 {
 struct PathSegmentDataStorage
 {
     PathSegmentDataStorage() = default;
     ~PathSegmentDataStorage() = default;
-    std::vector<PathSegmentData> m_segmentStorage;
+private: 
+#if defined(OPENPGL_PATHSEGMENT_STORAGE_USE_ARRAY) 
+    PathSegmentData* m_segmentStorage {nullptr};
+    int m_seg_idx = {-1};
+    int m_max_seg_size = {0};
 
+    SampleData* m_sampleStorage {nullptr};
+    int m_sample_idx = {-1};
+    int m_max_sample_size = {0};
+
+#else
+    std::vector<PathSegmentData> m_segmentStorage;  
+    std::vector<SampleData> m_sampleStorage;
+#endif
+public:
     void reserve(const size_t &size)
     {
+        //std::cout << "PathSegmentDataStorage::reserve: " << size << std::endl;
+#if defined(OPENPGL_PATHSEGMENT_STORAGE_USE_ARRAY)
+        if(m_max_sample_size == size)
+            return;
+        if(m_segmentStorage)
+            delete m_segmentStorage;
+
+        m_segmentStorage = new PathSegmentData[size];
+        m_seg_idx = -1;
+        m_max_seg_size = size;
+
+        if(m_sampleStorage)
+            delete m_sampleStorage;
+
+        m_sampleStorage = new SampleData[size];
+        m_sample_idx = -1;
+        m_max_sample_size = size;
+#else
+        if(m_segmentStorage.size() == size)
+            return;
         m_segmentStorage.reserve(size);
         m_sampleStorage.reserve(size);
+#endif
     }
 
     size_t size()
     {
+#if defined(OPENPGL_PATHSEGMENT_STORAGE_USE_ARRAY)
+        return m_seg_idx+1;
+#else
         return m_segmentStorage.size();
+#endif
     }
 
     void clear()
     {
-        m_segmentStorage.clear();
-        m_sampleStorage.clear();
+#if defined(OPENPGL_PATHSEGMENT_STORAGE_USE_ARRAY)
+        //std::cout << "PathSegmentDataStorage::clear: " << std::endl;
+        m_seg_idx = -1;
+        m_sample_idx = -1;
+#else
+        //m_segmentStorage.clear();
+        //m_sampleStorage.clear();
+        m_segmentStorage.resize(0);
+        m_sampleStorage.resize(0);
+#endif      
     }
 
     PathSegmentData *next()
     {
+#if defined(OPENPGL_PATHSEGMENT_STORAGE_USE_ARRAY)
+        if(m_seg_idx + 1 <= m_max_seg_size)
+        {
+            m_seg_idx++;
+            m_segmentStorage[m_seg_idx] = PathSegmentData();
+            return &m_segmentStorage[m_seg_idx];
+        } else {
+            //std::cout << "PathSegmentDataStorage::next: idx = " << m_seg_idx << "max_size = " << m_max_seg_size << std::endl;
+            return nullptr;
+        }
+#else
        m_segmentStorage.emplace_back();
        return &m_segmentStorage.back();
+#endif
     }
 
     void addSegment(const PGLPathSegmentData& segment)
     {
+#if defined(OPENPGL_PATHSEGMENT_STORAGE_USE_ARRAY)
+        if(m_seg_idx+1 <= m_max_seg_size)
+        {
+            m_seg_idx++;
+            m_segmentStorage[m_seg_idx] = segment;
+        }
+#else
         m_segmentStorage.push_back(segment);
+#endif
     }
 
     void push_back(const PathSegmentData &psData)
     {
+#if defined(OPENPGL_PATHSEGMENT_STORAGE_USE_ARRAY)
+        if(m_seg_idx+1 <= m_max_seg_size)
+        {
+            m_seg_idx++;
+            m_segmentStorage[m_seg_idx] = psData;
+        }
+#else
         m_segmentStorage.push_back(psData);
+#endif
     }
 
 
@@ -55,9 +131,11 @@ struct PathSegmentDataStorage
     {
         const float minPDF {0.1f};
         const openpgl::Vector3 maxThroughput {10.0f};
-
+#if defined(OPENPGL_PATHSEGMENT_STORAGE_USE_ARRAY)
+        size_t numSegments = m_seg_idx+1;
+#else
         size_t numSegments = m_segmentStorage.size();
-
+#endif
         float lastDistance = 0.0f;
         for (int i=numSegments-2; i>=0; --i)
         {
@@ -173,7 +251,15 @@ struct PathSegmentDataStorage
                         {
                             regionPtr->splatSample(dsd,sampler->next2D()); 
                         }
+#if defined(OPENPGL_PATHSEGMENT_STORAGE_USE_ARRAY)
+                        if(m_sample_idx+1 <= m_max_sample_size)
+                        {
+                            m_sample_idx++;
+                            m_sampleStorage[m_sample_idx] = dsd;
+                        }
+#else
                         m_sampleStorage.emplace_back(dsd);
+#endif
                     }
                     else
                     {
@@ -185,15 +271,23 @@ struct PathSegmentDataStorage
         }
         //std::cout << std::endl;
         //std::cout << this->toString() << std::endl;
+#if defined(OPENPGL_PATHSEGMENT_STORAGE_USE_ARRAY)
+        return m_sample_idx+1;
+#else
         return m_sampleStorage.size();
+#endif
     }
 
     pgl_vec3f calculatePixelEstimate(const bool rrEffectsDirectContribution = true)
     {
-        const float minPDF {0.1f};
+        //const float minPDF {0.1f};
         const openpgl::Vector3 maxThroughput {10.0f};
 
+#if defined(OPENPGL_PATHSEGMENT_STORAGE_USE_ARRAY)
+        size_t numSegments = m_seg_idx+1;
+#else
         size_t numSegments = m_segmentStorage.size();
+#endif
 
         pgl_vec3f finalColor;
         finalColor.x = 0.f;
@@ -267,9 +361,22 @@ struct PathSegmentDataStorage
         return finalColor;
     }
 
-    const std::vector<SampleData>& getSamples()const
+    const SampleData* getSamples()const
     {
+#if defined(OPENPGL_PATHSEGMENT_STORAGE_USE_ARRAY)
         return m_sampleStorage;
+#else
+        return m_sampleStorage.data();
+#endif
+    }
+
+    int getNumSamples()const
+    {
+#if defined(OPENPGL_PATHSEGMENT_STORAGE_USE_ARRAY)
+        return m_sample_idx + 1;
+#else
+        return m_sampleStorage.size();
+#endif
     }
 
     void addSample(const SampleData &sampleData)
@@ -277,13 +384,26 @@ struct PathSegmentDataStorage
         OPENPGL_ASSERT(isValid(sampleData));
         OPENPGL_ASSERT(sampleData.distance > 0);
         OPENPGL_ASSERT(embree::isvalid(sampleData.distance));
+#if defined(OPENPGL_PATHSEGMENT_STORAGE_USE_ARRAY)
+        if(m_sample_idx+1 >= m_max_sample_size)
+        {
+            m_sample_idx++;
+            m_sampleStorage[m_sample_idx] = sampleData;
+        }
+#else
         m_sampleStorage.push_back(sampleData);
+#endif
     }
 
     bool samplesValid() const
     {
         bool valid = true;
-        for ( int s = 0; s < m_sampleStorage.size(); s++)
+#if defined(OPENPGL_PATHSEGMENT_STORAGE_USE_ARRAY)
+        int nSamples = m_sample_idx + 1;
+#else
+        int nSamples = m_sampleStorage.size();
+#endif
+        for ( int s = 0; s < nSamples; s++)
         {
             SampleData sample = m_sampleStorage[s];
             valid = valid && isValid(sample);
@@ -294,8 +414,15 @@ struct PathSegmentDataStorage
 
     bool segmentsValid() const
     {
+#if defined(OPENPGL_PATHSEGMENT_STORAGE_USE_ARRAY)
+        size_t numSegments = m_seg_idx+1;
+#else
+        size_t numSegments = m_segmentStorage.size();
+#endif
+
+        
         bool valid = true;
-        for ( int s = 0; s < m_segmentStorage.size(); s++)
+        for ( int s = 0; s < numSegments; s++)
         {
             PathSegmentData psd = m_segmentStorage[s];
             valid = valid && isValid(psd);
@@ -313,18 +440,28 @@ struct PathSegmentDataStorage
 
     std::string toString() const
     {
+#if defined(OPENPGL_PATHSEGMENT_STORAGE_USE_ARRAY)
+        size_t numSegments = m_seg_idx+1;
+#else
+        size_t numSegments = m_segmentStorage.size();
+#endif
         std::stringstream ss;
         ss << "PathSegmentDataStorage:" << std::endl;
-        ss << "segment storage: size = "<< m_segmentStorage.size() << std::endl;
-        for ( int s = 0; s < m_segmentStorage.size(); s++)
+        ss << "segment storage: size = "<< numSegments << std::endl;
+        for ( int s = 0; s < numSegments; s++)
         {
             PathSegmentData psd = m_segmentStorage[s];
             ss << "seg[" << s << "]: " << openpgl::toString(psd) ;
 			ss << "\t valid = " << isValid(psd);
             ss << std::endl;
         }
+#if defined(OPENPGL_PATHSEGMENT_STORAGE_USE_ARRAY)
+        int nSamples = m_sample_idx + 1;
+#else
+        int nSamples = m_sampleStorage.size();
+#endif
 
-        for ( int s = 0; s < m_sampleStorage.size(); s++)
+        for ( int s = 0; s < nSamples; s++)
         {
             SampleData sample = m_sampleStorage[s];
             ss << "sample[" << s << "]: " << openpgl::toString(sample);
@@ -335,7 +472,7 @@ struct PathSegmentDataStorage
         return ss.str();
     }
 
-private:
-    std::vector<SampleData> m_sampleStorage;
+
+
 };
 }

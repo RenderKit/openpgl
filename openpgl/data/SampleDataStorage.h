@@ -80,11 +80,11 @@ struct SampleDataStorage
         }
     }
 
-    inline void addSamples(const std::vector<SampleData> &samples)
+    inline void addSamples(const SampleData* samples, int nSamples)
     {
-        for (auto& sample : samples)
+        for (int i = 0; i<nSamples; i++)
         {
-            addSample(sample);
+            addSample(samples[i]);
         }
     }
 
