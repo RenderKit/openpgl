@@ -261,10 +261,12 @@ public:
                         m_sampleStorage.emplace_back(dsd);
 #endif
                     }
+/*
                     else
                     {
                         std::cout << "PathSegmentDataStorage::prepareSamples(): !(distance>0)" << std::endl;
                     }
+*/
                 }
 
             }
