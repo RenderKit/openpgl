@@ -14,7 +14,7 @@ namespace openpgl
 {
 namespace cpp
 {
-
+struct Field;
 /**
  * @brief
  *
@@ -32,7 +32,7 @@ struct Device
 
     Device(const Device&) = delete;
 
-    friend class Field;
+    friend struct Field;
     private:
         PGLDevice m_deviceHandle {nullptr};
 };
