@@ -64,8 +64,8 @@ struct PGLVMMFactoryArguments
     // adaptive split and merge arguments
     bool useSplitAndMerge {true};
 
-    float splittingThreshold { 0.5 };
-    float mergingThreshold { 0.025 };
+    float splittingThreshold { 0.5f };
+    float mergingThreshold { 0.025f };
 
     bool partialReFit { true };
     int maxSplitItr { 1 };
@@ -93,7 +93,7 @@ struct PGLDQTFactoryArguments
 {
     PGLDQTLeafEstimator leafEstimator { PGLDQTLeafEstimator::REJECTION_SAMPLING };
     PGLDQTSplitMetric splitMetric { PGLDQTSplitMetric::MEAN };
-    float splitThreshold { 0.01 };
+    float splitThreshold { 0.01f };
     float footprintFactor { 1 };
     uint32_t maxLevels { 12 };
 };

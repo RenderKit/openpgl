@@ -10,12 +10,12 @@ namespace openpgl {
 
     void VMMSingleLobeHenyeyGreensteinOracle::init()
     {
-        minMeanCosine = 0.0;
-        maxMeanCosine = 0.99;
+        minMeanCosine = 0.0f;
+        maxMeanCosine = 0.99f;
         numRepresentations = 128;
 
         representations[0].K = 3;
-        representations[0].g = 0.0;
+        representations[0].g = 0.0f;
         representations[0].weights[0] = 0.01688512612073299f;
         representations[0].meanCosines[0] = 0.0f;
         representations[0].kappas[0] = 0.0f;
@@ -34,7 +34,7 @@ namespace openpgl {
         representations[0].normalizations[3] = 0.0f;
 
         representations[1].K = 3;
-        representations[1].g = 0.007795275590551181;
+        representations[1].g = 0.007795275590551181f;
         representations[1].weights[0] = 0.01688512612254555f;
         representations[1].meanCosines[0] = 0.03588398182493312f;
         representations[1].kappas[0] = 0.10774447737138962f;
@@ -53,7 +53,7 @@ namespace openpgl {
         representations[1].normalizations[3] = 0.0f;
 
         representations[2].K = 3;
-        representations[2].g = 0.015590551181102362;
+        representations[2].g = 0.015590551181102362f;
         representations[2].weights[0] = 0.01688437903886321f;
         representations[2].meanCosines[0] = 0.07165186574299764f;
         representations[2].kappas[0] = 0.21569511380458395f;
@@ -72,7 +72,7 @@ namespace openpgl {
         representations[2].normalizations[3] = 0.0f;
 
         representations[3].K = 3;
-        representations[3].g = 0.02338582677165354;
+        representations[3].g = 0.02338582677165354f;
         representations[3].weights[0] = 0.01688251644451822f;
         representations[3].meanCosines[0] = 0.10719000956269134f;
         representations[3].kappas[0] = 0.3240618203310573f;
@@ -91,7 +91,7 @@ namespace openpgl {
         representations[3].normalizations[3] = 0.0f;
 
         representations[4].K = 3;
-        representations[4].g = 0.031181102362204723;
+        representations[4].g = 0.031181102362204723f;
         representations[4].weights[0] = 0.016879170271827615f;
         representations[4].meanCosines[0] = 0.14238854747740515f;
         representations[4].kappas[0] = 0.43305883676258095f;
@@ -110,7 +110,7 @@ namespace openpgl {
         representations[4].normalizations[3] = 0.0f;
 
         representations[5].K = 3;
-        representations[5].g = 0.0389763779527559;
+        representations[5].g = 0.0389763779527559f;
         representations[5].weights[0] = 0.01688212081880487f;
         representations[5].meanCosines[0] = 0.17712402739360683f;
         representations[5].kappas[0] = 0.5428458438663006f;
@@ -129,7 +129,7 @@ namespace openpgl {
         representations[5].normalizations[3] = 0.0f;
 
         representations[6].K = 3;
-        representations[6].g = 0.04677165354330708;
+        representations[6].g = 0.04677165354330708f;
         representations[6].weights[0] = 0.016911780064021775f;
         representations[6].meanCosines[0] = 0.2112319819771247f;
         representations[6].kappas[0] = 0.6534261871553656f;
@@ -148,7 +148,7 @@ namespace openpgl {
         representations[6].normalizations[3] = 0.0f;
 
         representations[7].K = 3;
-        representations[7].g = 0.054566929133858265;
+        representations[7].g = 0.054566929133858265f;
         representations[7].weights[0] = 0.01698431443686933f;
         representations[7].meanCosines[0] = 0.24453864844476111f;
         representations[7].kappas[0] = 0.764722497664732f;
@@ -167,7 +167,7 @@ namespace openpgl {
         representations[7].normalizations[3] = 0.0f;
 
         representations[8].K = 3;
-        representations[8].g = 0.06236220472440945;
+        representations[8].g = 0.06236220472440945f;
         representations[8].weights[0] = 0.017178062978008293f;
         representations[8].meanCosines[0] = 0.2766513150830249f;
         representations[8].kappas[0] = 0.8758112176782963f;
@@ -186,7 +186,7 @@ namespace openpgl {
         representations[8].normalizations[3] = 0.0f;
 
         representations[9].K = 3;
-        representations[9].g = 0.07015748031496062;
+        representations[9].g = 0.07015748031496062f;
         representations[9].weights[0] = 0.017371006808467492f;
         representations[9].meanCosines[0] = 0.30782730487102705f;
         representations[9].kappas[0] = 0.9879265175144101f;
@@ -205,7 +205,7 @@ namespace openpgl {
         representations[9].normalizations[3] = 0.0f;
 
         representations[10].K = 3;
-        representations[10].g = 0.0779527559055118;
+        representations[10].g = 0.0779527559055118f;
         representations[10].weights[0] = 0.017584981738709496f;
         representations[10].meanCosines[0] = 0.33794984524349103f;
         representations[10].kappas[0] = 1.1009972551142273f;
@@ -224,7 +224,7 @@ namespace openpgl {
         representations[10].normalizations[3] = 0.0f;
 
         representations[11].K = 3;
-        representations[11].g = 0.08574803149606298;
+        representations[11].g = 0.08574803149606298f;
         representations[11].weights[0] = 0.017809322999872215f;
         representations[11].meanCosines[0] = 0.3670064050195432f;
         representations[11].kappas[0] = 1.2152757532992868f;
@@ -243,7 +243,7 @@ namespace openpgl {
         representations[11].normalizations[3] = 0.0f;
 
         representations[12].K = 3;
-        representations[12].g = 0.09354330708661417;
+        representations[12].g = 0.09354330708661417f;
         representations[12].weights[0] = 0.01826527507863583f;
         representations[12].meanCosines[0] = 0.3942271824887726f;
         representations[12].kappas[0] = 1.3277678345776889f;
@@ -262,7 +262,7 @@ namespace openpgl {
         representations[12].normalizations[3] = 0.0f;
 
         representations[13].K = 3;
-        representations[13].g = 0.10133858267716535;
+        representations[13].g = 0.10133858267716535f;
         representations[13].weights[0] = 0.01876291998771093f;
         representations[13].meanCosines[0] = 0.42020042532807644f;
         representations[13].kappas[0] = 1.4408083884538716f;
@@ -281,7 +281,7 @@ namespace openpgl {
         representations[13].normalizations[3] = 0.0f;
 
         representations[14].K = 3;
-        representations[14].g = 0.10913385826771653;
+        representations[14].g = 0.10913385826771653f;
         representations[14].weights[0] = 0.019306961289135425f;
         representations[14].meanCosines[0] = 0.44492057851788697f;
         representations[14].kappas[0] = 1.5543850149507152f;
@@ -300,7 +300,7 @@ namespace openpgl {
         representations[14].normalizations[3] = 0.0f;
 
         representations[15].K = 3;
-        representations[15].g = 0.11692913385826771;
+        representations[15].g = 0.11692913385826771f;
         representations[15].weights[0] = 0.01989845510400388f;
         representations[15].meanCosines[0] = 0.4684068719141528f;
         representations[15].kappas[0] = 1.6685346475413192f;
@@ -319,7 +319,7 @@ namespace openpgl {
         representations[15].normalizations[3] = 0.0f;
 
         representations[16].K = 3;
-        representations[16].g = 0.1247244094488189;
+        representations[16].g = 0.1247244094488189f;
         representations[16].weights[0] = 0.020535354184989436f;
         representations[16].meanCosines[0] = 0.49069955616971095f;
         representations[16].kappas[0] = 1.7833511441174834f;
@@ -338,7 +338,7 @@ namespace openpgl {
         representations[16].normalizations[3] = 0.0f;
 
         representations[17].K = 3;
-        representations[17].g = 0.13251968503937006;
+        representations[17].g = 0.13251968503937006f;
         representations[17].weights[0] = 0.021218949410057832f;
         representations[17].meanCosines[0] = 0.5118356933074103f;
         representations[17].kappas[0] = 1.8988787667383773f;
@@ -357,7 +357,7 @@ namespace openpgl {
         representations[17].normalizations[3] = 0.0f;
 
         representations[18].K = 3;
-        representations[18].g = 0.14031496062992124;
+        representations[18].g = 0.14031496062992124f;
         representations[18].weights[0] = 0.021949824475763605f;
         representations[18].meanCosines[0] = 0.5318607735970473f;
         representations[18].kappas[0] = 2.0151765919095097f;
@@ -376,7 +376,7 @@ namespace openpgl {
         representations[18].normalizations[3] = 0.0f;
 
         representations[19].K = 3;
-        representations[19].g = 0.14811023622047242;
+        representations[19].g = 0.14811023622047242f;
         representations[19].weights[0] = 0.02272913643627242f;
         representations[19].meanCosines[0] = 0.5508226752301884f;
         representations[19].kappas[0] = 2.1322958845677973f;
@@ -395,7 +395,7 @@ namespace openpgl {
         representations[19].normalizations[3] = 0.0f;
 
         representations[20].K = 3;
-        representations[20].g = 0.1559055118110236;
+        representations[20].g = 0.1559055118110236f;
         representations[20].weights[0] = 0.02355816434063645f;
         representations[20].meanCosines[0] = 0.5687717007838606f;
         representations[20].kappas[0] = 2.2502875905814577f;
@@ -414,7 +414,7 @@ namespace openpgl {
         representations[20].normalizations[3] = 0.0f;
 
         representations[21].K = 3;
-        representations[21].g = 0.1637007874015748;
+        representations[21].g = 0.1637007874015748f;
         representations[21].weights[0] = 0.024437905025832977f;
         representations[21].meanCosines[0] = 0.5857605240246847f;
         representations[21].kappas[0] = 2.369210817881718f;
@@ -433,7 +433,7 @@ namespace openpgl {
         representations[21].normalizations[3] = 0.0f;
 
         representations[22].K = 3;
-        representations[22].g = 0.17149606299212597;
+        representations[22].g = 0.17149606299212597f;
         representations[22].weights[0] = 0.02536961631311807f;
         representations[22].meanCosines[0] = 0.6018414369673392f;
         representations[22].kappas[0] = 2.4891221301227326f;
@@ -452,7 +452,7 @@ namespace openpgl {
         representations[22].normalizations[3] = 0.0f;
 
         representations[23].K = 3;
-        representations[23].g = 0.17929133858267715;
+        representations[23].g = 0.17929133858267715f;
         representations[23].weights[0] = 0.026354489815300336f;
         representations[23].meanCosines[0] = 0.6170665107763216f;
         representations[23].kappas[0] = 2.6100823069456927f;
@@ -471,7 +471,7 @@ namespace openpgl {
         representations[23].normalizations[3] = 0.0f;
 
         representations[24].K = 3;
-        representations[24].g = 0.18708661417322833;
+        representations[24].g = 0.18708661417322833f;
         representations[24].weights[0] = 0.027393813480758946f;
         representations[24].meanCosines[0] = 0.6314864653894078f;
         representations[24].kappas[0] = 2.732153035175755f;
@@ -490,7 +490,7 @@ namespace openpgl {
         representations[24].normalizations[3] = 0.0f;
 
         representations[25].K = 3;
-        representations[25].g = 0.19488188976377951;
+        representations[25].g = 0.19488188976377951f;
         representations[25].weights[0] = 0.02848894330183947f;
         representations[25].meanCosines[0] = 0.6451502887946322f;
         representations[25].kappas[0] = 2.855397531861139f;
@@ -509,7 +509,7 @@ namespace openpgl {
         representations[25].normalizations[3] = 0.0f;
 
         representations[26].K = 3;
-        representations[26].g = 0.2026771653543307;
+        representations[26].g = 0.2026771653543307f;
         representations[26].weights[0] = 0.029641232684561578f;
         representations[26].meanCosines[0] = 0.6581050795977398f;
         representations[26].kappas[0] = 2.979882270484645f;
@@ -528,7 +528,7 @@ namespace openpgl {
         representations[26].normalizations[3] = 0.0f;
 
         representations[27].K = 3;
-        representations[27].g = 0.21047244094488188;
+        representations[27].g = 0.21047244094488188f;
         representations[27].weights[0] = 0.03085210788273518f;
         representations[27].meanCosines[0] = 0.6703956245596104f;
         representations[27].kappas[0] = 3.1056753595617264f;
@@ -547,7 +547,7 @@ namespace openpgl {
         representations[27].normalizations[3] = 0.0f;
 
         representations[28].K = 3;
-        representations[28].g = 0.21826771653543306;
+        representations[28].g = 0.21826771653543306f;
         representations[28].weights[0] = 0.03212300887954878f;
         representations[28].meanCosines[0] = 0.6820644132559194f;
         representations[28].kappas[0] = 3.2328480493359963f;
@@ -566,7 +566,7 @@ namespace openpgl {
         representations[28].normalizations[3] = 0.0f;
 
         representations[29].K = 3;
-        representations[29].g = 0.22606299212598424;
+        representations[29].g = 0.22606299212598424f;
         representations[29].weights[0] = 0.03345544514793685f;
         representations[29].meanCosines[0] = 0.6931514474568911f;
         representations[29].kappas[0] = 3.3614734966515782f;
@@ -585,7 +585,7 @@ namespace openpgl {
         representations[29].normalizations[3] = 0.0f;
 
         representations[30].K = 3;
-        representations[30].g = 0.23385826771653542;
+        representations[30].g = 0.23385826771653542f;
         representations[30].weights[0] = 0.0348509218277539f;
         representations[30].meanCosines[0] = 0.703694400485129f;
         representations[30].kappas[0] = 3.491628707455712f;
@@ -604,7 +604,7 @@ namespace openpgl {
         representations[30].normalizations[3] = 0.0f;
 
         representations[31].K = 3;
-        representations[31].g = 0.2416535433070866;
+        representations[31].g = 0.2416535433070866f;
         representations[31].weights[0] = 0.0363110174513472f;
         representations[31].meanCosines[0] = 0.7137284878918613f;
         representations[31].kappas[0] = 3.6233927446497733f;
@@ -623,7 +623,7 @@ namespace openpgl {
         representations[31].normalizations[3] = 0.0f;
 
         representations[32].K = 3;
-        representations[32].g = 0.2494488188976378;
+        representations[32].g = 0.2494488188976378f;
         representations[32].weights[0] = 0.03783733033391697f;
         representations[32].meanCosines[0] = 0.7232866503493903f;
         representations[32].kappas[0] = 3.7568481915190235f;
@@ -642,7 +642,7 @@ namespace openpgl {
         representations[32].normalizations[3] = 0.0f;
 
         representations[33].K = 3;
-        representations[33].g = 0.25724409448818897;
+        representations[33].g = 0.25724409448818897f;
         representations[33].weights[0] = 0.039431478172527346f;
         representations[33].meanCosines[0] = 0.7323996378740554f;
         representations[33].kappas[0] = 3.892081342390479f;
@@ -661,7 +661,7 @@ namespace openpgl {
         representations[33].normalizations[3] = 0.0f;
 
         representations[34].K = 3;
-        representations[34].g = 0.2650393700787401;
+        representations[34].g = 0.2650393700787401f;
         representations[34].weights[0] = 0.04109511413829938f;
         representations[34].meanCosines[0] = 0.7410960812812006f;
         representations[34].kappas[0] = 4.029181949359587f;
@@ -680,7 +680,7 @@ namespace openpgl {
         representations[34].normalizations[3] = 0.0f;
 
         representations[35].K = 3;
-        representations[35].g = 0.27283464566929133;
+        representations[35].g = 0.27283464566929133f;
         representations[35].weights[0] = 0.04282992980429418f;
         representations[35].meanCosines[0] = 0.7494026016728395f;
         representations[35].kappas[0] = 4.1682433077297265f;
@@ -699,7 +699,7 @@ namespace openpgl {
         representations[35].normalizations[3] = 0.0f;
 
         representations[36].K = 3;
-        representations[36].g = 0.2806299212598425;
+        representations[36].g = 0.2806299212598425f;
         representations[36].weights[0] = 0.04463760356304057f;
         representations[36].meanCosines[0] = 0.7573440065673147f;
         representations[36].kappas[0] = 4.309363834506902f;
@@ -718,7 +718,7 @@ namespace openpgl {
         representations[36].normalizations[3] = 0.0f;
 
         representations[37].K = 3;
-        representations[37].g = 0.2884251968503937;
+        representations[37].g = 0.2884251968503937f;
         representations[37].weights[0] = 0.04651992132996143f;
         representations[37].meanCosines[0] = 0.7649432204882097f;
         representations[37].kappas[0] = 4.452644004080665f;
@@ -737,7 +737,7 @@ namespace openpgl {
         representations[37].normalizations[3] = 0.0f;
 
         representations[38].K = 3;
-        representations[38].g = 0.29622047244094485;
+        representations[38].g = 0.29622047244094485f;
         representations[38].weights[0] = 0.04847852891549287f;
         representations[38].meanCosines[0] = 0.7722217618748662f;
         representations[38].kappas[0] = 4.5981933220302285f;
@@ -756,7 +756,7 @@ namespace openpgl {
         representations[38].normalizations[3] = 0.0f;
 
         representations[39].K = 3;
-        representations[39].g = 0.30401574803149606;
+        representations[39].g = 0.30401574803149606f;
         representations[39].weights[0] = 0.050515288560540404f;
         representations[39].meanCosines[0] = 0.7791993428816343f;
         representations[39].kappas[0] = 4.746120804250555f;
@@ -775,7 +775,7 @@ namespace openpgl {
         representations[39].normalizations[3] = 0.0f;
 
         representations[40].K = 3;
-        representations[40].g = 0.3118110236220472;
+        representations[40].g = 0.3118110236220472f;
         representations[40].weights[0] = 0.052631938361106065f;
         representations[40].meanCosines[0] = 0.785894454230334f;
         representations[40].kappas[0] = 4.896544587693031f;
@@ -794,7 +794,7 @@ namespace openpgl {
         representations[40].normalizations[3] = 0.0f;
 
         representations[41].K = 3;
-        representations[41].g = 0.3196062992125984;
+        representations[41].g = 0.3196062992125984f;
         representations[41].weights[0] = 0.054830320932235194f;
         representations[41].meanCosines[0] = 0.7923241563653624f;
         representations[41].kappas[0] = 5.049585889496475f;
@@ -813,7 +813,7 @@ namespace openpgl {
         representations[41].normalizations[3] = 0.0f;
 
         representations[42].K = 3;
-        representations[42].g = 0.3274015748031496;
+        representations[42].g = 0.3274015748031496f;
         representations[42].weights[0] = 0.05711223605872792f;
         representations[42].meanCosines[0] = 0.7985043630899611f;
         representations[42].kappas[0] = 5.205373425292967f;
@@ -832,7 +832,7 @@ namespace openpgl {
         representations[42].normalizations[3] = 0.0f;
 
         representations[43].K = 3;
-        representations[43].g = 0.3351968503937008;
+        representations[43].g = 0.3351968503937008f;
         representations[43].weights[0] = 0.05947949976675226f;
         representations[43].meanCosines[0] = 0.8044498524567503f;
         representations[43].kappas[0] = 5.3640421044192195f;
@@ -851,7 +851,7 @@ namespace openpgl {
         representations[43].normalizations[3] = 0.0f;
 
         representations[44].K = 3;
-        representations[44].g = 0.34299212598425194;
+        representations[44].g = 0.34299212598425194f;
         representations[44].weights[0] = 0.061934017335778434f;
         representations[44].meanCosines[0] = 0.8101742785481437f;
         representations[44].kappas[0] = 5.525731270151455f;
@@ -870,7 +870,7 @@ namespace openpgl {
         representations[44].normalizations[3] = 0.0f;
 
         representations[45].K = 3;
-        representations[45].g = 0.35078740157480315;
+        representations[45].g = 0.35078740157480315f;
         representations[45].weights[0] = 0.06447760472630311f;
         representations[45].meanCosines[0] = 0.8156904376058959f;
         representations[45].kappas[0] = 5.6905902250879805f;
@@ -889,7 +889,7 @@ namespace openpgl {
         representations[45].normalizations[3] = 0.0f;
 
         representations[46].K = 3;
-        representations[46].g = 0.3585826771653543;
+        representations[46].g = 0.3585826771653543f;
         representations[46].weights[0] = 0.06711202650241141f;
         representations[46].meanCosines[0] = 0.8210102816127492f;
         representations[46].kappas[0] = 5.858777649296523f;
@@ -908,7 +908,7 @@ namespace openpgl {
         representations[46].normalizations[3] = 0.0f;
 
         representations[47].K = 3;
-        representations[47].g = 0.3663779527559055;
+        representations[47].g = 0.3663779527559055f;
         representations[47].weights[0] = 0.06983934101319342f;
         representations[47].meanCosines[0] = 0.8261446758646345f;
         representations[47].kappas[0] = 6.030451916295631f;
@@ -927,7 +927,7 @@ namespace openpgl {
         representations[47].normalizations[3] = 0.0f;
 
         representations[48].K = 3;
-        representations[48].g = 0.37417322834645667;
+        representations[48].g = 0.37417322834645667f;
         representations[48].weights[0] = 0.07266134359728532f;
         representations[48].meanCosines[0] = 0.8311039776930013f;
         representations[48].kappas[0] = 6.20578789794099f;
@@ -946,7 +946,7 @@ namespace openpgl {
         representations[48].normalizations[3] = 0.0f;
 
         representations[49].K = 3;
-        representations[49].g = 0.3819685039370079;
+        representations[49].g = 0.3819685039370079f;
         representations[49].weights[0] = 0.07557993630147046f;
         representations[49].meanCosines[0] = 0.8358977483762517f;
         representations[49].kappas[0] = 6.384966707199992f;
@@ -965,7 +965,7 @@ namespace openpgl {
         representations[49].normalizations[3] = 0.0f;
 
         representations[50].K = 3;
-        representations[50].g = 0.38976377952755903;
+        representations[50].g = 0.38976377952755903f;
         representations[50].weights[0] = 0.07859703707682453f;
         representations[50].meanCosines[0] = 0.8405348935900007f;
         representations[50].kappas[0] = 6.568178944104258f;
@@ -984,7 +984,7 @@ namespace openpgl {
         representations[50].normalizations[3] = 0.0f;
 
         representations[51].K = 3;
-        representations[51].g = 0.39755905511811024;
+        representations[51].g = 0.39755905511811024f;
         representations[51].weights[0] = 0.08171458128636552f;
         representations[51].meanCosines[0] = 0.8450237123238858f;
         representations[51].kappas[0] = 6.755625297772691f;
@@ -1003,7 +1003,7 @@ namespace openpgl {
         representations[51].normalizations[3] = 0.0f;
 
         representations[52].K = 3;
-        representations[52].g = 0.4053543307086614;
+        representations[52].g = 0.4053543307086614f;
         representations[52].weights[0] = 0.08493448605433432f;
         representations[52].meanCosines[0] = 0.8493719674172462f;
         representations[52].kappas[0] = 6.947518350251926f;
@@ -1022,7 +1022,7 @@ namespace openpgl {
         representations[52].normalizations[3] = 0.0f;
 
         representations[53].K = 3;
-        representations[53].g = 0.4131496062992126;
+        representations[53].g = 0.4131496062992126f;
         representations[53].weights[0] = 0.08825869500909991f;
         representations[53].meanCosines[0] = 0.8535868936983303f;
         representations[53].kappas[0] = 7.144082003779275f;
@@ -1041,7 +1041,7 @@ namespace openpgl {
         representations[53].normalizations[3] = 0.0f;
 
         representations[54].K = 3;
-        representations[54].g = 0.42094488188976376;
+        representations[54].g = 0.42094488188976376f;
         representations[54].weights[0] = 0.09168916522716564f;
         representations[54].meanCosines[0] = 0.8576752472049249f;
         representations[54].kappas[0] = 7.345552722466723f;
@@ -1060,7 +1060,7 @@ namespace openpgl {
         representations[54].normalizations[3] = 0.0f;
 
         representations[55].K = 3;
-        representations[55].g = 0.42874015748031497;
+        representations[55].g = 0.42874015748031497f;
         representations[55].weights[0] = 0.09522786839368456f;
         representations[55].meanCosines[0] = 0.8616433403817125f;
         representations[55].kappas[0] = 7.552180422573271f;
@@ -1079,7 +1079,7 @@ namespace openpgl {
         representations[55].normalizations[3] = 0.0f;
 
         representations[56].K = 3;
-        representations[56].g = 0.4365354330708661;
+        representations[56].g = 0.4365354330708661f;
         representations[56].weights[0] = 0.0988767934663242f;
         representations[56].meanCosines[0] = 0.8654970737530904f;
         representations[56].kappas[0] = 7.764229399563398f;
@@ -1098,7 +1098,7 @@ namespace openpgl {
         representations[56].normalizations[3] = 0.0f;
 
         representations[57].K = 3;
-        representations[57].g = 0.44433070866141733;
+        representations[57].g = 0.44433070866141733f;
         representations[57].weights[0] = 0.10263796004725238f;
         representations[57].meanCosines[0] = 0.8692419595769955f;
         representations[57].kappas[0] = 7.981979001500163f;
@@ -1117,7 +1117,7 @@ namespace openpgl {
         representations[57].normalizations[3] = 0.0f;
 
         representations[58].K = 3;
-        representations[58].g = 0.4521259842519685;
+        representations[58].g = 0.4521259842519685f;
         representations[58].weights[0] = 0.10651340265267141f;
         representations[58].meanCosines[0] = 0.8728831598504667f;
         representations[58].kappas[0] = 8.20572532527276f;
@@ -1136,7 +1136,7 @@ namespace openpgl {
         representations[58].normalizations[3] = 0.0f;
 
         representations[59].K = 3;
-        representations[59].g = 0.4599212598425197;
+        representations[59].g = 0.4599212598425197f;
         representations[59].weights[0] = 0.11050517555935604f;
         representations[59].meanCosines[0] = 0.8764255095007417f;
         representations[59].kappas[0] = 8.435782379970613f;
@@ -1155,7 +1155,7 @@ namespace openpgl {
         representations[59].normalizations[3] = 0.0f;
 
         representations[60].K = 3;
-        representations[60].g = 0.46771653543307085;
+        representations[60].g = 0.46771653543307085f;
         representations[60].weights[0] = 0.11461533860200686f;
         representations[60].meanCosines[0] = 0.8798735470937176f;
         representations[60].kappas[0] = 8.672483998747186f;
@@ -1174,7 +1174,7 @@ namespace openpgl {
         representations[60].normalizations[3] = 0.0f;
 
         representations[61].K = 3;
-        representations[61].g = 0.47551181102362206;
+        representations[61].g = 0.47551181102362206f;
         representations[61].weights[0] = 0.11884599637104817f;
         representations[61].meanCosines[0] = 0.8832315179423937f;
         representations[61].kappas[0] = 8.916184139359721f;
@@ -1193,7 +1193,7 @@ namespace openpgl {
         representations[61].normalizations[3] = 0.0f;
 
         representations[62].K = 3;
-        representations[62].g = 0.4833070866141732;
+        representations[62].g = 0.4833070866141732f;
         representations[62].weights[0] = 0.12319928766759637f;
         representations[62].meanCosines[0] = 0.8865034015121176f;
         representations[62].kappas[0] = 9.16725893612397f;
@@ -1212,7 +1212,7 @@ namespace openpgl {
         representations[62].normalizations[3] = 0.0f;
 
         representations[63].K = 3;
-        representations[63].g = 0.4911023622047244;
+        representations[63].g = 0.4911023622047244f;
         representations[63].weights[0] = 0.12767711326081116f;
         representations[63].meanCosines[0] = 0.8896930424203258f;
         representations[63].kappas[0] = 9.426117857395496f;
@@ -1231,7 +1231,7 @@ namespace openpgl {
         representations[63].normalizations[3] = 0.0f;
 
         representations[64].K = 3;
-        representations[64].g = 0.4988976377952756;
+        representations[64].g = 0.4988976377952756f;
         representations[64].weights[0] = 0.13228217893070182f;
         representations[64].meanCosines[0] = 0.8928037371351293f;
         representations[64].kappas[0] = 9.693170363545615f;
@@ -1250,7 +1250,7 @@ namespace openpgl {
         representations[64].normalizations[3] = 0.0f;
 
         representations[65].K = 3;
-        representations[65].g = 0.5066929133858268;
+        representations[65].g = 0.5066929133858268f;
         representations[65].weights[0] = 0.13701645780490154f;
         representations[65].meanCosines[0] = 0.8958388925416747f;
         representations[65].kappas[0] = 9.968880275772742f;
@@ -1269,7 +1269,7 @@ namespace openpgl {
         representations[65].normalizations[3] = 0.0f;
 
         representations[66].K = 3;
-        representations[66].g = 0.5144881889763779;
+        representations[66].g = 0.5144881889763779f;
         representations[66].weights[0] = 0.14188167518350953f;
         representations[66].meanCosines[0] = 0.8988018020497218f;
         representations[66].kappas[0] = 10.253752777050046f;
@@ -1288,7 +1288,7 @@ namespace openpgl {
         representations[66].normalizations[3] = 0.0f;
 
         representations[67].K = 3;
-        representations[67].g = 0.5222834645669291;
+        representations[67].g = 0.5222834645669291f;
         representations[67].weights[0] = 0.14688190532912504f;
         representations[67].meanCosines[0] = 0.9016947510325678f;
         representations[67].kappas[0] = 10.548244803107089f;
@@ -1307,7 +1307,7 @@ namespace openpgl {
         representations[67].normalizations[3] = 0.0f;
 
         representations[68].K = 3;
-        representations[68].g = 0.5300787401574802;
+        representations[68].g = 0.5300787401574802f;
         representations[68].weights[0] = 0.15201802364423217f;
         representations[68].meanCosines[0] = 0.9045210208344292f;
         representations[68].kappas[0] = 10.852964167601495f;
@@ -1326,7 +1326,7 @@ namespace openpgl {
         representations[68].normalizations[3] = 0.0f;
 
         representations[69].K = 3;
-        representations[69].g = 0.5378740157480315;
+        representations[69].g = 0.5378740157480315f;
         representations[69].weights[0] = 0.15729294132110566f;
         representations[69].meanCosines[0] = 0.9072830203855161f;
         representations[69].kappas[0] = 11.168487946406515f;
@@ -1345,7 +1345,7 @@ namespace openpgl {
         representations[69].normalizations[3] = 0.0f;
 
         representations[70].K = 3;
-        representations[70].g = 0.5456692913385827;
+        representations[70].g = 0.5456692913385827f;
         representations[70].weights[0] = 0.1627091674945393f;
         representations[70].meanCosines[0] = 0.9099831724121029f;
         representations[70].kappas[0] = 11.495452369732478f;
@@ -1364,7 +1364,7 @@ namespace openpgl {
         representations[70].normalizations[3] = 0.0f;
 
         representations[71].K = 3;
-        representations[71].g = 0.5534645669291338;
+        representations[71].g = 0.5534645669291338f;
         representations[71].weights[0] = 0.16826931509786597f;
         representations[71].meanCosines[0] = 0.9126237466462465f;
         representations[71].kappas[0] = 11.834538906133483f;
@@ -1383,7 +1383,7 @@ namespace openpgl {
         representations[71].normalizations[3] = 0.0f;
 
         representations[72].K = 3;
-        representations[72].g = 0.561259842519685;
+        representations[72].g = 0.561259842519685f;
         representations[72].weights[0] = 0.17397605681486036f;
         representations[72].meanCosines[0] = 0.91520688470064f;
         representations[72].kappas[0] = 12.186480389405208f;
@@ -1402,7 +1402,7 @@ namespace openpgl {
         representations[72].normalizations[3] = 0.0f;
 
         representations[73].K = 3;
-        representations[73].g = 0.5690551181102362;
+        representations[73].g = 0.5690551181102362f;
         representations[73].weights[0] = 0.17983214378421922f;
         representations[73].meanCosines[0] = 0.9177346040817985f;
         representations[73].kappas[0] = 12.552065355633442f;
@@ -1421,7 +1421,7 @@ namespace openpgl {
         representations[73].normalizations[3] = 0.0f;
 
         representations[74].K = 3;
-        representations[74].g = 0.5768503937007874;
+        representations[74].g = 0.5768503937007874f;
         representations[74].weights[0] = 0.1858404095572948f;
         representations[74].meanCosines[0] = 0.9202088063452304f;
         representations[74].kappas[0] = 12.93214347991311f;
@@ -1440,7 +1440,7 @@ namespace openpgl {
         representations[74].normalizations[3] = 0.0f;
 
         representations[75].K = 3;
-        representations[75].g = 0.5846456692913385;
+        representations[75].g = 0.5846456692913385f;
         representations[75].weights[0] = 0.1920037740311606f;
         representations[75].meanCosines[0] = 0.9226312846743214f;
         representations[75].kappas[0] = 13.327631663072642f;
@@ -1459,7 +1459,7 @@ namespace openpgl {
         representations[75].normalizations[3] = 0.0f;
 
         representations[76].K = 3;
-        representations[76].g = 0.5924409448818897;
+        representations[76].g = 0.5924409448818897f;
         representations[76].weights[0] = 0.19832522506414976f;
         representations[76].meanCosines[0] = 0.9250037361138848f;
         representations[76].kappas[0] = 13.739521789305007f;
@@ -1478,7 +1478,7 @@ namespace openpgl {
         representations[76].normalizations[3] = 0.0f;
 
         representations[77].K = 3;
-        representations[77].g = 0.600236220472441;
+        representations[77].g = 0.600236220472441f;
         representations[77].weights[0] = 0.2046370452946239f;
         representations[77].meanCosines[0] = 0.9273696065000837f;
         representations[77].kappas[0] = 14.176868423187258f;
@@ -1497,7 +1497,7 @@ namespace openpgl {
         representations[77].normalizations[3] = 0.0f;
 
         representations[78].K = 3;
-        representations[78].g = 0.6080314960629921;
+        representations[78].g = 0.6080314960629921f;
         representations[78].weights[0] = 0.21145522532501376f;
         representations[78].meanCosines[0] = 0.9296047853907953f;
         representations[78].kappas[0] = 14.61687501213509f;
@@ -1516,7 +1516,7 @@ namespace openpgl {
         representations[78].normalizations[3] = 0.0f;
 
         representations[79].K = 3;
-        representations[79].g = 0.6158267716535433;
+        representations[79].g = 0.6158267716535433f;
         representations[79].weights[0] = 0.21827030956844096f;
         representations[79].meanCosines[0] = 0.9318363148472478f;
         representations[79].kappas[0] = 15.0847624352229f;
@@ -1535,7 +1535,7 @@ namespace openpgl {
         representations[79].normalizations[3] = 0.0f;
 
         representations[80].K = 3;
-        representations[80].g = 0.6236220472440944;
+        representations[80].g = 0.6236220472440944f;
         representations[80].weights[0] = 0.22525660341537493f;
         representations[80].meanCosines[0] = 0.9340236772779147f;
         representations[80].kappas[0] = 15.573919583003752f;
@@ -1554,7 +1554,7 @@ namespace openpgl {
         representations[80].normalizations[3] = 0.0f;
 
         representations[81].K = 3;
-        representations[81].g = 0.6314173228346457;
+        representations[81].g = 0.6314173228346457f;
         representations[81].weights[0] = 0.23241776175313703f;
         representations[81].meanCosines[0] = 0.9361681219135087f;
         representations[81].kappas[0] = 16.085837543042345f;
@@ -1573,7 +1573,7 @@ namespace openpgl {
         representations[81].normalizations[3] = 0.0f;
 
         representations[82].K = 3;
-        representations[82].g = 0.6392125984251968;
+        representations[82].g = 0.6392125984251968f;
         representations[82].weights[0] = 0.23975751170874146f;
         representations[82].meanCosines[0] = 0.938270840447678f;
         representations[82].kappas[0] = 16.622146439652063f;
@@ -1592,7 +1592,7 @@ namespace openpgl {
         representations[82].normalizations[3] = 0.0f;
 
         representations[83].K = 3;
-        representations[83].g = 0.647007874015748;
+        representations[83].g = 0.647007874015748f;
         representations[83].weights[0] = 0.2472797267392922f;
         representations[83].meanCosines[0] = 0.9403329568840185f;
         representations[83].kappas[0] = 17.184628287927787f;
@@ -1611,7 +1611,7 @@ namespace openpgl {
         representations[83].normalizations[3] = 0.0f;
 
         representations[84].K = 3;
-        representations[84].g = 0.6548031496062992;
+        representations[84].g = 0.6548031496062992f;
         representations[84].weights[0] = 0.25498843647079295f;
         representations[84].meanCosines[0] = 0.9423555310229852f;
         representations[84].kappas[0] = 17.775234863783915f;
@@ -1630,7 +1630,7 @@ namespace openpgl {
         representations[84].normalizations[3] = 0.0f;
 
         representations[85].K = 3;
-        representations[85].g = 0.6625984251968504;
+        representations[85].g = 0.6625984251968504f;
         representations[85].weights[0] = 0.26288783702158497f;
         representations[85].meanCosines[0] = 0.9443395617200645f;
         representations[85].kappas[0] = 18.396108136191025f;
@@ -1649,7 +1649,7 @@ namespace openpgl {
         representations[85].normalizations[3] = 0.0f;
 
         representations[86].K = 3;
-        representations[86].g = 0.6703937007874016;
+        representations[86].g = 0.6703937007874016f;
         representations[86].weights[0] = 0.2709823025842266f;
         representations[86].meanCosines[0] = 0.946285989794297f;
         representations[86].kappas[0] = 19.04960365116869f;
@@ -1668,7 +1668,7 @@ namespace openpgl {
         representations[86].normalizations[3] = 0.0f;
 
         representations[87].K = 3;
-        representations[87].g = 0.6781889763779527;
+        representations[87].g = 0.6781889763779527f;
         representations[87].weights[0] = 0.27927639895625234f;
         representations[87].meanCosines[0] = 0.9481957005904299f;
         representations[87].kappas[0] = 19.738317362685333f;
@@ -1687,7 +1687,7 @@ namespace openpgl {
         representations[87].normalizations[3] = 0.0f;
 
         representations[88].K = 3;
-        representations[88].g = 0.6859842519685039;
+        representations[88].g = 0.6859842519685039f;
         representations[88].weights[0] = 0.28777489737254797f;
         representations[88].meanCosines[0] = 0.950069526417547f;
         representations[88].kappas[0] = 20.46511658959084f;
@@ -1706,7 +1706,7 @@ namespace openpgl {
         representations[88].normalizations[3] = 0.0f;
 
         representations[89].K = 3;
-        representations[89].g = 0.6937795275590551;
+        representations[89].g = 0.6937795275590551f;
         representations[89].weights[0] = 0.29648279054616156f;
         representations[89].meanCosines[0] = 0.9519082486667635f;
         representations[89].kappas[0] = 21.233175767008145f;
@@ -1725,7 +1725,7 @@ namespace openpgl {
         representations[89].normalizations[3] = 0.0f;
 
         representations[90].K = 3;
-        representations[90].g = 0.7015748031496063;
+        representations[90].g = 0.7015748031496063f;
         representations[90].weights[0] = 0.30540725904987076f;
         representations[90].meanCosines[0] = 0.9537123443474214f;
         representations[90].kappas[0] = 22.04589839813786f;
@@ -1744,7 +1744,7 @@ namespace openpgl {
         representations[90].normalizations[3] = 0.0f;
 
         representations[91].K = 3;
-        representations[91].g = 0.7093700787401575;
+        representations[91].g = 0.7093700787401575f;
         representations[91].weights[0] = 0.314550142879425f;
         representations[91].meanCosines[0] = 0.9554829884712971f;
         representations[91].kappas[0] = 22.907423174275007f;
@@ -1763,7 +1763,7 @@ namespace openpgl {
         representations[91].normalizations[3] = 0.0f;
 
         representations[92].K = 3;
-        representations[92].g = 0.7171653543307086;
+        representations[92].g = 0.7171653543307086f;
         representations[92].weights[0] = 0.323918941281032f;
         representations[92].meanCosines[0] = 0.9572205847121196f;
         representations[92].kappas[0] = 23.822020537466877f;
@@ -1782,7 +1782,7 @@ namespace openpgl {
         representations[92].normalizations[3] = 0.0f;
 
         representations[93].K = 3;
-        representations[93].g = 0.7249606299212599;
+        representations[93].g = 0.7249606299212599f;
         representations[93].weights[0] = 0.33351973492144515f;
         representations[93].meanCosines[0] = 0.9589257276203178f;
         representations[93].kappas[0] = 24.794582197555773f;
@@ -1801,7 +1801,7 @@ namespace openpgl {
         representations[93].normalizations[3] = 0.0f;
 
         representations[94].K = 3;
-        representations[94].g = 0.732755905511811;
+        representations[94].g = 0.732755905511811f;
         representations[94].weights[0] = 0.34335893848221183f;
         representations[94].meanCosines[0] = 0.9605989682723478f;
         representations[94].kappas[0] = 25.830596813856708f;
@@ -1820,7 +1820,7 @@ namespace openpgl {
         representations[94].normalizations[3] = 0.0f;
 
         representations[95].K = 3;
-        representations[95].g = 0.7405511811023622;
+        representations[95].g = 0.7405511811023622f;
         representations[95].weights[0] = 0.3534433331276196f;
         representations[95].meanCosines[0] = 0.9622408150553718f;
         representations[95].kappas[0] = 26.936241870352298f;
@@ -1839,7 +1839,7 @@ namespace openpgl {
         representations[95].normalizations[3] = 0.0f;
 
         representations[96].K = 3;
-        representations[96].g = 0.7483464566929133;
+        representations[96].g = 0.7483464566929133f;
         representations[96].weights[0] = 0.3637801026569973f;
         representations[96].meanCosines[0] = 0.9638517343301604f;
         representations[96].kappas[0] = 28.11849281221908f;
@@ -1858,7 +1858,7 @@ namespace openpgl {
         representations[96].normalizations[3] = 0.0f;
 
         representations[97].K = 3;
-        representations[97].g = 0.7561417322834645;
+        representations[97].g = 0.7561417322834645f;
         representations[97].weights[0] = 0.3743768742282063f;
         representations[97].meanCosines[0] = 0.9654321509327287f;
         representations[97].kappas[0] = 29.385253280066383f;
@@ -1877,7 +1877,7 @@ namespace openpgl {
         representations[97].normalizations[3] = 0.0f;
 
         representations[98].K = 3;
-        representations[98].g = 0.7639370078740157;
+        representations[98].g = 0.7639370078740157f;
         representations[98].weights[0] = 0.38524176513689695f;
         representations[98].meanCosines[0] = 0.9669824484448641f;
         representations[98].kappas[0] = 30.745511243403147f;
@@ -1896,7 +1896,7 @@ namespace openpgl {
         representations[98].normalizations[3] = 0.0f;
 
         representations[99].K = 3;
-        representations[99].g = 0.7717322834645669;
+        representations[99].g = 0.7717322834645669f;
         representations[99].weights[0] = 0.3963834354896696f;
         representations[99].meanCosines[0] = 0.9685029693213756f;
         representations[99].kappas[0] = 32.20952726109539f;
@@ -1915,7 +1915,7 @@ namespace openpgl {
         representations[99].normalizations[3] = 0.0f;
 
         representations[100].K = 3;
-        representations[100].g = 0.7795275590551181;
+        representations[100].g = 0.7795275590551181f;
         representations[100].weights[0] = 0.40781114817626546f;
         representations[100].meanCosines[0] = 0.9699940148344911f;
         representations[100].kappas[0] = 33.78906273533941f;
@@ -1934,7 +1934,7 @@ namespace openpgl {
         representations[100].normalizations[3] = 0.0f;
 
         representations[101].K = 3;
-        representations[101].g = 0.7873228346456692;
+        representations[101].g = 0.7873228346456692f;
         representations[101].weights[0] = 0.41953483679279924f;
         representations[101].meanCosines[0] = 0.9714558448595689f;
         representations[101].kappas[0] = 35.49765836096025f;
@@ -1953,7 +1953,7 @@ namespace openpgl {
         representations[101].normalizations[3] = 0.0f;
 
         representations[102].K = 3;
-        representations[102].g = 0.7951181102362205;
+        representations[102].g = 0.7951181102362205f;
         representations[102].weights[0] = 0.4315651834971288f;
         representations[102].meanCosines[0] = 0.9728886774534552f;
         representations[102].kappas[0] = 37.35097594771657f;
@@ -1972,7 +1972,7 @@ namespace openpgl {
         representations[102].normalizations[3] = 0.0f;
 
         representations[103].K = 3;
-        representations[103].g = 0.8029133858267716;
+        representations[103].g = 0.8029133858267716f;
         representations[103].weights[0] = 0.44391370756781706f;
         representations[103].meanCosines[0] = 0.9742926882438233f;
         representations[103].kappas[0] = 39.367220961959f;
@@ -1991,7 +1991,7 @@ namespace openpgl {
         representations[103].normalizations[3] = 0.0f;
 
         representations[104].K = 3;
-        representations[104].g = 0.8107086614173228;
+        representations[104].g = 0.8107086614173228f;
         representations[104].weights[0] = 0.4565928655077412f;
         representations[104].meanCosines[0] = 0.9756680097086392f;
         representations[104].kappas[0] = 41.567668857394764f;
@@ -2010,7 +2010,7 @@ namespace openpgl {
         representations[104].normalizations[3] = 0.0f;
 
         representations[105].K = 3;
-        representations[105].g = 0.8185039370078739;
+        representations[105].g = 0.8185039370078739f;
         representations[105].weights[0] = 0.4696161649129583f;
         representations[105].meanCosines[0] = 0.977014730283103f;
         representations[105].kappas[0] = 43.97732584501906f;
@@ -2029,7 +2029,7 @@ namespace openpgl {
         representations[105].normalizations[3] = 0.0f;
 
         representations[106].K = 3;
-        representations[106].g = 0.8262992125984252;
+        representations[106].g = 0.8262992125984252f;
         representations[106].weights[0] = 0.4829982941672016f;
         representations[106].meanCosines[0] = 0.9783328932720207f;
         representations[106].kappas[0] = 46.62576555511482f;
@@ -2048,7 +2048,7 @@ namespace openpgl {
         representations[106].normalizations[3] = 0.0f;
 
         representations[107].K = 3;
-        representations[107].g = 0.8340944881889764;
+        representations[107].g = 0.8340944881889764f;
         representations[107].weights[0] = 0.4967552695533019f;
         representations[107].meanCosines[0] = 0.9796224956118234f;
         representations[107].kappas[0] = 49.548198396402306f;
@@ -2067,7 +2067,7 @@ namespace openpgl {
         representations[107].normalizations[3] = 0.0f;
 
         representations[108].K = 3;
-        representations[108].g = 0.8418897637795275;
+        representations[108].g = 0.8418897637795275f;
         representations[108].weights[0] = 0.5109046020998166f;
         representations[108].meanCosines[0] = 0.9808834864797452f;
         representations[108].kappas[0] = 52.786852197566795f;
@@ -2086,7 +2086,7 @@ namespace openpgl {
         representations[108].normalizations[3] = 0.0f;
 
         representations[109].K = 3;
-        representations[109].g = 0.8496850393700787;
+        representations[109].g = 0.8496850393700787f;
         representations[109].weights[0] = 0.5254626731586894f;
         representations[109].meanCosines[0] = 0.9821159342861068f;
         representations[109].kappas[0] = 56.39330160029513f;
@@ -2105,7 +2105,7 @@ namespace openpgl {
         representations[109].normalizations[3] = 0.0f;
 
         representations[110].K = 3;
-        representations[110].g = 0.8574803149606299;
+        representations[110].g = 0.8574803149606299f;
         representations[110].weights[0] = 0.5404523430049603f;
         representations[110].meanCosines[0] = 0.98331956425316f;
         representations[110].kappas[0] = 60.429586611677735f;
@@ -2124,7 +2124,7 @@ namespace openpgl {
         representations[110].normalizations[3] = 0.0f;
 
         representations[111].K = 3;
-        representations[111].g = 0.8652755905511811;
+        representations[111].g = 0.8652755905511811f;
         representations[111].weights[0] = 0.5559119561109656f;
         representations[111].meanCosines[0] = 0.9844933366024191f;
         representations[111].kappas[0] = 64.96899206355937f;
@@ -2143,7 +2143,7 @@ namespace openpgl {
         representations[111].normalizations[3] = 0.0f;
 
         representations[112].K = 3;
-        representations[112].g = 0.8730708661417322;
+        representations[112].g = 0.8730708661417322f;
         representations[112].weights[0] = 0.5718393884942973f;
         representations[112].meanCosines[0] = 0.9856385541741431f;
         representations[112].kappas[0] = 70.11289450093315f;
@@ -2162,7 +2162,7 @@ namespace openpgl {
         representations[112].normalizations[3] = 0.0f;
 
         representations[113].K = 3;
-        representations[113].g = 0.8808661417322834;
+        representations[113].g = 0.8808661417322834f;
         representations[113].weights[0] = 0.5882755569376641f;
         representations[113].meanCosines[0] = 0.9867541732199454f;
         representations[113].kappas[0] = 75.97889680688574f;
@@ -2181,7 +2181,7 @@ namespace openpgl {
         representations[113].normalizations[3] = 0.0f;
 
         representations[114].K = 3;
-        representations[114].g = 0.8886614173228347;
+        representations[114].g = 0.8886614173228347f;
         representations[114].weights[0] = 0.6052504230780653f;
         representations[114].meanCosines[0] = 0.9878398850719791f;
         representations[114].kappas[0] = 82.7208461258252f;
@@ -2200,7 +2200,7 @@ namespace openpgl {
         representations[114].normalizations[3] = 0.0f;
 
         representations[115].K = 3;
-        representations[115].g = 0.8964566929133858;
+        representations[115].g = 0.8964566929133858f;
         representations[115].weights[0] = 0.6228027995524672f;
         representations[115].meanCosines[0] = 0.9888950555229361f;
         representations[115].kappas[0] = 90.53608079149387f;
@@ -2219,7 +2219,7 @@ namespace openpgl {
         representations[115].normalizations[3] = 0.0f;
 
         representations[116].K = 3;
-        representations[116].g = 0.904251968503937;
+        representations[116].g = 0.904251968503937f;
         representations[116].weights[0] = 0.6409625400276326f;
         representations[116].meanCosines[0] = 0.9899195955960743f;
         representations[116].kappas[0] = 99.68975599147025f;
@@ -2238,7 +2238,7 @@ namespace openpgl {
         representations[116].normalizations[3] = 0.0f;
 
         representations[117].K = 3;
-        representations[117].g = 0.9120472440944881;
+        representations[117].g = 0.9120472440944881f;
         representations[117].weights[0] = 0.6597760942835212f;
         representations[117].meanCosines[0] = 0.990912757734808f;
         representations[117].kappas[0] = 110.53301707231405f;
@@ -2257,7 +2257,7 @@ namespace openpgl {
         representations[117].normalizations[3] = 0.0f;
 
         representations[118].K = 3;
-        representations[118].g = 0.9198425196850394;
+        representations[118].g = 0.9198425196850394f;
         representations[118].weights[0] = 0.6792894636829033f;
         representations[118].meanCosines[0] = 0.9918739739911012f;
         representations[118].kappas[0] = 123.55121730910922f;
@@ -2276,7 +2276,7 @@ namespace openpgl {
         representations[118].normalizations[3] = 0.0f;
 
         representations[119].K = 3;
-        representations[119].g = 0.9276377952755905;
+        representations[119].g = 0.9276377952755905f;
         representations[119].weights[0] = 0.6995522112361258f;
         representations[119].meanCosines[0] = 0.9928026697072287f;
         representations[119].kappas[0] = 139.4314038120058f;
@@ -2295,7 +2295,7 @@ namespace openpgl {
         representations[119].normalizations[3] = 0.0f;
 
         representations[120].K = 3;
-        representations[120].g = 0.9354330708661417;
+        representations[120].g = 0.9354330708661417f;
         representations[120].weights[0] = 0.7206159394099868f;
         representations[120].meanCosines[0] = 0.9936983266077104f;
         representations[120].kappas[0] = 159.18012629540559f;
@@ -2314,7 +2314,7 @@ namespace openpgl {
         representations[120].normalizations[3] = 0.0f;
 
         representations[121].K = 3;
-        representations[121].g = 0.9432283464566928;
+        representations[121].g = 0.9432283464566928f;
         representations[121].weights[0] = 0.7425298903086794f;
         representations[121].meanCosines[0] = 0.9945606294046142f;
         representations[121].kappas[0] = 184.33799721904487f;
@@ -2333,7 +2333,7 @@ namespace openpgl {
         representations[121].normalizations[3] = 0.0f;
 
         representations[122].K = 3;
-        representations[122].g = 0.9510236220472441;
+        representations[122].g = 0.9510236220472441f;
         representations[122].weights[0] = 0.7653293103607429f;
         representations[122].meanCosines[0] = 0.9953898118117097f;
         representations[122].kappas[0] = 217.4051196152159f;
@@ -2352,7 +2352,7 @@ namespace openpgl {
         representations[122].normalizations[3] = 0.0f;
 
         representations[123].K = 3;
-        representations[123].g = 0.9588188976377953;
+        representations[123].g = 0.9588188976377953f;
         representations[123].weights[0] = 0.7890052405183582f;
         representations[123].meanCosines[0] = 0.9961874879915438f;
         representations[123].kappas[0] = 262.7894883431296f;
@@ -2371,7 +2371,7 @@ namespace openpgl {
         representations[123].normalizations[3] = 0.0f;
 
         representations[124].K = 3;
-        representations[124].g = 0.9666141732283464;
+        representations[124].g = 0.9666141732283464f;
         representations[124].weights[0] = 0.8134132864130297f;
         representations[124].meanCosines[0] = 0.9969590951155314f;
         representations[124].kappas[0] = 329.34568100402697f;
@@ -2390,7 +2390,7 @@ namespace openpgl {
         representations[124].normalizations[3] = 0.0f;
 
         representations[125].K = 3;
-        representations[125].g = 0.9744094488188976;
+        representations[125].g = 0.9744094488188976f;
         representations[125].weights[0] = 0.8380377885238703f;
         representations[125].meanCosines[0] = 0.9977192495345887f;
         representations[125].kappas[0] = 438.9493224499256f;
@@ -2409,7 +2409,7 @@ namespace openpgl {
         representations[125].normalizations[3] = 0.0f;
 
         representations[126].K = 3;
-        representations[126].g = 0.9822047244094488;
+        representations[126].g = 0.9822047244094488f;
         representations[126].weights[0] = 0.86110354278221f;
         representations[126].meanCosines[0] = 0.9985077831939306f;
         representations[126].kappas[0] = 670.6420411084238f;
@@ -2428,7 +2428,7 @@ namespace openpgl {
         representations[126].normalizations[3] = 0.0f;
 
         representations[127].K = 3;
-        representations[127].g = 0.99;
+        representations[127].g = 0.99f;
         representations[127].weights[0] = 0.868073622158317f;
         representations[127].meanCosines[0] = 0.9994691382373244f;
         representations[127].kappas[0] = 1884.2289065113011f;

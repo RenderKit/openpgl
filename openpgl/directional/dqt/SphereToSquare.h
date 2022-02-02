@@ -57,11 +57,11 @@ namespace openpgl {
         }
 
         static float jacobian(const Vector2 &point_) {
-            return 4 * M_PI;
+            return 4.0f * (float)M_PI;
         }
 
         static float area(const Rect<float>& rect) {
-            return 4 * M_PI * (rect.max.x - rect.min.x) * (rect.max.y - rect.min.y);
+            return 4.0f * (float)M_PI * (rect.max.x - rect.min.x) * (rect.max.y - rect.min.y);
         }
     };
 }

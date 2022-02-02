@@ -75,7 +75,7 @@ namespace openpgl
             std::atan2(v.y, v.x)
         );
         if (result.y < 0)
-            result.y += 2*M_PI;
+            result.y += 2.0f*(float)M_PI;
         return result;
     }
 
