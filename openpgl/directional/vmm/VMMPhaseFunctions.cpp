@@ -10,6 +10,13 @@ namespace openpgl {
 
     void VMMSingleLobeHenyeyGreensteinOracle::init()
     {
+        /* VMM representations of the single lobe HG phase function.
+           The 3-lobe VMMs are fitted using a least squares optimization framework
+           as described by S. Herholz: 
+                    - "Path Guiding in Production" 
+                    - - "Volumetric Zero-variance Based Path Guiding" (Chapter 11.5) 
+        */
+
         minMeanCosine = 0.0f;
         maxMeanCosine = 0.99f;
         numRepresentations = 128;
