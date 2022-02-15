@@ -52,6 +52,11 @@ OPENPGL_CORE_INTERFACE size_t pglSampleStorageGetSizeSurface(PGLSampleStorage sa
 
 OPENPGL_CORE_INTERFACE size_t pglSampleStorageGetSizeVolume(PGLSampleStorage sampleStorage);
 
+OPENPGL_CORE_INTERFACE PGLSampleData pglSampleStorageGetSampleSurface(PGLSampleStorage sampleStorage, const int idx);
+
+OPENPGL_CORE_INTERFACE PGLSampleData pglSampleStorageGetSampleVolume(PGLSampleStorage sampleStorage, const int idx);
+
+
 #ifdef __cplusplus
 }  // extern "C"
 #endif

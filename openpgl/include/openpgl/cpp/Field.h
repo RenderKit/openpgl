@@ -76,6 +76,8 @@ struct Field
     void SetSceneBounds(const pgl_box3f& bounds);
 
 
+    pgl_box3f GetSceneBounds() const;
+
     /**
      * @brief Upadates the current approximation of the radiance field.
      *
@@ -164,6 +166,12 @@ OPENPGL_INLINE void Field::SetSceneBounds(const pgl_box3f& bounds)
 {
     OPENPGL_ASSERT(m_fieldHandle);
     pglFieldSetSceneBounds(m_fieldHandle, bounds);
+}
+
+OPENPGL_INLINE pgl_box3f Field::GetSceneBounds() const
+{
+    OPENPGL_ASSERT(m_fieldHandle);
+    return pglFieldGetSceneBounds(m_fieldHandle);
 }
 
 OPENPGL_INLINE void Field::Update(const SampleStorage& sampleStorage, const size_t& numPerPixelSamples)

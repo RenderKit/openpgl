@@ -78,6 +78,11 @@ public:
         m_isSceneBoundsSet = true;
     }
 
+    openpgl::BBox getSceneBounds() const
+    {
+        return m_sceneBounds;
+    }
+
     void setIsSurface(const bool isSurface)
     {
         m_isSurface = isSurface;

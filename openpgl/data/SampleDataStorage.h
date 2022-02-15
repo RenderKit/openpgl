@@ -98,6 +98,19 @@ struct SampleDataStorage
         return m_surfaceContainer.size();
     }
 
+    inline SampleData getSampleSurface(const int idx) const
+    {
+        OPENPGL_ASSERT(idx >= 0);
+        OPENPGL_ASSERT(idx < m_surfaceContainer.size());
+        
+        SampleData sd;
+        if(idx < m_surfaceContainer.size())
+        {
+            sd = m_surfaceContainer[idx];
+        }
+        return sd;
+    }
+
     inline void clearSurface()
     {
         m_surfaceContainer.clear();
@@ -116,6 +129,19 @@ struct SampleDataStorage
     inline size_t sizeVolume() const
     {
         return m_volumeContainer.size();
+    }
+
+    inline SampleData getSampleVolume(const int idx) const
+    {
+        OPENPGL_ASSERT(idx >= 0);
+        OPENPGL_ASSERT(idx < m_volumeContainer.size());
+
+        SampleData sd;
+        if(idx < m_volumeContainer.size())
+        {
+            sd = m_volumeContainer[idx];
+        }
+        return sd;
     }
 
     inline void clearVolume()

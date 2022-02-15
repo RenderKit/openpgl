@@ -69,6 +69,10 @@ struct SampleStorage
     /// Returns the number of volume samples currently stored inside the storage container.
     size_t GetSizeVolume() const;
 
+    SampleData GetSampleSurface(const int idx) const;
+
+    SampleData GetSampleVolume(const int idx) const;
+
     friend struct Field;
     private:
         PGLSampleStorage m_sampleStorageHandle{nullptr};
@@ -135,6 +139,19 @@ OPENPGL_INLINE size_t SampleStorage::GetSizeVolume() const
     OPENPGL_ASSERT(m_sampleStorageHandle);
     return pglSampleStorageGetSizeVolume(m_sampleStorageHandle);
 }
+
+OPENPGL_INLINE SampleData SampleStorage::GetSampleSurface(const int idx) const
+{
+    OPENPGL_ASSERT(m_sampleStorageHandle);
+    return pglSampleStorageGetSampleSurface(m_sampleStorageHandle, idx);
+}
+
+OPENPGL_INLINE SampleData SampleStorage::GetSampleVolume(const int idx) const
+{
+    OPENPGL_ASSERT(m_sampleStorageHandle);
+    return pglSampleStorageGetSampleVolume(m_sampleStorageHandle, idx);
+}
+
 
 }
 }

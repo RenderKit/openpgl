@@ -137,6 +137,23 @@ extern "C" OPENPGL_DLLEXPORT void pglFieldSetSceneBounds(PGLField field, pgl_box
     sceneBounds.upper = openpgl::Vector3(bounds.upper.x,bounds.upper.y,bounds.upper.z);
     gField->setSceneBounds(sceneBounds);
 }
+
+extern "C" OPENPGL_DLLEXPORT pgl_box3f pglFieldGetSceneBounds(PGLField field)
+{
+    auto *gField = (IGuidingField *)field;
+    openpgl::BBox sceneBounds = gField->getSceneBounds();
+    pgl_box3f bounds;
+    bounds.lower.x = sceneBounds.lower.x;
+    bounds.lower.y = sceneBounds.lower.y;
+    bounds.lower.z = sceneBounds.lower.z;
+
+    bounds.upper.x = sceneBounds.upper.x;
+    bounds.upper.y = sceneBounds.upper.y;
+    bounds.upper.z = sceneBounds.upper.z;
+
+    return bounds;
+}
+
 /*
 extern "C" OPENPGL_DLLEXPORT pgl_box3f pglFieldGetSceneBounds(PGLField field)
 {
@@ -322,6 +339,18 @@ extern "C" OPENPGL_DLLEXPORT size_t pglSampleStorageGetSizeVolume(PGLSampleStora
 {
     auto *gSampleStorage = (openpgl::SampleDataStorage *)sampleStorage;
     return gSampleStorage->sizeVolume();
+}
+
+extern "C" OPENPGL_DLLEXPORT PGLSampleData pglSampleStorageGetSampleSurface(PGLSampleStorage sampleStorage, const int idx)
+{
+    auto *gSampleStorage = (openpgl::SampleDataStorage *)sampleStorage;
+    return gSampleStorage->getSampleSurface(idx);
+}
+
+extern "C" OPENPGL_DLLEXPORT PGLSampleData pglSampleStorageGetSampleVolume(PGLSampleStorage sampleStorage, const int idx)
+{
+    auto *gSampleStorage = (openpgl::SampleDataStorage *)sampleStorage;
+    return gSampleStorage->getSampleVolume(idx);
 }
 
 
