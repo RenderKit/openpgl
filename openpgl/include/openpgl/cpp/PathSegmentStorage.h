@@ -27,7 +27,7 @@ struct PathSegmentStorage
     /**
      * @brief Reserves memory for the storage. 
      * 
-     * @param size 
+     * @param size The maximum number of path segments (i.e., max path length)
      */
     void Reserve(size_t size);
 
@@ -35,9 +35,7 @@ struct PathSegmentStorage
     void Clear();
 
     /**
-     * @brief  Generates and internaly stores -radiance- samples from the the stored path segments.
-     * 
-     * 
+     * @brief  Generates and internaly stores -radiance- samples from the the collected path segments.
      * 
      * @param splatSamples 
      * @param sampler 
@@ -50,10 +48,10 @@ struct PathSegmentStorage
     pgl_vec3f CalculatePixelEstimate(const bool rrEffectsDirectContribution) const;
 
     /**
-     * @brief Get the Samples object
+     * @brief Retruns a pointer to the samples generated from the path segments.
      * 
-     * @param nSamples 
-     * @return const SampleData* 
+     * @param nSamples The size of the array of the returned pointer.
+     * @return const SampleData* The pointer to the sample data array.
      */
     const SampleData* GetSamples(size_t &nSamples);
 

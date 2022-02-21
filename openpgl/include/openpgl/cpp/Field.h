@@ -75,13 +75,18 @@ struct Field
      */
     void SetSceneBounds(const pgl_box3f& bounds);
 
-
+    /**
+     * @brief Get the bounding box of the scene/
+     * 
+     * The returned bounding box merges the bounds for the surface field and
+     * the volume field.
+     * 
+     * @return pgl_box3f 
+     */
     pgl_box3f GetSceneBounds() const;
 
     /**
      * @brief Upadates the current approximation of the radiance field.
-     *
-     *
      *
      * @param sampleStorage
      * @param numPerPixelSamples the number of sample per pixels used to generate the training data

@@ -69,8 +69,20 @@ struct SampleStorage
     /// Returns the number of volume samples currently stored inside the storage container.
     size_t GetSizeVolume() const;
 
+    /**
+     * @brief Returns a volume sample from the surface sample storage.
+     * 
+     * @param idx 
+     * @return SampleData 
+     */
     SampleData GetSampleSurface(const int idx) const;
 
+    /**
+     * @brief Returns a volume sample from the volume sample storage.
+     * 
+     * @param idx 
+     * @return SampleData 
+     */
     SampleData GetSampleVolume(const int idx) const;
 
     friend struct Field;
