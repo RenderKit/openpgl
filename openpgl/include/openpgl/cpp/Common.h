@@ -26,7 +26,7 @@ namespace cpp
    }
 
    /**
-    * @brief Wrapper function to simulate a C++ constructur
+    * @brief Wrapper function to simulate a C++ constructor
     * for a 2d vector of type pgl_vec2f.
     * 
     * @param x 
@@ -40,7 +40,7 @@ namespace cpp
    }
 
    /**
-    * @brief Wrapper function to simulate a C++ constructur
+    * @brief Wrapper function to simulate a C++ constructor
     * for a 3d position of type pgl_point3f.
     * 
     * @param x 
@@ -55,7 +55,7 @@ namespace cpp
    }
 
    /**
-    * @brief Wrapper function to simulate a C++ constructur
+    * @brief Wrapper function to simulate a C++ constructor
     * for a 2d position of type pgl_point2f.
     * 
     * @param x 
@@ -69,7 +69,7 @@ namespace cpp
    }
 
    /**
-    * @brief Wrapper function to simulate a C++ constructur
+    * @brief Wrapper function to simulate a C++ constructor
     * for a bounding box of type pgl_box3f.
     * 
     * @param lower 
@@ -83,7 +83,7 @@ namespace cpp
    }
 
    /**
-    * @brief Wrapper function to simulate a C++ constructur
+    * @brief Wrapper function to simulate a C++ constructor
     * for a bounding box of type pgl_box3f.
     * 
     * @param lower_x 

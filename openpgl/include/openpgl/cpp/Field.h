@@ -25,22 +25,22 @@ using FieldArguments = PGLFieldArguments;
 
 /**
  * @brief Key component of the guiding libary which holds the spatio-directional guiding information
- * (e.g., approximation of the incidance radiance field) for a scene.
+ * (e.g., approximation of the incoming radiance field) for a scene.
  *
  * This class is responsible for storing, learning and accessing the guiding information for a scene.
- * This information can be the incidence radiance field accros the whole scene learned from several training
- * iterations during rendering or from a preprocessing step. The field usually holds seperate approxiamtions
+ * This information can be the incidence radiance field accross the whole scene learned from several training
+ * iterations during rendering or from a preprocessing step. The field usually holds separate approximations
  * for the surface and volumetric radiance field which can be accessed individually.
- * Based on the used representation the Field separates the positional and directional componetns of the 5D
+ * Based on the used representation the Field separates the positional and directional components of the 5D
  * radiance field using a spatial subdivision structure, where each spatial leaf node (a.k.a. Region) contains a directional representation
- * for the local incident radiance distribtuion.
+ * for the local incident radiance distribution.
  */
 struct Field
 {
     /**
      * @brief Creates a new guiding field.
      * 
-     * @param device The Device defining the compute architechture and optimization of the Field implementation.
+     * @param device The Device defining the compute architecture and optimization of the Field implementation.
      * @param args The configuration of the Field (e.g., spatial or directional representation).
      */
     Field(Device *device, PGLFieldArguments args);
@@ -48,7 +48,7 @@ struct Field
     /**
      * @brief Creates/Loads a guiding field from a file. 
      * 
-     * @param device The Device defining the compute architechture and optimization of the Field implementation.
+     * @param device The Device defining the compute architecture and optimization of the Field implementation.
      * @param fieldFileName The location of the file the Field is loaded from.
      */
 	Field(Device *device, const std::string& fieldFileName);
@@ -88,7 +88,7 @@ struct Field
     pgl_box3f GetSceneBounds() const;
 
     /**
-     * @brief Upadates the current approximation of the radiance field.
+     * @brief Updates the current approximation of the radiance field.
      *
      * @param sampleStorage
      * @param numPerPixelSamples the number of sample per pixels used to generate the training data
@@ -96,10 +96,10 @@ struct Field
     void Update(const SampleStorage& sampleStorage, const size_t& numPerPixelSamples);
 
 
-    /// Returns the number of perforemd training iterations.
+    /// Returns the number of performed training iterations.
     size_t GetIteration() const;
 
-    /// Returns the over all number of sample per pixel used across all trainin iterations.
+    /// Returns the over all number of sample per pixel used across all training iterations.
     size_t GetTotalSPP() const;
 
     /// Checks if the guiding information of the Field is valid (e.g., contains no invalid directional distributions). 

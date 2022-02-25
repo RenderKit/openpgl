@@ -13,11 +13,11 @@ namespace cpp
 {
 
 /**
- * @brief The Sampling distriubtion used for guidiging directional sampling decisions on surfaces.
+ * @brief The Sampling distribution used for guidiging directional sampling decisions on surfaces.
  * 
- * The guided sampling distribution can be proportional to the incomming radiance or its product
+ * The guided sampling distribution can be proportional to the incoming radiance or its product
  * with components of a BSDF model (e.g., cosine term). The class supports function for sampling and
- * PDF evalautions. 
+ * PDF evaluations. 
  * 
  */
 struct SurfaceSamplingDistribution
@@ -25,7 +25,7 @@ struct SurfaceSamplingDistribution
     /**
      * @brief Constructs new instance of a SurfaceSamplingDistribution.
      * 
-     * Reserves the memory need to store the guiding distriubtion.
+     * Reserves the memory need to store the guiding distribution.
      * Since the type/representation of distribution depends on the guiding field
      * a pointer to the @ref Field has to be provided. After construction
      * the SurfaceSamplingDistribution still need to be initialized using the @ref Init function.
@@ -39,31 +39,31 @@ struct SurfaceSamplingDistribution
     SurfaceSamplingDistribution(const SurfaceSamplingDistribution&) = delete;
 
     /**
-     * @brief Intitializes the guiding distibution for a given position in the scene.
+     * @brief Initializes the guiding distribution for a given position in the scene.
      * 
      * This function queries the guiding field for a surface guiding distribution for
      * given position in the scene and initializes the SurfaceSamplingDistribution
-     * to this distriubtion. The resulting distribution is usually proportional to the local
-     * incident radiance distriubtion at the query position. The SurfaceSamplingDistribution
-     * can further being imporoved by applying products with BSDF components (e.g., cosine). 
+     * to this distribution. The resulting distribution is usually proportional to the local
+     * incident radiance distribution at the query position. The SurfaceSamplingDistribution
+     * can further being improved by applying products with BSDF components (e.g., cosine). 
      * 
      * @param field The guiding field of the scene.
      * @param pos The position the guiding distribution is queried for.
-     * @param sample1D A random number used of a stoachastic look-up is used.
-     * @param useParallaxCompensation If parallax compensation sould be applied or not. @deprecated
+     * @param sample1D A random number used of a stochastic look-up is used.
+     * @param useParallaxCompensation If parallax compensation should be applied or not. @deprecated
      * @return true 
      * @return false 
      */
     bool Init(const Field* field, const pgl_point3f& pos, float& sample1D, const bool useParallaxCompensation = true);
 
     /**
-     * @brief Clears/resets the internal repesentation of the guiding distribution. 
+     * @brief Clears/resets the internal representation of the guiding distribution. 
      * 
      */
     void Clear();
 
     /**
-     * @brief Importance samples a new direction based on the guiding distriubtion.
+     * @brief Importance samples a new direction based on the guiding distribution.
      * 
      * @param sample2D A 2D random variable
      * @return pgl_vec3f The sampled direction
@@ -92,7 +92,7 @@ struct SurfaceSamplingDistribution
 
     /**
      * @brief Returns if the used representation supports for including the cosine 
-     * product (e.g, for diffuse surfaces) into the guiding distriubtion. 
+     * product (e.g, for diffuse surfaces) into the guiding distribution. 
      * 
      * @return true 
      * @return false 
@@ -123,7 +123,7 @@ struct SurfaceSamplingDistribution
     /**
      * @brief Validates the current guiding distribution.
      * The guiding distriubtion can be invalid if it was not
-     * initialized before or due to (numerical) porblems during the fitting process.
+     * initialized before or due to (numerical) problems during the fitting process.
      * 
      * Note: Due to the overhead of this function, it should only be called during debugging.
      * 

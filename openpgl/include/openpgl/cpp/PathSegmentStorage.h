@@ -38,21 +38,21 @@ struct PathSegmentStorage
     void Clear();
 
     /**
-     * @brief  Generates and internaly stores -radiance- samples from the the collected path segments.
+     * @brief  Generates and internally stores -radiance- samples from the the collected path segments.
      * 
      * @param splatSamples If the samples generated samples should be spatially jittered (i.e., to share information with neighboring cells). DEPRECATED
-     * @param sampler The RNG used during spaltting. DEPRECATED
+     * @param sampler The RNG used during splatting. DEPRECATED
      * @param useNEEMiWeights If the direct illumination should be multiplied with the mis weights for NEE.
      * @param guideDirectLight If the gererated samples should include direct illumination.
-     * @param rrEffectsDirectContribution If the Russian roulette probablity needs to be integrated into the direct illumination.
+     * @param rrEffectsDirectContribution If the Russian roulette probability needs to be integrated into the direct illumination.
      * @return size_t The number of generated samples.
      */
     size_t PrepareSamples(const bool& splatSamples = false, Sampler* sampler = nullptr, const bool useNEEMiWeights = false, const bool guideDirectLight = false, const bool rrEffectsDirectContribution = true);
 
     /**
-     * @brief Calculates the color estimate of the randomg walk/path from the path segments.
+     * @brief Calculates the color estimate of the random walk/path from the path segments.
      * 
-     * This function is mainly used for debug puroses to validate if the path segments stored in the 
+     * This function is mainly used for debug purposes to validate if the path segments stored in the 
      * PathSegmentStorage cover/represent the behavior of the used renderer (e.g., path tracer).
      * Ideally the output for each radom walk should match the pixel value added to the framebuffer.   
      * 

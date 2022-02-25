@@ -19,7 +19,7 @@ struct VolumeSamplingDistribution;
 /**
  * @brief A Region represents a spatial region of the scene and contains the directional information (e.g., guiding distribution) for that region. 
  * 
- * @deprecated Thinking about hiding the existance of the Region structure from the user
+ * @deprecated Thinking about hiding the existence of the Region structure from the user
  */
 struct Region
 {
@@ -38,7 +38,7 @@ struct Region
 
     /**
      * @brief Returns a copy of the approximation of the local radiance Distribution stored inside the spatial Region.
-     * Based on the used ibnternal representation the Distribution can be constant accross the spatial area covered by
+     * Based on the used internal representation the Distribution can be constant accross the spatial area covered by
      * the Region or dependent on a specific position inside the Region (e.g., parallax-aware mixtures).
      * 
      * @param samplePosition sampling/querying positing inside the Region
