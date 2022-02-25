@@ -63,7 +63,7 @@ OPENPGL_CORE_INTERFACE PGLVolumeSamplingDistribution pglFieldNewVolumeSamplingDi
 
 OPENPGL_CORE_INTERFACE bool pglFieldInitVolumeSamplingDistriubtion(PGLField field, PGLVolumeSamplingDistribution volumeSamplingDistriubtion, pgl_point3f position, float* sample1D, const bool useParallaxComp);
 
-OPENPGL_CORE_INTERFACE bool pglFieldIsValid(PGLField field);
+OPENPGL_CORE_INTERFACE bool pglFieldValidate(PGLField field);
 
 #ifdef __cplusplus
 }  // extern "C"

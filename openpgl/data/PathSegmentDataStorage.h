@@ -397,7 +397,7 @@ public:
 #endif
     }
 
-    bool samplesValid() const
+    bool validateSamples() const
     {
         bool valid = true;
 #if defined(OPENPGL_PATHSEGMENT_STORAGE_USE_ARRAY)
@@ -414,7 +414,7 @@ public:
         return valid;
     }
 
-    bool segmentsValid() const
+    bool validateSegments() const
     {
 #if defined(OPENPGL_PATHSEGMENT_STORAGE_USE_ARRAY)
         size_t numSegments = m_seg_idx+1;

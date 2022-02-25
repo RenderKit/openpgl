@@ -152,7 +152,7 @@ public:
         m_volumeField.deserialize(is);
     }
 
-    virtual bool isValid(const bool checkSurface, const bool checkVolume) const override
+    virtual bool validate(const bool checkSurface, const bool checkVolume) const override
     {
         bool valid = true;
         if(m_surfaceField.isInitialized())

@@ -1,4 +1,4 @@
-// Copyright 2021 Intel Corporation
+// Copyright 2021-2022 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
 #pragma once
@@ -24,8 +24,8 @@ namespace cpp
 using FieldArguments = PGLFieldArguments;
 
 /**
- * @brief Key component of the guiding libary which holds the guind information
- * (e.g., approximation of the incidance radiance field) for a scene
+ * @brief Key component of the guiding libary which holds the spatio-directional guiding information
+ * (e.g., approximation of the incidance radiance field) for a scene.
  *
  * This class is responsible for storing, learning and accessing the guiding information for a scene.
  * This information can be the incidence radiance field accros the whole scene learned from several training
@@ -38,16 +38,18 @@ using FieldArguments = PGLFieldArguments;
 struct Field
 {
     /**
-     * @brief Construct a new Field object
-     *
-     * @param args
+     * @brief Creates a new guiding field.
+     * 
+     * @param device The Device defining the compute architechture and optimization of the Field implementation.
+     * @param args The configuration of the Field (e.g., spatial or directional representation).
      */
     Field(Device *device, PGLFieldArguments args);
 
     /**
-     * @brief Construct a new Field object from its serialized representation
-     *
-     * @param fieldFileName path to serialized representation
+     * @brief Creates/Loads a guiding field from a file. 
+     * 
+     * @param device The Device defining the compute architechture and optimization of the Field implementation.
+     * @param fieldFileName The location of the file the Field is loaded from.
      */
 	Field(Device *device, const std::string& fieldFileName);
 
@@ -97,10 +99,11 @@ struct Field
     /// Returns the number of perforemd training iterations.
     size_t GetIteration() const;
 
-    /// Return the over all number of sample per pixel used across all trainin iterations.
+    /// Returns the over all number of sample per pixel used across all trainin iterations.
     size_t GetTotalSPP() const;
 
-    bool IsValid() const;
+    /// Checks if the guiding information of the Field is valid (e.g., contains no invalid directional distributions). 
+    bool Validate() const;
 
     /**
      * @brief Returns the spatial surface Region containing the approximation of the local incident radiance distriubtion.
@@ -125,6 +128,10 @@ struct Field
     private:
         PGLField m_fieldHandle {nullptr};
 };
+
+////////////////////////////////////////////////////////////
+/// Implementation
+////////////////////////////////////////////////////////////
 
 OPENPGL_INLINE Field::Field(Device *device, PGLFieldArguments args)
 {
@@ -185,10 +192,10 @@ OPENPGL_INLINE void Field::Update(const SampleStorage& sampleStorage, const size
     pglFieldUpdate(m_fieldHandle, sampleStorage.m_sampleStorageHandle, numPerPixelSamples);
 }
 
-OPENPGL_INLINE bool Field::IsValid() const
+OPENPGL_INLINE bool Field::Validate() const
 {
     OPENPGL_ASSERT(m_fieldHandle);
-    return pglFieldIsValid(m_fieldHandle);
+    return pglFieldValidate(m_fieldHandle);
 }
 
 } // api

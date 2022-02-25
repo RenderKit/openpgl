@@ -13,7 +13,10 @@ namespace openpgl
 namespace cpp
 {
 /**
- * @brief 
+ * @brief The PathSegmentStorage is a utility class to help generating SampleData during 
+ * the path/random walk generation process. For the construction of a path/walk each new PathSegment
+ * is stored the PathSegmentStorage. When the walk is finished or terminated the -radiance- SampleData is 
+ * generated using a back propagation process. The resulting samples can then be passed to the global SampleDataStorage. 
  * 
  */
 
@@ -25,7 +28,7 @@ struct PathSegmentStorage
     PathSegmentStorage(const PathSegmentStorage&) = delete;
 
     /**
-     * @brief Reserves memory for the storage. 
+     * @brief Reserves memory for a given number PathSegments. 
      * 
      * @param size The maximum number of path segments (i.e., max path length)
      */
@@ -37,18 +40,29 @@ struct PathSegmentStorage
     /**
      * @brief  Generates and internaly stores -radiance- samples from the the collected path segments.
      * 
-     * @param splatSamples 
-     * @param sampler 
-     * @param useNEEMiWeights 
-     * @param guideDirectLight 
-     * @return size_t 
+     * @param splatSamples If the samples generated samples should be spatially jittered (i.e., to share information with neighboring cells). DEPRECATED
+     * @param sampler The RNG used during spaltting. DEPRECATED
+     * @param useNEEMiWeights If the direct illumination should be multiplied with the mis weights for NEE.
+     * @param guideDirectLight If the gererated samples should include direct illumination.
+     * @param rrEffectsDirectContribution If the Russian roulette probablity needs to be integrated into the direct illumination.
+     * @return size_t The number of generated samples.
      */
     size_t PrepareSamples(const bool& splatSamples = false, Sampler* sampler = nullptr, const bool useNEEMiWeights = false, const bool guideDirectLight = false, const bool rrEffectsDirectContribution = true);
 
+    /**
+     * @brief Calculates the color estimate of the randomg walk/path from the path segments.
+     * 
+     * This function is mainly used for debug puroses to validate if the path segments stored in the 
+     * PathSegmentStorage cover/represent the behavior of the used renderer (e.g., path tracer).
+     * Ideally the output for each radom walk should match the pixel value added to the framebuffer.   
+     * 
+     * @param rrEffectsDirectContribution If the direct contribution of a segment needs to be weighted with the RR probability.
+     * @return pgl_vec3f The RGB pixel value estimate for the random walk. 
+     */
     pgl_vec3f CalculatePixelEstimate(const bool rrEffectsDirectContribution) const;
 
     /**
-     * @brief Retruns a pointer to the samples generated from the path segments.
+     * @brief Returns a pointer to the samples generated from the path segments.
      * 
      * @param nSamples The size of the array of the returned pointer.
      * @return const SampleData* The pointer to the sample data array.
@@ -56,25 +70,55 @@ struct PathSegmentStorage
     const SampleData* GetSamples(size_t &nSamples);
 
     /**
-     * @brief 
+     * @brief Adds a new PathSegment to the end of the path segment list and returns a pointer to it.  
+     * 
+     * If the number of PathSegments exceeds the number of reserved elements a nullptr is returned. 
+     * 
+     * @return PathSegment* The pointer to the -currently- last segment of the storage.
+     */
+    PathSegment* NextSegment();
+
+    /**
+     * @brief Adds a PathSegment at the end of the storage.
+     * 
+     * If the storage has already reached its limit the segment is not added to the list. 
+     * 
+     * @param segment 
+     */
+    void AddSegment(const PathSegment& segment);
+
+    /**
+     * @brief Adds a SampleData to the sample list.
      * 
      * @param sample 
      */
     void AddSample(SampleData sample);
 
-    PathSegment* NextSegment();
+    /**
+     * @brief Validates the PathSegments as well as the generated SampleData.
+     * The function returns false if either a SampleData or a PathSegment is invalid.
+     */
+    bool Validate() const;
 
-    void AddSegment(const PathSegment& segment);
+    /**
+     * @brief Validates each PathSegment stored in the PathSegmentStorage.
+     * The function returns false if one of the PathSegments is invalid.
+     */
+    bool ValidateSegments() const;
 
-    bool IsValid() const;
-
-    bool SegmentsValid() const;
-
-    bool SamplesValid() const;
+    /**
+     * @brief Validates each SampleData generated from the PathSegments.
+     * The function returns false if one of the SampleData is invalid.
+     */
+    bool ValidateSamples() const;
 
     private:
         PGLPathSegmentStorage m_pathSegmentStorageHandle{nullptr};
 };
+
+////////////////////////////////////////////////////////////
+/// Implementation
+////////////////////////////////////////////////////////////
 
 OPENPGL_INLINE PathSegmentStorage::PathSegmentStorage()
 { 
@@ -141,21 +185,21 @@ OPENPGL_INLINE void PathSegmentStorage::AddSegment(const PathSegment& segment)
     pglPathSegmentStorageAddSegment(m_pathSegmentStorageHandle, segment);
 }
 
-OPENPGL_INLINE bool PathSegmentStorage::IsValid() const
+OPENPGL_INLINE bool PathSegmentStorage::Validate() const
 { 
-    return SegmentsValid() && SamplesValid();
+    return ValidateSegments() && ValidateSamples();
 }
 
-OPENPGL_INLINE bool PathSegmentStorage::SegmentsValid() const
+OPENPGL_INLINE bool PathSegmentStorage::ValidateSegments() const
 { 
     OPENPGL_ASSERT(m_pathSegmentStorageHandle);
-    return pglPathSegmentStorageSegmentsValid(m_pathSegmentStorageHandle);
+    return pglPathSegmentStorageValidateSegments(m_pathSegmentStorageHandle);
 }
 
-OPENPGL_INLINE bool PathSegmentStorage::SamplesValid() const
+OPENPGL_INLINE bool PathSegmentStorage::ValidateSamples() const
 { 
     OPENPGL_ASSERT(m_pathSegmentStorageHandle);
-    return pglPathSegmentStorageSamplesValid(m_pathSegmentStorageHandle);
+    return pglPathSegmentStorageValidateSamples(m_pathSegmentStorageHandle);
 }
 
 }

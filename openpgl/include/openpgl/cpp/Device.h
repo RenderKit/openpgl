@@ -1,4 +1,4 @@
-// Copyright 2021 Intel Corporation
+// Copyright 2021-2022 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
 #pragma once
@@ -16,15 +16,20 @@ namespace cpp
 {
 struct Field;
 /**
- * @brief
- *
+ * @brief The Device class is a key component of OpenPGL. It is used to set
+ * compute architecture and optimizations (e.g., SIMD) used for the implementation of
+ * guiding structures (e.g., Field, SurfaceSamplingDistriubtion, or VolumeSamplingDistriubtion).
  */
 struct Device
 {
     /**
-     * @brief Construct a new Device object
-     *
-     * @param args
+     * @brief Creates a new Device object.
+     * 
+     * Creates a new Device object. The object can be optimized
+     * for different compute architechtures. On the CPU the device can be 
+     * optimized for different SIMD architechtures (e.g., SSE4, AVX, or AVX-512)
+     * 
+     * @param deviceType The device optimization type.
      */
     Device(PGL_DEVICE_TYPE deviceType);
 
@@ -36,6 +41,10 @@ struct Device
     private:
         PGLDevice m_deviceHandle {nullptr};
 };
+
+////////////////////////////////////////////////////////////
+/// Implementation
+////////////////////////////////////////////////////////////
 
 OPENPGL_INLINE Device::Device(PGL_DEVICE_TYPE deviceType)
 {

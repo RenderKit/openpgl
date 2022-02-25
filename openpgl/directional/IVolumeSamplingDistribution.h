@@ -27,11 +27,13 @@ struct IVolumeSamplingDistribution
 
     virtual float samplePdf(const Point2 sample, Vector3 &dir) const = 0;
 
-    virtual bool valid() const = 0;
+    virtual bool validate() const = 0;
 
     virtual void clear() = 0;
 
     virtual void applySingleLobeHenyeyGreensteinProduct(const Vector3& dir, const float meanCosine) = 0;
+
+    virtual bool supportsApplySingleLobeHenyeyGreensteinProduct() const = 0;
 
     virtual std::string toString() const = 0;
 

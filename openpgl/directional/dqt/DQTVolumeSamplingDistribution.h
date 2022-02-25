@@ -25,12 +25,11 @@ struct DQTVolumeSamplingDistribution: public IVolumeSamplingDistribution {
         return distribution.pdf(dir);
     };
 
-    inline float samplePdf(const Point2 sample, Vector3 &dir) const override
-    {
+    inline float samplePdf(const Point2 sample, Vector3 &dir) const override {
         return distribution.samplePdf(sample, dir);
     }
 
-    inline bool valid() const override {
+    inline bool validate() const override {
         return distribution.isValid();
     };
 
@@ -41,6 +40,10 @@ struct DQTVolumeSamplingDistribution: public IVolumeSamplingDistribution {
         // not supported by quadtree
         return;
     };
+
+    inline bool supportsApplySingleLobeHenyeyGreensteinProduct() const override {
+        return false;
+    }
 
     std::string toString() const override {
         return "";

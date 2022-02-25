@@ -13,15 +13,26 @@ namespace cpp
 {
 
 /**
- * @brief Guided sampling distribution to be used inside volumes.
+ * @brief The Sampling distriubtion used for guidiging directional sampling decisions inside volumes.
  * 
+ * The guided sampling distribution can be proportional to the incomming radiance or to its product
+ * with the phase function (e.g., single lobe HG). The class supports function for sampling and
+ * PDF evalautions. 
  * 
  */
 
 struct VolumeSamplingDistribution
 {
-    //VolumeSamplingDistribution();
-
+    /**
+     * @brief Constructs new instance of a VolumeSamplingDistribution.
+     * 
+     * Reserves the memory need to store the guiding distriubtion.
+     * Since the type/representation of distribution depends on the guiding field
+     * a pointer to the @ref Field has to be provided. After construction
+     * the VolumeSamplingDistribution still need to be initialized using the @ref Init function.
+     * 
+     * @param field Pointer to the -guiding- Field.
+     */
     VolumeSamplingDistribution(const Field* field);
     
     ~VolumeSamplingDistribution();
@@ -29,39 +40,25 @@ struct VolumeSamplingDistribution
     VolumeSamplingDistribution(const VolumeSamplingDistribution&) = delete;
 
     /**
-     * @brief Importance samples a new direction based on the guiding distriubtion.
+     * @brief Intitializes the guiding distibution for a given position in the scene.
      * 
-     * @param sample2D a 2D random variable
-     * @return pgl_vec3f the sampled direction
-     */
-    pgl_vec3f Sample(const pgl_point2f& sample2D)const;
-
-    /**
-     * @brief Returns the sampling PDF for a given direction when is sampled
-     * according to the guiding distribution.
+     * This function queries the guiding field for a surface guiding distribution for
+     * given position in the scene and initializes the VolumeSamplingDistribution
+     * to this distriubtion. The resulting distriubtion is usually proportional to the local
+     * incident radiance distribution at the query position. The VolumeSamplingDistribution
+     * can further being imporoved by applying products with phase function (e.g., single lobe HG).
      * 
-     * @param direction 
-     * @return float the PDF for sampling @ref direction
-     */
-    float PDF(const pgl_vec3f& direction) const;
-
-    /**
-     * @brief Combined importance sampling and PDF calculation.
-     * Can be more efficient to use for some distributions (e.g. DirectionQuadtree)
+     * Note: in anisotropic volumes it is highly recommended to add the phase function product to
+     * avoid variance increase due to only guiding proportional to the incident radiance distriubtion. 
      * 
-     * @param sample2D a 2D random variable
-     * @param direction importance sampled direction
-     * @return float the PDF for sampling @ref direction
-     */
-    float SamplePDF(const pgl_point2f& sample2D, pgl_vec3f& direction) const;
-
-    /**
-     * @brief Checks if the current guiding distribution is valid or not.
-     * 
+     * @param field The guiding field of the scene.
+     * @param pos The position the guiding distribution is queried for.
+     * @param sample1D A random number used of a stoachastic look-up is used.
+     * @param useParallaxCompensation If parallax compensation sould be applied or not. @deprecated
      * @return true 
      * @return false 
      */
-    bool IsValid() const;
+    bool Init(const Field* field, const pgl_point3f& pos, float& sample1D, const bool useParallaxCompensation = true);
 
     /**
      * @brief Clears/resets the internal repesentation of the guiding distribution. 
@@ -70,42 +67,90 @@ struct VolumeSamplingDistribution
     void Clear();
 
     /**
-     * @brief Initializes the guided sampling distribution to the approximation of the local incident radiance distriubtion.
+     * @brief Importance samples a new direction based on the guiding distriubtion.
      * 
-     * @param region the Region containing the local inciden radiance distribution approximation.
-     * @param pos the position inside the Region 
-     * @param useParallaxCompensation if the local approximation should be adjusted to @ref pos
+     * @param sample2D A 2D random variable
+     * @return pgl_vec3f The sampled direction
      */
-    //void Init(const Region& region, const pgl_point3f& pos, const bool useParallaxCompensation = true);
-
-    bool Init(const Field* field, const pgl_point3f& pos, float& sample1D, const bool useParallaxCompensation = true);
-
-
-    Region GetRegion() const;
-
+    pgl_vec3f Sample(const pgl_point2f& sample2D)const;
 
     /**
-     * @brief Applies the product with the cosine to the sampling distriubtion.
+     * @brief Returns the sampling PDF for a given direction when is sampled
+     * according to the guiding distribution.
      * 
+     * @param direction 
+     * @return float The PDF for sampling @ref direction
+     */
+    float PDF(const pgl_vec3f& direction) const;
+
+    /**
+     * @brief Combined importance sampling and PDF calculation.
+     * Can be more efficient to use for some distributions (e.g. DirectionQuadtree)
+     * 
+     * @param sample2D A 2D random variable
+     * @param direction Importance sampled direction
+     * @return float The PDF for sampling @ref direction
+     */
+    float SamplePDF(const pgl_point2f& sample2D, pgl_vec3f& direction) const;
+
+    /**
+     * @brief Returns if the used representation supports for including the 
+     * product with a single lobe HenyeyGreenstein phase function into the guiding distriubtion. 
+     * 
+     * @return true 
+     * @return false 
+     */
+    bool SupportsApplySingleLobeHenyeyGreensteinProduct() const;
+
+    /**
+     * @brief Applies the product with a single lobe HenyeyGreenstein phase function
+     * to the sampling distriubtion.
      *  
-     * @param normal 
+     * @param dir The direction the walk/path arrives a the sample position.  
+     * @param meanCosine The mean cosine of the HG phase function.
      */
     void ApplySingleLobeHenyeyGreensteinProduct(const pgl_vec3f& dir, const float meanCosine);
+
 
     ///////////////////////////////////////
     /// Future plans
     ///////////////////////////////////////
 
 /*
-    void ApplySingleLobeHGProduct(const float meanCosine);
-
     void ApplyDualLobeHGProduct(const float meanCosine0, const float meanCosine1, const float mixWeight);
 */
+
+    /**
+     * @brief Validates the current guiding distribution.
+     * The guiding distriubtion can be invalid if it was not
+     * initialized before or due to (numerical) porblems during the fitting process.
+     * 
+     * Note: Due to the overhead of this function, it should only be called during debugging.
+     * 
+     * @return true 
+     * @return false 
+     */
+    bool Validate() const;
+
+
+    /**
+     * @brief @deprecated
+     * 
+     * @return Region 
+     */
+    Region GetRegion() const;
+
+
+
 
     friend struct openpgl::cpp::Field;
     private:
         PGLVolumeSamplingDistribution m_volumeSamplingDistributionHandle{nullptr};
 };
+
+////////////////////////////////////////////////////////////
+/// Implementation
+////////////////////////////////////////////////////////////
 
 /*
 VolumeSamplingDistribution::VolumeSamplingDistribution()
@@ -145,10 +190,10 @@ OPENPGL_INLINE float VolumeSamplingDistribution::SamplePDF(const pgl_point2f& sa
     return pglVolumeSamplingDistributionSamplePDF(m_volumeSamplingDistributionHandle, sample2D, direction);    
 }
 
-OPENPGL_INLINE bool VolumeSamplingDistribution::IsValid() const
+OPENPGL_INLINE bool VolumeSamplingDistribution::Validate() const
 {
     OPENPGL_ASSERT(m_volumeSamplingDistributionHandle);
-    return pglVolumeSamplingDistributionIsValid(m_volumeSamplingDistributionHandle);
+    return pglVolumeSamplingDistributionValidate(m_volumeSamplingDistributionHandle);
 }
 
 OPENPGL_INLINE void VolumeSamplingDistribution::Clear()
@@ -162,6 +207,13 @@ OPENPGL_INLINE void VolumeSamplingDistribution::ApplySingleLobeHenyeyGreensteinP
     OPENPGL_ASSERT(m_volumeSamplingDistributionHandle);
     return pglVolumeSamplingDistributionApplySingleLobeHenyeyGreensteinProduct(m_volumeSamplingDistributionHandle, dir, meanCosine);
 }
+
+OPENPGL_INLINE bool VolumeSamplingDistribution::SupportsApplySingleLobeHenyeyGreensteinProduct() const
+{
+    OPENPGL_ASSERT(m_volumeSamplingDistributionHandle);
+    return pglVolumeSamplingDistributionSupportsApplySingleLobeHenyeyGreensteinProduct(m_volumeSamplingDistributionHandle);
+}
+
 
 /*
 void VolumeSamplingDistribution::Init(const Region& region, const pgl_point3f& pos, const bool useParallaxCompensation)

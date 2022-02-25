@@ -22,6 +22,10 @@ struct DQTSurfaceSamplingDistribution: public ISurfaceSamplingDistribution {
         return;
     };
 
+    inline bool supportsApplyCosineProduct() const override {
+        return false;
+    }
+
     inline Vector3 sample(const Point2 sample) const override {
         return distribution.sample(sample);
     };
@@ -35,7 +39,7 @@ struct DQTSurfaceSamplingDistribution: public ISurfaceSamplingDistribution {
         return distribution.samplePdf(sample, dir);
     }
 
-    inline bool valid() const override {
+    inline bool validate() const override {
         return distribution.isValid();
     };
 

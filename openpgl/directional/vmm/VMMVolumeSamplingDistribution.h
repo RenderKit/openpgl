@@ -76,6 +76,10 @@ struct VMMVolumeSamplingDistribution: public IVolumeSamplingDistribution
         this->m_productIntegral = sumWeights;
     }
 
+    inline bool supportsApplySingleLobeHenyeyGreensteinProduct() const
+    {
+        return true;
+    }
 
     inline Vector3 sample(const Point2 sample) const override
     {
@@ -115,7 +119,7 @@ struct VMMVolumeSamplingDistribution: public IVolumeSamplingDistribution
         return pdf(dir);
     }
 
-    inline bool valid() const override
+    inline bool validate() const override
     {
         return m_numDistributions > 0;
     }

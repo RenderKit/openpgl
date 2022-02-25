@@ -34,7 +34,7 @@ struct VMMSurfaceSamplingDistribution: public ISurfaceSamplingDistribution
 
     inline void init(const void* distribution, Point3 samplePosition) override
     {
-         m_liDistribution = *(TVMMDistribution*)distribution;
+        m_liDistribution = *(const TVMMDistribution*)distribution;
         // prespare sampling distribution
         if(m_useParallaxCompensation)
         {
@@ -53,6 +53,11 @@ struct VMMSurfaceSamplingDistribution: public ISurfaceSamplingDistribution
         {
             this->m_productIntegral = this->m_distributions[0].product(1.0f, normal, 2.18853f);
         }
+    }
+
+    inline bool supportsApplyCosineProduct() const
+    {
+        return true;
     }
 
     inline Vector3 sample(const Point2 sample) const override
@@ -93,7 +98,7 @@ struct VMMSurfaceSamplingDistribution: public ISurfaceSamplingDistribution
         return pdf(dir);
     }
 
-    inline bool valid() const override
+    inline bool validate() const override
     {
         return m_numDistributions > 0;
     }

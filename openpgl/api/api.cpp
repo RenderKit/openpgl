@@ -237,10 +237,10 @@ extern "C" OPENPGL_DLLEXPORT  bool pglFieldInitVolumeSamplingDistriubtion(PGLFie
     return gField->initVolumeSamplingDistribution(gVolumeSamplingDistribution, pos, sample1D, useParallaxComp);
 }
 
-extern "C" OPENPGL_DLLEXPORT  bool pglFieldIsValid(PGLField field)
+extern "C" OPENPGL_DLLEXPORT  bool pglFieldValidate(PGLField field)
 {
     const auto *gField = (const IGuidingField *)field;
-    return gField->isValid(true, true);
+    return gField->validate(true, true);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -466,17 +466,17 @@ extern "C" OPENPGL_DLLEXPORT void pglPathSegmentStorageAddSegment(PGLPathSegment
     gPathSegmentStorage->addSegment(segment);
 }
 
-extern "C" OPENPGL_DLLEXPORT bool pglPathSegmentStorageSamplesValid(PGLPathSegmentStorage pathSegmentStorage)
+extern "C" OPENPGL_DLLEXPORT bool pglPathSegmentStorageValidateSamples(PGLPathSegmentStorage pathSegmentStorage)
 {
     auto *gPathSegmentStorage = (openpgl::PathSegmentDataStorage *)pathSegmentStorage;
-    return gPathSegmentStorage->samplesValid();
+    return gPathSegmentStorage->validateSamples();
 
 }
 
-extern "C" OPENPGL_DLLEXPORT bool pglPathSegmentStorageSegmentsValid(PGLPathSegmentStorage pathSegmentStorage)
+extern "C" OPENPGL_DLLEXPORT bool pglPathSegmentStorageValidateSegments(PGLPathSegmentStorage pathSegmentStorage)
 {
     auto *gPathSegmentStorage = (openpgl::PathSegmentDataStorage *)pathSegmentStorage;
-    return gPathSegmentStorage->segmentsValid();
+    return gPathSegmentStorage->validateSegments();
 
 }
 
@@ -522,6 +522,12 @@ extern "C" OPENPGL_DLLEXPORT void pglSurfaceSamplingDistributionApplyCosineProdu
     gSurfaceSamplingDistribution->applyCosineProduct(opglNormal);
 }
 
+extern "C" OPENPGL_DLLEXPORT bool pglSurfaceSamplingDistributionSupportsApplyCosineProduct(PGLSurfaceSamplingDistribution surfaceSamplingDistribution)
+{
+    ISurfaceSamplingDistribution* gSurfaceSamplingDistribution =  (ISurfaceSamplingDistribution*)surfaceSamplingDistribution;
+    return gSurfaceSamplingDistribution->supportsApplyCosineProduct();
+}
+
 extern "C" OPENPGL_DLLEXPORT pgl_vec3f pglSurfaceSamplingDistributionSample(PGLSurfaceSamplingDistribution surfaceSamplingDistribution, pgl_point2f sample)
 {
     ISurfaceSamplingDistribution* gSurfaceSamplingDistribution =  (ISurfaceSamplingDistribution*)surfaceSamplingDistribution;
@@ -547,10 +553,10 @@ extern "C" OPENPGL_DLLEXPORT float pglSurfaceSamplingDistributionSamplePDF(PGLSu
     return pdf;
 }
 
-extern "C" OPENPGL_DLLEXPORT bool pglSurfaceSamplingDistributionIsValid(PGLSurfaceSamplingDistribution surfaceSamplingDistribution)
+extern "C" OPENPGL_DLLEXPORT bool pglSurfaceSamplingDistributionValidate(PGLSurfaceSamplingDistribution surfaceSamplingDistribution)
 {
     ISurfaceSamplingDistribution* gSurfaceSamplingDistribution =  (ISurfaceSamplingDistribution*)surfaceSamplingDistribution;
-    return gSurfaceSamplingDistribution->valid();
+    return gSurfaceSamplingDistribution->validate();
 }
 
 extern "C" OPENPGL_DLLEXPORT void pglSurfaceSamplingDistributionClear(PGLSurfaceSamplingDistribution surfaceSamplingDistribution)
@@ -615,10 +621,10 @@ extern "C" OPENPGL_DLLEXPORT float pglVolumeSamplingDistributionSamplePDF(PGLVol
     return pdf;
 }
 
-extern "C" OPENPGL_DLLEXPORT bool pglVolumeSamplingDistributionIsValid(PGLVolumeSamplingDistribution volumeSamplingDistribution)
+extern "C" OPENPGL_DLLEXPORT bool pglVolumeSamplingDistributionValidate(PGLVolumeSamplingDistribution volumeSamplingDistribution)
 {
     IVolumeSamplingDistribution* gVolumeSamplingDistribution =  (IVolumeSamplingDistribution*)volumeSamplingDistribution;
-    return gVolumeSamplingDistribution->valid();
+    return gVolumeSamplingDistribution->validate();
 }
 
 extern "C" OPENPGL_DLLEXPORT void pglVolumeSamplingDistributionClear(PGLVolumeSamplingDistribution volumeSamplingDistribution)
@@ -632,6 +638,12 @@ extern "C" OPENPGL_DLLEXPORT void pglVolumeSamplingDistributionApplySingleLobeHe
     IVolumeSamplingDistribution* gVolumeSamplingDistribution = (IVolumeSamplingDistribution*)volumeSamplingDistribution;
     openpgl::Vector3 opglDir(dir.x, dir.y, dir.z);
     gVolumeSamplingDistribution->applySingleLobeHenyeyGreensteinProduct(opglDir, meanCosine);
+}
+
+extern "C" OPENPGL_DLLEXPORT bool pglVolumeSamplingDistributionSupportsApplySingleLobeHenyeyGreensteinProduct(PGLVolumeSamplingDistribution volumeSamplingDistribution)
+{
+    IVolumeSamplingDistribution* gVolumeSamplingDistribution = (IVolumeSamplingDistribution*)volumeSamplingDistribution;
+    return gVolumeSamplingDistribution->supportsApplySingleLobeHenyeyGreensteinProduct();
 }
 
 extern "C" OPENPGL_DLLEXPORT void pglFieldArgumentsSetDefaults(PGLFieldArguments &fieldArguments, const PGL_SPATIAL_STRUCTURE_TYPE spatialType, const PGL_DIRECTIONAL_DISTRIBUTION_TYPE directionalType)

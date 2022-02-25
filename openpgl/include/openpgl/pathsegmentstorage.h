@@ -57,9 +57,9 @@ OPENPGL_CORE_INTERFACE PGLPathSegmentData* pglPathSegmentStorageNextSegment(PGLP
 
 OPENPGL_CORE_INTERFACE void pglPathSegmentStorageAddSegment(PGLPathSegmentStorage pathSegmentStorage, PGLPathSegmentData segment);
 
-OPENPGL_CORE_INTERFACE bool pglPathSegmentStorageSamplesValid(PGLPathSegmentStorage pathSegmentStorage);
+OPENPGL_CORE_INTERFACE bool pglPathSegmentStorageValidateSamples(PGLPathSegmentStorage pathSegmentStorage);
 
-OPENPGL_CORE_INTERFACE bool  pglPathSegmentStorageSegmentsValid(PGLPathSegmentStorage pathSegmentStorage);
+OPENPGL_CORE_INTERFACE bool  pglPathSegmentStorageValidateSegments(PGLPathSegmentStorage pathSegmentStorage);
 
 #ifdef __cplusplus
 }  // extern "C"

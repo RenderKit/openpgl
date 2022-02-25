@@ -34,6 +34,13 @@ struct SampleStorage
 
     SampleStorage(const SampleStorage&) = delete;
 
+    /**
+     * @brief Stores the SampleStorage to a file.
+     * 
+     * @param sampleStorageFileName 
+     * @return true If saving the SampleStorage was successfull.
+     * @return false Otherwise.
+     */
     bool Store(const std::string& sampleStorageFileName) const;
 
     /**
@@ -46,15 +53,15 @@ struct SampleStorage
     /**
      * @brief Adds an array of samples to the storage container.
      * 
-     * @param samples 
-     * @param numSamples 
+     * @param samples Pointer to the beginning of the SampleData array.
+     * @param numSamples Number of SampleData elements stored in the array.
      */
     void AddSamples(const SampleData* samples, size_t numSamples);
 
     /**
      * @brief Reserves initial space/memory for the sample storage container.
      * 
-     * @param sizeSurface 
+     * @param sizeSurface
      * @param sizeVolume 
      */
     void Reserve(const size_t& sizeSurface, const size_t& sizeVolume);
@@ -89,6 +96,10 @@ struct SampleStorage
     private:
         PGLSampleStorage m_sampleStorageHandle{nullptr};
 };
+
+////////////////////////////////////////////////////////////
+/// Implementation
+////////////////////////////////////////////////////////////
 
 OPENPGL_INLINE SampleStorage::SampleStorage()
 {

@@ -17,7 +17,7 @@ void SetRegion(PathSegment* pathSegment, const Region &region);
 struct SurfaceSamplingDistribution;
 struct VolumeSamplingDistribution;
 /**
- * @brief 
+ * @brief A Region represents a spatial region of the scene and contains the directional information (e.g., guiding distribution) for that region. 
  * 
  * @deprecated Thinking about hiding the existance of the Region structure from the user
  */
@@ -53,6 +53,10 @@ struct Region
     private:
         PGLRegion m_regionHandle{nullptr};
 };
+
+////////////////////////////////////////////////////////////
+/// Implementation
+////////////////////////////////////////////////////////////
 
 OPENPGL_INLINE Region::Region(PGLRegion regionHandle)
 {

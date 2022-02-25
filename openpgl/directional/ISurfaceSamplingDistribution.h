@@ -23,13 +23,15 @@ struct ISurfaceSamplingDistribution
     
     virtual void applyCosineProduct(const Vector3& normal) = 0;
     
+    virtual bool supportsApplyCosineProduct() const = 0;
+
     virtual Vector3 sample(const Point2 sample) const = 0;
 
     virtual float pdf(const Vector3 dir) const = 0;
 
     virtual float samplePdf(const Point2 sample, Vector3 &dir) const = 0;
 
-    virtual bool valid() const = 0;
+    virtual bool validate() const = 0;
 
     virtual void clear() = 0;
 

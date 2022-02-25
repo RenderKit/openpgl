@@ -1,4 +1,4 @@
-// Copyright 2021 Intel Corporation
+// Copyright 2021-2022 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
 #pragma once
@@ -14,7 +14,7 @@ namespace cpp
 /**
  * @brief Class to store information of the current path segment.
  * 
- * This class stores all required information for a path segment
+ * The PathSegment class stores all required information for a path segment
  * so that a list of succeeding segments (stored in a PathSegmentStorage) 
  * can be used to generate SampleData for training the guiding Field. 
  * 
