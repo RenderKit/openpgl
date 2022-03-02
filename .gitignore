@@ -5,3 +5,4 @@ python/pybind11
 install*
 doxygen
 .vscode
+doc/tmp/*
