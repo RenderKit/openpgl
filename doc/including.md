@@ -5,21 +5,35 @@ Including Open PGL into a project
 Including into CMake build scripts 
 ----------------------------------
 
-`-Dopenpgl_DIR=[openpgl_install]/lib/cmake/openpgl-<OPENPGL_VERSION>`
+To include Open PGL into a project which is using CMake as a build system
+one can simply use the CMake configuration files provided by Open PGL. 
+
+To make CMake aware of Open PGL's CMake configuration scripts the 
+`openpgl_DIR` has to be set to their location during configuration:
+
+```Bash
+cmake -Dopenpgl_DIR=[openpgl_install]/lib/cmake/openpgl-<OPENPGL_VERSION> ..
+```
+
+After that, adding OpenPGL to a CMake project/target is done by first
+finding Open PGL using `find_package()` and then adding the `openpgl:openpgl`
+targets to the project/target: 
 
 ```CMake
 # locating Open PGL library and headers 
-FIND_PACKAGE(openpgl REQUIRED)
+find_package(openpgl REQUIRED)
 
 # setting up project/target
 ...
+add_executable(myProject ...)
 ...
 
 # adding Open PGL to the project/target
-target_include_directories([project] openpgl::openpgl)
+target_include_directories(myProject openpgl::openpgl)
 
-target_link_libraries([project] openpgl::openpgl)
+target_link_libraries(myProject openpgl::openpgl)
 ```
+
 
 Including Open PGL API headers
 ------------------------------

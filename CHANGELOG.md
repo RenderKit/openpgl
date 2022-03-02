@@ -3,7 +3,7 @@ Version History
 
 ## Open PGL 0.3.0
 
--   Added CMake superbuild script to build Open PGL including all it dependencies.      
+-   Added CMake Superbuild script to build Open PGL including all it dependencies.      
     The dependencies (e.g., TBB and Embree) are downloaded, built, and installed automatically. 
 
 -   Added support for different SIMD optimizations (SSE, AVX2, AVX-512).
@@ -34,12 +34,16 @@ Version History
 
 ## Open PGL 0.1.0
 
--   Added `vklSetParam()` API function which can set parameters of any supported
-    type
--   Structured regular volumes:
-    -   Added support for cell-centered data via the `cellCentered` parameter;
-        vertex-centered remains the default
-    -   Added support for more general transformations via the `indexToObject`
-        parameter
-    -   Added `indexOrigin` parameter which applies an index-space vec3i
-        translation
+-   Initial release of Open PGL
+    Features:
+    -   Incremental learning/updating of a 5D spatio-directional radiance field
+        from radiance samples (see `Field`).
+    -   Directional representation based on (parallax-aware) von Mises-Fisher mixtures.
+    -   `PathSegmentStorage` a utility class to help keeping track of all path segment 
+        information and to generate radiance samples when a path/random walk is finished/terminated.
+    -   Support for guided importance sampling of directions on surfaces (see `SurfaceSamplingDistribution`)
+        and inside volumes (see `VolumeSamplingDistribution`)
+
+-   Added C-API and C++-API headers
+    -   C-API: `#include <openpgl/openpgl.h>`
+    -   C++-API: `#include <openpgl/cpp/OpenPGL.h>` and the namespace `openpgl::cpp::`

@@ -10,6 +10,8 @@ covering all surfaces and volumes of the current scene. For each vertex of a ran
 Currently supported path guiding methods include: guiding directional sampling decisions on surfaces as well as inside volumes based on a learned incident radiance distribution or its product with BSDF components (i.e., cosine lobe) or phase functions (i.e., single lobe HG).
 
 Open PGL offers a C API as well as a C++ wrapper API for higher level abstraction. 
-The current implementation is optimized for the latest Intel® processors with support for SSE, AVX, AVX2, and AVX-512 instructions, and for ARM processors with support for NEON instructions. Open PGL is part of the [Intel® oneAPI Rendering
-Toolkit](https://software.intel.com/en-us/rendering-framework) and is released
+The current implementation is optimized for the latest Intel® processors with support for SSE, AVX, AVX2, and AVX-512 instructions.
+<!--, and for ARM processors with support for NEON instructions.--> 
+
+Open PGL is part of the [Intel® oneAPI Rendering Toolkit](https://software.intel.com/en-us/rendering-framework) and is released
 under the permissive [Apache 2.0 license](http://www.apache.org/licenses/LICENSE-2.0).

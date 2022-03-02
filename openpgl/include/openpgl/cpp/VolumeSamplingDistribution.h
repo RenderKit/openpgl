@@ -15,9 +15,9 @@ namespace cpp
 /**
  * @brief The Sampling distriubtion used for guidiging directional sampling decisions inside volumes.
  * 
- * The guided sampling distribution can be proportional to the incomming radiance or to its product
+ * The guided sampling distribution can be proportional to the incoming radiance or to its product
  * with the phase function (e.g., single lobe HG). The class supports function for sampling and
- * PDF evalautions. 
+ * PDF evaluations. 
  * 
  */
 

@@ -31,17 +31,23 @@ HG).
 Open PGL offers a C API as well as a C++ wrapper API for higher level
 abstraction. The current implementation is optimized for the latest
 Intel® processors with support for SSE, AVX, AVX2, and AVX-512
-instructions, and for ARM processors with support for NEON instructions.
+instructions.
+<!--, and for ARM processors with support for NEON instructions.-->
+
 Open PGL is part of the [Intel® oneAPI Rendering
 Toolkit](https://software.intel.com/en-us/rendering-framework) and is
 released under the permissive [Apache 2.0
 license](http://www.apache.org/licenses/LICENSE-2.0).
 
+| ![This is an image](/doc/images/test.png) |
+| :---------------------------------------: |
+|                  caption                  |
+
 # Version History
 
 ## Open PGL 0.3.0
 
-  - Added CMake superbuild script to build Open PGL including all it
+  - Added CMake Superbuild script to build Open PGL including all it
     dependencies.  
     The dependencies (e.g., TBB and Embree) are downloaded, built, and
     installed automatically.
@@ -78,15 +84,30 @@ license](http://www.apache.org/licenses/LICENSE-2.0).
 
 ## Open PGL 0.1.0
 
-  - Added `vklSetParam()` API function which can set parameters of any
-    supported type
-  - Structured regular volumes:
-      - Added support for cell-centered data via the `cellCentered`
-        parameter; vertex-centered remains the default
-      - Added support for more general transformations via the
-        `indexToObject` parameter
-      - Added `indexOrigin` parameter which applies an index-space vec3i
-        translation
+  - Initial release of Open PGL Features:
+      - Incremental learning/updating of a 5D spatio-directional
+        radiance field from radiance samples (see `Field`).
+      - Directional representation based on (parallax-aware) von
+        Mises-Fisher mixtures.
+      - `PathSegmentStorage` a utility class to help keeping track of
+        all path segment information and to generate radiance samples
+        when a path/random walk is finished/terminated.
+      - Support for guided importance sampling of directions on surfaces
+        (see `SurfaceSamplingDistribution`) and inside volumes (see
+        `VolumeSamplingDistribution`)
+  - Added C-API and C++-API headers
+      - C-API: `#include <openpgl/openpgl.h>`
+      - C++-API: `#include <openpgl/cpp/OpenPGL.h>` and the namespace
+        `openpgl::cpp::` Support and Contact ===================
+
+Open PGL is under active development, and though we do our best to
+guarantee stable release versions a certain number of bugs,
+as-yet-missing features, inconsistencies, or any other issues are still
+possible. Should you find any such issues please report them immediately
+via [Open PGL’s GitHub Issue
+Tracker](https://github.com/OpenPathGuidingLibrary/openpgl/issues) (or,
+if you should happen to have a fix for it, you can also send us a pull
+request).
 
 # Building Open PGL from source
 
@@ -162,7 +183,7 @@ Create a build directory, and go into it:
         cd build
 ```
 
-Configure the Open PGL build:
+Configure the Open PGL build using:
 
 ``` bash
         cmake -DCMAKE_INSTALL_PREFIX=[openpgl_install] ..
@@ -184,7 +205,7 @@ Configure the Open PGL build:
     
       - `TBB_ROOT` location of the TBB installation.
 
-Build and install Open PGL:
+Build and install Open PGL using:
 
 ``` bash
         cmake build
@@ -195,20 +216,34 @@ Build and install Open PGL:
 
 ## Including into CMake build scripts
 
-`-Dopenpgl_DIR=[openpgl_install]/lib/cmake/openpgl-0.1.0`
+To include Open PGL into a project which is using CMake as a build
+system one can simply use the CMake configuration files provided by Open
+PGL.
+
+To make CMake aware of Open PGL’s CMake configuration scripts the
+`openpgl_DIR` has to be set to their location during configuration:
+
+``` bash
+cmake -Dopenpgl_DIR=[openpgl_install]/lib/cmake/openpgl-0.1.0 ..
+```
+
+After that, adding OpenPGL to a CMake project/target is done by first
+finding Open PGL using `find_package()` and then adding the
+`openpgl:openpgl` targets to the project/target:
 
 ``` cmake
 # locating Open PGL library and headers 
-FIND_PACKAGE(openpgl REQUIRED)
+find_package(openpgl REQUIRED)
 
 # setting up project/target
 ...
+add_executable(myProject ...)
 ...
 
 # adding Open PGL to the project/target
-target_include_directories([project] openpgl::openpgl)
+target_include_directories(myProject openpgl::openpgl)
 
-target_link_libraries([project] openpgl::openpgl)
+target_link_libraries(myProject openpgl::openpgl)
 ```
 
 ## Including Open PGL API headers
@@ -246,11 +281,30 @@ and refer to the individual class header files for detailed information.
 #include <openpgl/cpp/Device.h>
 ```
 
+The `Device` class is a key component of OpenPGL. The Device defines the
+backend used by Open PGL. Currently OpenPGL supports different CPU
+backends using either SSE, AVX, or AVX-512 optimizations.
+
+Note: support for different GPU backends is planned in future releases.
+
 ## Field
 
 ``` c++
 #include <openpgl/cpp/Field.h>
 ```
+
+The `Field` class is a key component of Open PGL. An instance of this
+class holds the spatio-directional guiding information (e.g.,
+approximation of the incoming radiance field) for a scene. The Field is
+responsible for storing, learning and accessing the guiding information.
+This information can be the incidence radiance field across the whole
+scene learned from several training. The Field holds separate
+approximations for surface and volumetric radiance distributions which
+can be accessed separately. The representation of a scenes radiance
+distriubtion is usually separated into a positional and directional
+representation using a spatial subdivision structure, where each spatial
+leaf node (a.k.a. Region) contains a directional representation for the
+local incident radiance distribution.
 
 ## SurfaceSamplingDistriubtion
 
@@ -258,11 +312,23 @@ and refer to the individual class header files for detailed information.
 #include <openpgl/cpp/SurfaceSamplingDistriubtion.h>
 ```
 
+The `SurfaceSamplingDistriubtion` class represents the guiding
+distribution used for sampling directions on surfaces. The sampling
+distribution is often be proportional to the incoming radiance or its
+product with components of a BSDF model (e.g., cosine term). The class
+supports function for sampling and PDF evaluations.
+
 ## VolumeSamplingDistriubtion
 
 ``` c++
 #include <openpgl/cpp/VolumeSamplingDistriubtion.h>
 ```
+
+The `VolumeSamplingDistriubtion` class represents the guiding
+distriubtion used for sampling directions inside volumes. The sampling
+distribution is often proportional to the incoming radiance or to its
+product with the phase function (e.g., single lobe HG). The class
+supports function for sampling and PDF evaluations.
 
 ## SampleData
 
@@ -270,19 +336,48 @@ and refer to the individual class header files for detailed information.
 #include <openpgl/cpp/SampleData.h>
 ```
 
-## SampleDataStorage
+The `SampleData` struct represent a radiance sample (e.g., position,
+direction, value). Radiance samples are generated during rendering and
+are used to train/update the guiding field (e.g., after each rendering
+progression). A SampleData object can be created at each vertex of a
+random walk/path. To fill-in the required information the whole path
+(from its end point to the current vertex) has to be collected and
+backpropagated.
+
+## SampleStorage
 
 ``` c++
-#include <openpgl/cpp/SampleDataStorage.h>
+#include <openpgl/cpp/SampleStorage.h>
 ```
 
-# Support and Contact
+The `SampleStorage` class is a storage container collecting all
+SampleData generated during rendering. It stores the (radiance/photon)
+samples generated during rendering. The implementation is thread save
+and supports concurrent adding of samples from multiple threads. As a
+result only one instance of this container is needed per rendering
+process. The stored samples are later used by the Field class to
+train/learn the guiding field (i.e., radiance field) for a scene.
 
-Open PGL is under active development, and though we do our best to
-guarantee stable release versions a certain number of bugs,
-as-yet-missing features, inconsistencies, or any other issues are still
-possible. Should you find any such issues please report them immediately
-via [Open PGL’s GitHub Issue
-Tracker](https://github.com/OpenPathGuidingLibrary/openpgl/issues) (or,
-if you should happen to have a fix for it, you can also send us a pull
-request).
+## PathSegmentStorage
+
+``` c++
+#include <openpgl/cpp/PathSegmentStorage.h>
+```
+
+The `PathSegmentStorage` is a utility class to help generating
+SampleData during the path/random walk generation process. For the
+construction of a path/walk each new PathSegment is stored the
+PathSegmentStorage. When the walk is finished or terminated the
+-radiance- SampleData is generated using a back propagation process. The
+resulting samples can then be passed to the global SampleDataStorage.
+
+## PathSegment
+
+``` c++
+#include <openpgl/cpp/PathSegment.h>
+```
+
+The `PathSegment` struct stores all required information for a path
+segment (e.g., position, direction, PDF, BSDF evaluation). A list of
+succeeding segments (stored in a `PathSegmentStorage`) can be used to
+generate SampleData for training the guiding Field.

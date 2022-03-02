@@ -75,7 +75,7 @@ Create a build directory, and go into it:
         cd build
 ```
 
-Configure the Open PGL build:
+Configure the Open PGL build using:
 
 ```bash
         cmake -DCMAKE_INSTALL_PREFIX=[openpgl_install] ..
@@ -96,7 +96,7 @@ Configure the Open PGL build:
 
     - `TBB_ROOT` location of the TBB installation.
 
-Build and install Open PGL:
+Build and install Open PGL using:
 
 ```bash
         cmake build

@@ -43,14 +43,7 @@ tmpdir:
 ## Markdown
 ## ----------------------------------------------------------------------------
 
-#tmp/api.md: api.md tmp/links.md tmp/images_web.md
-#	$(PANDOC) $+ --indented-code-classes=cpp -t markdown-fenced_code_attributes -o $@
-
-#tmp/examples.md: examples.md tmp/links.md tmp/images_web.md
-#	$(PANDOC) $+ --indented-code-classes=cpp -t markdown-fenced_code_attributes -o $@
-
-#../README.md: tmp/readme_head.md overview.md changelog.md support.md tmp/api.md tmp/examples.md compilation.md related_projects.md tmp/links.md
-../README.md: tmp/readme_head.md overview.md changelog.md compilation.md tmp/including.md api.md support.md
+../README.md: tmp/readme_head.md overview.md examples.md changelog.md support.md compilation.md tmp/including.md api.md 
 	$(PANDOC) $+ -t gfm > $@
 
 ## ----------------------------------------------------------------------------
