@@ -1,6 +1,6 @@
 # Intel® Open Path Guiding Library
 
-This is release v0.1.0 of Intel® Open PGL. For changes and new features
+This is release v0.1.0 of Intel® Open PGL. For changes and new features,
 see the [changelog](CHANGELOG.md). Visit http://www.openpgl.org for more
 information.
 
@@ -9,34 +9,31 @@ information.
 The Intel® Open Path Guiding Library (Intel® Open PGL) implements a set
 of representations and training algorithms needed to integrate path
 guiding into a renderer. Open PGL offers implementations of current
-state-of-the-art path guiding methods which can be used to increase the
-sampling quality, and therefore the efficiency of a renderer. The goal
-of Open PGL is to provide implementations that well tested and robust
-enough to be used in a production environment.
+state-of-the-art path guiding methods, which increase the sampling
+quality and, therefore, the efficiency of a renderer. The goal of Open
+PGL is to provide implementations that are well tested and robust enough
+to be used in a production environment.
 
 The representation of the guiding field is learned during rendering and
-can be updated on a per frame basis. Radiance/importance samples which
-are generated during rendering by the renderer passed to Open PGL to
-train and update a guiding field covering all surfaces and volumes of
-the current scene. For each vertex of a random path/walk the guiding
-field can be queried for a local distriubtion (e.g., incident radiance)
-which can be used to guide local sampling decisions (e.g., directions).
+updated on a per-frame basis using radiance/importance samples generated
+during rendering. At each vertex of a random path/walk, the guiding
+field is queried for a local distribution (e.g., incident radiance),
+guiding local sampling decisions (e.g., directions).
 
 Currently supported path guiding methods include: guiding directional
-sampling decisions on surfaces as well as inside volumes based on a
-learned incident radiance distribution or its product with BSDF
-components (i.e., cosine lobe) or phase functions (i.e., single lobe
-HG).
+sampling decisions on surfaces and inside volumes based on a learned
+incident radiance distribution or its product with BSDF components
+(i.e., cosine lobe) or phase functions (i.e., single lobe HG).
 
-Open PGL offers a C API as well as a C++ wrapper API for higher level
+Open PGL offers a C API and a C++ wrapper API for higher-level
 abstraction. The current implementation is optimized for the latest
 Intel® processors with support for SSE, AVX, AVX2, and AVX-512
 instructions.
 <!--, and for ARM processors with support for NEON instructions.-->
 
 Open PGL is part of the [Intel® oneAPI Rendering
-Toolkit](https://software.intel.com/en-us/rendering-framework) and is
-released under the permissive [Apache 2.0
+Toolkit](https://software.intel.com/en-us/rendering-framework) and has
+been released under the permissive [Apache 2.0
 license](http://www.apache.org/licenses/LICENSE-2.0).
 
 | ![This is an image](/doc/images/test.png) |
@@ -47,7 +44,7 @@ license](http://www.apache.org/licenses/LICENSE-2.0).
 
 ## Open PGL 0.3.0
 
-  - Added CMake Superbuild script to build Open PGL including all it
+  - Added CMake Superbuild script to build Open PGL, including all its
     dependencies.  
     The dependencies (e.g., TBB and Embree) are downloaded, built, and
     installed automatically.
@@ -55,13 +52,13 @@ license](http://www.apache.org/licenses/LICENSE-2.0).
   - Added support for different SIMD optimizations (SSE, AVX2, AVX-512).
     The optimization type can be chosen when initializing the `Device`.
 
-  - Added support for directional quad trees for the directional
+  - Added support for directional quadtrees for the directional
     representation.
 
   - `PathSegmentStorage`:
     
       - Added debug function `CalculatePixelEstimate` to validate if the
-        stored path segment information represent the sampling behavior
+        stored path segment information represents the sampling behavior
         of the render (i.e., the resulting RGB value should match the
         pixel value the renderer adds to the framebuffer)
 
@@ -89,22 +86,24 @@ license](http://www.apache.org/licenses/LICENSE-2.0).
         radiance field from radiance samples (see `Field`).
       - Directional representation based on (parallax-aware) von
         Mises-Fisher mixtures.
-      - `PathSegmentStorage` a utility class to help keeping track of
-        all path segment information and to generate radiance samples
-        when a path/random walk is finished/terminated.
+      - `PathSegmentStorage` is a utility class to help keep track of
+        all path segment information and generate radiance samples when
+        a path/random walk is finished/terminated.
       - Support for guided importance sampling of directions on surfaces
         (see `SurfaceSamplingDistribution`) and inside volumes (see
         `VolumeSamplingDistribution`)
   - Added C-API and C++-API headers
       - C-API: `#include <openpgl/openpgl.h>`
       - C++-API: `#include <openpgl/cpp/OpenPGL.h>` and the namespace
-        `openpgl::cpp::` Support and Contact ===================
+        `openpgl::cpp::`
 
-Open PGL is under active development, and though we do our best to
-guarantee stable release versions a certain number of bugs,
-as-yet-missing features, inconsistencies, or any other issues are still
-possible. Should you find any such issues please report them immediately
-via [Open PGL’s GitHub Issue
+# Support and Contact
+
+Open PGL is under active development. Though we do our best to guarantee
+stable release versions, a certain number of bugs, as-yet-missing
+features, inconsistencies, or any other issues are still possible.
+Should you find any such issues, please report them immediately via
+[Open PGL’s GitHub Issue
 Tracker](https://github.com/OpenPathGuidingLibrary/openpgl/issues) (or,
 if you should happen to have a fix for it, you can also send us a pull
 request).
@@ -118,8 +117,8 @@ release.
 
 ## Prerequisites
 
-Open PGL currently supports Linux and Windows. In addition, before you
-can build Open PGL you need the following prerequisites:
+Open PGL currently supports Linux and Windows. In addition, before
+building Open PGL you need the following prerequisites:
 
   - You can clone the latest Open PGL sources via:
     
@@ -135,7 +134,7 @@ can build Open PGL you need the following prerequisites:
   - Open PGL depends on TBB, which is available at the [TBB GitHub
     repository](https://github.com/oneapi-src/oneTBB).
 
-Depending on your Linux distribution you can install these dependencies
+Depending on your Linux distribution, you can install these dependencies
 using `yum` or `apt-get`. Some of these packages might already be
 installed or might have slightly different names.
 
@@ -194,14 +193,14 @@ Configure the Open PGL build using:
       - `CMAKE_INSTALL_PREFIX` will be the root directory where
         everything gets installed.
     
-      - `BUILD_STATIC` if Open PGL should be build as static or shared
-        library (default `OFF`)
+      - `BUILD_STATIC` if Open PGL should be built as a static or shared
+        library (default `OFF`).
     
       - `ISA_AVX512` if Open PGL is compiled with AVX-512 support
         (default `OFF`).
     
       - `embree_DIR` location of the Embree CMake configuration file
-        (e.g., \[embree\_install\]/lib/cmake/embree-3.6.1)
+        (e.g., \[embree\_install\]/lib/cmake/embree-3.6.1).
     
       - `TBB_ROOT` location of the TBB installation.
 
@@ -214,11 +213,11 @@ Build and install Open PGL using:
 
 # Including Open PGL into a project
 
-## Including into CMake build scripts
+## Including into CMake build scripts.
 
 To include Open PGL into a project which is using CMake as a build
-system one can simply use the CMake configuration files provided by Open
-PGL.
+system, one can simply use the CMake configuration files provided by
+Open PGL.
 
 To make CMake aware of Open PGL’s CMake configuration scripts the
 `openpgl_DIR` has to be set to their location during configuration:
@@ -248,19 +247,19 @@ target_link_libraries(myProject openpgl::openpgl)
 
 ## Including Open PGL API headers
 
-Open PGL offers two types of APIs
+Open PGL offers two types of APIs.
 
 The C API is C99 conform and is the basis for interacting with Open PGL.
-To use the C API of Open PGL one only needs to include the following
+To use the C API of Open PGL, one only needs to include the following
 header:
 
 ``` c
 #include <openpgl/openpgl.h>
 ```
 
-The C++ API is a header based wrapper of the C API which offers a more
+The C++ API is a header-based wrapper of the C API, which offers a more
 comfortable, object-oriented way of using Open PGL. To use the C++ API
-of Open PGL one only needs to include the following header:
+of Open PGL, one only needs to include the following header:
 
 ``` c++
 #include <openpgl/cpp/OpenPGL.h>
@@ -269,11 +268,12 @@ of Open PGL one only needs to include the following header:
 # Open PGL API
 
 The API specification of Open PGL is currently still in a “work in
-progress” and might change with the next releases - depending on the
-community feedback and library evolution.
+progress” stage and might change with the next releases - depending on
+the community feedback and library evolution.
 
-We therefore only give here a small overview of the C++ class structures
-and refer to the individual class header files for detailed information.
+We, therefore, only give here a small overview of the C++ class
+structures and refer to the individual class header files for detailed
+information.
 
 ## Device
 
@@ -281,9 +281,9 @@ and refer to the individual class header files for detailed information.
 #include <openpgl/cpp/Device.h>
 ```
 
-The `Device` class is a key component of OpenPGL. The Device defines the
-backend used by Open PGL. Currently OpenPGL supports different CPU
-backends using either SSE, AVX, or AVX-512 optimizations.
+The `Device` class is a key component of OpenPGL. It defines the backend
+used by Open PGL. OpenPGL supports different CPU backends using SSE,
+AVX, or AVX-512 optimizations.
 
 Note: support for different GPU backends is planned in future releases.
 
@@ -295,16 +295,16 @@ Note: support for different GPU backends is planned in future releases.
 
 The `Field` class is a key component of Open PGL. An instance of this
 class holds the spatio-directional guiding information (e.g.,
-approximation of the incoming radiance field) for a scene. The Field is
-responsible for storing, learning and accessing the guiding information.
-This information can be the incidence radiance field across the whole
-scene learned from several training. The Field holds separate
-approximations for surface and volumetric radiance distributions which
-can be accessed separately. The representation of a scenes radiance
-distriubtion is usually separated into a positional and directional
-representation using a spatial subdivision structure, where each spatial
-leaf node (a.k.a. Region) contains a directional representation for the
-local incident radiance distribution.
+approximation of the incoming radiance field) for a scene. The `Field`
+is responsible for storing, learning, and accessing the guiding
+information. This information can be the incidence radiance field
+learned from several training iterations across the whole scene. The
+`Field` holds separate approximations for surface and volumetric
+radiance distributions, which can be accessed separately. The
+representation of a scene’s radiance distribution is usually separated
+into a positional and directional representation using a spatial
+subdivision structure. Each spatial leaf node (a.k.a. Region) contains a
+directional representation for the local incident radiance distribution.
 
 ## SurfaceSamplingDistriubtion
 
@@ -314,9 +314,9 @@ local incident radiance distribution.
 
 The `SurfaceSamplingDistriubtion` class represents the guiding
 distribution used for sampling directions on surfaces. The sampling
-distribution is often be proportional to the incoming radiance or its
-product with components of a BSDF model (e.g., cosine term). The class
-supports function for sampling and PDF evaluations.
+distribution is often proportional to the incoming radiance distribution
+or its product with components of a BSDF model (e.g., cosine term). The
+class supports functions for sampling and PDF evaluations.
 
 ## VolumeSamplingDistriubtion
 
@@ -325,10 +325,10 @@ supports function for sampling and PDF evaluations.
 ```
 
 The `VolumeSamplingDistriubtion` class represents the guiding
-distriubtion used for sampling directions inside volumes. The sampling
-distribution is often proportional to the incoming radiance or to its
-product with the phase function (e.g., single lobe HG). The class
-supports function for sampling and PDF evaluations.
+distribution used for sampling directions inside volumes. The sampling
+distribution is often proportional to the incoming radiance distribution
+or its product with the phase function (e.g., single lobe HG). The class
+supports functions for sampling and PDF evaluations.
 
 ## SampleData
 
@@ -336,13 +336,13 @@ supports function for sampling and PDF evaluations.
 #include <openpgl/cpp/SampleData.h>
 ```
 
-The `SampleData` struct represent a radiance sample (e.g., position,
+The `SampleData` struct represents a radiance sample (e.g., position,
 direction, value). Radiance samples are generated during rendering and
 are used to train/update the guiding field (e.g., after each rendering
-progression). A SampleData object can be created at each vertex of a
-random walk/path. To fill-in the required information the whole path
-(from its end point to the current vertex) has to be collected and
-backpropagated.
+progression). A `SampleData` object is created at each vertex of a
+random walk/path. To collect the data at a specific vertex, the whole
+path (from its endpoint to the current vertex) must be considered, and
+information (e.g., radiance) must be backpropagated.
 
 ## SampleStorage
 
@@ -354,7 +354,7 @@ The `SampleStorage` class is a storage container collecting all
 SampleData generated during rendering. It stores the (radiance/photon)
 samples generated during rendering. The implementation is thread save
 and supports concurrent adding of samples from multiple threads. As a
-result only one instance of this container is needed per rendering
+result, only one instance of this container is needed per rendering
 process. The stored samples are later used by the Field class to
 train/learn the guiding field (i.e., radiance field) for a scene.
 
@@ -364,12 +364,12 @@ train/learn the guiding field (i.e., radiance field) for a scene.
 #include <openpgl/cpp/PathSegmentStorage.h>
 ```
 
-The `PathSegmentStorage` is a utility class to help generating
-SampleData during the path/random walk generation process. For the
-construction of a path/walk each new PathSegment is stored the
-PathSegmentStorage. When the walk is finished or terminated the
--radiance- SampleData is generated using a back propagation process. The
-resulting samples can then be passed to the global SampleDataStorage.
+The `PathSegmentStorage` is a utility class to help generate multiple
+`SampleData` objects during the path/random walk generation process. For
+the construction of a path/walk, each new `PathSegment` is stored in the
+`PathSegmentStorage`. When the walk is finished or terminated, the
+-radiance- SampleData is generated using a backpropagation process. The
+resulting samples are then be passed to the global `SampleDataStorage`.
 
 ## PathSegment
 
@@ -380,4 +380,16 @@ resulting samples can then be passed to the global SampleDataStorage.
 The `PathSegment` struct stores all required information for a path
 segment (e.g., position, direction, PDF, BSDF evaluation). A list of
 succeeding segments (stored in a `PathSegmentStorage`) can be used to
-generate SampleData for training the guiding Field.
+generate SampleData for training the guiding field.
+
+# Projects that make use of Open PGL
+
+TBA
+
+# Projects that are closely related to Open PGL
+
+  - The [Intel® oneAPI Rendering
+    Toolkit](https://software.intel.com/en-us/rendering-framework)
+
+  - The [Intel® Embree](http://embree.github.io) Ray Tracing Kernel
+    Framework

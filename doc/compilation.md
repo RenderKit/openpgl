@@ -1,4 +1,3 @@
-
 Building Open PGL from source
 =============================
 
@@ -10,15 +9,13 @@ Prerequisites
 -------------
 
 Open PGL currently supports Linux and Windows. In addition, before
-you can build Open PGL you need the following prerequisites:
+building Open PGL you need the following prerequisites:
 
 -   You can clone the latest Open PGL sources via:
 
         git clone https://github.com/openpathguidinglibrary/openpgl.git
 
--   To build Open PGL you need [CMake](http://www.cmake.org), any form of C++11
-    compiler (we recommend using GCC, but also support Clang and MSVC), and
-    standard Linux development tools.
+-   To build Open PGL you need [CMake](http://www.cmake.org), any form of C++11 compiler (we recommend using GCC, but also support Clang and MSVC), and standard Linux development tools.
 
 -   Open PGL depends on Embree, which is available at the [Embree GitHub
     repository](https://github.com/embree/embree).
@@ -26,9 +23,7 @@ you can build Open PGL you need the following prerequisites:
 -   Open PGL depends on TBB, which is available at the [TBB GitHub
     repository](https://github.com/oneapi-src/oneTBB).
 
-Depending on your Linux distribution you can install these dependencies using
-`yum` or `apt-get`. Some of these packages might already be installed or might
-have slightly different names.
+Depending on your Linux distribution, you can install these dependencies using `yum` or `apt-get`. Some of these packages might already be installed or might have slightly different names.
 
 CMake Superbuild
 ----------------
@@ -56,8 +51,7 @@ CMake options to note (all have sensible defaults):
 - `BUILD_JOBS` sets the number given to `make -j` for parallel builds.
 - `INSTALL_IN_SEPARATE_DIRECTORIES` toggles installation of all libraries in
   separate or the same directory.
-- `BUILD_TBB_FROM_SOURCE` specifies whether TBB should be built from
-   source or the releases on GitHub should be used. This must be ON
+- `BUILD_TBB_FROM_SOURCE` specifies whether TBB should be built from source or the releases on GitHub should be used. This must be ON
    when compiling for ARM.
 
 For the full set of options, run `ccmake [<PGL_ROOT>/superbuild]`.
@@ -83,16 +77,14 @@ Configure the Open PGL build using:
 
 -  CMake options to note (all have sensible defaults):
 
-    - `CMAKE_INSTALL_PREFIX` will be the root directory where everything gets
-  installed.
+    - `CMAKE_INSTALL_PREFIX` will be the root directory where everything gets installed.
 
-    - `BUILD_STATIC` if Open PGL should be build as static or shared library
-    (default `OFF`)
+    - `BUILD_STATIC` if Open PGL should be built as a static or shared library (default `OFF`).
 
     - `ISA_AVX512` if Open PGL is compiled with AVX-512 support (default `OFF`).
 
     - `embree_DIR` location of the Embree CMake configuration file 
-    (e.g., [embree_install]/lib/cmake/embree-3.6.1)
+    (e.g., [embree_install]/lib/cmake/embree-3.6.1).
 
     - `TBB_ROOT` location of the TBB installation.
 
