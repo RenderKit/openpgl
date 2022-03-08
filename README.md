@@ -36,9 +36,9 @@ Toolkit](https://software.intel.com/en-us/rendering-framework) and has
 been released under the permissive [Apache 2.0
 license](http://www.apache.org/licenses/LICENSE-2.0).
 
-| ![This is an image](/doc/images/test.png) |
-| :---------------------------------------: |
-|                  caption                  |
+|                                                                ![Example rendering without and with Open PGL](/doc/images/example.png)                                                                 |
+| :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
+| Path traced image of a variation of the Nishita Sky Demo scene from Blender Studio (CC0) without and with using Open PGL to guide directional samples (i.e., on surfaces and inside the water volume). |
 
 # Version History
 
@@ -371,6 +371,10 @@ the construction of a path/walk, each new `PathSegment` is stored in the
 -radiance- SampleData is generated using a backpropagation process. The
 resulting samples are then be passed to the global `SampleDataStorage`.
 
+Note: The `PathSegmentStorage` is just a utility class meaning its usage
+is not required. It is possible to for the users to use their own method
+for generating `SampleData` objects during rendering.
+
 ## PathSegment
 
 ``` c++
@@ -379,8 +383,8 @@ resulting samples are then be passed to the global `SampleDataStorage`.
 
 The `PathSegment` struct stores all required information for a path
 segment (e.g., position, direction, PDF, BSDF evaluation). A list of
-succeeding segments (stored in a `PathSegmentStorage`) can be used to
-generate SampleData for training the guiding field.
+succeeding segments (stored in a `PathSegmentStorage`) is used to
+generate `SampleData` for training the guiding field.
 
 # Projects that make use of Open PGL
 
