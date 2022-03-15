@@ -1,7 +1,15 @@
-// Copyright 2009-2020 Intel Corporation
+// Copyright 2009-2021 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
 #pragma once
+
+#define vboolf vboolf_impl
+#define vboold vboold_impl
+#define vint vint_impl
+#define vuint vuint_impl
+#define vllong vllong_impl
+#define vfloat vfloat_impl
+#define vdouble vdouble_impl
 
 namespace embree
 {
@@ -28,9 +36,11 @@ namespace embree
 
     __forceinline vboolf(__m128 input) : v(input) {}
     __forceinline operator const __m128&() const { return v; }
+    #if !defined(__EMSCRIPTEN__)
     __forceinline operator const __m128i() const { return _mm_castps_si128(v); }
     __forceinline operator const __m128d() const { return _mm_castps_pd(v); }
-    
+    #endif
+
     __forceinline vboolf(bool a)
       : v(mm_lookupmask_ps[(size_t(a) << 3) | (size_t(a) << 2) | (size_t(a) << 1) | size_t(a)]) {}
     __forceinline vboolf(bool a, bool b)
@@ -171,3 +181,11 @@ namespace embree
     return cout << "<" << a[0] << ", " << a[1] << ", " << a[2] << ", " << a[3] << ">";
   }
 }
+
+#undef vboolf
+#undef vboold
+#undef vint
+#undef vuint
+#undef vllong
+#undef vfloat
+#undef vdouble

@@ -1,4 +1,4 @@
-// Copyright 2009-2020 Intel Corporation
+// Copyright 2009-2021 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
 #pragma once
@@ -23,9 +23,14 @@
 /// detect platform
 ////////////////////////////////////////////////////////////////////////////////
 
-/* detect 32 or 64 platform */
+/* detect 32 or 64 Intel platform */
 #if defined(__x86_64__) || defined(__ia64__) || defined(_M_X64)
 #define __X86_64__
+#endif
+
+/* detect 64 bit platform */
+#if defined(__X86_64__) || defined(__aarch64__)
+#define __64BIT__
 #endif
 
 /* detect Linux platform */
@@ -91,7 +96,7 @@
 #define dll_import 
 #endif
 
-#ifdef __WIN32__
+#if defined(__WIN32__) && !defined(__MINGW32__)
 #if !defined(__noinline)
 #define __noinline             __declspec(noinline)
 #endif
@@ -141,12 +146,14 @@
   #define DELETED  = delete
 #endif
 
+#if !defined(likely)
 #if defined(_MSC_VER) && !defined(__INTEL_COMPILER)
 #define   likely(expr) (expr)
 #define unlikely(expr) (expr)
 #else
 #define   likely(expr) __builtin_expect((bool)(expr),true )
 #define unlikely(expr) __builtin_expect((bool)(expr),false)
+#endif
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -186,7 +193,7 @@ namespace embree {
 
 /* windows does not have ssize_t */
 #if defined(__WIN32__)
-#if defined(__X86_64__)
+#if defined(__64BIT__)
 typedef int64_t ssize_t;
 #else
 typedef int32_t ssize_t;

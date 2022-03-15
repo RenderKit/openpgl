@@ -1,4 +1,4 @@
-// Copyright 2009-2020 Intel Corporation
+// Copyright 2009-2021 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
 #pragma once
@@ -104,10 +104,11 @@ namespace embree
 #endif
 
 #if defined(__AVX2__)
-    const Vec2fa res = _mm_mul_ps(r,_mm_fnmadd_ps(r, a, vfloat4(2.0f)));
+    const Vec2fa h_n = _mm_fnmadd_ps(a, r, vfloat4(1.0));  // First, compute 1 - a * r (which will be very close to 0)
+    const Vec2fa res = _mm_fmadd_ps(r, h_n, r);            // Then compute r + r * h_n
 #else
-    const Vec2fa res = _mm_mul_ps(r,_mm_sub_ps(vfloat4(2.0f), _mm_mul_ps(r, a)));
-    //return _mm_sub_ps(_mm_add_ps(r, r), _mm_mul_ps(_mm_mul_ps(r, r), a));
+    const Vec2fa h_n = _mm_sub_ps(vfloat4(1.0f), _mm_mul_ps(a, r));  // First, compute 1 - a * r (which will be very close to 0)
+    const Vec2fa res = _mm_add_ps(r,_mm_mul_ps(r, h_n));             // Then compute r + r * h_n  
 #endif
 
     return res;
@@ -275,7 +276,11 @@ namespace embree
   /// Rounding Functions
   ////////////////////////////////////////////////////////////////////////////////
 
-#if defined (__SSE4_1__)
+#if defined(__aarch64__)
+  //__forceinline Vec2fa trunc(const Vec2fa& a) { return vrndq_f32(a); }
+  __forceinline Vec2fa floor(const Vec2fa& a) { return vrndmq_f32(a); }
+  __forceinline Vec2fa ceil (const Vec2fa& a) { return vrndpq_f32(a); }
+#elif defined (__SSE4_1__)
   //__forceinline Vec2fa trunc( const Vec2fa& a ) { return _mm_round_ps(a, _MM_FROUND_TO_NEAREST_INT); }
   __forceinline Vec2fa floor( const Vec2fa& a ) { return _mm_round_ps(a, _MM_FROUND_TO_NEG_INF    ); }
   __forceinline Vec2fa ceil ( const Vec2fa& a ) { return _mm_round_ps(a, _MM_FROUND_TO_POS_INF    ); }
