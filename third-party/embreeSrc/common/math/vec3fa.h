@@ -124,7 +124,7 @@ namespace embree
 
   __forceinline Vec3fa rsqrt( const Vec3fa& a )
   {
-#if defined(__AVX512VL__)
+#if defined(__AVX512VL__) && !defined(_MSC_VER)
     __m128 r = _mm_rsqrt14_ps(a.m128);
 #else
     __m128 r = _mm_rsqrt_ps(a.m128);
@@ -489,7 +489,7 @@ namespace embree
 
   __forceinline Vec3fx rsqrt( const Vec3fx& a )
   {
-#if defined(__AVX512VL__)
+#if defined(__AVX512VL__) && !defined(_MSC_VER)
     __m128 r = _mm_rsqrt14_ps(a.m128);
 #else
     __m128 r = _mm_rsqrt_ps(a.m128);

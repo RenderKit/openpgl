@@ -249,7 +249,7 @@ namespace embree
 
   static __forceinline vfloat8 rsqrt(const vfloat8& a)
   {
-#if defined(__AVX512VL__)
+#if defined(__AVX512VL__) && !defined(_MSC_VER)
     const vfloat8 r = _mm256_rsqrt14_ps(a);
 #else
     const vfloat8 r = _mm256_rsqrt_ps(a);

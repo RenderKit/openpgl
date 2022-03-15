@@ -119,7 +119,7 @@ namespace embree
 
   __forceinline Vec2fa rsqrt( const Vec2fa& a )
   {
-#if defined(__AVX512VL__)
+#if defined(__AVX512VL__) && !defined(_MSC_VER)
     __m128 r = _mm_rsqrt14_ps(a.m128);
 #else
     __m128 r = _mm_rsqrt_ps(a.m128);
