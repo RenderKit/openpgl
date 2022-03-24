@@ -40,6 +40,12 @@ license](http://www.apache.org/licenses/LICENSE-2.0).
 | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
 | Path traced image of a variation of the Nishita Sky Demo scene from Blender Studio (CC0) without and with using Open PGL to guide directional samples (i.e., on surfaces and inside the water volume). |
 
+# Disclaimer
+
+The current version of Open PGL is still in a beta stage and should be
+used with caution in any production related environment. The API
+specification is still in flux and might change with upcoming releases.
+
 # Version History
 
 ## Open PGL 0.3.0

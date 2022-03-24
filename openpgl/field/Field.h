@@ -305,7 +305,9 @@ private:
     inline void fitRegions(SampleContainer& samples)
     {
         size_t nGuidingRegions = m_regionStorageContainer.size();
+#if defined( OPENPGL_SHOW_PRINT_OUTS)
         std::cout << "fitRegion: "<< (m_isSurface? "surface":"volume") << "\tnGuidingRegions = " << nGuidingRegions << std::endl;
+#endif
 #if defined(OPENPGL_USE_OMP_THREADING)
         #pragma omp parallel for num_threads(this->m_nCores) schedule(dynamic)
         for (size_t n=0; n < nGuidingRegions; n++)
@@ -353,7 +355,9 @@ private:
     void updateRegions(SampleContainer& samples)
     {
         size_t nGuidingRegions = m_regionStorageContainer.size();
+#if defined( OPENPGL_SHOW_PRINT_OUTS)
         std::cout << "updateRegion: " << (m_isSurface? "surface":"volume") << "\tnGuidingRegions = " << nGuidingRegions << std::endl;
+#endif
 #if defined(OPENPGL_USE_OMP_THREADING)
         #pragma omp parallel for num_threads(this->m_nCores) schedule(dynamic)
         for (size_t n=0; n < nGuidingRegions; n++)
