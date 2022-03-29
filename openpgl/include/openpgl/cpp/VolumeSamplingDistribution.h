@@ -13,7 +13,7 @@ namespace cpp
 {
 
 /**
- * @brief The Sampling distriubtion used for guidiging directional sampling decisions inside volumes.
+ * @brief The Sampling distribution used for guidiging directional sampling decisions inside volumes.
  * 
  * The guided sampling distribution can be proportional to the incoming radiance or to its product
  * with the phase function (e.g., single lobe HG). The class supports function for sampling and
@@ -26,7 +26,7 @@ struct VolumeSamplingDistribution
     /**
      * @brief Constructs new instance of a VolumeSamplingDistribution.
      * 
-     * Reserves the memory need to store the guiding distriubtion.
+     * Reserves the memory need to store the guiding distribution.
      * Since the type/representation of distribution depends on the guiding field
      * a pointer to the @ref Field has to be provided. After construction
      * the VolumeSamplingDistribution still need to be initialized using the @ref Init function.
@@ -44,12 +44,12 @@ struct VolumeSamplingDistribution
      * 
      * This function queries the guiding field for a surface guiding distribution for
      * given position in the scene and initializes the VolumeSamplingDistribution
-     * to this distriubtion. The resulting distriubtion is usually proportional to the local
+     * to this Distribution. The resulting distribution is usually proportional to the local
      * incident radiance distribution at the query position. The VolumeSamplingDistribution
      * can further being imporoved by applying products with phase function (e.g., single lobe HG).
      * 
      * Note: in anisotropic volumes it is highly recommended to add the phase function product to
-     * avoid variance increase due to only guiding proportional to the incident radiance distriubtion. 
+     * avoid variance increase due to only guiding proportional to the incident radiance distribution. 
      * 
      * @param field The guiding field of the scene.
      * @param pos The position the guiding distribution is queried for.
@@ -67,7 +67,7 @@ struct VolumeSamplingDistribution
     void Clear();
 
     /**
-     * @brief Importance samples a new direction based on the guiding distriubtion.
+     * @brief Importance samples a new direction based on the guiding distribution.
      * 
      * @param sample2D A 2D random variable
      * @return pgl_vec3f The sampled direction
@@ -95,7 +95,7 @@ struct VolumeSamplingDistribution
 
     /**
      * @brief Returns if the used representation supports for including the 
-     * product with a single lobe HenyeyGreenstein phase function into the guiding distriubtion. 
+     * product with a single lobe HenyeyGreenstein phase function into the guiding distribution. 
      * 
      * @return true 
      * @return false 
@@ -104,7 +104,7 @@ struct VolumeSamplingDistribution
 
     /**
      * @brief Applies the product with a single lobe HenyeyGreenstein phase function
-     * to the sampling distriubtion.
+     * to the sampling distribution.
      *  
      * @param dir The direction the walk/path arrives a the sample position.  
      * @param meanCosine The mean cosine of the HG phase function.
@@ -122,7 +122,7 @@ struct VolumeSamplingDistribution
 
     /**
      * @brief Validates the current guiding distribution.
-     * The guiding distriubtion can be invalid if it was not
+     * The guiding distribution can be invalid if it was not
      * initialized before or due to (numerical) porblems during the fitting process.
      * 
      * Note: Due to the overhead of this function, it should only be called during debugging.
@@ -227,7 +227,7 @@ OPENPGL_INLINE bool VolumeSamplingDistribution::Init(const Field* field, const p
 {
     OPENPGL_ASSERT(m_volumeSamplingDistributionHandle);
     OPENPGL_ASSERT(field->m_fieldHandle);
-    return pglFieldInitVolumeSamplingDistriubtion(field->m_fieldHandle, m_volumeSamplingDistributionHandle, pos, &sample1D, useParallaxCompensation);
+    return pglFieldInitVolumeSamplingDistribution(field->m_fieldHandle, m_volumeSamplingDistributionHandle, pos, &sample1D, useParallaxCompensation);
 }
 
 OPENPGL_INLINE Region VolumeSamplingDistribution::GetRegion() const

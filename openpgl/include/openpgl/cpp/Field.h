@@ -106,7 +106,7 @@ struct Field
     bool Validate() const;
 
     /**
-     * @brief Returns the spatial surface Region containing the approximation of the local incident radiance distriubtion.
+     * @brief Returns the spatial surface Region containing the approximation of the local incident radiance Distribution.
      *
      * @param position
      * @param sampler
@@ -115,7 +115,7 @@ struct Field
     //Region GetSurfaceRegion(pgl_point3f position, Sampler* sampler);
 
     /**
-     * @brief Returns the spatial volume Region containing the approximation of the local incident radiance distriubtion.
+     * @brief Returns the spatial volume Region containing the approximation of the local incident radiance Distribution.
      *
      * @param position
      * @param sampler

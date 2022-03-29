@@ -387,7 +387,7 @@ private:
 #ifdef OPENPGL_DEBUG_MODE
                 RegionType oldRegion = regionStorage.first;
 #endif
-				// TODO: we should move applying the paralax comp to the distriubtion to the factory
+				// TODO: we should move applying the paralax comp to the Distribution to the factory
                 if(m_useParallaxCompensation)
                 {
                     regionStorage.first.trainingStatistics.sufficientStatistics.applyParallaxShift(regionStorage.first.distribution, regionStorage.first.distribution._pivotPosition - sampleMean);

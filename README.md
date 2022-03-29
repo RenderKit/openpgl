@@ -312,25 +312,25 @@ into a positional and directional representation using a spatial
 subdivision structure. Each spatial leaf node (a.k.a. Region) contains a
 directional representation for the local incident radiance distribution.
 
-## SurfaceSamplingDistriubtion
+## SurfaceSamplingDistribution
 
 ``` c++
-#include <openpgl/cpp/SurfaceSamplingDistriubtion.h>
+#include <openpgl/cpp/SurfaceSamplingDistribution.h>
 ```
 
-The `SurfaceSamplingDistriubtion` class represents the guiding
+The `SurfaceSamplingDistribution` class represents the guiding
 distribution used for sampling directions on surfaces. The sampling
 distribution is often proportional to the incoming radiance distribution
 or its product with components of a BSDF model (e.g., cosine term). The
 class supports functions for sampling and PDF evaluations.
 
-## VolumeSamplingDistriubtion
+## VolumeSamplingDistribution
 
 ``` c++
-#include <openpgl/cpp/VolumeSamplingDistriubtion.h>
+#include <openpgl/cpp/VolumeSamplingDistribution.h>
 ```
 
-The `VolumeSamplingDistriubtion` class represents the guiding
+The `VolumeSamplingDistribution` class represents the guiding
 distribution used for sampling directions inside volumes. The sampling
 distribution is often proportional to the incoming radiance distribution
 or its product with the phase function (e.g., single lobe HG). The class

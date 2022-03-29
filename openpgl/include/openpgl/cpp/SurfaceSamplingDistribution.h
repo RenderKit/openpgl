@@ -100,7 +100,7 @@ struct SurfaceSamplingDistribution
     bool SupportsApplyCosineProduct() const;
 
     /**
-     * @brief Applies the product with the cosine to the guiding distriubtion.
+     * @brief Applies the product with the cosine to the guiding distribution.
      *  
      * @param normal The surface normal at the curren sampling position.
      */
@@ -122,7 +122,7 @@ struct SurfaceSamplingDistribution
 
     /**
      * @brief Validates the current guiding distribution.
-     * The guiding distriubtion can be invalid if it was not
+     * The guiding distribution can be invalid if it was not
      * initialized before or due to (numerical) problems during the fitting process.
      * 
      * Note: Due to the overhead of this function, it should only be called during debugging.
@@ -208,7 +208,7 @@ OPENPGL_INLINE bool SurfaceSamplingDistribution::Init(const Field* field, const 
 {
     OPENPGL_ASSERT(m_surfaceSamplingDistributionHandle);
     OPENPGL_ASSERT(field->m_fieldHandle);
-    return pglFieldInitSurfaceSamplingDistriubtion(field->m_fieldHandle, m_surfaceSamplingDistributionHandle, pos, &sample1D, useParallaxCompensation);
+    return pglFieldInitSurfaceSamplingDistribution(field->m_fieldHandle, m_surfaceSamplingDistributionHandle, pos, &sample1D, useParallaxCompensation);
 }
 
 OPENPGL_INLINE void SurfaceSamplingDistribution::ApplyCosineProduct(const pgl_vec3f& normal)

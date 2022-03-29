@@ -40,8 +40,8 @@ struct Device: public IDevice {
         if (args.spatialStructureType == PGL_SPATIAL_STRUCTURE_KDTREE &&
             args.directionalDistributionType ==  PGL_DIRECTIONAL_DISTRIBUTION_PARALLAX_AWARE_VMM )
         {
-            using DirectionalDistriubtionFactory = AdaptiveSplitAndMergeFactory<ParallaxAwareVonMisesFisherMixture<VecSize, 32>>;
-            using GuidingField = SurfaceVolumeField<DirectionalDistriubtionFactory, KDTreePartitionBuilder, VMMSurfaceSamplingDistribution<typename DirectionalDistriubtionFactory::Distribution>, VMMVolumeSamplingDistribution<typename DirectionalDistriubtionFactory::Distribution>>;
+            using DirectionalDistributionFactory = AdaptiveSplitAndMergeFactory<ParallaxAwareVonMisesFisherMixture<VecSize, 32>>;
+            using GuidingField = SurfaceVolumeField<DirectionalDistributionFactory, KDTreePartitionBuilder, VMMSurfaceSamplingDistribution<typename DirectionalDistributionFactory::Distribution>, VMMVolumeSamplingDistribution<typename DirectionalDistributionFactory::Distribution>>;
 
             typename GuidingField::Settings gFieldSettings;
             gFieldSettings.settings.decayOnSpatialSplit   = 0.25f;
@@ -87,8 +87,8 @@ struct Device: public IDevice {
         } else if (args.spatialStructureType == PGL_SPATIAL_STRUCTURE_KDTREE &&
                    args.directionalDistributionType ==  PGL_DIRECTIONAL_DISTRIBUTION_QUADTREE )
         {
-            using DirectionalDistriubtionFactory = DirectionalQuadtreeFactory<DirectionalQuadtree<SphereToSquareCylindrical>>;
-            using GuidingField = SurfaceVolumeField<DirectionalDistriubtionFactory, KDTreePartitionBuilder, DQTSurfaceSamplingDistribution<DirectionalDistriubtionFactory::Distribution>, DQTVolumeSamplingDistribution<DirectionalDistriubtionFactory::Distribution>>;
+            using DirectionalDistributionFactory = DirectionalQuadtreeFactory<DirectionalQuadtree<SphereToSquareCylindrical>>;
+            using GuidingField = SurfaceVolumeField<DirectionalDistributionFactory, KDTreePartitionBuilder, DQTSurfaceSamplingDistribution<DirectionalDistributionFactory::Distribution>, DQTVolumeSamplingDistribution<DirectionalDistributionFactory::Distribution>>;
 
             GuidingField::Settings gFieldSettings;
             PGLKDTreeArguments *spatialSturctureArguments = (PGLKDTreeArguments*)args.spatialSturctureArguments;
@@ -139,15 +139,15 @@ struct Device: public IDevice {
 
         if (spatialStructureType == PGL_SPATIAL_STRUCTURE_KDTREE && directionalDistributionType == PGL_DIRECTIONAL_DISTRIBUTION_PARALLAX_AWARE_VMM)
         {
-            using DirectionalDistriubtionFactory = AdaptiveSplitAndMergeFactory<ParallaxAwareVonMisesFisherMixture<VecSize, 32>>;
-            using GuidingField = SurfaceVolumeField<DirectionalDistriubtionFactory, KDTreePartitionBuilder, VMMSurfaceSamplingDistribution<typename DirectionalDistriubtionFactory::Distribution>, VMMVolumeSamplingDistribution<typename DirectionalDistriubtionFactory::Distribution>>;
+            using DirectionalDistributionFactory = AdaptiveSplitAndMergeFactory<ParallaxAwareVonMisesFisherMixture<VecSize, 32>>;
+            using GuidingField = SurfaceVolumeField<DirectionalDistributionFactory, KDTreePartitionBuilder, VMMSurfaceSamplingDistribution<typename DirectionalDistributionFactory::Distribution>, VMMVolumeSamplingDistribution<typename DirectionalDistributionFactory::Distribution>>;
 
             gField = (ISurfaceVolumeField *)new GuidingField();
         } else if (spatialStructureType == PGL_SPATIAL_STRUCTURE_KDTREE &&
                    directionalDistributionType == PGL_DIRECTIONAL_DISTRIBUTION_QUADTREE)
         {
-            using DirectionalDistriubtionFactory = DirectionalQuadtreeFactory<DirectionalQuadtree<SphereToSquareCylindrical>>;
-            using GuidingField = SurfaceVolumeField<DirectionalDistriubtionFactory, KDTreePartitionBuilder, DQTSurfaceSamplingDistribution<DirectionalDistriubtionFactory::Distribution>, DQTVolumeSamplingDistribution<DirectionalDistriubtionFactory::Distribution>>;
+            using DirectionalDistributionFactory = DirectionalQuadtreeFactory<DirectionalQuadtree<SphereToSquareCylindrical>>;
+            using GuidingField = SurfaceVolumeField<DirectionalDistributionFactory, KDTreePartitionBuilder, DQTSurfaceSamplingDistribution<DirectionalDistributionFactory::Distribution>, DQTVolumeSamplingDistribution<DirectionalDistributionFactory::Distribution>>;
 
             gField = (ISurfaceVolumeField *)new GuidingField();
         } else {

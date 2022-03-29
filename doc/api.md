@@ -23,20 +23,20 @@ Field
 The `Field` class is a key component of Open PGL. An instance of this class holds the spatio-directional guiding information (e.g., approximation of the incoming radiance field) for a scene. The `Field` is responsible for storing, learning, and accessing the guiding information. This information can be the incidence radiance field learned from several training iterations across the whole scene. The `Field` holds separate approximations for surface and volumetric radiance distributions, which can be accessed separately. The representation of a scene's radiance distribution is usually separated into a positional and directional representation using a spatial subdivision structure. Each spatial leaf node (a.k.a. Region) contains a directional representation for the local incident radiance distribution.
 
 
-SurfaceSamplingDistriubtion
+SurfaceSamplingDistribution
 ---------------------------
 ```C++
-#include <openpgl/cpp/SurfaceSamplingDistriubtion.h>
+#include <openpgl/cpp/SurfaceSamplingDistribution.h>
 ```
-The `SurfaceSamplingDistriubtion` class represents the guiding distribution used for sampling directions on surfaces. The sampling distribution is often proportional to the incoming radiance distribution or its product with components of a BSDF model (e.g., cosine term). The class supports functions for sampling and PDF evaluations. 
+The `SurfaceSamplingDistribution` class represents the guiding distribution used for sampling directions on surfaces. The sampling distribution is often proportional to the incoming radiance distribution or its product with components of a BSDF model (e.g., cosine term). The class supports functions for sampling and PDF evaluations. 
 
 
-VolumeSamplingDistriubtion
+VolumeSamplingDistribution
 --------------------------
 ```C++
-#include <openpgl/cpp/VolumeSamplingDistriubtion.h>
+#include <openpgl/cpp/VolumeSamplingDistribution.h>
 ```
- The `VolumeSamplingDistriubtion` class represents the guiding distribution used for sampling directions inside volumes. The sampling distribution is often proportional to the incoming radiance distribution or its product with the phase function (e.g., single lobe HG). The class supports functions for sampling and PDF evaluations.
+ The `VolumeSamplingDistribution` class represents the guiding distribution used for sampling directions inside volumes. The sampling distribution is often proportional to the incoming radiance distribution or its product with the phase function (e.g., single lobe HG). The class supports functions for sampling and PDF evaluations.
 
 
 SampleData

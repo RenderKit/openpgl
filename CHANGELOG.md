@@ -20,14 +20,14 @@ Version History
 -   `SurfaceSamplingDistribution`:
     -   Added support for guiding based on the product of a normal-oriented
         cosine lobe and the incident radiance distribution:
-        `ApplySingleLobeHenyeyGreensteinProduct()`
+        `(ApplyCosineProduct)`
         This feature is only supported for VMM-based directional distributions.
         Support can be checked with `SupportsApplyCosineProduct()`.
 
 -   `VolumeSamplingDistribution`:
     -   Added support for guiding based on the product of a single lobe
         HG phase function and the incident radiance distribution:
-        `ApplyCosineProduct()`
+        `ApplySingleLobeHenyeyGreensteinProduct()`
         This feature is only supported for VMM-based directional distributions.
         Support can be checked with `SupportsApplySingleLobeHenyeyGreensteinProduct()`.
 

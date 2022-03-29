@@ -57,11 +57,11 @@ OPENPGL_CORE_INTERFACE size_t pglFieldGetTotalSPP(PGLField field);
 
 OPENPGL_CORE_INTERFACE PGLSurfaceSamplingDistribution pglFieldNewSurfaceSamplingDistribution(PGLField field);
 
-OPENPGL_CORE_INTERFACE bool pglFieldInitSurfaceSamplingDistriubtion(PGLField field, PGLSurfaceSamplingDistribution surfaceSamplingDistriubtion, pgl_point3f position, float* sample1D, const bool useParallaxComp);
+OPENPGL_CORE_INTERFACE bool pglFieldInitSurfaceSamplingDistribution(PGLField field, PGLSurfaceSamplingDistribution surfaceSamplingDistribution, pgl_point3f position, float* sample1D, const bool useParallaxComp);
 
 OPENPGL_CORE_INTERFACE PGLVolumeSamplingDistribution pglFieldNewVolumeSamplingDistribution(PGLField field);
 
-OPENPGL_CORE_INTERFACE bool pglFieldInitVolumeSamplingDistriubtion(PGLField field, PGLVolumeSamplingDistribution volumeSamplingDistriubtion, pgl_point3f position, float* sample1D, const bool useParallaxComp);
+OPENPGL_CORE_INTERFACE bool pglFieldInitVolumeSamplingDistribution(PGLField field, PGLVolumeSamplingDistribution volumeSamplingDistribution, pgl_point3f position, float* sample1D, const bool useParallaxComp);
 
 OPENPGL_CORE_INTERFACE bool pglFieldValidate(PGLField field);
 

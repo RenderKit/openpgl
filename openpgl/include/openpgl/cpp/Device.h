@@ -18,7 +18,7 @@ struct Field;
 /**
  * @brief The Device class is a key component of OpenPGL. It is used to set
  * compute architecture and optimizations (e.g., SIMD) used for the implementation of
- * guiding structures (e.g., Field, SurfaceSamplingDistriubtion, or VolumeSamplingDistriubtion).
+ * guiding structures (e.g., Field, SurfaceSamplingDistribution, or VolumeSamplingDistribution).
  */
 struct Device
 {

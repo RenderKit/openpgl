@@ -214,11 +214,11 @@ extern "C" OPENPGL_DLLEXPORT  PGLSurfaceSamplingDistribution pglFieldNewSurfaceS
 }
 OPENPGL_CATCH_END(nullptr)
 
-extern "C" OPENPGL_DLLEXPORT  bool pglFieldInitSurfaceSamplingDistriubtion(PGLField field, PGLSurfaceSamplingDistribution surfaceSamplingDistriubtion, pgl_point3f position, float* sample1D, const bool useParallaxComp)
+extern "C" OPENPGL_DLLEXPORT  bool pglFieldInitSurfaceSamplingDistribution(PGLField field, PGLSurfaceSamplingDistribution surfaceSamplingDistribution, pgl_point3f position, float* sample1D, const bool useParallaxComp)
 {
     const openpgl::Point3 pos(position.x, position.y, position.z);
     auto *gField = (IGuidingField *)field;
-    ISurfaceSamplingDistribution* gSurfaceSamplingDistribution = (ISurfaceSamplingDistribution*)surfaceSamplingDistriubtion;
+    ISurfaceSamplingDistribution* gSurfaceSamplingDistribution = (ISurfaceSamplingDistribution*)surfaceSamplingDistribution;
     return gField->initSurfaceSamplingDistribution(gSurfaceSamplingDistribution, pos, sample1D, useParallaxComp);
 }
 extern "C" OPENPGL_DLLEXPORT  PGLVolumeSamplingDistribution pglFieldNewVolumeSamplingDistribution(PGLField field)OPENPGL_CATCH_BEGIN
@@ -229,11 +229,11 @@ extern "C" OPENPGL_DLLEXPORT  PGLVolumeSamplingDistribution pglFieldNewVolumeSam
 }
 OPENPGL_CATCH_END(nullptr)
 
-extern "C" OPENPGL_DLLEXPORT  bool pglFieldInitVolumeSamplingDistriubtion(PGLField field, PGLVolumeSamplingDistribution volumeSamplingDistriubtion, pgl_point3f position, float* sample1D, const bool useParallaxComp)
+extern "C" OPENPGL_DLLEXPORT  bool pglFieldInitVolumeSamplingDistribution(PGLField field, PGLVolumeSamplingDistribution volumeSamplingDistribution, pgl_point3f position, float* sample1D, const bool useParallaxComp)
 {
     const openpgl::Point3 pos(position.x, position.y, position.z);
     auto *gField = (IGuidingField *)field;
-    IVolumeSamplingDistribution* gVolumeSamplingDistribution = (IVolumeSamplingDistribution*)volumeSamplingDistriubtion;
+    IVolumeSamplingDistribution* gVolumeSamplingDistribution = (IVolumeSamplingDistribution*)volumeSamplingDistribution;
     return gField->initVolumeSamplingDistribution(gVolumeSamplingDistribution, pos, sample1D, useParallaxComp);
 }
 
@@ -511,8 +511,8 @@ extern "C" OPENPGL_DLLEXPORT void pglSurfaceSamplingDistributionInit(PGLSurfaceS
     ISurfaceSamplingDistribution* gSurfaceSamplingDistribution =  (ISurfaceSamplingDistribution*)surfaceSamplingDistribution;
     IRegion *gRegion = (IRegion*)region;
     openpgl::Vector3 opglSamplePosition(samplePosition.x, samplePosition.y, samplePosition.z);
-    GuidingDistribution distriubtion = gRegion->getDistribution(opglSamplePosition, useParallaxComp);
-    gSurfaceSamplingDistribution->init(&distriubtion);
+    GuidingDistribution Distribution = gRegion->getDistribution(opglSamplePosition, useParallaxComp);
+    gSurfaceSamplingDistribution->init(&Distribution);
 }
 */
 extern "C" OPENPGL_DLLEXPORT void pglSurfaceSamplingDistributionApplyCosineProduct(PGLSurfaceSamplingDistribution surfaceSamplingDistribution, pgl_vec3f normal)
@@ -592,8 +592,8 @@ extern "C" OPENPGL_DLLEXPORT void pglVolumeSamplingDistributionInit(PGLVolumeSam
     IVolumeSamplingDistribution* gVolumeSamplingDistribution =  (IVolumeSamplingDistribution*)volumeSamplingDistribution;
     IRegion *gRegion = (IRegion*)region;
     openpgl::Vector3 opglSamplePosition(samplePosition.x, samplePosition.y, samplePosition.z);
-    GuidingDistribution distriubtion = gRegion->getDistribution(opglSamplePosition, useParallaxComp);
-    gVolumeSamplingDistribution->init(&distriubtion);
+    GuidingDistribution Distribution = gRegion->getDistribution(opglSamplePosition, useParallaxComp);
+    gVolumeSamplingDistribution->init(&Distribution);
 }
 */
 extern "C" OPENPGL_DLLEXPORT pgl_vec3f pglVolumeSamplingDistributionSample(PGLVolumeSamplingDistribution volumeSamplingDistribution, pgl_point2f sample)
