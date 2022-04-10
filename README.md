@@ -72,17 +72,17 @@ specification is still in flux and might change with upcoming releases.
     
       - Added support for guiding based on the product of a
         normal-oriented cosine lobe and the incident radiance
-        distribution: `ApplySingleLobeHenyeyGreensteinProduct()` This
-        feature is only supported for VMM-based directional
-        distributions. Support can be checked with
-        `SupportsApplyCosineProduct()`.
+        distribution: `(ApplyCosineProduct)` This feature is only
+        supported for VMM-based directional distributions. Support can
+        be checked with `SupportsApplyCosineProduct()`.
 
   - `VolumeSamplingDistribution`:
     
       - Added support for guiding based on the product of a single lobe
         HG phase function and the incident radiance distribution:
-        `ApplyCosineProduct()` This feature is only supported for
-        VMM-based directional distributions. Support can be checked with
+        `ApplySingleLobeHenyeyGreensteinProduct()` This feature is only
+        supported for VMM-based directional distributions. Support can
+        be checked with
         `SupportsApplySingleLobeHenyeyGreensteinProduct()`.
 
 ## Open PGL 0.1.0
