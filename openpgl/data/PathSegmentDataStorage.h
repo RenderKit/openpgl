@@ -39,14 +39,14 @@ public:
         if(m_max_sample_size == size)
             return;
         if(m_segmentStorage)
-            delete m_segmentStorage;
+            delete[] m_segmentStorage;
 
         m_segmentStorage = new PathSegmentData[size];
         m_seg_idx = -1;
         m_max_seg_size = size;
 
         if(m_sampleStorage)
-            delete m_sampleStorage;
+            delete[] m_sampleStorage;
 
         m_sampleStorage = new SampleData[size];
         m_sample_idx = -1;
@@ -387,7 +387,7 @@ public:
         OPENPGL_ASSERT(sampleData.distance > 0);
         OPENPGL_ASSERT(embree::isvalid(sampleData.distance));
 #if defined(OPENPGL_PATHSEGMENT_STORAGE_USE_ARRAY)
-        if(m_sample_idx+1 >= m_max_sample_size)
+        if(m_sample_idx+1 <= m_max_sample_size)
         {
             m_sample_idx++;
             m_sampleStorage[m_sample_idx] = sampleData;

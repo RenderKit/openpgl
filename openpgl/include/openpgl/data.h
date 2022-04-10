@@ -74,19 +74,19 @@ struct PGLPathSegmentData
     bool isDelta {false};
 
     /// The BSDF*cos or phase function evaluation at @ref position for the out-going direction @ref directionOut and the in-comming direction @ref directionIn divided by the sampling PDF @ref pdfDirectionIn.
-    pgl_vec3f scatteringWeight{1.0f};
+    pgl_vec3f scatteringWeight{1.0f, 1.0f, 1.0f};
 
     /// The transmittance from the current @ref position to the @ref position of the next segment divided by the corresponding distance sampling PDF.
-    pgl_vec3f transmittanceWeight{1.0f};
+    pgl_vec3f transmittanceWeight{1.0f, 1.0f, 1.0f};
 
     /// the direct contribution (i.e., emission) at @ref position into @ref directionOut
-    pgl_vec3f directContribution{0.0f};
+    pgl_vec3f directContribution{0.0f, 0.0f, 0.0f};
     
     /// The MIS weight which would be applied to @ref directContribution when sampling this contribution using NEE at the previous path segment.
     float miWeight {1.0f};
 
     /// The contribution which is scattered at @ref position into @ref directionOut. There can be multiple source us such contribution (sub-surface-scattering (dipole) or scattered NEE).
-    pgl_vec3f scatteredContribution{0.0f};
+    pgl_vec3f scatteredContribution{0.0f, 0.0f, 0.0f};
 
     /// The probability to survive Russian roulette
     float russianRouletteProbability{1.0f};
