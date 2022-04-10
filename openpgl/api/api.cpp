@@ -419,7 +419,7 @@ extern "C" OPENPGL_DLLEXPORT void pglPathSegmentStorageClear(PGLPathSegmentStora
     gPathSegmentStorage->clear();
 }
 
-extern "C" OPENPGL_DLLEXPORT size_t pglPathSegmentStoragePrepareSamples(PGLPathSegmentStorage pathSegmentStorage,const bool &spaltSamples, PGLSampler* sampler,  const bool useNEEMiWeights, const bool guideDirectLight, const bool rrEffectsDirectContribution)
+extern "C" OPENPGL_DLLEXPORT size_t pglPathSegmentStoragePrepareSamples(PGLPathSegmentStorage pathSegmentStorage, const bool spaltSamples, PGLSampler* sampler,  const bool useNEEMiWeights, const bool guideDirectLight, const bool rrEffectsDirectContribution)
 {
     auto *gPathSegmentStorage = (openpgl::PathSegmentDataStorage *)pathSegmentStorage;
     SamplerC gSampler(sampler);
