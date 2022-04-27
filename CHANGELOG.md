@@ -1,6 +1,15 @@
 Version History
 ===============
 
+## Open PGL x.x.x
+
+-   `Field`:
+    - Added `Reset()` function to reset a guiding field (e.g., when the lighting or the scene 
+        geometry changed)
+
+-   `PathSegmentStorage`:
+    - Fixed bug when using `AddSample()`
+
 ## Open PGL 0.3.0
 
 -   Added CMake Superbuild script to build Open PGL, including all its dependencies.      
