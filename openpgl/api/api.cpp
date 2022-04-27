@@ -182,6 +182,14 @@ extern "C" OPENPGL_DLLEXPORT  void pglFieldUpdate(PGLField field, PGLSampleStora
     gField->addTrainingIteration(numPerPixelSamples);
 }
 OPENPGL_CATCH_END()
+
+extern "C" OPENPGL_DLLEXPORT  void pglFieldReset(PGLField field)OPENPGL_CATCH_BEGIN
+{
+    auto *gField = (IGuidingField *)field;
+    gField->resetField();
+}
+OPENPGL_CATCH_END()
+
 /*
 extern "C" OPENPGL_DLLEXPORT  PGLRegion pglFieldGetSurfaceRegion(PGLField field, pgl_point3f position, PGLSampler* sampler)OPENPGL_CATCH_BEGIN
 {

@@ -47,6 +47,8 @@ OPENPGL_CORE_INTERFACE pgl_box3f pglFieldGetSceneBounds(PGLField field);
 
 OPENPGL_CORE_INTERFACE void pglFieldUpdate(PGLField field, PGLSampleStorage sampleStorage, size_t numPerPixelSamples);
 
+OPENPGL_CORE_INTERFACE void pglFieldReset(PGLField field);
+
 //OPENPGL_CORE_INTERFACE size_t pglGetTrainingIteration(PGLField field);
 
 OPENPGL_CORE_INTERFACE size_t pglFieldGetTotalSPP(PGLField field);

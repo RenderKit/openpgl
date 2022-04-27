@@ -157,6 +157,19 @@ public:
         }
     }
 
+    void resetField()
+    {
+        m_iteration = 0;
+        m_totalSPP = 0;
+        
+        m_isSceneBoundsSet =false;
+        m_initialized = false;
+        
+        m_spatialSubdiv = SpatialStructure();
+        m_regionStorageContainer.clear();
+        m_regionKNNSearchTree = KNearestRegionsSearchTree();
+    }
+
 
     void addTrainingIteration(size_t spp) {
         m_totalSPP += spp;

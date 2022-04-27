@@ -95,6 +95,7 @@ struct Field
      */
     void Update(const SampleStorage& sampleStorage, const size_t& numPerPixelSamples);
 
+    void Reset();
 
     /// Returns the number of performed training iterations.
     size_t GetIteration() const;
@@ -190,6 +191,12 @@ OPENPGL_INLINE void Field::Update(const SampleStorage& sampleStorage, const size
 {
     OPENPGL_ASSERT(m_fieldHandle);
     pglFieldUpdate(m_fieldHandle, sampleStorage.m_sampleStorageHandle, numPerPixelSamples);
+}
+
+OPENPGL_INLINE void Field::Reset()
+{
+    OPENPGL_ASSERT(m_fieldHandle);
+    pglFieldReset(m_fieldHandle);
 }
 
 OPENPGL_INLINE bool Field::Validate() const

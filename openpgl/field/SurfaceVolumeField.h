@@ -109,6 +109,13 @@ public:
             m_volumeField.updateField(samplesVolume);
     }
 
+    void resetField() override
+    {
+        m_iteration = 0;
+        m_totalSPP = 0;
+        m_surfaceField.resetField();
+        m_volumeField.resetField();
+    }
 
     void addTrainingIteration(size_t spp) override
     {
