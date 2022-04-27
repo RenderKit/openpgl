@@ -44,10 +44,10 @@ struct PathSegmentStorage
      * @param sampler The RNG used during splatting. DEPRECATED
      * @param useNEEMiWeights If the direct illumination should be multiplied with the mis weights for NEE.
      * @param guideDirectLight If the gererated samples should include direct illumination.
-     * @param rrEffectsDirectContribution If the Russian roulette probability needs to be integrated into the direct illumination.
+     * @param rrAffectsDirectContribution If the Russian roulette probability needs to be integrated into the direct illumination.
      * @return size_t The number of generated samples.
      */
-    size_t PrepareSamples(const bool& splatSamples = false, Sampler* sampler = nullptr, const bool useNEEMiWeights = false, const bool guideDirectLight = false, const bool rrEffectsDirectContribution = true);
+    size_t PrepareSamples(const bool& splatSamples = false, Sampler* sampler = nullptr, const bool useNEEMiWeights = false, const bool guideDirectLight = false, const bool rrAffectsDirectContribution = true);
 
     /**
      * @brief Calculates the color estimate of the random walk/path from the path segments.
@@ -56,10 +56,10 @@ struct PathSegmentStorage
      * PathSegmentStorage cover/represent the behavior of the used renderer (e.g., path tracer).
      * Ideally the output for each radom walk should match the pixel value added to the framebuffer.   
      * 
-     * @param rrEffectsDirectContribution If the direct contribution of a segment needs to be weighted with the RR probability.
+     * @param rrAffectsDirectContribution If the direct contribution of a segment needs to be weighted with the RR probability.
      * @return pgl_vec3f The RGB pixel value estimate for the random walk. 
      */
-    pgl_vec3f CalculatePixelEstimate(const bool rrEffectsDirectContribution) const;
+    pgl_vec3f CalculatePixelEstimate(const bool rrAffectsDirectContribution) const;
 
     /**
      * @brief Returns a pointer to the samples generated from the path segments.
@@ -144,20 +144,20 @@ OPENPGL_INLINE void PathSegmentStorage::Clear()
     pglPathSegmentStorageClear(m_pathSegmentStorageHandle);
 }
 
-OPENPGL_INLINE size_t PathSegmentStorage::PrepareSamples(const bool& splatSamples, Sampler* sampler, const bool useNEEMiWeights, const bool guideDirectLight, const bool rrEffectsDirectContribution)
+OPENPGL_INLINE size_t PathSegmentStorage::PrepareSamples(const bool& splatSamples, Sampler* sampler, const bool useNEEMiWeights, const bool guideDirectLight, const bool rrAffectsDirectContribution)
 {
     OPENPGL_ASSERT(m_pathSegmentStorageHandle);
     //OPENPGL_ASSERT(&sampler.m_samplerHandle);
     if(sampler)
-        return pglPathSegmentStoragePrepareSamples(m_pathSegmentStorageHandle, splatSamples, &sampler->m_samplerHandle, useNEEMiWeights, guideDirectLight, rrEffectsDirectContribution);
+        return pglPathSegmentStoragePrepareSamples(m_pathSegmentStorageHandle, splatSamples, &sampler->m_samplerHandle, useNEEMiWeights, guideDirectLight, rrAffectsDirectContribution);
     else
-        return pglPathSegmentStoragePrepareSamples(m_pathSegmentStorageHandle, splatSamples, nullptr, useNEEMiWeights, guideDirectLight, rrEffectsDirectContribution);
+        return pglPathSegmentStoragePrepareSamples(m_pathSegmentStorageHandle, splatSamples, nullptr, useNEEMiWeights, guideDirectLight, rrAffectsDirectContribution);
 }
 
-OPENPGL_INLINE pgl_vec3f PathSegmentStorage::CalculatePixelEstimate(const bool rrEffectsDirectContribution) const
+OPENPGL_INLINE pgl_vec3f PathSegmentStorage::CalculatePixelEstimate(const bool rrAffectsDirectContribution) const
 {
     OPENPGL_ASSERT(m_pathSegmentStorageHandle);
-    return pglPathSegmentStorageCalculatePixelEstimate(m_pathSegmentStorageHandle, rrEffectsDirectContribution);
+    return pglPathSegmentStorageCalculatePixelEstimate(m_pathSegmentStorageHandle, rrAffectsDirectContribution);
 }
 
 OPENPGL_INLINE const SampleData* PathSegmentStorage::GetSamples(size_t &nSamples)

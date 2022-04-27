@@ -127,7 +127,7 @@ public:
     }
 
 
-    size_t prepareSamples(const bool splatSamples, Sampler* sampler, const bool useNEEMiWeights = false, const bool guideDirectLight = false, const bool rrEffectsDirectContribution = true)
+    size_t prepareSamples(const bool splatSamples, Sampler* sampler, const bool useNEEMiWeights = false, const bool guideDirectLight = false, const bool rrAffectsDirectContribution = true)
     {
         const float minPDF {0.1f};
         const openpgl::Vector3 maxThroughput {10.0f};
@@ -196,7 +196,7 @@ public:
                     OPENPGL_ASSERT(contribution[0] >= 0.f && contribution[1] >= 0.f && contribution[2] >= 0.f);
                     
                     openpgl::Vector3 directContribution = openpgl::Vector3(nextPathSegment.directContribution.x, nextPathSegment.directContribution.y, nextPathSegment.directContribution.z);
-                    if(!rrEffectsDirectContribution)
+                    if(!rrAffectsDirectContribution)
                     {
                         directContribution *= previousRR;
                     }
@@ -280,7 +280,7 @@ public:
 #endif
     }
 
-    pgl_vec3f calculatePixelEstimate(const bool rrEffectsDirectContribution = true)
+    pgl_vec3f calculatePixelEstimate(const bool rrAffectsDirectContribution = true)
     {
         //const float minPDF {0.1f};
         const openpgl::Vector3 maxThroughput {10.0f};
@@ -319,7 +319,7 @@ public:
             OPENPGL_ASSERT(contribution[0] >= 0.f && contribution[1] >= 0.f && contribution[2] >= 0.f);
 
             openpgl::Vector3 directContribution = openpgl::Vector3(nextPathSegment.directContribution.x, nextPathSegment.directContribution.y, nextPathSegment.directContribution.z);
-            if(!rrEffectsDirectContribution)
+            if(!rrAffectsDirectContribution)
             {
                 directContribution *= previousRR;
             }
