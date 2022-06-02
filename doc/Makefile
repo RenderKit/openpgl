@@ -43,7 +43,7 @@ tmpdir:
 ## Markdown
 ## ----------------------------------------------------------------------------
 
-../README.md: tmp/readme_head.md overview.md examples.md disclaimer.md changelog.md support.md compilation.md tmp/including.md api.md related_projects.md
+../README.md: tmp/readme_head.md overview.md examples.md disclaimer.md changelog.md support.md bib.md compilation.md tmp/including.md api.md related_projects.md
 	$(PANDOC) $+ -t gfm > $@
 
 ## ----------------------------------------------------------------------------

@@ -48,6 +48,14 @@ specification is still in flux and might change with upcoming releases.
 
 # Version History
 
+## Open PGL x.x.x
+
+  - `Field`:
+      - Added `Reset()` function to reset a guiding field (e.g., when
+        the lighting or the scene geometry changed)
+  - `PathSegmentStorage`:
+      - Fixed bug when using `AddSample()`
+
 ## Open PGL 0.3.0
 
   - Added CMake Superbuild script to build Open PGL, including all its
@@ -113,6 +121,18 @@ Should you find any such issues, please report them immediately via
 Tracker](https://github.com/OpenPathGuidingLibrary/openpgl/issues) (or,
 if you should happen to have a fix for it, you can also send us a pull
 request).
+
+# Reference
+
+``` code
+@misc{openpgl,
+   Author = {Herholz, Sebastian and Dittebrandt, Addis},
+   Year = {2022},
+   Note = {https://www.openpgl.org},
+   Title = {Intel{\textsuperscript{\tiny\textregistered}}
+ Open Path Guiding Library}
+}
+```
 
 # Building Open PGL from source
 
