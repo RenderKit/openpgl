@@ -1,0 +1,134 @@
+# This is a basic workflow to help you get started with Actions
+
+name: CI
+
+# Controls when the workflow will run
+on:
+  # Triggers the workflow on push or pull request events but only for the "devel" branch
+  push:
+    branches: [ "devel" ]
+  pull_request:
+    branches: [ "devel" ]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+
+  ## Build Jobs ##
+  ### Build Linux Jobs ###
+  build-centos7:
+    secrets: inherit
+    uses: intel-innersource/libraries.devops.renderkit.workflows/.github/workflows/docker.yml@devel
+    with:
+      image: ospray/docker-images:centos7
+      # artifact-name: build-ubuntu1804-gcc_artifact
+      cmd: |
+        gitlab/build.sh -D BUILD_PYTHON=OFF
+
+  build-centos8:
+    secrets: inherit
+    uses: intel-innersource/libraries.devops.renderkit.workflows/.github/workflows/docker.yml@devel
+    with:
+      image: ospray/docker-images:centos8
+      # artifact-name: build-ubuntu1804-gcc_artifact
+      cmd: |
+        gitlab/build.sh -D BUILD_PYTHON=OFF
+
+  build-ubuntu16-04:
+    secrets: inherit
+    uses: intel-innersource/libraries.devops.renderkit.workflows/.github/workflows/docker.yml@devel
+    with:
+      image: ospray/docker-images:ubuntu16.04
+      # artifact-name: build-ubuntu1804-gcc_artifact
+      cmd: |
+        gitlab/build.sh -D BUILD_PYTHON=OFF
+
+  build-ubuntu18-04:
+    secrets: inherit
+    uses: intel-innersource/libraries.devops.renderkit.workflows/.github/workflows/docker.yml@devel
+    with:
+      image: ospray/docker-images:ubuntu18.04
+      # artifact-name: build-ubuntu1804-gcc_artifact
+      cmd: |
+        gitlab/build.sh -D BUILD_PYTHON=OFF
+
+  build-ubuntu20-04:
+    secrets: inherit
+    uses: intel-innersource/libraries.devops.renderkit.workflows/.github/workflows/docker.yml@devel
+    with:
+      image: ospray/docker-images:ubuntu20.04
+      # artifact-name: build-ubuntu1804-gcc_artifact
+      cmd: |
+        gitlab/build.sh -D BUILD_PYTHON=OFF
+
+  build-arch:
+    secrets: inherit
+    uses: intel-innersource/libraries.devops.renderkit.workflows/.github/workflows/docker.yml@devel
+    with:
+      image: ospray/docker-images:arch
+      # artifact-name: build-ubuntu1804-gcc_artifact
+      cmd: |
+        gitlab/build.sh -D BUILD_PYTHON=OFF
+  
+  ### Build Windows Jobs ###
+
+  build-windows-msvc15:
+    secrets: inherit
+    uses: intel-innersource/libraries.devops.renderkit.workflows/.github/workflows/windows.yml@main
+    with:
+      cmd: |
+          gitlab/build.bat "Visual Studio 15 2017 Win64" "v141" '"-DTBB_VERSION=2021.1.1"' '"-DTBB_HASH="""'           
+      # REQUIRED: Powershell command to run on host. Use "|" syntax for multiple lines.
+      artifact-input: ''  # OPTIONAL: Artifact name to import.
+      artifact-output: '' # OPTIONAL, but must be used with "artifact-path": Artifact name to export.
+      artifact-path: ''   # OPTIONAL, but must be used with "artifact-output": Artifact path to be exported.
+      runs-on: '[]'       # OPTIONAL, defaults to '[ "Windows", "build" ]': List of runner labels.
+
+  ### Build MacOS Jobs ###
+
+  build-macOS:
+    secrets: inherit
+    uses: intel-innersource/libraries.devops.renderkit.workflows/.github/workflows/macos.yml@main
+    with:
+      cmd: |
+          gitlab/build_mac.sh
+          
+                          # REQUIRED: Bash command to run on host. Use "|" syntax for multiple lines.
+                          #   If "runs-on" contains "arm", ensure proper arch settings.
+#    artifact-input: ''  # OPTIONAL: Artifact name to import.
+#    artifact-output: '' # OPTIONAL, but must be used with "artifact-path": Artifact name to export.
+#    artifact-path: ''   # OPTIONAL, but must be used with "artifact-output": Artifact path to be exported.
+#    runs-on: '[]'       # OPTIONAL, defaults to '[ "macOS", "build" ]': List of runner labels.
+
+  ## Scan Jobs ##
+
+  ### KW Jobs ###
+
+  ### Protex Jobs ###
+
+  ## Release Jobs ##
+
+  ## Binary Scan Jobs ##
+
+  # # This workflow contains a single job called "build"
+  # build:
+  #   # The type of runner that the job will run on
+  #   runs-on: [ Windows, build ]
+
+  #   # Steps represent a sequence of tasks that will be executed as part of the job
+  #   steps:
+  #     # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+  #     - uses: actions/checkout@v3
+
+  #     # Runs a single command using the runners shell
+  #     - name: Run a one-line script
+  #       run: echo Hello, world!
+
+  #     # Runs a set of commands using the runners shell
+  #     - name: Run a multi-line script
+  #       run: |
+  #         echo Add other actions to build,
+  #         echo test, and deploy your project.
+
