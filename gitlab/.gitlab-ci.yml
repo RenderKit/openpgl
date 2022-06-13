@@ -200,12 +200,12 @@ scan-bdba-bin:
   needs: [release-linux, release-macOS, release-windows]
   script:
     - gitlab/bdba.sh "openpgl-*"
-    - gitlab/store-files.sh $CI_PROJECT_NAME $CI_PIPELINE_ID bdba "openvkl-*.pdf"
-    - gitlab/store-files.sh $CI_PROJECT_NAME $CI_PIPELINE_ID bdba "openvkl-*.csv"
+    - gitlab/store-files.sh $CI_PROJECT_NAME $CI_PIPELINE_ID bdba "openpgl-*.pdf"
+    - gitlab/store-files.sh $CI_PROJECT_NAME $CI_PIPELINE_ID bdba "openpgl-*.csv"
   artifacts:
     paths:
-      - openvkl-*.pdf
-      - openvkl-*.csv
+      - openpgl-*.pdf
+      - openpgl-*.csv
   allow_failure: true
 
 av:
