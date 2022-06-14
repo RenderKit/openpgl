@@ -21,18 +21,20 @@ include(GNUInstallDirs)
 
 ## Establish project ##
 
-project(openpgl VERSION 0.3.0 LANGUAGES C CXX)
+project(openpgl VERSION 0.3.1 LANGUAGES C CXX)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/cmake)
 include(openpgl_macros)
 
 ## openpgl specific configuration ##
 
-option(BUILD_PYTHON "Build python wrapper 'pyopenpgl'."  OFF)
-option(USE_OMP_THREADING "Use omp instead of tbb for threading." OFF)
-option(BUILD_STATIC "Build OpenPGL as static library." OFF)
+option(OPENPGL_BUILD_PYTHON "Build python wrapper 'pyopenpgl'."  OFF)
+option(OPENPGL_USE_OMP_THREADING "Use omp instead of tbb for threading." OFF)
+option(OPENPGL_BUILD_STATIC "Build OpenPGL as static library." OFF)
 
-option(ISA_AVX512 "Build with support for AVX512." OFF)
+option(OPENPGL_ISA_AVX512 "Build with support for AVX512." OFF)
+
+SET(OPENPGL_TBB_COMPONENT "tbb" CACHE STRING "The TBB component/library name.")
 
 find_package(embree 3.6.1 REQUIRED)
 

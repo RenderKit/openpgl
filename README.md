@@ -1,6 +1,6 @@
 # Intel® Open Path Guiding Library
 
-This is release v0.3.0 of Intel® Open PGL. For changes and new features,
+This is release v0.3.1 of Intel® Open PGL. For changes and new features,
 see the [changelog](CHANGELOG.md). Visit http://www.openpgl.org for more
 information.
 
@@ -48,7 +48,7 @@ specification is still in flux and might change with upcoming releases.
 
 # Version History
 
-## Open PGL x.x.x
+## Open PGL 0.3.1
 
   - `Field`:
       - Added `Reset()` function to reset a guiding field (e.g., when
@@ -219,16 +219,16 @@ Configure the Open PGL build using:
       - `CMAKE_INSTALL_PREFIX` will be the root directory where
         everything gets installed.
     
-      - `BUILD_STATIC` if Open PGL should be built as a static or shared
-        library (default `OFF`).
+      - `OPENPGL_BUILD_STATIC` if Open PGL should be built as a static
+        or shared library (default `OFF`).
     
-      - `ISA_AVX512` if Open PGL is compiled with AVX-512 support
-        (default `OFF`).
+      - `OPENPGL_ISA_AVX512` if Open PGL is compiled with AVX-512
+        support (default `OFF`).
     
       - `embree_DIR` location of the Embree CMake configuration file
         (e.g., \[embree\_install\]/lib/cmake/embree-3.6.1).
     
-      - `TBB_ROOT` location of the TBB installation.
+      - `OPENPGL_TBB_ROOT` location of the TBB installation.
 
 Build and install Open PGL using:
 
@@ -249,7 +249,7 @@ To make CMake aware of Open PGL’s CMake configuration scripts the
 `openpgl_DIR` has to be set to their location during configuration:
 
 ``` bash
-cmake -Dopenpgl_DIR=[openpgl_install]/lib/cmake/openpgl-0.3.0 ..
+cmake -Dopenpgl_DIR=[openpgl_install]/lib/cmake/openpgl-0.3.1 ..
 ```
 
 After that, adding OpenPGL to a CMake project/target is done by first

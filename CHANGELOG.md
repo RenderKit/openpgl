@@ -1,7 +1,7 @@
 Version History
 ===============
 
-## Open PGL x.x.x
+## Open PGL 0.3.1
 
 -   `Field`:
     - Added `Reset()` function to reset a guiding field (e.g., when the lighting or the scene 

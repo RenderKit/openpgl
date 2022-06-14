@@ -79,14 +79,14 @@ Configure the Open PGL build using:
 
     - `CMAKE_INSTALL_PREFIX` will be the root directory where everything gets installed.
 
-    - `BUILD_STATIC` if Open PGL should be built as a static or shared library (default `OFF`).
+    - `OPENPGL_BUILD_STATIC` if Open PGL should be built as a static or shared library (default `OFF`).
 
-    - `ISA_AVX512` if Open PGL is compiled with AVX-512 support (default `OFF`).
+    - `OPENPGL_ISA_AVX512` if Open PGL is compiled with AVX-512 support (default `OFF`).
 
     - `embree_DIR` location of the Embree CMake configuration file 
     (e.g., [embree_install]/lib/cmake/embree-3.6.1).
 
-    - `TBB_ROOT` location of the TBB installation.
+    - `OPENPGL_TBB_ROOT` location of the TBB installation.
 
 Build and install Open PGL using:
 

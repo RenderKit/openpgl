@@ -5,7 +5,7 @@
 set(DEVICE_SRC api/deviceCPU4.cpp
                 api/deviceCPU8.cpp)
 
-if(ISA_AVX512)
+if(OPENPGL_ISA_AVX512)
   set(DEVICE_SRC ${DEVICE_SRC} api/deviceCPU16.cpp)
 endif()
 
@@ -18,7 +18,7 @@ set(OPENPGL_SRC
     ../third-party/embreeSrc/common/simd/sse.cpp
 )
 
-if(BUILD_STATIC)
+if(OPENPGL_BUILD_STATIC)
 add_library(${PROJECT_NAME} STATIC
   ${OPENPGL_SRC}
 )
@@ -52,7 +52,7 @@ else()
     set(OPENPGL_RELEASE_OPTIONS -O3 -Wall -msse2 -msse4.1)
     set_source_files_properties(api/deviceCPU4.cpp PROPERTIES COMPILE_FLAGS "-msse2 -msse4.1")
     set_source_files_properties(api/deviceCPU8.cpp PROPERTIES COMPILE_FLAGS "-msse2 -msse4.1 -mf16c -mavx2 -mfma -mlzcnt -mbmi -mbmi2")
-    if(ISA_AVX512)
+    if(OPENPGL_ISA_AVX512)
       set_source_files_properties(api/deviceCPU16.cpp PROPERTIES COMPILE_FLAGS "-msse2 -msse4.1 -mavx512f -mavx512dq -mavx512cd -mavx512bw -mavx512vl -mf16c -mavx2 -mfma -mlzcnt -mbmi -mbmi2")
     endif()
     #set(OPENPGL_RELEASE_OPTIONS ${OPENPGL_RELEASE_OPTIONS} -fno-strict-aliasing -Wno-padded -ftree-vectorize -mfpmath=sse -funsafe-math-optimizations -fno-rounding-math -fno-signaling-nans -fno-math-errno -fomit-frame-pointer )
@@ -60,7 +60,7 @@ else()
 endif()
 
 
-if(USE_OMP_THREADING)
+if(OPENPGL_USE_OMP_THREADING)
   set(OPENPGL_RELEASE_OPTIONS -fopenmp)
 endif()
 
@@ -69,13 +69,19 @@ target_compile_options(${PROJECT_NAME} PUBLIC "$<$<CONFIG:RELEASE>:${OPENPGL_REL
 # CMAKE 3.8 feature
 #target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_11)
 
-if(USE_OMP_THREADING)
+if(OPENPGL_USE_OMP_THREADING)
   add_compile_definitions(OPENPGL_USE_OMP_THREADING)
 endif()
 
 #add_compile_options()
 
-FIND_PACKAGE(TBB REQUIRED tbb)
+if (NOT ${OPENPGL_TBB_ROOT} STREQUAL "")
+    set(TBB_FIND_PACKAGE_OPTION "NO_DEFAULT_PATH")
+    set(TBB_ROOT ${OPENPGL_TBB_ROOT})
+    list(APPEND CMAKE_PREFIX_PATH ${OPENPGL_TBB_ROOT})
+endif()
+
+FIND_PACKAGE(TBB REQUIRED ${OPENPGL_TBB_COMPONENT})
 
 FIND_PACKAGE(embree 3.6 REQUIRED)
 
@@ -100,7 +106,7 @@ target_include_directories(${PROJECT_NAME}
 )
 
 target_link_libraries(${PROJECT_NAME} PRIVATE embree)
-target_link_libraries(${PROJECT_NAME} PRIVATE TBB::tbb)
+target_link_libraries(${PROJECT_NAME} PRIVATE TBB::${OPENPGL_TBB_COMPONENT})
 
 ## Configure OpenPGL installation ##
 

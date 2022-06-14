@@ -17,7 +17,7 @@ stages:
 .job_template: &base_build_job
   stage: build
   script:
-    - gitlab/build.sh -G Ninja -D BUILD_PYTHON=OFF
+    - gitlab/build.sh -G Ninja -D OPENPGL_BUILD_PYTHON=OFF
   artifacts:
     paths:
     - build/install
@@ -46,38 +46,38 @@ build-centos7:
   <<: *build_job_docker
   image: $DOCKER_REGISTRY/ospray/docker-images:centos7
   script:
-  - gitlab/build.sh -D BUILD_PYTHON=OFF
+  - gitlab/build.sh -D OPENPGL_BUILD_PYTHON=OFF
 
 build-centos8:
   <<: *build_job_docker
   image: $DOCKER_REGISTRY/ospray/docker-images:centos8
   script:
-  - gitlab/build.sh -G Ninja -D BUILD_PYTHON=OFF
+  - gitlab/build.sh -G Ninja -D OPENPGL_BUILD_PYTHON=OFF
 
 build-ubuntu16.04:
   <<: *build_job_docker
   image: $DOCKER_REGISTRY/ospray/docker-images:ubuntu16.04
   script:
-    - gitlab/build.sh -G Ninja -D BUILD_PYTHON=OFF
+    - gitlab/build.sh -G Ninja -D OPENPGL_BUILD_PYTHON=OFF
   allow_failure: true
 
 build-ubuntu18.04:
   <<: *build_job_docker
   image: $DOCKER_REGISTRY/ospray/docker-images:ubuntu18.04
   script:
-    - gitlab/build.sh -G Ninja -D BUILD_PYTHON=OFF
+    - gitlab/build.sh -G Ninja -D OPENPGL_BUILD_PYTHON=OFF
 
 build-ubuntu20.04:
   <<: *build_job_docker
   image: $DOCKER_REGISTRY/ospray/docker-images:ubuntu20.04
   script:
-    - gitlab/build.sh -G Ninja -D BUILD_PYTHON=OFF
+    - gitlab/build.sh -G Ninja -D OPENPGL_BUILD_PYTHON=OFF
 
 build-arch:
   <<: *build_job_docker
   image: $DOCKER_REGISTRY/ospray/docker-images:arch
   script:
-    - gitlab/build.sh -D BUILD_PYTHON=OFF
+    - gitlab/build.sh -D OPENPGL_BUILD_PYTHON=OFF
 
 build-macOS:
   <<: *base_build_job
