@@ -208,8 +208,13 @@ struct KDNode
 
 struct KDTree
 {
-    // bounding box
     KDTree() = default;
+
+    ~KDTree()
+    {
+        if(m_nodesPtr)
+            delete m_nodesPtr;
+    }
 
     inline void init(const BBox &bounds, size_t numNodesReseve = 0)
     {
@@ -271,6 +276,44 @@ struct KDTree
         return m_bounds;
     }
 
+    void finalize()
+    {
+        if(m_nodesPtr){
+            delete m_nodesPtr;
+            m_nodesPtr = nullptr;
+        }
+        size_t nNodes = m_nodes.size();
+        if (nNodes > 0)
+        {
+            m_nodesPtr = new KDNode[nNodes];
+            for(int n = 0; n < nNodes; n++)
+            {
+                m_nodesPtr[n] = m_nodes[n];
+            }
+        }       
+    }
+
+    uint32_t getDataIdxAtPos(const Vector3 &pos) const
+    {
+        OPENPGL_ASSERT(m_isInit);
+        OPENPGL_ASSERT(embree::inside(m_bounds, pos));
+
+        uint32_t nodeIdx = 0;
+        while(!m_nodesPtr[nodeIdx].isLeaf())
+        {
+            uint8_t splitDim = m_nodesPtr[nodeIdx].getSplitDim();
+            float pivot = m_nodesPtr[nodeIdx].getSplitPivot();
+
+            nodeIdx = m_nodesPtr[nodeIdx].getLeftChildIdx();
+            if (pos[splitDim] >= pivot)
+            {
+                nodeIdx++;
+            }
+        }
+
+        return m_nodesPtr[nodeIdx].getDataIdx();
+    }
+
     std::string toString() const
     {
         std::stringstream ss;
@@ -279,26 +322,6 @@ struct KDTree
         ss << "  isInit: " << m_isInit <<  std::endl;
         ss << "  bounds: " << m_bounds<< std::endl;
         return ss.str();
-    }
-
-    uint32_t getDataIdxAtPos(const Vector3 &pos, BBox &bbox) const
-    {
-        OPENPGL_ASSERT(m_isInit);
-        OPENPGL_ASSERT(embree::inside(m_bounds, pos));
-        bbox = m_bounds;
-
-        uint32_t nodeIdx = 0;
-        while(!m_nodes[nodeIdx].isLeaf())
-        {
-            uint8_t splitDim = m_nodes[nodeIdx].getSplitDim();
-            float pivot = m_nodes[nodeIdx].getSplitPivot();
-            if (pos[splitDim] < pivot)
-                nodeIdx = m_nodes[nodeIdx].getLeftChildIdx();
-            else
-                nodeIdx = m_nodes[nodeIdx].getLeftChildIdx()+1;
-        }
-
-        return m_nodes[nodeIdx].getDataIdx();
     }
 
     void exportKDTreeStructureToObj(std::string objFileName) const
@@ -449,21 +472,27 @@ struct KDTree
         size_t num_nodes = 0;
         stream.read(reinterpret_cast<char*>(&num_nodes), sizeof(size_t));
         m_nodes.reserve(num_nodes);
+        m_nodesPtr = new KDNode[num_nodes];
         for (size_t n = 0; n < num_nodes; n++)
         {
             KDNode node;
             node.deserialize(stream);
             m_nodes.push_back(node);
+            m_nodesPtr[n] = node;
         }
     }
 
 public:
     bool m_isInit { false };
 
+    // bounds of the spatial region covered by the KDTree
     BBox m_bounds;
 
-    //node storage
+    // node storage used during build
     tbb::concurrent_vector<KDNode> m_nodes;
+
+    // node storage used during querying
+    KDNode* m_nodesPtr {nullptr};
 };
 
 }

@@ -101,7 +101,7 @@ struct KDTreePartitionBuilder
 */
 #endif
         updateTreeNode(&kdTree, root, depth, samples, sampleRange, sampleStats, &dataStorage, buildSettings);
-
+        kdTree.finalize();
     }
 
     std::string toString() const;
