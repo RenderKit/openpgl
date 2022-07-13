@@ -220,7 +220,7 @@ OPENPGL_INLINE void SurfaceSamplingDistribution::ApplyCosineProduct(const pgl_ve
 OPENPGL_INLINE bool SurfaceSamplingDistribution::SupportsApplyCosineProduct() const
 {
     OPENPGL_ASSERT(m_surfaceSamplingDistributionHandle);
-    pglSurfaceSamplingDistributionSupportsApplyCosineProduct(m_surfaceSamplingDistributionHandle);
+    return pglSurfaceSamplingDistributionSupportsApplyCosineProduct(m_surfaceSamplingDistributionHandle);
 }
 
 OPENPGL_INLINE Region SurfaceSamplingDistribution::GetRegion() const
