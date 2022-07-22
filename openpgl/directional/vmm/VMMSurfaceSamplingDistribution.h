@@ -49,9 +49,11 @@ struct VMMSurfaceSamplingDistribution: public ISurfaceSamplingDistribution
 
     inline void applyCosineProduct(const Vector3& normal) override
     {
+        const float cosine_kappa = 2.18853f;
+        const float cosine_normalization = 2.18853f/(2.0f*M_PI*(1.0f-std::exp(-2.0f * 2.18853f)));
         if(this->m_numDistributions > 0)
         {
-            this->m_productIntegral = this->m_distributions[0].product(1.0f, normal, 2.18853f);
+            this->m_productIntegral = this->m_distributions[0].product(1.0f, normal, cosine_kappa, cosine_normalization);
         }
     }
 
