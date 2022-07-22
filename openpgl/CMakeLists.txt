@@ -35,7 +35,7 @@ endif()
 
 target_compile_definitions(${PROJECT_NAME} PRIVATE OPENPGL_VERSION_MAJOR=${PROJECT_VERSION_MAJOR} OPENPGL_VERSION_MINOR=${PROJECT_VERSION_MINOR} OPENPGL_VERSION_PATCH=${PROJECT_VERSION_PATCH})
 target_compile_definitions(${PROJECT_NAME} PRIVATE OPENPGL_VERSION_STRING="${PROJECT_VERSION}")
-if(ISA_AVX512)
+if(OPENPGL_ISA_AVX512)
 target_compile_definitions(${PROJECT_NAME} PRIVATE OPENPGL_ISA_AVX512)
 endif()
 
@@ -44,7 +44,7 @@ if(WIN32)
   #set(OPENPGL_RELEASE_OPTIONS ${OPENPGL_RELEASE_OPTIONS} -ftree-vectorize -mfpmath=sse -funsafe-math-optimizations -fno-rounding-math -fno-signaling-nans -fno-math-errno -fomit-frame-pointer )
   set_source_files_properties(api/deviceCPU4.cpp PROPERTIES COMPILE_FLAGS "/D__SSE__ /D__SSE2__ /D__SSE3__ /D__SSE4_1__ /D__SSE4_2__")
   set_source_files_properties(api/deviceCPU8.cpp PROPERTIES COMPILE_FLAGS "/D__SSE__ /D__SSE2__ /D__SSE3__ /D__SSE4_1__ /D__SSE4_2__ /arch:AVX /arch:AVX2")
-  if(ISA_AVX512)
+  if(OPENPGL_ISA_AVX512)
     set_source_files_properties(api/deviceCPU16.cpp PROPERTIES COMPILE_FLAGS "/D__SSE__ /D__SSE2__ /D__SSE3__ /D__SSE4_1__ /D__SSE4_2__ /arch:AVX /arch:AVX2 /arch:AVX512")
   endif()
 
