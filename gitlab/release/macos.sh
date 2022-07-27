@@ -46,7 +46,12 @@ cmake --version
 cmake \
   "$@" \
   -D BUILD_DEPENDENCIES_ONLY=ON \
+  -D BUILD_PYTHON=OFF \
+  -D BUILD_EMBREE_FROM_SOURCE=ON \
+  -D CMAKE_VERBOSE_MAKEFILE:BOOL=ON \
   -D CMAKE_INSTALL_PREFIX=$DEP_INSTALL_DIR \
+  -D TBB_VERSION=2021.1.1 \
+  -D TBB_HASH="" \
   -D CMAKE_INSTALL_LIBDIR=lib \
   ../superbuild
 
@@ -54,7 +59,7 @@ cmake --build .
 
 cd $ROOT_DIR
 
-#### Build Open VKL ####
+#### Build Open PGL ####
 
 mkdir -p $OPENPGL_BUILD_DIR
 cd $OPENPGL_BUILD_DIR
@@ -68,6 +73,7 @@ export OPENPGL_EXTRA_OPENVDB_OPTIONS="-DCMAKE_NO_SYSTEM_FROM_IMPORTED=ON"
 
 # set release settings
 cmake -L \
+  -D CMAKE_PREFIX_PATH="$DEP_INSTALL_DIR\lib\cmake" \
   -D CMAKE_INSTALL_PREFIX=$OPENPGL_INSTALL_DIR \
   -D CMAKE_INSTALL_INCLUDEDIR=include \
   -D CMAKE_INSTALL_LIBDIR=lib \
