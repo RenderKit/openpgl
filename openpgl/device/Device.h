@@ -45,7 +45,7 @@ struct Device: public IDevice {
 
             typename GuidingField::Settings gFieldSettings;
             gFieldSettings.settings.decayOnSpatialSplit   = 0.25f;
-            gFieldSettings.settings.deterministic         = false;
+            gFieldSettings.settings.deterministic         = args.deterministic;
 
             PGLKDTreeArguments *spatialSturctureArguments = (PGLKDTreeArguments*)args.spatialSturctureArguments;
             gFieldSettings.settings.useStochasticNNLookUp = spatialSturctureArguments->knnLookup;

@@ -131,22 +131,25 @@ public:
     {
         m_iteration = 0;
         m_totalSPP  = 0;
-        if (m_deterministic)
+        if(samples.size() > 0)
         {
-            //std::cout << "SurfaceVolumeField::buildField(): deterministic = " << m_deterministic<< std::endl;
-            std::sort(samples.begin(), samples.end(), SampleDataLess);
-            //std::sort(samplesVolume.begin(), samplesVolume.end(), SampleDataLess);
-        }
+            if (m_deterministic)
+            {
+                //std::cout << "SurfaceVolumeField::buildField(): deterministic = " << m_deterministic<< std::endl;
+                std::sort(samples.begin(), samples.end(), SampleDataLess);
+                //std::sort(samplesVolume.begin(), samplesVolume.end(), SampleDataLess);
+            }
 
-        //std::cout << "BufferSize: " << sizeof(SampleData) * m_spatialSubdivBuilderSettings.maxSamples * 1e-6 <<  " MB" << std::endl;
-        //std::cout << "buildField: samplesSurface = " << samplesSurface.size() << "\t samplesVolume = " << samplesVolume.size() << std::endl;
-        if(!m_isSceneBoundsSet)
-        {
-            estimateSceneBounds(samples);
-        }
+            //std::cout << "BufferSize: " << sizeof(SampleData) * m_spatialSubdivBuilderSettings.maxSamples * 1e-6 <<  " MB" << std::endl;
+            //std::cout << "buildField: samplesSurface = " << samplesSurface.size() << "\t samplesVolume = " << samplesVolume.size() << std::endl;
+            if(!m_isSceneBoundsSet)
+            {
+                estimateSceneBounds(samples);
+            }
 
-        buildSpatialStructure(m_sceneBounds, samples);
-        fitRegions(samples);
+            buildSpatialStructure(m_sceneBounds, samples);
+            fitRegions(samples);
+        }
     }
 
     void updateField(SampleContainer& samples)
