@@ -471,7 +471,7 @@ void WeightedEMParallaxAwareVonMisesFisherFactory< TVMMDistribution>::updateComp
         {
             for (size_t k = 0; k < cnt; k++)
             {
-                weights = softAssign.assignments[k] * ( (softAssign.assignments[k] * softAssign.pdf) / vmm._weights[k]);
+                weights = samples[n].weight * softAssign.assignments[k] * ( (softAssign.assignments[k] * softAssign.pdf) / vmm._weights[k]);
                 batchDistances[k] += weights * sampleDistance;
                 batchSumWeights[k] += weights;
             }
