@@ -11,6 +11,8 @@
 #include <tbb/parallel_for.h>
 #endif
 
+#define USE_PRECOMPUTED_NN 1
+
 namespace openpgl
 {
 
@@ -94,14 +96,22 @@ public:
         {
             if(m_useStochasticNNLookUp)
             {
-                uint32_t regionIdx =  getClosestRegionIdx(m_regionKNNSearchTree, p, sample1D);
-                if(regionIdx != -1)
+                if (USE_PRECOMPUTED_NN)
                 {
+                    uint32_t regionIdx = getApproximateClosestRegionIdx(m_regionKNNSearchTree, p, sample1D);
                     return &m_regionStorageContainer[regionIdx].first;
                 }
                 else
                 {
-                    return nullptr;
+                    uint32_t regionIdx =  getClosestRegionIdx(m_regionKNNSearchTree, p, sample1D);
+                    if(regionIdx != -1)
+                    {
+                        return &m_regionStorageContainer[regionIdx].first;
+                    }
+                    else
+                    {
+                        return nullptr;
+                    }
                 }
             }
             else
@@ -249,6 +259,10 @@ public:
         }
         is.read(reinterpret_cast<char*>(&m_useStochasticNNLookUp), sizeof(m_useStochasticNNLookUp));
         m_regionKNNSearchTree.deserialize(is);
+
+        if (m_useStochasticNNLookUp && USE_PRECOMPUTED_NN && m_regionKNNSearchTree.isBuild()) {
+            m_regionKNNSearchTree.buildRegionNeighbours();
+        }
     }
 
     bool isValid() const
@@ -296,12 +310,24 @@ private:
         return regionIdx;
     }
 
+    inline uint32_t getApproximateClosestRegionIdx(const KNearestRegionsSearchTree &knnTree, const openpgl::Point3 &p, float *sample) const
+    {
+        OPENPGL_ASSERT(knnTree.isBuildNeighbours());
+        uint32_t dataIdx = m_spatialSubdiv.getDataIdxAtPos(p);
+        OPENPGL_ASSERT(dataIdx < m_regionStorageContainer.size());
+        return knnTree.sampleApproximateClosestRegionIdx(dataIdx, p, sample);
+    }
+
     inline void buildSpatialStructure(const BBox &bounds, SampleContainer& samples)
     {
         m_spatialSubdivBuilder.build(m_spatialSubdiv, bounds, samples, m_regionStorageContainer, m_spatialSubdivBuilderSettings, m_nCores);
         if (m_useStochasticNNLookUp)
         {
             m_regionKNNSearchTree.buildRegionSearchTree<RegionStorageContainerType, RegionType>(m_regionStorageContainer);
+            if (USE_PRECOMPUTED_NN)
+            {
+                m_regionKNNSearchTree.buildRegionNeighbours();
+            }
         }
     }
 
@@ -311,6 +337,10 @@ private:
         if (m_useStochasticNNLookUp)
         {
             m_regionKNNSearchTree.buildRegionSearchTree<RegionStorageContainerType, RegionType>(m_regionStorageContainer);
+            if (USE_PRECOMPUTED_NN)
+            {
+                m_regionKNNSearchTree.buildRegionNeighbours();
+            }
         }
     }
 
