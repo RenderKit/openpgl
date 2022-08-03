@@ -175,7 +175,9 @@ private:
             std::pair<TRegion, Range> &regionAndRangeData = dataStorage->operator[](dataIdx);
             if(depth < buildSettings.maxDepth && regionAndRangeData.first.sampleStatistics.numSamples + sampleRange.size() > buildSettings.maxSamples)
             {
-                getSplitDimensionAndPosition(sampleStats, splitDim, splitPos);
+                SampleStatistics mergedSampleStats = regionAndRangeData.first.sampleStatistics;
+                mergedSampleStats.merge( sampleStats );
+                getSplitDimensionAndPosition(mergedSampleStats, splitDim, splitPos);
 
                 //regionAndRangeData.first.onSplit();
                 auto regionAndRangeDataRight = regionAndRangeData;
