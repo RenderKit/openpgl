@@ -12,13 +12,13 @@ namespace openpgl
 {
 
 
-template<class TDirectionalDistributionFactory, template<typename, typename> class TSpatialStructureBuilder, typename TSurfaceSamplingDistribution, typename TVolumeSamplingDistribution>
+template<int Vecsize, class TDirectionalDistributionFactory, template<typename, typename> class TSpatialStructureBuilder, typename TSurfaceSamplingDistribution, typename TVolumeSamplingDistribution>
 struct SurfaceVolumeField: public ISurfaceVolumeField
 {
 
 private:
 
-    using FieldType = Field<TDirectionalDistributionFactory, TSpatialStructureBuilder>;
+    using FieldType = Field<Vecsize, TDirectionalDistributionFactory, TSpatialStructureBuilder>;
     using SampleContainer = SampleDataStorage::SampleDataContainer;
 public:
 

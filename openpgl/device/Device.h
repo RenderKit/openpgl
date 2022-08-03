@@ -41,7 +41,7 @@ struct Device: public IDevice {
             args.directionalDistributionType ==  PGL_DIRECTIONAL_DISTRIBUTION_PARALLAX_AWARE_VMM )
         {
             using DirectionalDistributionFactory = AdaptiveSplitAndMergeFactory<ParallaxAwareVonMisesFisherMixture<VecSize, 32>>;
-            using GuidingField = SurfaceVolumeField<DirectionalDistributionFactory, KDTreePartitionBuilder, VMMSurfaceSamplingDistribution<typename DirectionalDistributionFactory::Distribution>, VMMVolumeSamplingDistribution<typename DirectionalDistributionFactory::Distribution>>;
+            using GuidingField = SurfaceVolumeField<VecSize, DirectionalDistributionFactory, KDTreePartitionBuilder, VMMSurfaceSamplingDistribution<typename DirectionalDistributionFactory::Distribution>, VMMVolumeSamplingDistribution<typename DirectionalDistributionFactory::Distribution>>;
 
             typename GuidingField::Settings gFieldSettings;
             gFieldSettings.settings.decayOnSpatialSplit   = 0.25f;
@@ -88,7 +88,7 @@ struct Device: public IDevice {
                    args.directionalDistributionType ==  PGL_DIRECTIONAL_DISTRIBUTION_QUADTREE )
         {
             using DirectionalDistributionFactory = DirectionalQuadtreeFactory<DirectionalQuadtree<SphereToSquareCylindrical>>;
-            using GuidingField = SurfaceVolumeField<DirectionalDistributionFactory, KDTreePartitionBuilder, DQTSurfaceSamplingDistribution<DirectionalDistributionFactory::Distribution>, DQTVolumeSamplingDistribution<DirectionalDistributionFactory::Distribution>>;
+            using GuidingField = SurfaceVolumeField<VecSize, DirectionalDistributionFactory, KDTreePartitionBuilder, DQTSurfaceSamplingDistribution<DirectionalDistributionFactory::Distribution>, DQTVolumeSamplingDistribution<DirectionalDistributionFactory::Distribution>>;
 
             GuidingField::Settings gFieldSettings;
             PGLKDTreeArguments *spatialSturctureArguments = (PGLKDTreeArguments*)args.spatialSturctureArguments;
@@ -141,14 +141,14 @@ struct Device: public IDevice {
         if (spatialStructureType == PGL_SPATIAL_STRUCTURE_KDTREE && directionalDistributionType == PGL_DIRECTIONAL_DISTRIBUTION_PARALLAX_AWARE_VMM)
         {
             using DirectionalDistributionFactory = AdaptiveSplitAndMergeFactory<ParallaxAwareVonMisesFisherMixture<VecSize, 32>>;
-            using GuidingField = SurfaceVolumeField<DirectionalDistributionFactory, KDTreePartitionBuilder, VMMSurfaceSamplingDistribution<typename DirectionalDistributionFactory::Distribution>, VMMVolumeSamplingDistribution<typename DirectionalDistributionFactory::Distribution>>;
+            using GuidingField = SurfaceVolumeField<VecSize, DirectionalDistributionFactory, KDTreePartitionBuilder, VMMSurfaceSamplingDistribution<typename DirectionalDistributionFactory::Distribution>, VMMVolumeSamplingDistribution<typename DirectionalDistributionFactory::Distribution>>;
 
             gField = (ISurfaceVolumeField *)new GuidingField();
         } else if (spatialStructureType == PGL_SPATIAL_STRUCTURE_KDTREE &&
                    directionalDistributionType == PGL_DIRECTIONAL_DISTRIBUTION_QUADTREE)
         {
             using DirectionalDistributionFactory = DirectionalQuadtreeFactory<DirectionalQuadtree<SphereToSquareCylindrical>>;
-            using GuidingField = SurfaceVolumeField<DirectionalDistributionFactory, KDTreePartitionBuilder, DQTSurfaceSamplingDistribution<DirectionalDistributionFactory::Distribution>, DQTVolumeSamplingDistribution<DirectionalDistributionFactory::Distribution>>;
+            using GuidingField = SurfaceVolumeField<VecSize, DirectionalDistributionFactory, KDTreePartitionBuilder, DQTSurfaceSamplingDistribution<DirectionalDistributionFactory::Distribution>, DQTVolumeSamplingDistribution<DirectionalDistributionFactory::Distribution>>;
 
             gField = (ISurfaceVolumeField *)new GuidingField();
         } else {

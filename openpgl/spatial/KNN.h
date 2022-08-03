@@ -43,7 +43,7 @@ inline  void myalignedFree(void* ptr)
 
 namespace openpgl
 {
-
+template<int Vecsize>
 struct KNearestRegionsSearchTree
 {
 

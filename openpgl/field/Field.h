@@ -17,7 +17,7 @@ namespace openpgl
 {
 
 
-template<class TDirectionalDistributionFactory, template<typename, typename> class TSpatialStructureBuilder>
+template<int Vecsize, class TDirectionalDistributionFactory, template<typename, typename> class TSpatialStructureBuilder>
 struct Field
 {
 
@@ -176,7 +176,7 @@ public:
         
         m_spatialSubdiv = SpatialStructure();
         m_regionStorageContainer.clear();
-        m_regionKNNSearchTree = KNearestRegionsSearchTree();
+        m_regionKNNSearchTree = KNearestRegionsSearchTree<Vecsize>();
     }
 
 
@@ -303,14 +303,14 @@ private:
         }
     }
 
-    inline uint32_t getClosestRegionIdx(const KNearestRegionsSearchTree &knnTree, const openpgl::Point3 &p, float *sample) const
+    inline uint32_t getClosestRegionIdx(const KNearestRegionsSearchTree<Vecsize> &knnTree, const openpgl::Point3 &p, float *sample) const
     {
         OPENPGL_ASSERT(knnTree.isBuild());
         const uint32_t regionIdx = knnTree.sampleClosestRegionIdx(p, sample);
         return regionIdx;
     }
 
-    inline uint32_t getApproximateClosestRegionIdx(const KNearestRegionsSearchTree &knnTree, const openpgl::Point3 &p, float *sample) const
+    inline uint32_t getApproximateClosestRegionIdx(const KNearestRegionsSearchTree<Vecsize> &knnTree, const openpgl::Point3 &p, float *sample) const
     {
         OPENPGL_ASSERT(knnTree.isBuildNeighbours());
         uint32_t dataIdx = m_spatialSubdiv.getDataIdxAtPos(p);
@@ -532,7 +532,7 @@ private:
     RegionStorageContainerType m_regionStorageContainer;
 
     bool m_useStochasticNNLookUp {false};
-    KNearestRegionsSearchTree m_regionKNNSearchTree;
+    KNearestRegionsSearchTree<Vecsize> m_regionKNNSearchTree;
 };
 
 }
