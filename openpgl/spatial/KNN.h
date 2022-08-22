@@ -14,10 +14,9 @@
 #include <tbb/parallel_for.h>
 #endif
 
-//using namespace embree;
-
 #define NUM_KNN 4
 #define NUM_KNN_NEIGHBOURS 8
+#define DEBUG_SAMPLE_APPROXIMATE_CLOSEST_REGION_IDX 0
 
 inline  void* myalignedMalloc(size_t size, size_t align)
   {
@@ -43,10 +42,143 @@ inline  void myalignedFree(void* ptr)
 
 namespace openpgl
 {
+
+inline uint32_t draw(float* sample, uint32_t size) {
+    size = std::min<uint32_t>(NUM_KNN, size);
+    uint32_t selected = *sample * size;
+    *sample = (*sample - float(selected) / size) * size;
+    OPENPGL_ASSERT(*sample >= 0.f && *sample < 1.0f);
+    return std::min(selected, size - 1);
+}
+
+template<typename RegionNeighbours>
+uint32_t sampleApproximateClosestRegionIdxRef(const RegionNeighbours &nh, const openpgl::Point3 &p, float sample) {
+    uint32_t selected = draw(&sample, nh.size);
+
+    using E = std::pair<uint32_t, float>;
+    E candidates[NUM_KNN_NEIGHBOURS];
+
+    for (int i = 0; i < nh.size; i++) {
+        auto tup = nh.get(i);
+        const uint32_t primID = std::get<0>(tup);
+        const float
+            xd = std::get<1>(tup) - p.x,
+            yd = std::get<2>(tup) - p.y,
+            zd = std::get<3>(tup) - p.z;
+        float d = xd * xd + yd * yd + zd * zd;
+
+        // we use the three least significant bits of the mantissa to store the array ids,
+        // so we have to do the same to get the same results
+        uint32_t mask = (1 << 3) - 1;
+        uint32_t *df = (uint32_t*)&d;
+        *df = *df & ~mask | i & mask;
+
+        candidates[i] = {primID, d};
+    }
+
+    std::sort(std::begin(candidates), std::begin(candidates) + nh.size, [&](E &a, E &b) {
+        return a.second < b.second;
+    });
+
+    return candidates[selected].first;
+}
+template<int Vecsize>
+struct RegionNeighbours { };
+
+
+template<>
+struct RegionNeighbours<4>
+{
+    embree::vuint<4>  ids[2];
+    embree::Vec3<embree::vfloat<4> > points[2]; 
+    uint32_t size;
+
+    inline void set(uint32_t i, uint32_t id, float x, float y, float z) {
+        ids[i / 4][i % 4] = id;
+        points[i / 4].x[i % 4]  = x;
+        points[i / 4].y[i % 4]  = y;
+        points[i / 4].z[i % 4]  = z;
+    }
+
+    inline std::tuple<uint32_t, float, float, float> get(uint32_t i) const {
+        return { ids[i / 4][i % 4], points[i / 4].x[i % 4], points[i / 4].y[i % 4], points[i / 4].z[i % 4] };
+    }
+
+    inline embree::vfloat<4> prepare(const uint32_t i, const embree::Vec3< embree::vfloat<4> > &p) const {
+        // While we only need the first two mantissa bits here, 
+        // we want to keep the output consistent with the 8- and 16-wide implementation
+        const embree::vfloat<4> ids = asFloat(embree::vint<4>(0, 1, 2, 3) + 4 * i);
+        const embree::vfloat<4> mask = asFloat(embree::vint<4>(~7));
+
+        const embree::Vec3<embree::vfloat<4>> d = points[i] - p;
+        embree::vfloat<4> distances = embree::dot(d,d);
+        distances = distances&mask | ids;
+        distances = select(ids != ~0, distances, embree::vfloat<4>(std::numeric_limits<float>::infinity()));
+
+        return sort_ascending(distances);
+    }
+
+    inline uint32_t sampleApproximateClosestRegionIdx(const openpgl::Point3 &p, float* sample) const {
+        uint32_t selected = draw(sample, size);
+        const embree::Vec3< embree::vfloat<4> > _p(p[0], p[1], p[2]);
+
+        const embree::vfloat<4> d0 = prepare(0, _p);
+        const embree::vfloat<4> d1 = prepare(1, _p);
+
+        uint32_t i0 = 0, i1 = 0;
+        for (uint32_t i = 0; i < selected; i++) {
+            if (d0[i0] < d1[i1]) i0++;
+            else                 i1++;
+        }
+
+        if (d0[i0] < d1[i1]) return ids[0][asInt(d0)[i0] & 3];
+        else                 return ids[1][asInt(d1)[i1] & 3];
+    }
+};
+
+#if defined(__AVX__)
+template<>
+struct RegionNeighbours<8>
+{
+    embree::vuint<8>  ids;
+    embree::Vec3<embree::vfloat<8> > points;
+    uint32_t size;
+
+    inline void set(uint32_t i, uint32_t id, float x, float y, float z) {
+        ids[i] = id;
+        points.x[i]  = x;
+        points.y[i]  = y;
+        points.z[i]  = z;
+    }
+
+    inline std::tuple<uint32_t, float, float, float> get(uint32_t i) const {
+        return { ids[i], points.x[i], points.y[i], points.z[i] };
+    }
+
+    inline uint32_t sampleApproximateClosestRegionIdx(const openpgl::Point3 &p, float* sample) const {
+        uint32_t selected = draw(sample, size);
+
+        const embree::vfloat<8> ids = asFloat(embree::vint<8>(0, 1, 2, 3, 4, 5, 6, 7));
+        const embree::vfloat<8> mask = asFloat(embree::vint<8>(~7));
+
+        const embree::Vec3< embree::vfloat<8> > _p(p[0], p[1], p[2]);
+        const embree::Vec3<embree::vfloat<8>> d = points - _p;
+        embree::vfloat<8> distances = embree::dot(d,d);
+        distances = distances&mask | ids;
+        distances = select(ids != ~0, distances, embree::vfloat<8>(std::numeric_limits<float>::infinity()));
+        distances = sort_ascending(distances);
+
+        return this->ids[asInt(distances)[selected] & 7];
+    }
+};
+
+template<>
+struct RegionNeighbours<16>: public RegionNeighbours<8> { };
+#endif
+
 template<int Vecsize>
 struct KNearestRegionsSearchTree
 {
-
     struct Point
     {
         ALIGNED_STRUCT_(16)
@@ -61,10 +193,7 @@ struct KNearestRegionsSearchTree
         bool operator<(Neighbour const& n1) const { return d < n1.d; }
     };
 
-    struct RegionNeighbours
-    {
-        uint32_t ids[NUM_KNN_NEIGHBOURS];
-    };
+    using RN = RegionNeighbours<Vecsize>;
 
     struct KNNResult
     {
@@ -97,7 +226,7 @@ struct KNearestRegionsSearchTree
         return std::move(result);
     }
 
-    template<typename TRegionStorageContainer, typename TRegion>
+    template<typename TRegionStorageContainer>
     void buildRegionSearchTree(const TRegionStorageContainer &regionStorage)
     {
         num_points = regionStorage.size();
@@ -105,11 +234,11 @@ struct KNearestRegionsSearchTree
         {
             myalignedFree(embree_points);
         }
-        embree_points = (Point*) myalignedMalloc(num_points*sizeof(Point), 16);
+        embree_points = (Point*) myalignedMalloc(num_points*sizeof(Point), 32);
 
         for (size_t i = 0; i < num_points; i++)
         {
-            const TRegion region = regionStorage[i].first;
+            const auto region = regionStorage[i].first;
             openpgl::SampleStatistics combinedStats = region.sampleStatistics;
             openpgl::Point3 distributionPivot = combinedStats.mean;
             embree_points[i].p = embree::Vec3f(distributionPivot[0], distributionPivot[1], distributionPivot[2]);
@@ -139,8 +268,7 @@ struct KNearestRegionsSearchTree
         {
             myalignedFree(neighbours);
         }
-        neighbours = (RegionNeighbours*) myalignedMalloc(num_points*sizeof(RegionNeighbours), 16);
-
+        neighbours = (RN*) myalignedMalloc(num_points*sizeof(RN), 32);
 #if defined(OPENPGL_USE_OMP_THREADING)
         #pragma omp parallel for num_threads(this->m_nCores) schedule(dynamic)
         for (size_t n=0; n < num_points; n++)
@@ -155,20 +283,25 @@ struct KNearestRegionsSearchTree
             // We extend the query size by 1 to account for our current region n
             auto result = knn(point.p, NUM_KNN_NEIGHBOURS);
             auto &nh = neighbours[n];
+            nh.size = 0;
             int i = 0;
             bool selfIsIn = false;
             while (!result.knn.empty() && i < NUM_KNN_NEIGHBOURS)
             {
                 const auto& elem = result.knn.top();
                 selfIsIn = selfIsIn || elem.primID == n;
-                nh.ids[i] = elem.primID;
+                nh.set(i, elem.primID,
+                    embree_points[elem.primID].p.x,
+                    embree_points[elem.primID].p.y,
+                    embree_points[elem.primID].p.z
+                );
                 result.knn.pop();
+                nh.size++;
                 i++;
             }
-
             for (; i < NUM_KNN_NEIGHBOURS; i++)
             {
-                nh.ids[i] = ~0;
+                nh.set(i, ~0, 0, 0, 0);
             }
 
             OPENPGL_ASSERT(selfIsIn);
@@ -222,50 +355,15 @@ struct KNearestRegionsSearchTree
     uint32_t sampleApproximateClosestRegionIdx(unsigned int regionIdx, const openpgl::Point3 &p, float* sample) const {
         OPENPGL_ASSERT(_isBuildNeighbours);
 
-        int numCandidates = 0;
-        std::pair<unsigned int, float> candidates[NUM_KNN];
+#if DEBUG_SAMPLE_APPROXIMATE_CLOSEST_REGION_IDX
+        uint32_t ref = sampleApproximateClosestRegionIdxRef(neighbours[regionIdx], p, *sample);
+#endif
+        uint32_t out = neighbours[regionIdx].sampleApproximateClosestRegionIdx(p, sample);
+#if DEBUG_SAMPLE_APPROXIMATE_CLOSEST_REGION_IDX
+        OPENPGL_ASSERT(ref == out);
+#endif
 
-        const auto &nh = neighbours[regionIdx];
-        for (int i = 0; i < NUM_KNN; i++) {
-            const uint32_t primID = nh.ids[i];
-            if (primID == ~0) break;
-            OPENPGL_ASSERT(primID < num_points);
-            const auto diff = embree_points[primID].p - p;
-            const auto d = dot(diff, diff);
-
-            candidates[i] = {primID, d};
-            numCandidates++;
-        }
-
-        // If we enter this loop, then numCandidates == NUM_KNN
-        for (int i = NUM_KNN; i < NUM_KNN_NEIGHBOURS; i++) {
-            const uint32_t primID = nh.ids[i];
-            if (primID == ~0) break;
-            OPENPGL_ASSERT(primID < num_points);
-            const auto diff = embree_points[primID].p - p;
-            const auto d = dot(diff, diff);
-
-            int worstJ = NUM_KNN;
-            float worstD = d;
-            for (int j = 0; j < NUM_KNN; j++) {
-                const auto d = candidates[j].second;
-                if (d > worstD) {
-                    worstJ = j;
-                    worstD = d;
-                }
-            }
-
-            if (worstJ == NUM_KNN) continue;
-
-            candidates[worstJ] = {primID, d};
-        }
-
-        int randomNeighbor = (*sample * numCandidates);
-        const float sampleProb = 1.f / float(numCandidates);
-        *sample = (*sample - randomNeighbor * sampleProb) * embree::rcp(sampleProb);
-        OPENPGL_ASSERT(*sample >= 0.f && *sample < 1.0f);
-
-        return candidates[randomNeighbor].first;
+        return out;
     }
 
     static bool pointQueryFunc(struct RTCPointQueryFunctionArguments* args)
@@ -295,9 +393,9 @@ struct KNearestRegionsSearchTree
 
             if (result->knn.size() == result->k)
             {
-            const float R = result->knn.top().d;
-            query->radius = R;
-            return true;
+                const float R = result->knn.top().d;
+                query->radius = R;
+                return true;
             }
         }
         return false;
@@ -363,7 +461,7 @@ struct KNearestRegionsSearchTree
         if(_isBuild)
         {
             stream.read(reinterpret_cast<char*>(&num_points), sizeof(uint32_t));
-            embree_points = (Point*) myalignedMalloc(num_points*sizeof(Point), 16);
+            embree_points = (Point*) myalignedMalloc(num_points*sizeof(Point), 32);
             for (uint32_t n = 0; n < num_points; n++)
             {
                 Point p;
@@ -404,13 +502,12 @@ private:
     RTCDevice embree_device = nullptr;
     RTCScene embree_scene = nullptr;
     Point* embree_points= nullptr;
-    RegionNeighbours* neighbours = nullptr;
+    RN* neighbours = nullptr;
 
     uint32_t num_points {0};
 
     bool _isBuild{false};
     bool _isBuildNeighbours{false};
-
 };
 
 }

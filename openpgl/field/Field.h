@@ -323,7 +323,7 @@ private:
         m_spatialSubdivBuilder.build(m_spatialSubdiv, bounds, samples, m_regionStorageContainer, m_spatialSubdivBuilderSettings, m_nCores);
         if (m_useStochasticNNLookUp)
         {
-            m_regionKNNSearchTree.buildRegionSearchTree<RegionStorageContainerType, RegionType>(m_regionStorageContainer);
+            m_regionKNNSearchTree.buildRegionSearchTree(m_regionStorageContainer);
             if (USE_PRECOMPUTED_NN)
             {
                 m_regionKNNSearchTree.buildRegionNeighbours();
@@ -336,7 +336,7 @@ private:
         m_spatialSubdivBuilder.updateTree(m_spatialSubdiv, samples, m_regionStorageContainer, m_spatialSubdivBuilderSettings, m_nCores);
         if (m_useStochasticNNLookUp)
         {
-            m_regionKNNSearchTree.buildRegionSearchTree<RegionStorageContainerType, RegionType>(m_regionStorageContainer);
+            m_regionKNNSearchTree.buildRegionSearchTree(m_regionStorageContainer);
             if (USE_PRECOMPUTED_NN)
             {
                 m_regionKNNSearchTree.buildRegionNeighbours();

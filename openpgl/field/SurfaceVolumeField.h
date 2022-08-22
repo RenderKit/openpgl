@@ -53,7 +53,7 @@ public:
         {
             return false;
         }
-        const DirectionalDistribution* distribution = region->getDistribution(position);
+        const DirectionalDistribution* distribution = &region->distribution;
         _surfaceSamplingDistribution->init(distribution, position);
         _surfaceSamplingDistribution->setRegion(region);
         return true;
