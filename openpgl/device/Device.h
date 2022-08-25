@@ -124,12 +124,13 @@ struct Device: public IDevice {
         char buf[256];
         is.read(&buf[0], size);
         if (!is) throw std::runtime_error("error: invalid file header");
+#ifdef OPENPGL_STRICT_IO_VERSION_CHECKING        
         for (auto i = 0; i < size; i++)
         {
             if (buf[i] != FIELD_FILE_HEADER_STRING[i])
                 throw std::runtime_error("error: invalid file header");
         }
-
+#endif        
         PGL_SPATIAL_STRUCTURE_TYPE spatialStructureType;
         is.read(reinterpret_cast<char*>(&spatialStructureType), sizeof(spatialStructureType));
         PGL_DIRECTIONAL_DISTRIBUTION_TYPE directionalDistributionType;

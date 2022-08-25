@@ -39,12 +39,13 @@ struct SampleDataStorage
         char buf[256];
         is.read(&buf[0], size);
         if (!is) throw std::runtime_error("error: invalid file header");
+#ifdef OPENPGL_STRICT_IO_VERSION_CHECKING
         for (auto i = 0; i < size; i++)
         {
             if (buf[i] != SAMPLE_DATA_STORAGE_FILE_HEADER_STRING[i])
                 throw std::runtime_error("error: invalid file header");
         }
-
+#endif
         openpgl::SampleDataStorage* gSampleStorage = new openpgl::SampleDataStorage();
         gSampleStorage->deserialize(is);
 
