@@ -1,6 +1,13 @@
 Version History
 ===============
 
+## Open PGL 0.4.0
+
+-   Performance:
+    - Optimized KNN lookup of guiding caches (x3 speed-up).
+    - Optimized Cosine product for VMM based representations.
+ 
+
 ## Open PGL 0.3.1
 
 -   `Field`:
