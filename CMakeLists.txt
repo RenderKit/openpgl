@@ -36,10 +36,6 @@ option(OPENPGL_ISA_AVX512 "Build with support for AVX512." OFF)
 
 SET(OPENPGL_TBB_COMPONENT "tbb" CACHE STRING "The TBB component/library name.")
 
-find_package(embree 3.6.1 REQUIRED)
-
-openpgl_create_embree_target()
-
 ## Build library and  ##
 add_subdirectory(openpgl)
 

@@ -83,10 +83,6 @@ endif()
 
 FIND_PACKAGE(TBB REQUIRED ${OPENPGL_TBB_COMPONENT})
 
-FIND_PACKAGE(embree 3.6 REQUIRED)
-
-get_target_property(embree_include_dir embree INTERFACE_INCLUDE_DIRECTORIES)
-
 message(STATUS "CMAKE_CURRENT_LIST_DIR = ${CMAKE_CURRENT_LIST_DIR}")
 message(STATUS "CMAKE_CURRENT_SOURCE_DIR = ${CMAKE_CURRENT_SOURCE_DIR}")
 message(STATUS "CMAKE_CURRENT_BINARY_DIR = ${CMAKE_CURRENT_BINARY_DIR}")
@@ -101,11 +97,9 @@ target_include_directories(${PROJECT_NAME}
   PRIVATE
     $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/../third-party/>
     ${CMAKE_CURRENT_LIST_DIR}
-    ${embree_include_dir}
     ${TBB_INCLUDE_DIRS}
 )
 
-target_link_libraries(${PROJECT_NAME} PRIVATE embree)
 target_link_libraries(${PROJECT_NAME} PRIVATE TBB::${OPENPGL_TBB_COMPONENT})
 
 ## Configure OpenPGL installation ##

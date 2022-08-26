@@ -1,23 +1,6 @@
 ## Copyright 2021 Intel Corporation
 ## SPDX-License-Identifier: Apache-2.0
 
-macro(openpgl_create_embree_target)
-  if (NOT TARGET embree)
-    add_library(embree INTERFACE) # NOTE(jda) - Cannot be IMPORTED due to CMake
-                                  #             issues found on Ubuntu.
-
-    target_include_directories(embree
-    INTERFACE
-      $<BUILD_INTERFACE:${EMBREE_INCLUDE_DIRS}>
-    )
-
-    target_link_libraries(embree
-    INTERFACE
-      $<BUILD_INTERFACE:${EMBREE_LIBRARY}>
-    )
-  endif()
-endmacro()
-
 
 macro(openpgl_install_library name)
   set_target_properties(${name}

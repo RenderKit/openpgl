@@ -83,26 +83,6 @@ option(BUILD_DEPENDENCIES_ONLY
 ## variables to select different versions.
 ## ======================================================================== ##
 
-option(BUILD_ISPC "Build the Intel SPMD Program Compiler or search in environment?" ON)
-if (BUILD_ISPC)
-  set(ISPC_VERSION "1.15.0")
-  set(ISPC_BASE_URL "https://github.com/ispc/ispc/releases/download/v${ISPC_VERSION}")
-  if (APPLE)
-    set(_ISPC_URL "${ISPC_BASE_URL}/ispc-v${ISPC_VERSION}-macOS.tar.gz")
-    set(_ISPC_HASH "eb736abb5ed197504113aa88e5ea04ca13f47add87a96b386be95b14776b2048")
-  elseif(WIN32)
-    set(_ISPC_URL "${ISPC_BASE_URL}/ispc-v${ISPC_VERSION}-windows.zip")
-    set(_ISPC_HASH "76a10ba670b5163c22dfd354d003535fd0cf0cfd1287aed8724e6cca0f2105b7")
-  else()
-    set(_ISPC_URL "${ISPC_BASE_URL}/ispc-v${ISPC_VERSION}-linux.tar.gz")
-    set(_ISPC_HASH "b67f50ab16b38d29e28b0a2dbb9733fd6fc1276cb5a5be0cac78e356941f881f")
-  endif()
-  set(ISPC_URL "${_ISPC_URL}" CACHE STRING "URL of the ISPC archive.")
-  set(ISPC_HASH "${_ISPC_HASH}" CACHE STRING "SHA256 hash of the ISPC archive.")
-  include(dep_ispc)
-endif()
-
-
 option(BUILD_TBB "Build Intel Threading Building Blocks or search in environment?" ON)
 if (BUILD_TBB)
   set(TBB_VERSION "2020.3" CACHE STRING "TBB version to download")
@@ -127,34 +107,6 @@ if (BUILD_TBB)
   set(TBB_URL "${_TBB_URL}" CACHE STRING "URL of the TBB archive.")
   set(TBB_HASH "${_TBB_HASH}" CACHE STRING "SHA256 hash of the TBB archive.")
   include(dep_tbb)
-endif()
-
-# Embree can either be build from source or downloaded as binaries.
-option(BUILD_EMBREE "Build Intel Embree or search in environment?" ON)
-option(BUILD_EMBREE_FROM_SOURCE "Build Embree from source or use pre-built version? (Only used when BUILD_EMBREE=ON)" OFF)
-if (BUILD_EMBREE)
-  set(EMBREE_VERSION "v3.12.2" CACHE STRING "Embree version to download")
-  if (BUILD_EMBREE_FROM_SOURCE)
-    set(_EMBREE_URL "https://github.com/embree/embree/archive/${EMBREE_VERSION}.zip")
-    set(_EMBREE_HASH "83aa90b1526fed8db80e800bb5c080cce3f06a8729b6dc24e597bac7f931cf98")
-  else()
-    # Embree binary package URLs do not use the "v" prefix
-    string(REPLACE "v" "" EMBREE_VERSION_NUMBER ${EMBREE_VERSION})
-    set(EMBREE_BASE_URL "https://github.com/embree/embree/releases/download/${EMBREE_VERSION}")
-    if (APPLE)
-      set(_EMBREE_URL "${EMBREE_BASE_URL}/embree-${EMBREE_VERSION_NUMBER}.x86_64.macosx.zip")
-      set(_EMBREE_HASH "076debd5a734ae5348791eafe21aefbbba7fbc5f32cf6e9b2ae55b3a23d5ca0b")
-    elseif (WIN32)
-      set(_EMBREE_URL "${EMBREE_BASE_URL}/embree-${EMBREE_VERSION_NUMBER}.x64.vc14.windows.zip")
-      set(_EMBREE_HASH "fa495acc3c1494c9affebd0a9a707d462ca2fa9d303acc230caf942434bc6bcc")
-    else()
-      set(_EMBREE_URL "${EMBREE_BASE_URL}/embree-${EMBREE_VERSION_NUMBER}.x86_64.linux.tar.gz")
-      set(_EMBREE_HASH "0cb88651ca08798eb6d3d560bb2adc568973d3b74f9acdcbe756b7d9296b6fc1")
-    endif()
-  endif()
-  set(EMBREE_URL "${_EMBREE_URL}"  CACHE STRING "URL of the Embree source archive.")
-  set(EMBREE_HASH "${_EMBREE_HASH}" CACHE STRING "SHA256 hash for the Embree source archive.")
-  include(dep_embree)
 endif()
 
 ## ======================================================================== ##
@@ -211,8 +163,6 @@ if (NOT BUILD_DEPENDENCIES_ONLY)
 
   ExternalProject_Add_StepDependencies(openpgl
   configure
-    $<$<BOOL:${BUILD_ISPC}>:ispc>
     $<$<BOOL:${BUILD_TBB}>:tbb>
-    $<$<BOOL:${BUILD_EMBREE}>:embree>
   )
 endif()
