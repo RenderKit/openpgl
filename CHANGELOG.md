@@ -7,11 +7,16 @@ Version History
     - Optimized KNN lookup of guiding caches (x3 speed-up).
     - Optimized Cosine product for VMM based representations.
 
--   `PathSegmentStorage`:
-    - Fixing bug when multiple refracted/reflected events hit a distant
-      source (i.e., environment map) by clamping to a max distance.
-    - Adding `GetMaxDistance` and `SetMaxDistance` methods.
- 
+  - Dependencies:
+      - Removed the Embree library dependency for KNN lookups in favour
+        of the header-only library nanoflann.
+
+  - `PathSegmentStorage`:
+      - Fixing bug when multiple refracted/reflected events hit a
+        distant source (i.e., environment map) by clamping to a max
+        distance.
+      - Adding `GetMaxDistance` and `SetMaxDistance` methods.
+
 ## Open PGL 0.3.1
 
 -   `Field`:
