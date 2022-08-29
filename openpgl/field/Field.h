@@ -10,6 +10,7 @@
 #if !defined (OPENPGL_USE_OMP_THREADING)
 #include <tbb/parallel_for.h>
 #endif
+#include <tbb/parallel_sort.h>
 
 #define USE_PRECOMPUTED_NN 1
 
@@ -20,7 +21,6 @@ namespace openpgl
 template<int Vecsize, class TDirectionalDistributionFactory, template<typename, typename> class TSpatialStructureBuilder>
 struct Field
 {
-
 public:
 
     using DirectionalDistributionFactory = TDirectionalDistributionFactory;
@@ -135,9 +135,8 @@ public:
         {
             if (m_deterministic)
             {
-                //std::cout << "SurfaceVolumeField::buildField(): deterministic = " << m_deterministic<< std::endl;
-                std::sort(samples.begin(), samples.end(), SampleDataLess);
-                //std::sort(samplesVolume.begin(), samplesVolume.end(), SampleDataLess);
+                tbb::parallel_sort(samples.begin(), samples.end(), SampleDataLess);
+                //std::sort(samples.begin(), samples.end(), SampleDataLess);
             }
 
             //std::cout << "BufferSize: " << sizeof(SampleData) * m_spatialSubdivBuilderSettings.maxSamples * 1e-6 <<  " MB" << std::endl;
@@ -159,9 +158,8 @@ public:
             //std::cout << "updateField: samplesSurface = " << samplesSurface.size() << "\t samplesVolume = " << samplesVolume.size() << std::endl;
             if (m_deterministic)
             {
-                //std::cout << "SurfaceVolumeField::buildField(): deterministic = " << m_deterministic << std::endl;
-                std::sort(samples.begin(), samples.end(), SampleDataLess);
-                //std::sort(samplesVolume.begin(), samplesVolume.end(), SampleDataLess);
+                tbb::parallel_sort(samples.begin(), samples.end(), SampleDataLess);
+                //std::sort(samples.begin(), samples.end(), SampleDataLess);
             }
 
             updateSpatialStructure(samples);
