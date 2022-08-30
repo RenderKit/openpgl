@@ -719,7 +719,8 @@ Vector3 VonMisesFisherMixture<VecSize, maxComponents>::sample( const Vector2 sam
     }
     else
     {
-        float cosTheta = 1.f + (std::log1p((sEMinus2Kappa-1.f) * _sample[0])) / sKappa;
+        float cosTheta = 1.f + (embree::fastapprox::log<float>(1.0f + ((sEMinus2Kappa-1.f) * _sample[0]))) / sKappa;
+        //float cosTheta = 1.f + (std::log1p((sEMinus2Kappa-1.f) * _sample[0])) / sKappa;
 
         // safeguard for numerical imprecisions (if sample[0] is 0.999999999)
         cosTheta = std::min(1.0f, std::max(cosTheta, -1.f));
