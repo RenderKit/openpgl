@@ -18,6 +18,7 @@ struct PathSegmentDataStorage
     PathSegmentDataStorage() = default;
     ~PathSegmentDataStorage() = default;
 private: 
+    float m_max_distance = {1e6f};
 #if defined(OPENPGL_PATHSEGMENT_STORAGE_USE_ARRAY) 
     PathSegmentData* m_segmentStorage {nullptr};
     int m_seg_idx = {-1};
@@ -126,6 +127,15 @@ public:
 #endif
     }
 
+    float getMaxDistance() const 
+    {
+        return m_max_distance;
+    }
+
+    void setMaxDistance(const float maxDistance)
+    {
+        m_max_distance = maxDistance;
+    }
 
     size_t prepareSamples(const bool splatSamples, Sampler* sampler, const bool useNEEMiWeights = false, const bool guideDirectLight = false, const bool rrAffectsDirectContribution = true)
     {
@@ -141,7 +151,8 @@ public:
         {
             const openpgl::PathSegmentData &currentPathSegment = m_segmentStorage[i];
             float currentDistance = embree::length(openpgl::Point3(m_segmentStorage[i+1].position.x, m_segmentStorage[i+1].position.y, m_segmentStorage[i+1].position.z) - openpgl::Point3(currentPathSegment.position.x, currentPathSegment.position.y, currentPathSegment.position.z));
-            float distance = currentDistance + lastDistance;
+            float distance = std::fmin(currentDistance + lastDistance, 2.0f * m_max_distance);
+
             if(!currentPathSegment.isDelta && currentPathSegment.roughness >=0.3f)
             {
                 lastDistance = 0.0f;
@@ -219,7 +230,14 @@ public:
                         }
                     }
                     throughput = throughput * openpgl::Vector3(nextPathSegment.scatteringWeight.x, nextPathSegment.scatteringWeight.y, nextPathSegment.scatteringWeight.z);
-                    throughput /= nextPathSegment.russianRouletteProbability;
+                    if(nextPathSegment.russianRouletteProbability > 0.f)
+                    {
+                        throughput /= nextPathSegment.russianRouletteProbability;
+                    }
+                    else
+                    {
+                        throughput = openpgl::Vector3(0.f);
+                    }
                     previousRR = nextPathSegment.russianRouletteProbability;
 
                     OPENPGL_ASSERT(embree::isvalid(throughput));
@@ -230,7 +248,7 @@ public:
                 OPENPGL_ASSERT(contribution[0] >= 0.f && contribution[1] >= 0.f && contribution[2] >= 0.f);
                 if (contribution[0] > 0.0f || contribution[1] > 0.0f || contribution[2] > 0.0f )
                 {
-					OPENPGL_ASSERT(embree::isvalid(distance));
+                    OPENPGL_ASSERT(embree::isvalid(distance));
                     if(distance>0){
                         const float weight = OPENPGL_SPECTRUM_TO_FLOAT(contribution)/pdf;
                         OPENPGL_ASSERT(embree::isvalid(weight));
@@ -328,7 +346,14 @@ public:
             OPENPGL_ASSERT(contribution[0] >= 0.f && contribution[1] >= 0.f && contribution[2] >= 0.f);
 
             throughput = throughput * openpgl::Vector3(nextPathSegment.scatteringWeight.x, nextPathSegment.scatteringWeight.y, nextPathSegment.scatteringWeight.z);
-            throughput /= nextPathSegment.russianRouletteProbability;
+            if(nextPathSegment.russianRouletteProbability > 0.f)
+            {
+                throughput /= nextPathSegment.russianRouletteProbability;
+            }
+            else
+            {
+                throughput = openpgl::Vector3(0.f);
+            }
             previousRR = nextPathSegment.russianRouletteProbability;
             OPENPGL_ASSERT(embree::isvalid(throughput));
             OPENPGL_ASSERT(throughput[0] >= 0.f && throughput[1] >= 0.f && throughput[2] >= 0.f)

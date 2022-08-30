@@ -427,6 +427,18 @@ extern "C" OPENPGL_DLLEXPORT void pglPathSegmentStorageClear(PGLPathSegmentStora
     gPathSegmentStorage->clear();
 }
 
+extern "C" OPENPGL_DLLEXPORT void pglPathSegmentSetMaxDistance(PGLPathSegmentStorage pathSegmentStorage, float maxDistance)
+{
+    auto *gPathSegmentStorage = (openpgl::PathSegmentDataStorage *)pathSegmentStorage;
+    gPathSegmentStorage->setMaxDistance(maxDistance);
+}
+
+extern "C" OPENPGL_DLLEXPORT float pglPathSegmentGetMaxDistance(PGLPathSegmentStorage pathSegmentStorage)
+{
+    auto *gPathSegmentStorage = (openpgl::PathSegmentDataStorage *)pathSegmentStorage;
+    return gPathSegmentStorage->getMaxDistance();
+}
+
 extern "C" OPENPGL_DLLEXPORT size_t pglPathSegmentStoragePrepareSamples(PGLPathSegmentStorage pathSegmentStorage, const bool spaltSamples, PGLSampler* sampler,  const bool useNEEMiWeights, const bool guideDirectLight, const bool rrAffectsDirectContribution)
 {
     auto *gPathSegmentStorage = (openpgl::PathSegmentDataStorage *)pathSegmentStorage;

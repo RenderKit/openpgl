@@ -95,6 +95,20 @@ struct PathSegmentStorage
     void AddSample(SampleData sample);
 
     /**
+     * @brief Sets the max. distance for a generated SampleData
+     * (i.e., the distance used when hitting an environment map).
+     * If not set the default value is 1e6f.
+     * @param maxDistance 
+     */
+    void SetMaxDistance(const float maxDistance);
+
+    /**
+     * @brief Returns the max. distance for a generated SampleData
+     * (i.e., the distance used when hitting an environment map).
+     */
+    float GetMaxDistance();
+
+    /**
      * @brief Validates the PathSegments as well as the generated SampleData.
      * The function returns false if either a SampleData or a PathSegment is invalid.
      */
@@ -183,6 +197,19 @@ OPENPGL_INLINE void PathSegmentStorage::AddSegment(const PathSegment& segment)
 {
     OPENPGL_ASSERT(m_pathSegmentStorageHandle);
     pglPathSegmentStorageAddSegment(m_pathSegmentStorageHandle, segment);
+}
+
+OPENPGL_INLINE void PathSegmentStorage::SetMaxDistance(const float maxDistance)
+{
+    OPENPGL_ASSERT(m_pathSegmentStorageHandle);
+    pglPathSegmentSetMaxDistance(m_pathSegmentStorageHandle, maxDistance);
+
+}
+
+OPENPGL_INLINE float PathSegmentStorage::GetMaxDistance()
+{
+    OPENPGL_ASSERT(m_pathSegmentStorageHandle);
+    return pglPathSegmentGetMaxDistance(m_pathSegmentStorageHandle);
 }
 
 OPENPGL_INLINE bool PathSegmentStorage::Validate() const

@@ -6,8 +6,12 @@ Version History
 -   Performance:
     - Optimized KNN lookup of guiding caches (x3 speed-up).
     - Optimized Cosine product for VMM based representations.
- 
 
+-   `PathSegmentStorage`:
+    - Fixing bug when multiple refracted/reflected events hit a distant
+      source (i.e., environment map) by clamping to a max distance.
+    - Adding `GetMaxDistance` and `SetMaxDistance` methods.
+ 
 ## Open PGL 0.3.1
 
 -   `Field`:
