@@ -24,23 +24,23 @@ jobs:
   ### Build Linux Jobs ###
   build-centos7:
     secrets: inherit
-    uses: intel-innersource/libraries.devops.renderkit.workflows/.github/workflows/docker.yml@devel
+    uses: intel-innersource/libraries.devops.renderkit.workflows/.github/workflows/docker.yml@main
     with:
-      image: centos:7-devel
+      image: centos:7
       cmd: |
         gitlab/build.sh -D BUILD_PYTHON=OFF
 
   build-centos8:
     secrets: inherit
-    uses: intel-innersource/libraries.devops.renderkit.workflows/.github/workflows/docker.yml@devel
+    uses: intel-innersource/libraries.devops.renderkit.workflows/.github/workflows/docker.yml@main
     with:
-      image: centos:8-devel
+      image: centos:8
       cmd: |
         gitlab/build.sh -D BUILD_PYTHON=OFF
 
   #build-ubuntu16-04:
   #  secrets: inherit
-  #  uses: intel-innersource/libraries.devops.renderkit.workflows/.github/workflows/docker.yml@devel
+  #  uses: intel-innersource/libraries.devops.renderkit.workflows/.github/workflows/docker.yml@main
   #  with:
   #    image: ospray/docker-images:ubuntu16.04
   #    # artifact-name: build-ubuntu1804-gcc_artifact
@@ -49,32 +49,32 @@ jobs:
 
   build-ubuntu18-04:
     secrets: inherit
-    uses: intel-innersource/libraries.devops.renderkit.workflows/.github/workflows/docker.yml@devel
+    uses: intel-innersource/libraries.devops.renderkit.workflows/.github/workflows/docker.yml@main
     with:
-      image: ubuntu:18.04-devel
+      image: ubuntu:18.04
       cmd: |
         gitlab/build.sh -D BUILD_PYTHON=OFF
 
   build-ubuntu20-04:
     secrets: inherit
-    uses: intel-innersource/libraries.devops.renderkit.workflows/.github/workflows/docker.yml@devel
+    uses: intel-innersource/libraries.devops.renderkit.workflows/.github/workflows/docker.yml@main
     with:
-      image: ubuntu:20.04-devel
+      image: ubuntu:20.04
       cmd: |
         gitlab/build.sh -D BUILD_PYTHON=OFF
 
   #build-ubuntu22-04:
   #  secrets: inherit
-  #  uses: intel-innersource/libraries.devops.renderkit.workflows/.github/workflows/docker.yml@devel
+  #  uses: intel-innersource/libraries.devops.renderkit.workflows/.github/workflows/docker.yml@main
   #  with:
-  #    image: ubuntu:22.04-devel
+  #    image: ubuntu:22.04
   #    # artifact-name: build-ubuntu1804-gcc_artifact
   #    cmd: |
   #      gitlab/build.sh -D BUILD_PYTHON=OFF
 
   build-arch:
     secrets: inherit
-    uses: intel-innersource/libraries.devops.renderkit.workflows/.github/workflows/docker.yml@devel
+    uses: intel-innersource/libraries.devops.renderkit.workflows/.github/workflows/docker.yml@main
     with:
       image: archlinux:latest
       cmd: |
@@ -134,7 +134,7 @@ jobs:
     secrets: inherit
     uses: intel-innersource/libraries.devops.renderkit.workflows/.github/workflows/docker.yml@main
     with:
-      image: centos:7-devel
+      image: centos:7
       cmd: |
         export OPENPGL_RELEASE_PACKAGE_VERSION=0.3.1
         gitlab/release/linux.sh
