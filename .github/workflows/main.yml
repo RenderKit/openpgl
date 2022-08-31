@@ -63,14 +63,13 @@ jobs:
       cmd: |
         gitlab/build.sh -D BUILD_PYTHON=OFF
 
-  #build-ubuntu22-04:
-  #  secrets: inherit
-  #  uses: intel-innersource/libraries.devops.renderkit.workflows/.github/workflows/docker.yml@main
-  #  with:
-  #    image: ubuntu:22.04
-  #    # artifact-name: build-ubuntu1804-gcc_artifact
-  #    cmd: |
-  #      gitlab/build.sh -D BUILD_PYTHON=OFF
+  build-ubuntu22-04:
+    secrets: inherit
+    uses: intel-innersource/libraries.devops.renderkit.workflows/.github/workflows/docker.yml@main
+    with:
+      image: ubuntu:22.04
+      cmd: |
+        gitlab/build.sh -D BUILD_PYTHON=OFF
 
   build-arch:
     secrets: inherit
