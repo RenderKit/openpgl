@@ -28,7 +28,6 @@ include(openpgl_macros)
 
 ## openpgl specific configuration ##
 
-option(OPENPGL_BUILD_PYTHON "Build python wrapper 'pyopenpgl'."  OFF)
 option(OPENPGL_USE_OMP_THREADING "Use omp instead of tbb for threading." OFF)
 option(OPENPGL_BUILD_STATIC "Build OpenPGL as static library." OFF)
 
@@ -55,10 +54,6 @@ SET(OPENPGL_TBB_COMPONENT "tbb" CACHE STRING "The TBB component/library name.")
 
 ## Build library and  ##
 add_subdirectory(openpgl)
-
-if (BUILD_PYTHON)
-    add_subdirectory(python)
-endif()
 
 ## Configure CMake find_package() config files ##
 

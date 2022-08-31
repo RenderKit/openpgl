@@ -54,7 +54,6 @@ cmake -L `
   -D CMAKE_INSTALL_DOCDIR=doc `
   -D CMAKE_INSTALL_BINDIR=bin `
   -D TBB_ROOT=$DEP_INSTALL_DIR `
-  -D BUILD_PYTHON=OFF `
   ..
 
 # build
