@@ -8,7 +8,7 @@ namespace openpgl
 
 template<class TDirectionalQuadtree>
 struct DQTSurfaceSamplingDistribution: public ISurfaceSamplingDistribution {
-    DQTSurfaceSamplingDistribution(const bool useParallaxCompensation):ISurfaceSamplingDistribution(useParallaxCompensation)
+    DQTSurfaceSamplingDistribution(/*const bool useParallaxCompensation):ISurfaceSamplingDistribution(useParallaxCompensation*/)
     {};
 
     virtual ~DQTSurfaceSamplingDistribution() override {};
@@ -49,8 +49,18 @@ struct DQTSurfaceSamplingDistribution: public ISurfaceSamplingDistribution {
     std::string toString() const override {
         return "";
     };
+
+    const IRegion* getRegion() const override {
+        return m_region;
+    }
+
+    void setRegion(const IRegion* region) override {
+        m_region = region;
+    }
+
 private:
     TDirectionalQuadtree distribution;
+    const IRegion* m_region {nullptr};
 };
 
 }

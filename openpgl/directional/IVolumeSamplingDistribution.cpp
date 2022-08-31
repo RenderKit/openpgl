@@ -5,7 +5,7 @@
 
 namespace openpgl
 {
-
+/*
 const IRegion* IVolumeSamplingDistribution::getRegion() const
 {
     return m_region;
@@ -15,5 +15,5 @@ void IVolumeSamplingDistribution::setRegion(const IRegion* region)
 {
     m_region = region;
 }
-
+*/
 }

@@ -8,7 +8,7 @@ namespace openpgl
 
 template<class TDirectionalQuadtree>
 struct DQTVolumeSamplingDistribution: public IVolumeSamplingDistribution {
-    DQTVolumeSamplingDistribution(const bool useParallaxCompensation):IVolumeSamplingDistribution(useParallaxCompensation)
+    DQTVolumeSamplingDistribution(/*const bool useParallaxCompensation):IVolumeSamplingDistribution(useParallaxCompensation*/)
     {};
 
     virtual ~DQTVolumeSamplingDistribution() override {};
@@ -48,8 +48,18 @@ struct DQTVolumeSamplingDistribution: public IVolumeSamplingDistribution {
     std::string toString() const override {
         return "";
     };
+
+    const IRegion* getRegion() const override {
+        return m_region;
+    }
+
+    void setRegion(const IRegion* region) override {
+        m_region = region;
+    }
+
 private:
     TDirectionalQuadtree distribution;
+    const IRegion* m_region {nullptr};
 };
 
 }

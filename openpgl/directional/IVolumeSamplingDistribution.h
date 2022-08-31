@@ -9,13 +9,9 @@ namespace openpgl
 {
 struct IVolumeSamplingDistribution
 {
-    IVolumeSamplingDistribution() = delete;
+    //IVolumeSamplingDistribution() = delete;
     
-    IVolumeSamplingDistribution(const bool useParallaxCompensation)
-        :m_useParallaxCompensation(useParallaxCompensation)
-        ,m_region{nullptr}
-    {
-    }
+    IVolumeSamplingDistribution() {};
     
     virtual ~IVolumeSamplingDistribution() {};
     
@@ -37,13 +33,13 @@ struct IVolumeSamplingDistribution
 
     virtual std::string toString() const = 0;
 
-    void setRegion(const IRegion* region);
+    virtual void setRegion(const IRegion* region) = 0;
 
-    const IRegion* getRegion() const;
+    virtual const IRegion* getRegion() const = 0;
 
 protected:
-    bool m_useParallaxCompensation{true};
-    const IRegion* m_region {nullptr};
+    //bool m_useParallaxCompensation{true};
+    //const IRegion* m_region {nullptr};
 };
 
 }

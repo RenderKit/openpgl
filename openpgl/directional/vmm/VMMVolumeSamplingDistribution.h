@@ -9,11 +9,12 @@
 namespace openpgl
 {
 
-template<class TVMMDistribution>
-struct VMMVolumeSamplingDistribution: public IVolumeSamplingDistribution
+template<class TVMMDistribution, bool UseParallaxCompensation>
+struct __aligned(TVMMDistribution::VectorSize*4) VMMVolumeSamplingDistribution: public IVolumeSamplingDistribution
 {
     
-    VMMVolumeSamplingDistribution(const bool useParallaxCompensation): IVolumeSamplingDistribution(useParallaxCompensation){};
+    ALIGNED_STRUCT_(TVMMDistribution::VectorSize*4)
+    VMMVolumeSamplingDistribution(): IVolumeSamplingDistribution(){};
     ~VMMVolumeSamplingDistribution() = default;
 
     typedef std::integral_constant<size_t, OPENPGL_VMM_NUM_PHASE_COMP> MaxNumProductDistributions;
@@ -30,6 +31,8 @@ struct VMMVolumeSamplingDistribution: public IVolumeSamplingDistribution
     /// guiding cosine/BSDF product integral (= irradiance/flux, for cosine)
     float m_productIntegral;
 
+    const IRegion* m_region {nullptr};
+
     inline void init(const void* distribution, Point3 samplePosition) override
     {
         m_liDistribution = *(TVMMDistribution*)distribution;
@@ -37,7 +40,7 @@ struct VMMVolumeSamplingDistribution: public IVolumeSamplingDistribution
         //m_liDistribution.uniformInit(0.0);
 
         // prespare sampling distribution
-        if(m_useParallaxCompensation)
+        if(UseParallaxCompensation)
         {
             const Point3 pivotPosition = this->m_liDistribution._pivotPosition;
             this->m_liDistribution.performRelativeParallaxShift(pivotPosition - samplePosition);
@@ -143,6 +146,13 @@ struct VMMVolumeSamplingDistribution: public IVolumeSamplingDistribution
         return oss.str();
     }
 
+    inline const IRegion* getRegion() const override {
+        return m_region;
+    }
+
+    inline void setRegion(const IRegion* region) override {
+        m_region = region;
+    }
 };
 
 }

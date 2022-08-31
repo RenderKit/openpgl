@@ -10,12 +10,12 @@
 namespace openpgl
 {
 
-template<class TVMMDistribution>
-struct VMMSurfaceSamplingDistribution: public ISurfaceSamplingDistribution
+template<class TVMMDistribution, bool UseParallaxCompensation>
+struct __aligned(TVMMDistribution::VectorSize*4) VMMSurfaceSamplingDistribution: public ISurfaceSamplingDistribution
 {
-    
-    VMMSurfaceSamplingDistribution(const bool useParallaxCompensation):ISurfaceSamplingDistribution(useParallaxCompensation)
-    {};
+    ALIGNED_STRUCT_(TVMMDistribution::VectorSize*4)
+
+    VMMSurfaceSamplingDistribution() {};
     ~VMMSurfaceSamplingDistribution() = default;
     
     typedef std::integral_constant<size_t, 2> MaxNumProductDistributions;
@@ -32,11 +32,13 @@ struct VMMSurfaceSamplingDistribution: public ISurfaceSamplingDistribution
     /// guiding cosine/BSDF product integral (= irradiance/flux, for cosine)
     float m_productIntegral;
 
+    const IRegion* m_region {nullptr};
+
     inline void init(const void* distribution, Point3 samplePosition) override
     {
         m_liDistribution = *(const TVMMDistribution*)distribution;
         // prespare sampling distribution
-        if(m_useParallaxCompensation)
+        if(UseParallaxCompensation)
         {
             const Point3 pivotPosition = this->m_liDistribution._pivotPosition;
             this->m_liDistribution.performRelativeParallaxShift(pivotPosition - samplePosition);
@@ -122,6 +124,14 @@ struct VMMSurfaceSamplingDistribution: public ISurfaceSamplingDistribution
         oss << "product: " << m_productIntegral << '\n'
             << ']';
         return oss.str();
+    }
+
+    inline const IRegion* getRegion() const override {
+        return m_region;
+    }
+
+    inline void setRegion(const IRegion* region) override {
+        m_region = region;
     }
 
 };

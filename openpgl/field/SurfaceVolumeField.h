@@ -42,7 +42,7 @@ public:
 
     ISurfaceSamplingDistribution* newSurfaceSamplingDistribution() const override
     {
-        return new TSurfaceSamplingDistribution(m_surfaceField.getUseParallaxCompensation());
+        return new TSurfaceSamplingDistribution();
     }
 
     bool initSurfaceSamplingDistribution(ISurfaceSamplingDistribution* surfaceSamplingDistribution, const Point3& position, float* sample1D, const bool useParrallaxComp) const override
@@ -61,7 +61,7 @@ public:
 
     IVolumeSamplingDistribution* newVolumeSamplingDistribution() const override
     {
-        return new TVolumeSamplingDistribution(m_volumeField.getUseParallaxCompensation());
+        return new TVolumeSamplingDistribution();
     }
 
     bool initVolumeSamplingDistribution(IVolumeSamplingDistribution* volumeSamplingDistribution, const Point3& position, float* sample1D, const bool useParrallaxComp) const override

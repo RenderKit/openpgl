@@ -5,7 +5,7 @@
 
 namespace openpgl
 {
-
+/*
 const IRegion* ISurfaceSamplingDistribution::getRegion() const
 {
     return m_region;
@@ -15,5 +15,5 @@ void ISurfaceSamplingDistribution::setRegion(const IRegion* region)
 {
     m_region = region;
 }
-
+*/
 }
