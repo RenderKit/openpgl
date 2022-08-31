@@ -48,7 +48,7 @@ struct VMMVolumeSamplingDistribution: public IVolumeSamplingDistribution
         this->m_productIntegral = 1.0f;
     }
 
-    inline void applySingleLobeHenyeyGreensteinProduct(const Vector3& dir, const float meanCosine)
+    inline void applySingleLobeHenyeyGreensteinProduct(const Vector3& dir, const float meanCosine) override
     {
         float sumWeights = 0.f;        
         const VMMPhaseFunctionRepresentation pfRep =VMMSingleLobeHenyeyGreensteinOracle::getPhaseFunctionRepresentation(meanCosine);
@@ -76,7 +76,7 @@ struct VMMVolumeSamplingDistribution: public IVolumeSamplingDistribution
         this->m_productIntegral = sumWeights;
     }
 
-    inline bool supportsApplySingleLobeHenyeyGreensteinProduct() const
+    inline bool supportsApplySingleLobeHenyeyGreensteinProduct() const override
     {
         return true;
     }

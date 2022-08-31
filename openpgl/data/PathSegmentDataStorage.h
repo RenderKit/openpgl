@@ -317,7 +317,7 @@ public:
         if(numSegments==0)
             return finalColor;
         
-        const openpgl::PathSegmentData &currentPathSegment = m_segmentStorage[0];
+        //const openpgl::PathSegmentData &currentPathSegment = m_segmentStorage[0];
         
         // evalaute the incident radiance the incident
         openpgl::Vector3 throughput {1.0f};

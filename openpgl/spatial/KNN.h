@@ -71,7 +71,7 @@ uint32_t sampleApproximateClosestRegionIdxRef(const RegionNeighbours &nh, const 
         // so we have to do the same to get the same results
         uint32_t mask = (1 << 3) - 1;
         uint32_t *df = (uint32_t*)&d;
-        *df = *df & ~mask | i & mask;
+        *df = (*df & ~mask) | (i & mask);
 
         candidates[i] = {primID, d};
     }

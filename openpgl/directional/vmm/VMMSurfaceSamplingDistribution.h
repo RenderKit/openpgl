@@ -57,7 +57,7 @@ struct VMMSurfaceSamplingDistribution: public ISurfaceSamplingDistribution
         }
     }
 
-    inline bool supportsApplyCosineProduct() const
+    inline bool supportsApplyCosineProduct() const override
     {
         return true;
     }
