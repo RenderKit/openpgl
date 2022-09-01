@@ -681,6 +681,7 @@ extern "C" OPENPGL_DLLEXPORT void pglFieldArgumentsSetDefaults(PGLFieldArguments
         break;
     }
 
+    fieldArguments.deterministic = false;
 
     switch (directionalType)
     {

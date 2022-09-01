@@ -106,7 +106,7 @@ struct PGLFieldArguments
     void *directionalDistributionArguments;
     // for debugging
     bool useParallaxCompensation;
-    bool deterministic;
+    bool deterministic {false};
 };
 
 
