@@ -113,7 +113,7 @@ struct RegionNeighbours<4>
         const embree::Vec3<embree::vfloat<4>> d = points[i] - p;
         embree::vfloat<4> distances = embree::dot(d,d);
         distances = distances&mask | ids;
-        distances = select(ids != ~0, distances, embree::vfloat<4>(std::numeric_limits<float>::infinity()));
+        distances = select(this->ids[i] != ~0, distances, embree::vfloat<4>(std::numeric_limits<float>::infinity()));
 
         return sort_ascending(distances);
     }
@@ -165,7 +165,7 @@ struct RegionNeighbours<8>
         const embree::Vec3<embree::vfloat<8>> d = points - _p;
         embree::vfloat<8> distances = embree::dot(d,d);
         distances = distances&mask | ids;
-        distances = select(ids != ~0, distances, embree::vfloat<8>(std::numeric_limits<float>::infinity()));
+        distances = select(this->ids != ~0, distances, embree::vfloat<8>(std::numeric_limits<float>::infinity()));
         distances = sort_ascending(distances);
 
         return this->ids[asInt(distances)[selected] & 7];
