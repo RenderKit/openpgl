@@ -132,6 +132,15 @@ public:
         return m_max_distance;
     }
 
+    int getNumSegments() const
+    {
+#if defined(OPENPGL_PATHSEGMENT_STORAGE_USE_ARRAY)
+        return m_seg_idx + 1;
+#else
+        return m_segmentStorage.size();
+#endif
+    }
+
     void setMaxDistance(const float maxDistance)
     {
         m_max_distance = maxDistance;
@@ -397,7 +406,7 @@ public:
 #endif
     }
 
-    int getNumSamples()const
+    int getNumSamples() const
     {
 #if defined(OPENPGL_PATHSEGMENT_STORAGE_USE_ARRAY)
         return m_sample_idx + 1;

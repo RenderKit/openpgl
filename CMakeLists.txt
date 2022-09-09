@@ -21,7 +21,7 @@ include(GNUInstallDirs)
 
 ## Establish project ##
 
-project(openpgl VERSION 0.3.1 LANGUAGES C CXX)
+project(openpgl VERSION 0.4.0 LANGUAGES C CXX)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/cmake)
 include(openpgl_macros)

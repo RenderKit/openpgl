@@ -99,6 +99,7 @@ public:
             m_surfaceField.buildField(samplesSurface);
         if(samplesVolume.size() > 0)
             m_volumeField.buildField(samplesVolume);
+        m_iteration++;
     }
 
     void updateField(SampleContainer& samplesSurface, SampleContainer& samplesVolume) override
@@ -107,6 +108,7 @@ public:
             m_surfaceField.updateField(samplesSurface);
         if(samplesVolume.size() > 0)
             m_volumeField.updateField(samplesVolume);
+        m_iteration++;
     }
 
     void resetField() override
@@ -117,25 +119,12 @@ public:
         m_volumeField.resetField();
     }
 
-    void addTrainingIteration(size_t spp) override
-    {
-        m_totalSPP += spp;
-        ++m_iteration;
-        m_surfaceField.addTrainingIteration(spp);
-        m_volumeField.addTrainingIteration(spp);
-    }
-
     PGL_SPATIAL_STRUCTURE_TYPE getSpatialStructureType() const override {
         return FieldType::SpatialStructureBuilder::SPATIAL_STRUCTURE_TYPE;
     }
 
     PGL_DIRECTIONAL_DISTRIBUTION_TYPE getDirectionalDistributionType() const override {
         return FieldType::DirectionalDistributionFactory::DIRECTIONAL_DISTRIBUTION_TYPE;
-    }
-
-    size_t getTotalSPP() const override
-    {
-        return m_totalSPP;
     }
 
     size_t getIteration() const override

@@ -91,17 +91,13 @@ struct Field
      * @brief Updates the current approximation of the radiance field.
      *
      * @param sampleStorage
-     * @param numPerPixelSamples the number of sample per pixels used to generate the training data
      */
-    void Update(const SampleStorage& sampleStorage, const size_t& numPerPixelSamples);
+    void Update(const SampleStorage& sampleStorage);
 
     void Reset();
 
     /// Returns the number of performed training iterations.
     size_t GetIteration() const;
-
-    /// Returns the over all number of sample per pixel used across all training iterations.
-    size_t GetTotalSPP() const;
 
     /// Checks if the guiding information of the Field is valid (e.g., contains no invalid directional distributions). 
     bool Validate() const;
@@ -169,12 +165,6 @@ OPENPGL_INLINE size_t Field::GetIteration() const
     return pglFieldGetIteration(m_fieldHandle);
 }
 
-OPENPGL_INLINE size_t Field::GetTotalSPP() const
-{
-    OPENPGL_ASSERT(m_fieldHandle);
-    return pglFieldGetTotalSPP(m_fieldHandle);
-}
-
 OPENPGL_INLINE void Field::SetSceneBounds(const pgl_box3f& bounds)
 {
     OPENPGL_ASSERT(m_fieldHandle);
@@ -187,10 +177,10 @@ OPENPGL_INLINE pgl_box3f Field::GetSceneBounds() const
     return pglFieldGetSceneBounds(m_fieldHandle);
 }
 
-OPENPGL_INLINE void Field::Update(const SampleStorage& sampleStorage, const size_t& numPerPixelSamples)
+OPENPGL_INLINE void Field::Update(const SampleStorage& sampleStorage)
 {
     OPENPGL_ASSERT(m_fieldHandle);
-    pglFieldUpdate(m_fieldHandle, sampleStorage.m_sampleStorageHandle, numPerPixelSamples);
+    pglFieldUpdate(m_fieldHandle, sampleStorage.m_sampleStorageHandle);
 }
 
 OPENPGL_INLINE void Field::Reset()

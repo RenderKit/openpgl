@@ -46,6 +46,10 @@ OPENPGL_CORE_INTERFACE void pglPathSegmentSetMaxDistance(PGLPathSegmentStorage p
 
 OPENPGL_CORE_INTERFACE float pglPathSegmentGetMaxDistance(PGLPathSegmentStorage pathSegmentStorage);
 
+OPENPGL_CORE_INTERFACE int pglPathSegmentGetNumSegments(PGLPathSegmentStorage pathSegmentStorage);
+
+OPENPGL_CORE_INTERFACE int pglPathSegmentGetNumSamples(PGLPathSegmentStorage pathSegmentStorage);
+
 OPENPGL_CORE_INTERFACE size_t pglPathSegmentStoragePrepareSamples(PGLPathSegmentStorage pathSegmentStorage, const bool spaltSamples, PGLSampler* sampler, const bool useNEEMiWeights = false, const bool guideDirectLight = false, const bool rrAffectsDirectContribution = true);
 
 OPENPGL_CORE_INTERFACE pgl_vec3f pglPathSegmentStorageCalculatePixelEstimate(PGLPathSegmentStorage pathSegmentStorage, const bool rrAffectsDirectContribution = true);

@@ -149,6 +149,7 @@ public:
             buildSpatialStructure(m_sceneBounds, samples);
             fitRegions(samples);
         }
+        m_iteration++;
     }
 
     void updateField(SampleContainer& samples)
@@ -165,6 +166,7 @@ public:
             updateSpatialStructure(samples);
             updateRegions(samples);
         }
+        m_iteration++;
     }
 
     void resetField()
@@ -178,17 +180,6 @@ public:
         m_spatialSubdiv = SpatialStructure();
         m_regionStorageContainer.clear();
         m_regionKNNSearchTree = KNearestRegionsSearchTree<Vecsize>();
-    }
-
-
-    void addTrainingIteration(size_t spp) {
-        m_totalSPP += spp;
-        ++m_iteration;
-    }
-
-    size_t getTotalSPP() const
-    {
-        return m_totalSPP;
     }
 
     size_t getIteration() const

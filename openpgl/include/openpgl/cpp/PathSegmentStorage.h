@@ -106,7 +106,23 @@ struct PathSegmentStorage
      * @brief Returns the max. distance for a generated SampleData
      * (i.e., the distance used when hitting an environment map).
      */
-    float GetMaxDistance();
+    float GetMaxDistance() const;
+
+    /**
+     * @brief Gets the number of stored path segments.
+     * 
+     * @return int number of stored path segments.
+     */
+    int GetNumSegments() const;
+
+    /**
+     * @brief Gets the number of samples generated from the path 
+     * segments and the ones added explicitly by the user.
+     * 
+     * @return int number of generated or added samples.
+     */
+    int GetNumSamples() const;
+
 
     /**
      * @brief Validates the PathSegments as well as the generated SampleData.
@@ -206,10 +222,22 @@ OPENPGL_INLINE void PathSegmentStorage::SetMaxDistance(const float maxDistance)
 
 }
 
-OPENPGL_INLINE float PathSegmentStorage::GetMaxDistance()
+OPENPGL_INLINE float PathSegmentStorage::GetMaxDistance() const
 {
     OPENPGL_ASSERT(m_pathSegmentStorageHandle);
     return pglPathSegmentGetMaxDistance(m_pathSegmentStorageHandle);
+}
+
+OPENPGL_INLINE int PathSegmentStorage::GetNumSegments() const 
+{
+    OPENPGL_ASSERT(m_pathSegmentStorageHandle);
+    return pglPathSegmentGetNumSegments(m_pathSegmentStorageHandle);
+}
+
+OPENPGL_INLINE int PathSegmentStorage::GetNumSamples() const
+{
+    OPENPGL_ASSERT(m_pathSegmentStorageHandle);
+    return pglPathSegmentGetNumSamples(m_pathSegmentStorageHandle);
 }
 
 OPENPGL_INLINE bool PathSegmentStorage::Validate() const

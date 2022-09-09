@@ -35,13 +35,9 @@ struct ISurfaceVolumeField
 
     virtual void resetField() = 0;
 
-    virtual void addTrainingIteration(size_t spp) = 0;
-
     virtual PGL_SPATIAL_STRUCTURE_TYPE getSpatialStructureType() const = 0;
 
     virtual PGL_DIRECTIONAL_DISTRIBUTION_TYPE getDirectionalDistributionType() const = 0;
-
-    virtual size_t getTotalSPP() const = 0;
 
     virtual size_t getIteration() const = 0;
 

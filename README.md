@@ -1,6 +1,6 @@
 # Intel® Open Path Guiding Library
 
-This is release v0.3.1 of Intel® Open PGL. For changes and new features,
+This is release v0.4.0 of Intel® Open PGL. For changes and new features,
 see the [changelog](CHANGELOG.md). Visit http://www.openpgl.org for more
 information.
 
@@ -51,18 +51,34 @@ specification is still in flux and might change with upcoming releases.
 ## Open PGL 0.4.0
 
   - Performance:
+    
       - Optimized KNN lookup of guiding caches (x3 speed-up).
       - Optimized Cosine product for VMM based representations.
 
   - Dependencies:
+    
       - Removed the Embree library dependency for KNN lookups in favour
         of the header-only library nanoflann.
 
+  - Adding ARM Neon support (e.g., Apple M1).
+
+  - Fixing memory alignment bug for higher SIMD widths.
+
   - `PathSegmentStorage`:
+    
       - Fixing bug when multiple refracted/reflected events hit a
         distant source (i.e., environment map) by clamping to a max
         distance.
       - Adding `GetMaxDistance` and `SetMaxDistance` methods.
+      - Adding `GetNumSegments` and `GetNumSamples` methods.
+
+  - `Field`:
+    
+      - Stopped tracing a total number of spp statistic since it is not
+        really useful.
+          - Removed the `GetTotalSPP` function.
+          - Removed the `numPerPixelSamples` parameter from the `Update`
+            function.
 
 ## Open PGL 0.3.1
 
@@ -265,7 +281,7 @@ To make CMake aware of Open PGL’s CMake configuration scripts the
 `openpgl_DIR` has to be set to their location during configuration:
 
 ``` bash
-cmake -Dopenpgl_DIR=[openpgl_install]/lib/cmake/openpgl-0.3.1 ..
+cmake -Dopenpgl_DIR=[openpgl_install]/lib/cmake/openpgl-0.4.0 ..
 ```
 
 After that, adding OpenPGL to a CMake project/target is done by first
