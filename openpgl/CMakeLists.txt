@@ -133,7 +133,7 @@ target_include_directories(${PROJECT_NAME}
 )
 
 target_link_libraries(${PROJECT_NAME} PRIVATE TBB::${OPENPGL_TBB_COMPONENT})
-
+set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME ${OPENPGL_LIBRARY_NAME})
 ## Configure OpenPGL installation ##
 
 openpgl_install_library(${PROJECT_NAME})
@@ -143,7 +143,6 @@ install(DIRECTORY
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
   FILES_MATCHING
   PATTERN "*.h"
-  #PATTERN "*.isph"
 )
 
 install(FILES

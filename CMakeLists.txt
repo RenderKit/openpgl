@@ -50,6 +50,8 @@ if(NOT (OPENPGL_ISA_NEON OR
   message(FATAL_ERROR "Must have at least one ISA enabled.")
 endif()
 
+SET(OPENPGL_LIBRARY_NAME  "openpgl" CACHE STRING "Name of the Open PGL library file (default is openpgl)")
+
 SET(OPENPGL_TBB_COMPONENT "tbb" CACHE STRING "The TBB component/library name.")
 
 ## Build library and  ##

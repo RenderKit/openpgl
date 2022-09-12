@@ -83,10 +83,15 @@ Configure the Open PGL build using:
 
     - `OPENPGL_ISA_AVX512` if Open PGL is compiled with AVX-512 support (default `OFF`).
 
-    - `embree_DIR` location of the Embree CMake configuration file 
-    (e.g., [embree_install]/lib/cmake/embree-3.6.1).
+    - `OPENPGL_ISA_NEON` and `OPENPGL_ISA_NEON2X` if Open PGL is compiled with NEON or double
+       pumped NEON support (default `OFF`).
+
+    - `OPENPGL_LIBRARY_NAME`: Specifies the name of the Open PGL library file
+        created. By default the name `openpgl` is used.
 
     - `OPENPGL_TBB_ROOT` location of the TBB installation.
+
+    - `OPENPGL_TBB_COMPONENT` the name of the TBB component/library (default `tbb`).
 
 Build and install Open PGL using:
 
