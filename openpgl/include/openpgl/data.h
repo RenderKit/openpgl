@@ -28,10 +28,11 @@ struct PGLSampleData
         EInsideVolume = 1<<1 
     };
 
-    /// test
+    /// the position of the sample (i.e., at which energy arrives)
     pgl_point3f position;
 
-    /// test2 
+    /// a vector pointing into the direction the energy (e.g., radiance or importance)
+    /// comes from 
     pgl_vec3f direction; 
 
     /// a scalar representation of the incident radiance divide by @ref pdf
@@ -82,7 +83,7 @@ struct PGLPathSegmentData
     /// the direct contribution (i.e., emission) at @ref position into @ref directionOut
     pgl_vec3f directContribution{0.0f, 0.0f, 0.0f};
     
-    /// The MIS weight which would be applied to @ref directContribution when sampling this contribution using NEE at the previous path segment.
+    /// The MIS weight which would be applied to @ref directContribution (e.g., miWeight = bsdfPDF^2/(bsdfPDF^2+neePDF^2)).
     float miWeight {1.0f};
 
     /// The contribution which is scattered at @ref position into @ref directionOut. There can be multiple source us such contribution (sub-surface-scattering (dipole) or scattered NEE).
