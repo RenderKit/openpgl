@@ -6,9 +6,6 @@ name: CI
 on:
   # Triggers the workflow on push or pull request events but only for the "devel" branch
   push:
-    branches: [ "devel" ]
-  pull_request:
-    branches: [ "devel" ]
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -94,7 +91,7 @@ jobs:
     secrets: inherit
     uses: intel-innersource/libraries.devops.renderkit.workflows/.github/workflows/macos.yml@main
     with:
-      runs-on: '[ "macOS", "build", "avx2" ]'
+      runs-on: '[ "macOS", "build", "avx2", "x86_64" ]'
       cmd: |
           gitlab/build_mac.sh
 
@@ -116,17 +113,13 @@ jobs:
       project: OpenPGL
       #submodules: true
       prebuild: |
-        mkdir build
-        cd build
         export LD_LIBRARY_PATH=`pwd`/install/lib:${LD_LIBRARY_PATH}
-        cmake -DBUILD_JOBS=`nproc` -DBUILD_DEPENDENCIES_ONLY=ON "$@" ../superbuild
-        cmake --build .
-        mkdir openpgl_build
-        cd openpgl_build
-        DEP_INSTALL_DIR=`pwd`/../install
+        cmake -S superbuild -B build_deps -DBUILD_JOBS=`nproc` -DBUILD_DEPENDENCIES_ONLY=ON "$@"
+        cmake --build build_deps
+        DEP_INSTALL_DIR=build_deps/install
         export embree_DIR=$DEP_INSTALL_DIR
-        cmake -DOPENPGL_TBB_ROOT=$DEP_INSTALL_DIR ../..
-      build: cmake --build ./build/openpgl_build
+        cmake -S . -B build -DOPENPGL_TBB_ROOT=$DEP_INSTALL_DIR
+      build: cmake --build build
 
   ### Protex Jobs ###
 
@@ -161,7 +154,7 @@ jobs:
     uses: intel-innersource/libraries.devops.renderkit.workflows/.github/workflows/macos.yml@main
     with:
       submodules: true
-      runs-on: '[ "macOS", "sign", "avx2" ]'
+      runs-on: '[ "macOS", "sign", "avx2", "x86_64" ]'
       artifact-out: release-macos
       artifact-path: ./*.zip
       cmd: |
