@@ -46,9 +46,11 @@ namespace openpgl
             //OPENPGL_ASSERT(std::fabs(meanCosine) >= minMeanCosine);
             //OPENPGL_ASSERT(std::fabs(meanCosine) <= maxMeanCosine);
 
-            const float stepSize = (maxMeanCosine-minMeanCosine)/float(numRepresentations);
-            int idx = std::floor((std::fabs(meanCosine)-minMeanCosine)/stepSize);
-            
+            const float absMeanCosine = std::fabs(meanCosine);
+            const float stepSize = (absMeanCosine-minMeanCosine)/float(numRepresentations);
+            int idx = std::floor((absMeanCosine-minMeanCosine)/stepSize);
+            idx = std::min(idx, numRepresentations-1);
+
             OPENPGL_ASSERT(idx >= 0);
             OPENPGL_ASSERT(idx < numRepresentations);
             return representations[idx];
