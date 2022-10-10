@@ -314,6 +314,30 @@ struct KDTree
         return m_nodesPtr[nodeIdx].getDataIdx();
     }
 
+    uint32_t getMaxNodeDepth(const KDNode& node) const
+    {
+        if(node.isLeaf())
+        {
+            return 1;
+        } 
+        else 
+        {
+            const uint32_t leftNodeId = node.getLeftChildIdx();
+            const uint32_t leftMaxNodeDepth = getMaxNodeDepth(m_nodes[leftNodeId]);
+            const uint32_t rightMaxNodeDepth = getMaxNodeDepth(m_nodes[leftNodeId+1]);
+            return 1 + std::max(leftMaxNodeDepth, rightMaxNodeDepth);
+        }
+    }    
+
+    uint32_t getMaxTreeDepth() const
+    {
+        if(m_nodes.size()>0)
+        {
+            return getMaxNodeDepth(m_nodes[0]);
+        }
+        return 0;
+    }
+
     std::string toString() const
     {
         std::stringstream ss;
@@ -321,6 +345,8 @@ struct KDTree
         ss << "KDTree::" << std::endl;
         ss << "  isInit: " << m_isInit <<  std::endl;
         ss << "  bounds: " << m_bounds<< std::endl;
+        ss << "  maxDepth: " << getMaxTreeDepth() << std::endl;
+        ss << "  numNodes: " << m_nodes.size() << std::endl;
         return ss.str();
     }
 
