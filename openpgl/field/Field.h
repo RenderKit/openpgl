@@ -74,6 +74,11 @@ public:
         m_useParallaxCompensation = settings.useParallaxCompensation;
     }
 
+    ~Field()
+    {
+        m_regionKNNSearchTree.reset();
+    }
+
     void setSceneBounds(const openpgl::BBox &sceneBounds)
     {
         m_sceneBounds = sceneBounds;
@@ -179,7 +184,7 @@ public:
         
         m_spatialSubdiv = SpatialStructure();
         m_regionStorageContainer.clear();
-        m_regionKNNSearchTree = KNearestRegionsSearchTree<Vecsize>();
+        m_regionKNNSearchTree.reset();
     }
 
     size_t getIteration() const
@@ -328,6 +333,7 @@ private:
         m_spatialSubdivBuilder.updateTree(m_spatialSubdiv, samples, m_regionStorageContainer, m_spatialSubdivBuilderSettings, m_nCores);
         if (m_useStochasticNNLookUp)
         {
+            m_regionKNNSearchTree.reset();
             m_regionKNNSearchTree.buildRegionSearchTree(m_regionStorageContainer);
             if (USE_PRECOMPUTED_NN)
             {

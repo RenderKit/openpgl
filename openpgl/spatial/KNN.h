@@ -199,6 +199,12 @@ struct KNearestRegionsSearchTree
 
     using RN = RegionNeighbours<Vecsize>;
 
+    ~KNearestRegionsSearchTree()
+    {
+        myalignedFree(points);
+        myalignedFree(neighbours);
+    }
+
     template<typename TRegionStorageContainer>
     void buildRegionSearchTree(const TRegionStorageContainer &regionStorage)
     {
@@ -348,6 +354,25 @@ struct KNearestRegionsSearchTree
                 stream.write(reinterpret_cast<const char*>(&points[n]), sizeof(Point));
             }
         }
+    }
+
+    void reset()
+    {
+        if(points)
+        {
+            myalignedFree(points);
+            points = nullptr;
+            num_points = 0;
+        }
+
+        if(neighbours)
+        {
+            myalignedFree(neighbours);
+            neighbours = nullptr;
+        }
+
+        _isBuildNeighbours = false;
+        _isBuild = false;
     }
 
     void deserialize(std::istream& stream)
