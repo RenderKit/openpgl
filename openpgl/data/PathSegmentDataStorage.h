@@ -16,7 +16,17 @@ namespace openpgl
 struct PathSegmentDataStorage
 {
     PathSegmentDataStorage() = default;
-    ~PathSegmentDataStorage() = default;
+
+    ~PathSegmentDataStorage(){
+#if defined(OPENPGL_PATHSEGMENT_STORAGE_USE_ARRAY)
+        if(m_segmentStorage)
+            delete[] m_segmentStorage;
+
+        if(m_sampleStorage)
+            delete[] m_sampleStorage;
+#endif
+    };
+
 private: 
     float m_max_distance = {1e6f};
 #if defined(OPENPGL_PATHSEGMENT_STORAGE_USE_ARRAY) 
@@ -35,7 +45,6 @@ private:
 public:
     void reserve(const size_t &size)
     {
-        //std::cout << "PathSegmentDataStorage::reserve: " << size << std::endl;
 #if defined(OPENPGL_PATHSEGMENT_STORAGE_USE_ARRAY)
         if(m_max_sample_size == size)
             return;
