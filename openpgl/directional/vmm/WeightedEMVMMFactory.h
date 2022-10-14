@@ -60,7 +60,7 @@ struct WeightedEMVonMisesFisherFactory: public VonMisesFisherFactory< TVMMDistri
     {
         size_t numSamples {0};
         size_t numIterations {0};
-        float summedWeightedLogLikelihood {0.0};
+        float summedWeightedLogLikelihood {0.0f};
     };
 
     struct PartialFittingMask
@@ -1066,7 +1066,7 @@ void WeightedEMVonMisesFisherFactory< TVMMDistribution>::estimatePartialMAPMeanD
             vmm._meanDirections[cnt-1].z[i] = 1.0f;
 
             vmm._meanCosines[cnt-1][i] = 0.0f;
-            vmm._kappas[cnt-1][i] = 0.0;
+            vmm._kappas[cnt-1][i] = 0.0f;
         }
     }
 

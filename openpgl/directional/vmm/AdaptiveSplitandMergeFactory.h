@@ -39,8 +39,8 @@ public:
     {
         typename WeightedEMFactory::Configuration weightedEMCfg;
 
-        float splittingThreshold { 0.75 };
-        float mergingThreshold { 0.00625 };
+        float splittingThreshold { 0.75f };
+        float mergingThreshold { 0.00625f };
 
         bool useSplitAndMerge {true};
 

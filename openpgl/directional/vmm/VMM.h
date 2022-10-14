@@ -675,7 +675,7 @@ Vector3 VonMisesFisherMixture<VecSize, maxComponents>::sample( const Vector2 sam
     Vector2 _sample = sample;
     float searched = _sample[1];
     float sumWeights = 0.0f;
-    float cdf = 0.0;
+    float cdf = 0.0f;
     //int k0 = 0;
     //int k1 = 0;
     // find comp

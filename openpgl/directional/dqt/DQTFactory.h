@@ -48,7 +48,7 @@ public:
         //   This additionally steers splitting of leaves which internally have an uneven distribution of incoming radiance.
         SplitMetric splitMetric = SplitMetric::MEAN;
         // Nodes are split if their metric is more than a fraction (splitThreshold) of the summed metric over all nodes
-        float splitThreshold = 0.1;
+        float splitThreshold = 0.1f;
         // Samples are accumulated into multiple nodes according to a footprint that is constructed from the sample center.
         // The footprint size is scaled by footprintFactor and the size of leaf in which the sample falls.
         // A footprint of 0 denotes that all radiance is accumulated into the single leaf in which the sample falls.
@@ -68,12 +68,12 @@ public:
     struct StatsNode {
         uint32_t offsetChildren = 0;
 
-        float sampleWeight = 0;
-        float splitWeight = 0;
+        float sampleWeight = 0.f;
+        float splitWeight = 0.f;
 
-        float numSamples = 0;
-        float firstMoment = 0;
-        float secondMoment = 0;
+        float numSamples = 0.f;
+        float firstMoment = 0.f;
+        float secondMoment = 0.f;
     };
 
     struct Statistics {
