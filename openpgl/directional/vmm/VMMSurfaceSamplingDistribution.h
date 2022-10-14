@@ -13,7 +13,7 @@ namespace openpgl
 template<class TVMMDistribution, bool UseParallaxCompensation>
 struct __aligned(TVMMDistribution::VectorSize*4) VMMSurfaceSamplingDistribution: public ISurfaceSamplingDistribution
 {
-    ALIGNED_STRUCT_(TVMMDistribution::VectorSize*4)
+    OPENPGL_ALIGNED_STRUCT_(TVMMDistribution::VectorSize*4)
 
     VMMSurfaceSamplingDistribution() {};
     ~VMMSurfaceSamplingDistribution() = default;

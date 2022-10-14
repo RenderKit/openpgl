@@ -20,7 +20,6 @@ set(OPENPGL_SRC
     directional/IVolumeSamplingDistribution.cpp
     directional/vmm/VMMPhaseFunctions.cpp
     ../third-party/embreeSrc/common/simd/sse.cpp
-    ../third-party/embreeSrc/common/sys/alloc.cpp
 )
 
 if(OPENPGL_BUILD_STATIC)

@@ -13,7 +13,7 @@ template<class TVMMDistribution, bool UseParallaxCompensation>
 struct __aligned(TVMMDistribution::VectorSize*4) VMMVolumeSamplingDistribution: public IVolumeSamplingDistribution
 {
     
-    ALIGNED_STRUCT_(TVMMDistribution::VectorSize*4)
+    OPENPGL_ALIGNED_STRUCT_(TVMMDistribution::VectorSize*4)
     VMMVolumeSamplingDistribution(): IVolumeSamplingDistribution(){};
     ~VMMVolumeSamplingDistribution() = default;
 

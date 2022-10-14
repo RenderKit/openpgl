@@ -18,28 +18,6 @@
 #define NUM_KNN_NEIGHBOURS 8
 #define DEBUG_SAMPLE_APPROXIMATE_CLOSEST_REGION_IDX 0
 
-inline  void* myalignedMalloc(size_t size, size_t align)
-  {
-    if (size == 0)
-      return nullptr;
-
-    assert((align & (align-1)) == 0);
-    void* ptr = _mm_malloc(size,align);
-
-    if (size != 0 && ptr == nullptr)
-      throw std::bad_alloc();
-
-    return ptr;
-  }
-
-inline  void myalignedFree(void* ptr)
-  {
-    if (ptr)
-      _mm_free(ptr);
-  }
-
-
-
 namespace openpgl
 {
 
@@ -181,7 +159,7 @@ struct KNearestRegionsSearchTree
 {
     struct Point
     {
-        ALIGNED_STRUCT_(16)
+        OPENPGL_ALIGNED_STRUCT_(16)
         embree::Vec3fa p;                      //!< position
     };
 
@@ -201,8 +179,8 @@ struct KNearestRegionsSearchTree
 
     ~KNearestRegionsSearchTree()
     {
-        myalignedFree(points);
-        myalignedFree(neighbours);
+        alignedFree(points);
+        alignedFree(neighbours);
     }
 
     template<typename TRegionStorageContainer>
@@ -211,9 +189,9 @@ struct KNearestRegionsSearchTree
         num_points = regionStorage.size();
         if (points)
         {
-            myalignedFree(points);
+            alignedFree(points);
         }
-        points = (Point*) myalignedMalloc(num_points*sizeof(Point), 32);
+        points = (Point*) alignedMalloc(num_points*sizeof(Point), 32);
 
         for (size_t i = 0; i < num_points; i++)
         {
@@ -235,9 +213,9 @@ struct KNearestRegionsSearchTree
 
         if (neighbours)
         {
-            myalignedFree(neighbours);
+            alignedFree(neighbours);
         }
-        neighbours = (RN*) myalignedMalloc(num_points*sizeof(RN), 32);
+        neighbours = (RN*) alignedMalloc(num_points*sizeof(RN), 32);
 #if defined(OPENPGL_USE_OMP_THREADING)
         #pragma omp parallel for num_threads(this->m_nCores) schedule(dynamic)
         for (size_t n=0; n < num_points; n++)
@@ -360,14 +338,14 @@ struct KNearestRegionsSearchTree
     {
         if(points)
         {
-            myalignedFree(points);
+            alignedFree(points);
             points = nullptr;
             num_points = 0;
         }
 
         if(neighbours)
         {
-            myalignedFree(neighbours);
+            alignedFree(neighbours);
             neighbours = nullptr;
         }
 
@@ -381,7 +359,7 @@ struct KNearestRegionsSearchTree
         if(_isBuild)
         {
             stream.read(reinterpret_cast<char*>(&num_points), sizeof(uint32_t));
-            points = (Point*) myalignedMalloc(num_points*sizeof(Point), 32);
+            points = (Point*) alignedMalloc(num_points*sizeof(Point), 32);
             for (uint32_t n = 0; n < num_points; n++)
             {
                 Point p;

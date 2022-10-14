@@ -23,6 +23,35 @@ inline void sincosf(const float theta, float* sin, float* cos)
 
 #endif
 
+namespace openpgl
+{
+
+  inline void* alignedMalloc(size_t size, size_t align)
+  {
+    if (size == 0)
+      return nullptr;
+
+    assert((align & (align-1)) == 0);
+    void* ptr = _mm_malloc(size,align);
+
+    if (size != 0 && ptr == nullptr)
+      throw std::bad_alloc();
+
+    return ptr;
+  }
+
+  inline void alignedFree(void* ptr)
+  {
+    if (ptr)
+      _mm_free(ptr);
+  }
+}
+
+#define OPENPGL_ALIGNED_STRUCT_(align)                                           \
+  void* operator new(size_t size) { return openpgl::alignedMalloc(size,align); } \
+  void operator delete(void* ptr) { openpgl::alignedFree(ptr); }                 \
+  void* operator new[](size_t size) { return openpgl::alignedMalloc(size,align); } \
+  void operator delete[](void* ptr) { openpgl::alignedFree(ptr); }
 
 namespace openpgl
 {
