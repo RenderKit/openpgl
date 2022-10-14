@@ -17,6 +17,10 @@ struct PathSegmentDataStorage
 {
     PathSegmentDataStorage() = default;
 
+    PathSegmentDataStorage(const PathSegmentDataStorage&) = delete;
+
+    PathSegmentDataStorage & operator=(const PathSegmentDataStorage&) = delete;
+
     ~PathSegmentDataStorage(){
 #if defined(OPENPGL_PATHSEGMENT_STORAGE_USE_ARRAY)
         if(m_segmentStorage)
