@@ -1,6 +1,12 @@
 Version History
 ===============
 
+## Open PGL 0.4.1
+- Bugfixes:
+    - Fixing bug introduced in `0.4.0` when using
+     `ApplySingleLobeHenyeyGreensteinProduct()` for VMM-based 
+     representations
+
 ## Open PGL 0.4.0
 
 -   Performance:

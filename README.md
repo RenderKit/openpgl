@@ -1,6 +1,6 @@
 # Intel® Open Path Guiding Library
 
-This is release v0.4.0 of Intel® Open PGL. For changes and new features,
+This is release v0.4.1 of Intel® Open PGL. For changes and new features,
 see the [changelog](CHANGELOG.md). Visit http://www.openpgl.org for more
 information.
 
@@ -47,6 +47,13 @@ used with caution in any production related environment. The API
 specification is still in flux and might change with upcoming releases.
 
 # Version History
+
+## Open PGL 0.4.1
+
+  - Bugfixes:
+      - Fixing bug introduced in `0.4.0` when using
+        `ApplySingleLobeHenyeyGreensteinProduct()` for VMM-based
+        representations
 
 ## Open PGL 0.4.0
 
@@ -257,10 +264,17 @@ Configure the Open PGL build using:
       - `OPENPGL_ISA_AVX512` if Open PGL is compiled with AVX-512
         support (default `OFF`).
     
-      - `embree_DIR` location of the Embree CMake configuration file
-        (e.g., \[embree\_install\]/lib/cmake/embree-3.6.1).
+      - `OPENPGL_ISA_NEON` and `OPENPGL_ISA_NEON2X` if Open PGL is
+        compiled with NEON or double pumped NEON support (default
+        `OFF`).
+    
+      - `OPENPGL_LIBRARY_NAME`: Specifies the name of the Open PGL
+        library file created. By default the name `openpgl` is used.
     
       - `OPENPGL_TBB_ROOT` location of the TBB installation.
+    
+      - `OPENPGL_TBB_COMPONENT` the name of the TBB component/library
+        (default `tbb`).
 
 Build and install Open PGL using:
 
@@ -281,7 +295,7 @@ To make CMake aware of Open PGL’s CMake configuration scripts the
 `openpgl_DIR` has to be set to their location during configuration:
 
 ``` bash
-cmake -Dopenpgl_DIR=[openpgl_install]/lib/cmake/openpgl-0.4.0 ..
+cmake -Dopenpgl_DIR=[openpgl_install]/lib/cmake/openpgl-0.4.1 ..
 ```
 
 After that, adding OpenPGL to a CMake project/target is done by first
