@@ -217,12 +217,12 @@ extern "C" OPENPGL_DLLEXPORT  PGLSurfaceSamplingDistribution pglFieldNewSurfaceS
 }
 OPENPGL_CATCH_END(nullptr)
 
-extern "C" OPENPGL_DLLEXPORT  bool pglFieldInitSurfaceSamplingDistribution(PGLField field, PGLSurfaceSamplingDistribution surfaceSamplingDistribution, pgl_point3f position, float* sample1D, const bool useParallaxComp)
+extern "C" OPENPGL_DLLEXPORT  bool pglFieldInitSurfaceSamplingDistribution(PGLField field, PGLSurfaceSamplingDistribution surfaceSamplingDistribution, pgl_point3f position, float* sample1D)
 {
     const openpgl::Point3 pos(position.x, position.y, position.z);
     auto *gField = (IGuidingField *)field;
     ISurfaceSamplingDistribution* gSurfaceSamplingDistribution = (ISurfaceSamplingDistribution*)surfaceSamplingDistribution;
-    return gField->initSurfaceSamplingDistribution(gSurfaceSamplingDistribution, pos, sample1D, useParallaxComp);
+    return gField->initSurfaceSamplingDistribution(gSurfaceSamplingDistribution, pos, sample1D);
 }
 extern "C" OPENPGL_DLLEXPORT  PGLVolumeSamplingDistribution pglFieldNewVolumeSamplingDistribution(PGLField field)OPENPGL_CATCH_BEGIN
 {
@@ -232,12 +232,12 @@ extern "C" OPENPGL_DLLEXPORT  PGLVolumeSamplingDistribution pglFieldNewVolumeSam
 }
 OPENPGL_CATCH_END(nullptr)
 
-extern "C" OPENPGL_DLLEXPORT  bool pglFieldInitVolumeSamplingDistribution(PGLField field, PGLVolumeSamplingDistribution volumeSamplingDistribution, pgl_point3f position, float* sample1D, const bool useParallaxComp)
+extern "C" OPENPGL_DLLEXPORT  bool pglFieldInitVolumeSamplingDistribution(PGLField field, PGLVolumeSamplingDistribution volumeSamplingDistribution, pgl_point3f position, float* sample1D)
 {
     const openpgl::Point3 pos(position.x, position.y, position.z);
     auto *gField = (IGuidingField *)field;
     IVolumeSamplingDistribution* gVolumeSamplingDistribution = (IVolumeSamplingDistribution*)volumeSamplingDistribution;
-    return gField->initVolumeSamplingDistribution(gVolumeSamplingDistribution, pos, sample1D, useParallaxComp);
+    return gField->initVolumeSamplingDistribution(gVolumeSamplingDistribution, pos, sample1D);
 }
 
 extern "C" OPENPGL_DLLEXPORT  bool pglFieldValidate(PGLField field)
@@ -691,18 +691,15 @@ extern "C" OPENPGL_DLLEXPORT void pglFieldArgumentsSetDefaults(PGLFieldArguments
     default:
     case PGL_DIRECTIONAL_DISTRIBUTION_TYPE::PGL_DIRECTIONAL_DISTRIBUTION_PARALLAX_AWARE_VMM:
         fieldArguments.directionalDistributionType = PGL_DIRECTIONAL_DISTRIBUTION_PARALLAX_AWARE_VMM;
-        fieldArguments.directionalDistributionArguments = new PGLVMMFactoryArguments(true);
-        fieldArguments.useParallaxCompensation = true;
+        fieldArguments.directionalDistributionArguments = new PGLVMMFactoryArguments();
         break;
     case PGL_DIRECTIONAL_DISTRIBUTION_TYPE::PGL_DIRECTIONAL_DISTRIBUTION_QUADTREE:
         fieldArguments.directionalDistributionType = PGL_DIRECTIONAL_DISTRIBUTION_QUADTREE;
         fieldArguments.directionalDistributionArguments = new PGLDQTFactoryArguments();
-        fieldArguments.useParallaxCompensation = false;
         break;
     case PGL_DIRECTIONAL_DISTRIBUTION_TYPE::PGL_DIRECTIONAL_DISTRIBUTION_VMM:
         fieldArguments.directionalDistributionType = PGL_DIRECTIONAL_DISTRIBUTION_VMM;
-        fieldArguments.directionalDistributionArguments = new PGLVMMFactoryArguments(false);
-        fieldArguments.useParallaxCompensation = false;
+        fieldArguments.directionalDistributionArguments = new PGLVMMFactoryArguments();
         break;
     }
 

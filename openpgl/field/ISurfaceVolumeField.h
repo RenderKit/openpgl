@@ -19,11 +19,11 @@ struct ISurfaceVolumeField
 
     virtual ISurfaceSamplingDistribution* newSurfaceSamplingDistribution() const = 0;
 
-    virtual bool initSurfaceSamplingDistribution(ISurfaceSamplingDistribution* surfaceSamplingDistribution, const Point3& position, float* sample1D, const bool useParrallaxComp) const = 0;
+    virtual bool initSurfaceSamplingDistribution(ISurfaceSamplingDistribution* surfaceSamplingDistribution, const Point3& position, float* sample1D) const = 0;
 
     virtual IVolumeSamplingDistribution* newVolumeSamplingDistribution() const = 0;
 
-    virtual bool initVolumeSamplingDistribution(IVolumeSamplingDistribution* volumeSamplingDistribution, const Point3& position, float* sample1D, const bool useParrallaxComp) const = 0;
+    virtual bool initVolumeSamplingDistribution(IVolumeSamplingDistribution* volumeSamplingDistribution, const Point3& position, float* sample1D) const = 0;
 
     virtual void setSceneBounds(const openpgl::BBox &sceneBounds) = 0;
 

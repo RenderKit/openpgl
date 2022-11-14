@@ -40,7 +40,7 @@ struct Device: public IDevice {
         if (args.spatialStructureType == PGL_SPATIAL_STRUCTURE_KDTREE &&
             args.directionalDistributionType ==  PGL_DIRECTIONAL_DISTRIBUTION_PARALLAX_AWARE_VMM )
         {
-            using DirectionalDistributionFactory = AdaptiveSplitAndMergeFactory<ParallaxAwareVonMisesFisherMixture<VecSize, 32>>;
+            using DirectionalDistributionFactory = AdaptiveSplitAndMergeFactory<ParallaxAwareVonMisesFisherMixture<VecSize, 32, true>>;
             using GuidingField = SurfaceVolumeField<VecSize, DirectionalDistributionFactory, KDTreePartitionBuilder, VMMSurfaceSamplingDistribution<typename DirectionalDistributionFactory::Distribution, true>, VMMVolumeSamplingDistribution<typename DirectionalDistributionFactory::Distribution, true>>;
 
             typename GuidingField::Settings gFieldSettings;
@@ -55,7 +55,6 @@ struct Device: public IDevice {
             delete spatialSturctureArguments;
 
             PGLVMMFactoryArguments *directionalDistributionArguments = (PGLVMMFactoryArguments*)args.directionalDistributionArguments;
-            gFieldSettings.distributionFactorySettings.weightedEMCfg.parallaxCompensation = directionalDistributionArguments->parallaxCompensation;
 
             gFieldSettings.distributionFactorySettings.weightedEMCfg.initK = directionalDistributionArguments->initK;
             gFieldSettings.distributionFactorySettings.weightedEMCfg.initKappa = directionalDistributionArguments->initKappa;
@@ -82,12 +81,11 @@ struct Device: public IDevice {
             gFieldSettings.distributionFactorySettings.minSamplesForMerging = directionalDistributionArguments->minSamplesForMerging;
             delete directionalDistributionArguments;
 
-            gFieldSettings.useParallaxCompensation = true;
             gField = new GuidingField(gFieldSettings);
         } else if (args.spatialStructureType == PGL_SPATIAL_STRUCTURE_KDTREE &&
             args.directionalDistributionType ==  PGL_DIRECTIONAL_DISTRIBUTION_VMM )
         {
-            using DirectionalDistributionFactory = AdaptiveSplitAndMergeFactory<ParallaxAwareVonMisesFisherMixture<VecSize, 32>>;
+            using DirectionalDistributionFactory = AdaptiveSplitAndMergeFactory<ParallaxAwareVonMisesFisherMixture<VecSize, 32, false>>;
             using GuidingField = SurfaceVolumeField<VecSize, DirectionalDistributionFactory, KDTreePartitionBuilder, VMMSurfaceSamplingDistribution<typename DirectionalDistributionFactory::Distribution, false>, VMMVolumeSamplingDistribution<typename DirectionalDistributionFactory::Distribution, false>>;
 
             typename GuidingField::Settings gFieldSettings;
@@ -102,7 +100,6 @@ struct Device: public IDevice {
             delete spatialSturctureArguments;
 
             PGLVMMFactoryArguments *directionalDistributionArguments = (PGLVMMFactoryArguments*)args.directionalDistributionArguments;
-            gFieldSettings.distributionFactorySettings.weightedEMCfg.parallaxCompensation = directionalDistributionArguments->parallaxCompensation;
 
             gFieldSettings.distributionFactorySettings.weightedEMCfg.initK = directionalDistributionArguments->initK;
             gFieldSettings.distributionFactorySettings.weightedEMCfg.initKappa = directionalDistributionArguments->initKappa;
@@ -129,7 +126,6 @@ struct Device: public IDevice {
             gFieldSettings.distributionFactorySettings.minSamplesForMerging = directionalDistributionArguments->minSamplesForMerging;
             delete directionalDistributionArguments;
 
-            gFieldSettings.useParallaxCompensation = false;
             gField = new GuidingField(gFieldSettings);
         } else if (args.spatialStructureType == PGL_SPATIAL_STRUCTURE_KDTREE &&
                    args.directionalDistributionType ==  PGL_DIRECTIONAL_DISTRIBUTION_QUADTREE )
@@ -151,7 +147,6 @@ struct Device: public IDevice {
             gFieldSettings.distributionFactorySettings.footprintFactor = directionalDistributionArguments->footprintFactor;
             gFieldSettings.distributionFactorySettings.maxLevels = directionalDistributionArguments->maxLevels;
 
-            gFieldSettings.useParallaxCompensation = false;
             gField = new GuidingField(gFieldSettings);
         }else {
             throw std::runtime_error("error: unrecognized field type");
@@ -187,13 +182,13 @@ struct Device: public IDevice {
 
         if (spatialStructureType == PGL_SPATIAL_STRUCTURE_KDTREE && directionalDistributionType == PGL_DIRECTIONAL_DISTRIBUTION_PARALLAX_AWARE_VMM)
         {
-            using DirectionalDistributionFactory = AdaptiveSplitAndMergeFactory<ParallaxAwareVonMisesFisherMixture<VecSize, 32>>;
+            using DirectionalDistributionFactory = AdaptiveSplitAndMergeFactory<ParallaxAwareVonMisesFisherMixture<VecSize, 32, true>>;
             using GuidingField = SurfaceVolumeField<VecSize, DirectionalDistributionFactory, KDTreePartitionBuilder, VMMSurfaceSamplingDistribution<typename DirectionalDistributionFactory::Distribution, true>, VMMVolumeSamplingDistribution<typename DirectionalDistributionFactory::Distribution, true>>;
 
             gField = (ISurfaceVolumeField *)new GuidingField();
         } else if (spatialStructureType == PGL_SPATIAL_STRUCTURE_KDTREE && directionalDistributionType == PGL_DIRECTIONAL_DISTRIBUTION_VMM)
         {
-            using DirectionalDistributionFactory = AdaptiveSplitAndMergeFactory<ParallaxAwareVonMisesFisherMixture<VecSize, 32>>;
+            using DirectionalDistributionFactory = AdaptiveSplitAndMergeFactory<ParallaxAwareVonMisesFisherMixture<VecSize, 32, false>>;
             using GuidingField = SurfaceVolumeField<VecSize, DirectionalDistributionFactory, KDTreePartitionBuilder, VMMSurfaceSamplingDistribution<typename DirectionalDistributionFactory::Distribution, false>, VMMVolumeSamplingDistribution<typename DirectionalDistributionFactory::Distribution, false>>;
 
             gField = (ISurfaceVolumeField *)new GuidingField();

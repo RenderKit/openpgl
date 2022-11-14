@@ -54,7 +54,6 @@ public:
     {
         SpatialSettings settings;
         DirectionalDistributionFactorySettings distributionFactorySettings;
-        bool useParallaxCompensation{true};
 
         std::string toString()const;
     };
@@ -71,7 +70,6 @@ public:
         m_spatialSubdivBuilderSettings = settings.settings.spatialSubdivBuilderSettings;
 
         m_distributionFactorySettings = settings.distributionFactorySettings;
-        m_useParallaxCompensation = settings.useParallaxCompensation;
     }
 
     ~Field()
@@ -198,15 +196,9 @@ public:
 
     //void deserialize(std::istream& stream);
 
-    inline bool getUseParallaxCompensation() const
-    {
-        return m_useParallaxCompensation;
-    }
-
     void serialize(std::ostream &os) const {
         os.write(reinterpret_cast<const char*>(&m_isSurface), sizeof(m_isSurface));
         os.write(reinterpret_cast<const char*>(&m_decayOnSpatialSplit), sizeof(m_decayOnSpatialSplit));
-        os.write(reinterpret_cast<const char*>(&m_useParallaxCompensation), sizeof(m_useParallaxCompensation));
         os.write(reinterpret_cast<const char*>(&m_iteration), sizeof(m_iteration));
         os.write(reinterpret_cast<const char*>(&m_totalSPP), sizeof(m_totalSPP));
         os.write(reinterpret_cast<const char*>(&m_nCores), sizeof(m_nCores));
@@ -232,7 +224,6 @@ public:
     {
         is.read(reinterpret_cast<char*>(&m_isSurface), sizeof(m_isSurface));
         is.read(reinterpret_cast<char*>(&m_decayOnSpatialSplit), sizeof(m_decayOnSpatialSplit));
-        is.read(reinterpret_cast<char*>(&m_useParallaxCompensation), sizeof(m_useParallaxCompensation));
         is.read(reinterpret_cast<char*>(&m_iteration), sizeof(m_iteration));
         is.read(reinterpret_cast<char*>(&m_totalSPP), sizeof(m_totalSPP));
         is.read(reinterpret_cast<char*>(&m_nCores), sizeof(m_nCores));
@@ -428,9 +419,9 @@ private:
                 RegionType oldRegion = regionStorage.first;
 #endif
 				// TODO: we should move applying the paralax comp to the Distribution to the factory
-                if(m_useParallaxCompensation)
+                if(DirectionalDistribution::ParallaxCompensation == 1)
                 {
-                    regionStorage.first.trainingStatistics.sufficientStatistics.applyParallaxShift(regionStorage.first.distribution, regionStorage.first.distribution._pivotPosition - sampleMean);
+					regionStorage.first.trainingStatistics.sufficientStatistics.applyParallaxShift(regionStorage.first.distribution, regionStorage.first.distribution._pivotPosition - sampleMean);
                     regionStorage.first.distribution.performRelativeParallaxShift(regionStorage.first.distribution._pivotPosition - sampleMean);
                     OPENPGL_ASSERT(regionStorage.first.distribution.isValid());
                     OPENPGL_ASSERT(regionStorage.first.trainingStatistics.sufficientStatistics.isValid());
@@ -503,7 +494,6 @@ private:
     bool m_isSurface{true};
 
     float m_decayOnSpatialSplit {0.25f};
-    bool m_useParallaxCompensation {true};
 
     size_t m_iteration {0};
     size_t m_totalSPP  {0};

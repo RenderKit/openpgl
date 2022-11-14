@@ -37,9 +37,8 @@ struct PGLKDTreeArguments
 
 struct PGLVMMFactoryArguments
 {
-    PGLVMMFactoryArguments(bool parallaxCompensation = true)
+    PGLVMMFactoryArguments()
     {
-        this->parallaxCompensation = parallaxCompensation;
     }
     
     // weighted EM arguments
@@ -73,8 +72,6 @@ struct PGLVMMFactoryArguments
     int minSamplesForSplitting { 32000/8 };
     int minSamplesForPartialRefitting { 32000/8 };
     int minSamplesForMerging { 32000/4 };
-
-    bool parallaxCompensation {true};
 };
 
 enum PGLDQTLeafEstimator
@@ -105,7 +102,6 @@ struct PGLFieldArguments
     PGL_DIRECTIONAL_DISTRIBUTION_TYPE directionalDistributionType;
     void *directionalDistributionArguments;
     // for debugging
-    bool useParallaxCompensation;
     bool deterministic {false};
 };
 

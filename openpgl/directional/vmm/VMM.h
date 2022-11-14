@@ -36,7 +36,9 @@ struct VonMisesFisherMixture
 {
 
 public:
-
+    enum {
+        ParallaxCompensation = 0
+    };
     enum{
         MaxComponents = maxComponents,
         VectorSize = VecSize,

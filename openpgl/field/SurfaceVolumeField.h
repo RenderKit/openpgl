@@ -45,7 +45,7 @@ public:
         return new TSurfaceSamplingDistribution();
     }
 
-    bool initSurfaceSamplingDistribution(ISurfaceSamplingDistribution* surfaceSamplingDistribution, const Point3& position, float* sample1D, const bool useParrallaxComp) const override
+    bool initSurfaceSamplingDistribution(ISurfaceSamplingDistribution* surfaceSamplingDistribution, const Point3& position, float* sample1D) const override
     {
         TSurfaceSamplingDistribution* _surfaceSamplingDistribution = (TSurfaceSamplingDistribution*)surfaceSamplingDistribution;
         const RegionType* region = m_surfaceField.getRegion(position, sample1D);
@@ -64,7 +64,7 @@ public:
         return new TVolumeSamplingDistribution();
     }
 
-    bool initVolumeSamplingDistribution(IVolumeSamplingDistribution* volumeSamplingDistribution, const Point3& position, float* sample1D, const bool useParrallaxComp) const override
+    bool initVolumeSamplingDistribution(IVolumeSamplingDistribution* volumeSamplingDistribution, const Point3& position, float* sample1D) const override
     {
         TVolumeSamplingDistribution* _volumeSamplingDistribution = (TVolumeSamplingDistribution*)volumeSamplingDistribution;
         const RegionType* region = m_volumeField.getRegion(position, sample1D);

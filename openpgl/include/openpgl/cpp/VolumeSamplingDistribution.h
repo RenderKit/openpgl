@@ -54,11 +54,10 @@ struct VolumeSamplingDistribution
      * @param field The guiding field of the scene.
      * @param pos The position the guiding distribution is queried for.
      * @param sample1D A random number used of a stoachastic look-up is used.
-     * @param useParallaxCompensation If parallax compensation sould be applied or not. @deprecated
      * @return true 
      * @return false 
      */
-    bool Init(const Field* field, const pgl_point3f& pos, float& sample1D, const bool useParallaxCompensation = true);
+    bool Init(const Field* field, const pgl_point3f& pos, float& sample1D);
 
     /**
      * @brief Clears/resets the internal repesentation of the guiding distribution. 
@@ -214,20 +213,11 @@ OPENPGL_INLINE bool VolumeSamplingDistribution::SupportsApplySingleLobeHenyeyGre
     return pglVolumeSamplingDistributionSupportsApplySingleLobeHenyeyGreensteinProduct(m_volumeSamplingDistributionHandle);
 }
 
-
-/*
-void VolumeSamplingDistribution::Init(const Region& region, const pgl_point3f& pos, const bool useParallaxCompensation)
-{
-    OPENPGL_ASSERT(m_volumeSamplingDistributionHandle);
-    pglVolumeSamplingDistributionInit(m_volumeSamplingDistributionHandle, region.m_regionHandle, pos, useParallaxCompensation);
-}
-*/
-
-OPENPGL_INLINE bool VolumeSamplingDistribution::Init(const Field* field, const pgl_point3f& pos, float& sample1D, const bool useParallaxCompensation)
+OPENPGL_INLINE bool VolumeSamplingDistribution::Init(const Field* field, const pgl_point3f& pos, float& sample1D)
 {
     OPENPGL_ASSERT(m_volumeSamplingDistributionHandle);
     OPENPGL_ASSERT(field->m_fieldHandle);
-    return pglFieldInitVolumeSamplingDistribution(field->m_fieldHandle, m_volumeSamplingDistributionHandle, pos, &sample1D, useParallaxCompensation);
+    return pglFieldInitVolumeSamplingDistribution(field->m_fieldHandle, m_volumeSamplingDistributionHandle, pos, &sample1D);
 }
 
 OPENPGL_INLINE Region VolumeSamplingDistribution::GetRegion() const

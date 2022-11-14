@@ -24,6 +24,11 @@ namespace openpgl {
 
     template<typename TSphere2Square>
     struct DirectionalQuadtree {
+
+        enum {
+            ParallaxCompensation = 0
+        };
+
         using Sphere2Square = TSphere2Square;
 
         Point3 _pivotPosition;

@@ -10,12 +10,15 @@
 namespace openpgl
 {
 
-template<int VecSize, int maxComponents>
+template<int VecSize, int maxComponents, bool UseParallaxCompensation>
 struct ParallaxAwareVonMisesFisherMixture: public VonMisesFisherMixture<VecSize, maxComponents>
 {
 
 public:
-
+    enum {
+        ParallaxCompensation = UseParallaxCompensation
+    };
+    
     ParallaxAwareVonMisesFisherMixture() = default;
 
     typedef VonMisesFisherMixture<VecSize, maxComponents> VMM;
@@ -45,8 +48,8 @@ private:
 
 };
 
-template<int VecSize, int maxComponents>
-std::string ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents>::toString() const{
+template<int VecSize, int maxComponents, bool UseParallaxCompensation>
+std::string ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents,UseParallaxCompensation>::toString() const{
     std::stringstream ss;
     ss.precision(5);
     ss << "ParallaxAwareVonMisesFisherMixture:" << std::endl;
@@ -77,8 +80,8 @@ std::string ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents>::toString
     return ss.str();
 }
 
-template<int VecSize, int maxComponents>
-void ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents>::splitComponent(const size_t &idx0, const size_t &idx1, const float &weight0, const float &weight1, const Vector3 &meanDirection0, const Vector3 &meanDirection1, const float &meanCosine0, const float &meanCosine1)
+template<int VecSize, int maxComponents, bool UseParallaxCompensation>
+void ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents,UseParallaxCompensation>::splitComponent(const size_t &idx0, const size_t &idx1, const float &weight0, const float &weight1, const Vector3 &meanDirection0, const Vector3 &meanDirection1, const float &meanCosine0, const float &meanCosine1)
 {
     const div_t tmpIdx0 = div( idx0, VecSize);
     const div_t tmpIdx1 = div( idx1, VecSize);
@@ -89,8 +92,8 @@ void ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents>::splitComponent(
 }
 
 
-template<int VecSize, int maxComponents>
-void ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents>::mergeComponents(const size_t &idx0, const size_t &idx1)
+template<int VecSize, int maxComponents, bool UseParallaxCompensation>
+void ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents,UseParallaxCompensation>::mergeComponents(const size_t &idx0, const size_t &idx1)
 {
     const div_t tmpIdx0 = div( idx0, VecSize);
     const div_t tmpIdx1 = div( idx1, VecSize);
@@ -114,8 +117,8 @@ void ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents>::mergeComponents
     VonMisesFisherMixture<VecSize, maxComponents>::mergeComponents(idx0, idx1);
 }
 
-template<int VecSize, int maxComponents>
-void ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents>::serialize(std::ostream& stream) const
+template<int VecSize, int maxComponents, bool UseParallaxCompensation>
+void ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents,UseParallaxCompensation>::serialize(std::ostream& stream) const
 {
     VonMisesFisherMixture<VecSize, maxComponents>::serialize(stream);
     for(uint32_t k=0;k<VMM::NumVectors;k++){
@@ -124,8 +127,8 @@ void ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents>::serialize(std::
     stream.write(reinterpret_cast<const char*>(&_pivotPosition), sizeof(Point3));
 }
 
-template<int VecSize, int maxComponents>
-void ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents>::deserialize(std::istream& stream)
+template<int VecSize, int maxComponents, bool UseParallaxCompensation>
+void ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents,UseParallaxCompensation>::deserialize(std::istream& stream)
 {
     VonMisesFisherMixture<VecSize, maxComponents>::deserialize(stream);
     for(uint32_t k=0;k<VMM::NumVectors;k++){
@@ -134,8 +137,8 @@ void ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents>::deserialize(std
     stream.read(reinterpret_cast<char*>(&_pivotPosition), sizeof(Point3));
 }
 
-template<int VecSize, int maxComponents>
-bool ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents>::isValid() const
+template<int VecSize, int maxComponents, bool UseParallaxCompensation>
+bool ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents,UseParallaxCompensation>::isValid() const
 {
     bool valid = VonMisesFisherMixture<VecSize, maxComponents>::isValid();
 
@@ -155,22 +158,22 @@ bool ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents>::isValid() const
     return valid;
 }
 
-template<int VecSize, int maxComponents>
-void ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents>::setComponentDistance(const size_t &idx, const float &distance)
+template<int VecSize, int maxComponents, bool UseParallaxCompensation>
+void ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents,UseParallaxCompensation>::setComponentDistance(const size_t &idx, const float &distance)
 {
     const div_t tmpIdx = div( idx, VecSize);
     _distances[tmpIdx.quot][tmpIdx.rem]= distance;
 }
 
-template<int VecSize, int maxComponents>
-float ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents>::getComponentDistance(const size_t &idx) const
+template<int VecSize, int maxComponents, bool UseParallaxCompensation>
+float ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents,UseParallaxCompensation>::getComponentDistance(const size_t &idx) const
 {
     const div_t tmpIdx = div( idx, VecSize);
     return _distances[tmpIdx.quot][tmpIdx.rem];
 }
 
-template<int VecSize, int maxComponents>
-void ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents>::performRelativeParallaxShift( const Vector3 &shiftDirection )
+template<int VecSize, int maxComponents, bool UseParallaxCompensation>
+void ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents,UseParallaxCompensation>::performRelativeParallaxShift( const Vector3 &shiftDirection )
 {
     const embree::vfloat<VecSize> ones(1.0f);
     const embree::vfloat<VecSize> zeros(0.0f);

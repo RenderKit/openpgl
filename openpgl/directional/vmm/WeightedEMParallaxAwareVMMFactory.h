@@ -25,8 +25,6 @@ struct WeightedEMParallaxAwareVonMisesFisherFactory: public WeightedEMVonMisesFi
 
     struct Configuration: public WEMVMMFactory::Configuration
     {
-        bool parallaxCompensation {true};
-
         void init();
 
         void serialize(std::ostream& stream) const;
@@ -333,7 +331,7 @@ void WeightedEMParallaxAwareVonMisesFisherFactory< TVMMDistribution>::reprojectS
 template<class TVMMDistribution>
 void WeightedEMParallaxAwareVonMisesFisherFactory< TVMMDistribution>::prepareSamples(SampleData* samples, const size_t numSamples, const SampleStatistics &sampleStatistics, const Configuration &cfg) const
 {
-    if(cfg.parallaxCompensation) 
+    if(TVMMDistribution::ParallaxCompensation) 
     {
         openpgl::Vector3 sampleVariance = sampleStatistics.getVaraince();
         float minDistance = length(sampleVariance);
@@ -564,14 +562,12 @@ template<class TVMMDistribution>
 void WeightedEMParallaxAwareVonMisesFisherFactory< TVMMDistribution>::Configuration::serialize(std::ostream& stream) const
 {
     WEMVMMFactory::Configuration::serialize(stream);
-    stream.write(reinterpret_cast<const char*>(&parallaxCompensation), sizeof(bool));
 }
 
 template<class TVMMDistribution>
 void WeightedEMParallaxAwareVonMisesFisherFactory< TVMMDistribution>::Configuration::deserialize(std::istream& stream)
 {
     WEMVMMFactory::Configuration::deserialize(stream);
-    stream.read(reinterpret_cast<char*>(&parallaxCompensation), sizeof(bool));
 }
 
 template<class TVMMDistribution>
@@ -579,7 +575,7 @@ std::string WeightedEMParallaxAwareVonMisesFisherFactory< TVMMDistribution>::Con
 {
     std::stringstream ss;
     ss << WEMVMMFactory::Configuration::toString();
-    ss << "\tparallaxCompensation = " << parallaxCompensation << std::endl;
+    ss << "\tparallaxCompensation = " << TVMMDistribution::ParallaxCompensation << std::endl;
     return ss.str();
 }
 

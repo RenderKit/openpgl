@@ -38,7 +38,6 @@ struct ISurfaceSamplingDistribution
     virtual const IRegion* getRegion() const = 0;
 
 protected:
-    //bool m_useParallaxCompensation{true};
     //const IRegion* m_region {nullptr};
 };
 
