@@ -7,7 +7,7 @@
 #include "../../data/SampleData.h"
 #include "../../include/openpgl/types.h"
 
-#include "WeightedEMParallaxAwareVMMFactory.h"
+#include "ParallaxAwareVonMisesFisherWeightedEMFactory.h"
 #include "VMMChiSquareComponentSplitter.h"
 #include "VMMChiSquareComponentMerger.h"
 
@@ -28,7 +28,7 @@ public:
     typedef TVMMDistribution VMM;
 
     //typedef WeightedEMVonMisesFisherFactory<VMM> WeightedEMFactory;
-    typedef WeightedEMParallaxAwareVonMisesFisherFactory<VMM> WeightedEMFactory;
+    typedef ParallaxAwareVonMisesFisherWeightedEMFactory<VMM> WeightedEMFactory;
     typedef VonMisesFisherChiSquareComponentSplitter<WeightedEMFactory> Splitter;
     typedef VonMisesFisherChiSquareComponentMerger<WeightedEMFactory> Merger;
 

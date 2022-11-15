@@ -256,7 +256,7 @@ void ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents,UseParallaxCompen
     const div_t tmpIdx0 = div( idx0, VecSize);
     const div_t tmpIdx1 = div( idx1, VecSize);
 
-    const div_t tmpIdx2 = div( this->_numComponents -1, VecSize);
+    //const div_t tmpIdx2 = div( this->_numComponents -1, VecSize);
     if (idx0 != idx1)
     {
         const float weight0 = _weights[tmpIdx0.quot][tmpIdx0.rem];

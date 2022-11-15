@@ -7,7 +7,7 @@
 #include "field/ISurfaceVolumeField.h"
 #include "field/SurfaceVolumeField.h"
 
-#include "directional/vmm/ParallaxAwareVMM.h"
+#include "directional/vmm/ParallaxAwareVonMisesFisherMixture.h"
 #include "directional/vmm/AdaptiveSplitandMergeFactory.h"
 #include "directional/vmm/VMMSurfaceSamplingDistribution.h"
 #include "directional/vmm/VMMVolumeSamplingDistribution.h"
