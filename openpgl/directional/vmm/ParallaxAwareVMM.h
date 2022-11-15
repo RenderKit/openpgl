@@ -126,14 +126,11 @@ public:
 
     std::string toString() const;
 
-    // stuff
     void _calculateNormalization();
 
     void _calculateMeanCosines();
 
     void _normalizeWeights();
-
-private:
 
 };
 

@@ -7,7 +7,6 @@
 #include "../../data/SampleData.h"
 #include "../../include/openpgl/types.h"
 
-#include "WeightedEMVMMFactory.h"
 #include "WeightedEMParallaxAwareVMMFactory.h"
 #include "VMMChiSquareComponentSplitter.h"
 #include "VMMChiSquareComponentMerger.h"
