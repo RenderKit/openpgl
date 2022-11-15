@@ -16,8 +16,6 @@
 #include "data/SampleData.h"
 #include "data/SampleDataStorage.h"
 
-#include "sampler/Sampler.h"
-
 #include <cstring>
 
 using namespace openpgl;
@@ -184,30 +182,6 @@ extern "C" OPENPGL_DLLEXPORT  void pglFieldReset(PGLField field)OPENPGL_CATCH_BE
     gField->resetField();
 }
 OPENPGL_CATCH_END()
-
-/*
-extern "C" OPENPGL_DLLEXPORT  PGLRegion pglFieldGetSurfaceRegion(PGLField field, pgl_point3f position, PGLSampler* sampler)OPENPGL_CATCH_BEGIN
-{
-    const openpgl::Point3 pos(position.x, position.y, position.z);
-    SamplerC gSampler(sampler);
-    float sample1D = gSampler.next1D();
-    auto *gField = (GuidingField *)field;
-    const IRegion* gRegion = gField->getSurfaceGuidingRegion(pos, sample1D);
-    return (PGLRegion) gRegion;
-}
-OPENPGL_CATCH_END(nullptr)
-
-extern "C" OPENPGL_DLLEXPORT  PGLRegion pglFieldGetVolumeRegion(PGLField field, pgl_point3f position, PGLSampler* sampler)OPENPGL_CATCH_BEGIN
-{
-    const openpgl::Point3 pos(position.x, position.y, position.z);
-    SamplerC gSampler(sampler);
-    float sample1D = gSampler.next1D();
-    auto *gField = (GuidingField *)field;
-    const IRegion* gRegion = gField->getVolumeGuidingRegion(pos, sample1D);
-    return (PGLRegion) gRegion;
-}
-OPENPGL_CATCH_END(nullptr)
-*/
 
 extern "C" OPENPGL_DLLEXPORT  PGLSurfaceSamplingDistribution pglFieldNewSurfaceSamplingDistribution(PGLField field)OPENPGL_CATCH_BEGIN
 {
@@ -446,11 +420,10 @@ extern "C" OPENPGL_DLLEXPORT int pglPathSegmentGetNumSamples(PGLPathSegmentStora
     return gPathSegmentStorage->getNumSamples();
 }
 
-extern "C" OPENPGL_DLLEXPORT size_t pglPathSegmentStoragePrepareSamples(PGLPathSegmentStorage pathSegmentStorage, const bool spaltSamples, PGLSampler* sampler,  const bool useNEEMiWeights, const bool guideDirectLight, const bool rrAffectsDirectContribution)
+extern "C" OPENPGL_DLLEXPORT size_t pglPathSegmentStoragePrepareSamples(PGLPathSegmentStorage pathSegmentStorage, const bool useNEEMiWeights, const bool guideDirectLight, const bool rrAffectsDirectContribution)
 {
     auto *gPathSegmentStorage = (openpgl::PathSegmentDataStorage *)pathSegmentStorage;
-    SamplerC gSampler(sampler);
-    return gPathSegmentStorage->prepareSamples(spaltSamples, &gSampler, useNEEMiWeights, guideDirectLight, rrAffectsDirectContribution);
+    return gPathSegmentStorage->prepareSamples(useNEEMiWeights, guideDirectLight, rrAffectsDirectContribution);
 }
 
 extern "C" OPENPGL_DLLEXPORT pgl_vec3f pglPathSegmentStorageCalculatePixelEstimate(PGLPathSegmentStorage pathSegmentStorage, const bool rrAffectsDirectContribution)

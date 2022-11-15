@@ -7,7 +7,6 @@
 
 #include "Region.h"
 #include "Device.h"
-#include "Sampler.h"
 #include "SampleStorage.h"
 
 #include <string>
@@ -101,24 +100,6 @@ struct Field
 
     /// Checks if the guiding information of the Field is valid (e.g., contains no invalid directional distributions). 
     bool Validate() const;
-
-    /**
-     * @brief Returns the spatial surface Region containing the approximation of the local incident radiance Distribution.
-     *
-     * @param position
-     * @param sampler
-     * @return Region
-     */
-    //Region GetSurfaceRegion(pgl_point3f position, Sampler* sampler);
-
-    /**
-     * @brief Returns the spatial volume Region containing the approximation of the local incident radiance Distribution.
-     *
-     * @param position
-     * @param sampler
-     * @return Region
-     */
-    //Region GetVolumeRegion(pgl_point3f position, Sampler* sampler);
 
     friend struct openpgl::cpp::SurfaceSamplingDistribution;
     friend struct openpgl::cpp::VolumeSamplingDistribution;

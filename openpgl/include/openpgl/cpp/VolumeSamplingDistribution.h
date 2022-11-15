@@ -223,8 +223,6 @@ OPENPGL_INLINE bool VolumeSamplingDistribution::Init(const Field* field, const p
 OPENPGL_INLINE Region VolumeSamplingDistribution::GetRegion() const
 {
     OPENPGL_ASSERT(m_volumeSamplingDistributionHandle);
-    //OPENPGL_ASSERT(sampler);
-    //OPENPGL_ASSERT(&sampler->m_samplerHandle);
     PGLRegion regionHandle = pglVolumeSamplingGetRegion(m_volumeSamplingDistributionHandle);
     return Region(regionHandle);
 }

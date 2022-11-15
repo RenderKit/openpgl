@@ -5,7 +5,6 @@
 
 #include "../openpgl.h"
 #include "PathSegment.h"
-#include "Sampler.h"
 #include "SampleData.h"
 
 namespace openpgl
@@ -40,14 +39,12 @@ struct PathSegmentStorage
     /**
      * @brief  Generates and internally stores -radiance- samples from the the collected path segments.
      * 
-     * @param splatSamples If the samples generated samples should be spatially jittered (i.e., to share information with neighboring cells). DEPRECATED
-     * @param sampler The RNG used during splatting. DEPRECATED
      * @param useNEEMiWeights If the direct illumination should be multiplied with the mis weights for NEE.
      * @param guideDirectLight If the gererated samples should include direct illumination.
      * @param rrAffectsDirectContribution If the Russian roulette probability needs to be integrated into the direct illumination.
      * @return size_t The number of generated samples.
      */
-    size_t PrepareSamples(const bool& splatSamples = false, Sampler* sampler = nullptr, const bool useNEEMiWeights = false, const bool guideDirectLight = false, const bool rrAffectsDirectContribution = true);
+    size_t PrepareSamples(const bool useNEEMiWeights = false, const bool guideDirectLight = false, const bool rrAffectsDirectContribution = true);
 
     /**
      * @brief Calculates the color estimate of the random walk/path from the path segments.
@@ -174,14 +171,10 @@ OPENPGL_INLINE void PathSegmentStorage::Clear()
     pglPathSegmentStorageClear(m_pathSegmentStorageHandle);
 }
 
-OPENPGL_INLINE size_t PathSegmentStorage::PrepareSamples(const bool& splatSamples, Sampler* sampler, const bool useNEEMiWeights, const bool guideDirectLight, const bool rrAffectsDirectContribution)
+OPENPGL_INLINE size_t PathSegmentStorage::PrepareSamples(const bool useNEEMiWeights, const bool guideDirectLight, const bool rrAffectsDirectContribution)
 {
     OPENPGL_ASSERT(m_pathSegmentStorageHandle);
-    //OPENPGL_ASSERT(&sampler.m_samplerHandle);
-    if(sampler)
-        return pglPathSegmentStoragePrepareSamples(m_pathSegmentStorageHandle, splatSamples, &sampler->m_samplerHandle, useNEEMiWeights, guideDirectLight, rrAffectsDirectContribution);
-    else
-        return pglPathSegmentStoragePrepareSamples(m_pathSegmentStorageHandle, splatSamples, nullptr, useNEEMiWeights, guideDirectLight, rrAffectsDirectContribution);
+    return pglPathSegmentStoragePrepareSamples(m_pathSegmentStorageHandle, useNEEMiWeights, guideDirectLight, rrAffectsDirectContribution);
 }
 
 OPENPGL_INLINE pgl_vec3f PathSegmentStorage::CalculatePixelEstimate(const bool rrAffectsDirectContribution) const

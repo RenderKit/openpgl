@@ -13,7 +13,6 @@
 
 #include "common.h"
 #include "region.h"
-#include "sampler.h"
 #include "samplestorage.h"
 
 #ifdef __cplusplus
@@ -50,10 +49,9 @@ OPENPGL_CORE_INTERFACE int pglPathSegmentGetNumSegments(PGLPathSegmentStorage pa
 
 OPENPGL_CORE_INTERFACE int pglPathSegmentGetNumSamples(PGLPathSegmentStorage pathSegmentStorage);
 
-OPENPGL_CORE_INTERFACE size_t pglPathSegmentStoragePrepareSamples(PGLPathSegmentStorage pathSegmentStorage, const bool spaltSamples, PGLSampler* sampler, const bool useNEEMiWeights = false, const bool guideDirectLight = false, const bool rrAffectsDirectContribution = true);
+OPENPGL_CORE_INTERFACE size_t pglPathSegmentStoragePrepareSamples(PGLPathSegmentStorage pathSegmentStorage, const bool useNEEMiWeights = false, const bool guideDirectLight = false, const bool rrAffectsDirectContribution = true);
 
 OPENPGL_CORE_INTERFACE pgl_vec3f pglPathSegmentStorageCalculatePixelEstimate(PGLPathSegmentStorage pathSegmentStorage, const bool rrAffectsDirectContribution = true);
-
 
 OPENPGL_CORE_INTERFACE const PGLSampleData* pglPathSegmentStorageGetSamples(PGLPathSegmentStorage pathSegmentStorage, size_t &nSamples);
 

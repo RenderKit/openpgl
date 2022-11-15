@@ -5,7 +5,6 @@
 
 #include "../openpgl.h"
 #include "Region.h"
-#include "Sampler.h"
 
 namespace openpgl
 {

@@ -14,7 +14,6 @@
 #include "PathSegmentStorage.h"
 #include "Region.h"
 #include "SampleData.h"
-#include "Sampler.h"
 #include "SampleStorage.h"
 #include "SurfaceSamplingDistribution.h"
 #include "VolumeSamplingDistribution.h"

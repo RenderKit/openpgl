@@ -13,7 +13,6 @@
 
 #include "common.h"
 #include "config.h"
-#include "sampler.h"
 #include "samplestorage.h"
 #include "region.h"
 #include "surfacesamplingdistribution.h"
@@ -48,10 +47,6 @@ OPENPGL_CORE_INTERFACE pgl_box3f pglFieldGetSceneBounds(PGLField field);
 OPENPGL_CORE_INTERFACE void pglFieldUpdate(PGLField field, PGLSampleStorage sampleStorage);
 
 OPENPGL_CORE_INTERFACE void pglFieldReset(PGLField field);
-
-//OPENPGL_CORE_INTERFACE PGLRegion pglFieldGetSurfaceRegion(PGLField field, pgl_point3f position, PGLSampler* sampler);
-
-//OPENPGL_CORE_INTERFACE PGLRegion pglFieldGetVolumeRegion(PGLField field, pgl_point3f position, PGLSampler* sampler);
 
 OPENPGL_CORE_INTERFACE PGLSurfaceSamplingDistribution pglFieldNewSurfaceSamplingDistribution(PGLField field);
 

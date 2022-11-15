@@ -219,8 +219,6 @@ OPENPGL_INLINE bool SurfaceSamplingDistribution::SupportsApplyCosineProduct() co
 OPENPGL_INLINE Region SurfaceSamplingDistribution::GetRegion() const
 {
     OPENPGL_ASSERT(m_surfaceSamplingDistributionHandle);
-    //OPENPGL_ASSERT(sampler);
-    //OPENPGL_ASSERT(&sampler->m_samplerHandle);
     PGLRegion regionHandle = pglSurfaceSamplingGetRegion(m_surfaceSamplingDistributionHandle);
     return Region(regionHandle);
 }

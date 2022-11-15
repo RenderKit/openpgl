@@ -6,7 +6,6 @@
 #include "../openpgl_common.h"
 
 #include "SampleData.h"
-#include "../sampler/Sampler.h"
 
 #include <tbb/concurrent_vector.h>
 

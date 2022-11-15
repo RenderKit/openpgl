@@ -6,7 +6,6 @@
 #include "../openpgl_common.h"
 #include "PathSegmentData.h"
 #include "SampleData.h"
-#include "../sampler/Sampler.h"
 #include "../spatial/Region.h"
 
 #define OPENPGL_PATHSEGMENT_STORAGE_USE_ARRAY 
@@ -159,7 +158,7 @@ public:
         m_max_distance = maxDistance;
     }
 
-    size_t prepareSamples(const bool splatSamples, Sampler* sampler, const bool useNEEMiWeights = false, const bool guideDirectLight = false, const bool rrAffectsDirectContribution = true)
+    size_t prepareSamples(const bool useNEEMiWeights = false, const bool guideDirectLight = false, const bool rrAffectsDirectContribution = true)
     {
         const float minPDF {0.1f};
         const openpgl::Vector3 maxThroughput {10.0f};
@@ -203,7 +202,7 @@ public:
                 openpgl::Vector3 dir = openpgl::Vector3(currentPathSegment.directionIn.x, currentPathSegment.directionIn.y, currentPathSegment.directionIn.z);
                 float pdf = std::max(minPDF,currentPathSegment.pdfDirectionIn);
                 uint32_t flags{0};
-                const IRegion* regionPtr = (const IRegion*)currentPathSegment.regionPtr;
+                //const IRegion* regionPtr = (const IRegion*)currentPathSegment.regionPtr;
                 //OPENPGL_ASSERT(regionPtr != nullptr);
                 bool insideVolume = currentPathSegment.volumeScatter;
                 if(insideVolume)
@@ -286,11 +285,6 @@ public:
                         dsd.pdf = pdf;
                         dsd.distance = distance;
                         dsd.flags = flags;
-                        //m_sampleStorage.emplace_back(dsd, regionPtr);
-                        if(sampler && regionPtr !=nullptr && splatSamples)
-                        {
-                            regionPtr->splatSample(dsd,sampler->next2D()); 
-                        }
 #if defined(OPENPGL_PATHSEGMENT_STORAGE_USE_ARRAY)
                         if(m_sample_idx+1 <= m_max_sample_size)
                         {
