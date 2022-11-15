@@ -4,7 +4,6 @@
 #pragma once
 
 #include "../../openpgl_common.h"
-#include "VMM.h"
 
 #include "WeightedEMVMMFactory.h"
 #include "VMMChiSquareComponentSplitter.h"

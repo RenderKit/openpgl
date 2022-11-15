@@ -4,7 +4,6 @@
 #pragma once
 
 #include "../../openpgl_common.h"
-#include "VMM.h"
 #include "../../data/SampleData.h"
 #include "../../include/openpgl/types.h"
 
