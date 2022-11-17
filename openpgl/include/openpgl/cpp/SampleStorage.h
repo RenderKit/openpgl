@@ -61,6 +61,14 @@ struct SampleStorage
     void AddSamples(const SampleData* samples, size_t numSamples);
 
     /**
+     * @brief Adds an array of invalid samples to the storage container.
+     * 
+     * @param samples Pointer to the beginning of the SampleData array.
+     * @param numSamples Number of SampleData elements stored in the array.
+     */
+    void AddInvalidSamples(const InvalidSampleData* samples, size_t numSamples);
+
+    /**
      * @brief Reserves initial space/memory for the sample storage container.
      * 
      * @param sizeSurface
@@ -83,6 +91,12 @@ struct SampleStorage
 
     /// Returns the number of volume samples currently stored inside the storage container.
     size_t GetSizeVolume() const;
+
+    /// Returns the number of invalid surface samples currently stored inside the storage container.
+    size_t GetSizeInvalidSurface() const;
+
+    /// Returns the number of invalid volume samples currently stored inside the storage container.
+    size_t GetSizeInvalidVolume() const;
 
     /**
      * @brief Returns a volume sample from the surface sample storage.
@@ -154,6 +168,13 @@ OPENPGL_INLINE void SampleStorage::AddSamples(const SampleData* samples, size_t 
     pglSampleStorageAddSamples(m_sampleStorageHandle, samples, numSamples);
 }
 
+OPENPGL_INLINE void SampleStorage::AddInvalidSamples(const InvalidSampleData* samples, size_t numSamples)
+{
+    OPENPGL_ASSERT(m_sampleStorageHandle);
+    pglSampleStorageAddInvalidSamples(m_sampleStorageHandle, samples, numSamples);
+}
+
+
 OPENPGL_INLINE void SampleStorage::Reserve(const size_t& sizeSurface, const size_t& sizeVolume)
 {
     OPENPGL_ASSERT(m_sampleStorageHandle);
@@ -188,6 +209,18 @@ OPENPGL_INLINE size_t SampleStorage::GetSizeVolume() const
 {
     OPENPGL_ASSERT(m_sampleStorageHandle);
     return pglSampleStorageGetSizeVolume(m_sampleStorageHandle);
+}
+
+OPENPGL_INLINE size_t SampleStorage::GetSizeInvalidSurface() const
+{
+    OPENPGL_ASSERT(m_sampleStorageHandle);
+    return pglSampleStorageGetSizeInvalidSurface(m_sampleStorageHandle);
+}
+
+OPENPGL_INLINE size_t SampleStorage::GetSizeInvalidVolume() const
+{
+    OPENPGL_ASSERT(m_sampleStorageHandle);
+    return pglSampleStorageGetSizeInvalidVolume(m_sampleStorageHandle);
 }
 
 OPENPGL_INLINE SampleData SampleStorage::GetSampleSurface(const int idx) const

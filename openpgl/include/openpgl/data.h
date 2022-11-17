@@ -48,6 +48,15 @@ struct PGLSampleData
     uint32_t flags;
 };
 
+
+struct PGLInvalidSampleData
+{
+    /// the position of the invalid sample
+    pgl_point3f position;
+    /// if the position is inside a volume
+    bool volume;
+};
+
 /**
  * @brief 
  * 

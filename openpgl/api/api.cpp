@@ -343,11 +343,22 @@ extern "C" OPENPGL_DLLEXPORT void pglSampleStorageAddSamples(PGLSampleStorage sa
     gSampleStorage->addSamples(opglSamples, numSamples);    
 }
 
+extern "C" OPENPGL_DLLEXPORT void pglSampleStorageAddInvalidSamples(PGLSampleStorage sampleStorage, const PGLInvalidSampleData* samples, size_t numSamples)
+{
+    auto *gSampleStorage = (openpgl::SampleDataStorage *)sampleStorage;
+
+    openpgl::InvalidSampleData* opglSamples = (openpgl::InvalidSampleData*)samples;
+    gSampleStorage->addInvalidSamples(opglSamples, numSamples);    
+}
+
 extern "C" OPENPGL_DLLEXPORT void pglSampleStorageReserve(PGLSampleStorage sampleStorage, const size_t sizeSurface, const size_t sizeVolume)
 {
     auto *gSampleStorage = (openpgl::SampleDataStorage *)sampleStorage;
     gSampleStorage->reserveSurface(sizeSurface);
     gSampleStorage->reserveVolume(sizeVolume);
+
+    gSampleStorage->reserveInvalidSurface(sizeSurface);
+    gSampleStorage->reserveInvalidVolume(sizeVolume);
 }
 
 extern "C" OPENPGL_DLLEXPORT void pglSampleStorageClear(PGLSampleStorage sampleStorage)
@@ -355,6 +366,10 @@ extern "C" OPENPGL_DLLEXPORT void pglSampleStorageClear(PGLSampleStorage sampleS
     auto *gSampleStorage = (openpgl::SampleDataStorage *)sampleStorage;
     gSampleStorage->clearSurface();
     gSampleStorage->clearVolume();
+
+    gSampleStorage->clearInvalidSurface();
+    gSampleStorage->clearInvalidVolume();
+
 }
 
 extern "C" OPENPGL_DLLEXPORT void pglSampleStorageClearSurface(PGLSampleStorage sampleStorage)
@@ -379,6 +394,18 @@ extern "C" OPENPGL_DLLEXPORT size_t pglSampleStorageGetSizeVolume(PGLSampleStora
 {
     auto *gSampleStorage = (openpgl::SampleDataStorage *)sampleStorage;
     return gSampleStorage->sizeVolume();
+}
+
+extern "C" OPENPGL_DLLEXPORT size_t pglSampleStorageGetSizeInvalidSurface(PGLSampleStorage sampleStorage)
+{
+    auto *gSampleStorage = (openpgl::SampleDataStorage *)sampleStorage;
+    return gSampleStorage->sizeInvalidSurface();
+}
+
+extern "C" OPENPGL_DLLEXPORT size_t pglSampleStorageGetSizeInvalidVolume(PGLSampleStorage sampleStorage)
+{
+    auto *gSampleStorage = (openpgl::SampleDataStorage *)sampleStorage;
+    return gSampleStorage->sizeInvalidVolume();
 }
 
 extern "C" OPENPGL_DLLEXPORT PGLSampleData pglSampleStorageGetSampleSurface(PGLSampleStorage sampleStorage, const int idx)
@@ -445,9 +472,9 @@ extern "C" OPENPGL_DLLEXPORT void pglSampleDataSetFlags(PGLSampleData sampleData
 // PathSegmentStorage /////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
-extern "C" OPENPGL_DLLEXPORT PGLPathSegmentStorage pglNewPathSegmentStorage()OPENPGL_CATCH_BEGIN
+extern "C" OPENPGL_DLLEXPORT PGLPathSegmentStorage pglNewPathSegmentStorage(bool trackInvalidSamples)OPENPGL_CATCH_BEGIN
 {
-    openpgl::PathSegmentDataStorage* pathSegmentStorage = new openpgl::PathSegmentDataStorage();
+    openpgl::PathSegmentDataStorage* pathSegmentStorage = new openpgl::PathSegmentDataStorage(trackInvalidSamples);
     return (PGLPathSegmentStorage) pathSegmentStorage;
 }
 OPENPGL_CATCH_END(nullptr)
@@ -515,6 +542,19 @@ extern "C" OPENPGL_DLLEXPORT const PGLSampleData* pglPathSegmentStorageGetSample
     return (PGLSampleData*)opglSamples;
 }
 
+extern "C" OPENPGL_DLLEXPORT int pglPathSegmentGetNumInvalidSamples(PGLPathSegmentStorage pathSegmentStorage)
+{
+    auto *gPathSegmentStorage = (openpgl::PathSegmentDataStorage *)pathSegmentStorage;
+    return gPathSegmentStorage->getNumInvalidSamples();
+}
+
+extern "C" OPENPGL_DLLEXPORT const PGLInvalidSampleData* pglPathSegmentStorageGetInvalidSamples(PGLPathSegmentStorage pathSegmentStorage, size_t &nSamples)
+{
+    auto *gPathSegmentStorage = (openpgl::PathSegmentDataStorage *)pathSegmentStorage;
+    const openpgl::InvalidSampleData* opglSamples = gPathSegmentStorage->getInvalidSamples();
+    nSamples = gPathSegmentStorage->getNumInvalidSamples();
+    return (PGLInvalidSampleData*)opglSamples;
+}
 
 /*
 extern "C" OPENPGL_DLLEXPORT void pglPathSegmentStorageAddSegment(PGLPathSegmentStorage pathSegmentStorage, PGLPathSegment pathSegment)

@@ -22,6 +22,10 @@ struct SampleDataStorage
     SampleDataContainer m_surfaceContainer;
     SampleDataContainer m_volumeContainer;
 
+    typedef tbb::concurrent_vector<InvalidSampleData> InvalidSampleDataContainer;
+    InvalidSampleDataContainer m_invalidSurfaceContainer;
+    InvalidSampleDataContainer m_invalidVolumeContainer;
+
     static SampleDataStorage* newSampleDataStorage()
     {
         return new openpgl::SampleDataStorage();
@@ -69,7 +73,7 @@ struct SampleDataStorage
         fb.close();
     }
 
-    inline void addSample(SampleData sample)
+    inline void addSample(const SampleData& sample)
     {
         if(isInsideVolume(sample))
         {
@@ -88,6 +92,27 @@ struct SampleDataStorage
             addSample(samples[i]);
         }
     }
+
+    inline void addInvalidSample(const InvalidSampleData& sample)
+    {
+        if(sample.volume)
+        {
+            m_invalidVolumeContainer.push_back(sample);
+        }
+        else
+        {
+            m_invalidSurfaceContainer.push_back(sample);
+        }
+    }
+
+    inline void addInvalidSamples(const InvalidSampleData* samples, int nSamples)
+    {
+        for (int i = 0; i<nSamples; i++)
+        {
+            addInvalidSample(samples[i]);
+        }
+    }
+
 
     inline void reserveSurface(const size_t &size)
     {
@@ -155,6 +180,71 @@ struct SampleDataStorage
         std::sort(m_volumeContainer.begin(), m_volumeContainer.end(), SampleDataLess);
     }
 
+    inline void reserveInvalidSurface(const size_t &size)
+    {
+        m_invalidSurfaceContainer.reserve(size);
+    }
+
+    inline size_t sizeInvalidSurface() const
+    {
+        return m_invalidSurfaceContainer.size();
+    }
+
+    inline InvalidSampleData getInvalidSampleSurface(const int idx) const
+    {
+        OPENPGL_ASSERT(idx >= 0);
+        OPENPGL_ASSERT(idx < m_invalidSurfaceContainer.size());
+        
+        InvalidSampleData isd;
+        if(idx < m_invalidSurfaceContainer.size())
+        {
+            isd = m_invalidSurfaceContainer[idx];
+        }
+        return isd;
+    }
+
+    inline void clearInvalidSurface()
+    {
+        m_invalidSurfaceContainer.clear();
+    }
+
+    void sortInvalidSurface()
+    {
+        std::sort(m_invalidSurfaceContainer.begin(), m_invalidSurfaceContainer.end(), InvalidSampleDataLess);
+    }
+
+    inline void reserveInvalidVolume(const size_t &size)
+    {
+        m_invalidVolumeContainer.reserve(size);
+    }
+
+    inline size_t sizeInvalidVolume() const
+    {
+        return m_invalidVolumeContainer.size();
+    }
+
+    inline InvalidSampleData getInvalidSampleVolume(const int idx) const
+    {
+        OPENPGL_ASSERT(idx >= 0);
+        OPENPGL_ASSERT(idx < m_invalidVolumeContainer.size());
+
+        InvalidSampleData isd;
+        if(idx < m_invalidVolumeContainer.size())
+        {
+            isd = m_invalidVolumeContainer[idx];
+        }
+        return isd;
+    }
+
+    inline void clearInvalidVolume()
+    {
+        m_invalidVolumeContainer.clear();
+    }
+
+    void sortInvalidVolume()
+    {
+        std::sort(m_invalidVolumeContainer.begin(), m_invalidVolumeContainer.end(), InvalidSampleDataLess);
+    }
 
     void exportSurfaceSamplesToObj(std::string objFileName, bool pointsOnly = true)
     {
@@ -190,6 +280,22 @@ struct SampleDataStorage
             SampleData dsd = m_volumeContainer[n];
             stream.write(reinterpret_cast<const char*>(&dsd), sizeof(SampleData));
         }
+
+        size_t num_invalid_surface_samples = m_invalidSurfaceContainer.size();
+        stream.write(reinterpret_cast<const char*>(&num_invalid_surface_samples), sizeof(size_t));
+        for ( size_t n = 0; n < num_invalid_surface_samples; n++)
+        {
+            InvalidSampleData isd = m_invalidSurfaceContainer[n];
+            stream.write(reinterpret_cast<const char*>(&isd), sizeof(InvalidSampleData));
+        }
+
+        size_t num_invalid_volume_samples = m_invalidVolumeContainer.size();
+        stream.write(reinterpret_cast<const char*>(&num_invalid_volume_samples), sizeof(size_t));
+        for ( size_t n = 0; n < num_invalid_volume_samples; n++)
+        {
+            InvalidSampleData isd = m_invalidVolumeContainer[n];
+            stream.write(reinterpret_cast<const char*>(&isd), sizeof(InvalidSampleData));
+        }
     }
 
     void deserialize(std::istream& stream)
@@ -212,6 +318,26 @@ struct SampleDataStorage
             SampleData dsd;
             stream.read(reinterpret_cast<char*>(&dsd), sizeof(SampleData));
             m_volumeContainer.push_back(dsd);
+        }
+
+        size_t num_invalid_surface_samples;
+        stream.read(reinterpret_cast<char*>(&num_invalid_surface_samples), sizeof(size_t));
+        m_invalidSurfaceContainer.reserve(num_invalid_surface_samples);
+        for ( size_t n = 0; n < num_invalid_surface_samples; n++)
+        {
+            InvalidSampleData isd;
+            stream.read(reinterpret_cast<char*>(&isd), sizeof(InvalidSampleData));
+            m_invalidSurfaceContainer.push_back(isd);
+        }
+
+        size_t num_invalid_volume_samples;
+        stream.read(reinterpret_cast<char*>(&num_invalid_volume_samples), sizeof(size_t));
+        m_invalidVolumeContainer.reserve(num_invalid_volume_samples);
+        for ( size_t n = 0; n < num_invalid_volume_samples; n++)
+        {
+            InvalidSampleData isd;
+            stream.read(reinterpret_cast<char*>(&isd), sizeof(InvalidSampleData));
+            m_invalidVolumeContainer.push_back(isd);
         }
     }
 

@@ -22,7 +22,7 @@ namespace cpp
 
 struct PathSegmentStorage
 {
-    PathSegmentStorage();
+    PathSegmentStorage(bool trackInvalidSamples = false);
     ~PathSegmentStorage();
 
     PathSegmentStorage(const PathSegmentStorage&) = delete;
@@ -66,6 +66,14 @@ struct PathSegmentStorage
      * @return const SampleData* The pointer to the sample data array.
      */
     const SampleData* GetSamples(size_t &nSamples);
+
+    /**
+     * @brief Returns a pointer to the invalid samples generated from the path segments.
+     * 
+     * @param nSamples The size of the array of the returned pointer.
+     * @return const SampleData* The pointer to the sample data array.
+     */
+    const InvalidSampleData* GetInvalidSamples(size_t &nSamples);
 
     /**
      * @brief Adds a new PathSegment to the end of the path segment list and returns a pointer to it.  
@@ -121,6 +129,13 @@ struct PathSegmentStorage
      */
     int GetNumSamples() const;
 
+    /**
+     * @brief Gets the number of invalid samples generated 
+     * from the path segments.
+     * 
+     * @return int number of generated or added samples.
+     */
+    int GetNumInvalidSamples() const;
 
     /**
      * @brief Validates the PathSegments as well as the generated SampleData.
@@ -150,9 +165,9 @@ struct PathSegmentStorage
 /// Implementation
 ////////////////////////////////////////////////////////////
 
-OPENPGL_INLINE PathSegmentStorage::PathSegmentStorage()
+OPENPGL_INLINE PathSegmentStorage::PathSegmentStorage(bool trackInvalidSamples)
 { 
-    m_pathSegmentStorageHandle = pglNewPathSegmentStorage();
+    m_pathSegmentStorageHandle = pglNewPathSegmentStorage(trackInvalidSamples);
 }
 
 OPENPGL_INLINE PathSegmentStorage::~PathSegmentStorage()
@@ -215,7 +230,6 @@ OPENPGL_INLINE void PathSegmentStorage::SetMaxDistance(const float maxDistance)
 {
     OPENPGL_ASSERT(m_pathSegmentStorageHandle);
     pglPathSegmentSetMaxDistance(m_pathSegmentStorageHandle, maxDistance);
-
 }
 
 OPENPGL_INLINE float PathSegmentStorage::GetMaxDistance() const
@@ -234,6 +248,18 @@ OPENPGL_INLINE int PathSegmentStorage::GetNumSamples() const
 {
     OPENPGL_ASSERT(m_pathSegmentStorageHandle);
     return pglPathSegmentGetNumSamples(m_pathSegmentStorageHandle);
+}
+
+OPENPGL_INLINE int PathSegmentStorage::GetNumInvalidSamples() const
+{
+    OPENPGL_ASSERT(m_pathSegmentStorageHandle);
+    return pglPathSegmentGetNumInvalidSamples(m_pathSegmentStorageHandle);
+}
+
+OPENPGL_INLINE const InvalidSampleData* PathSegmentStorage::GetInvalidSamples(size_t &nSamples)
+{
+    OPENPGL_ASSERT(m_pathSegmentStorageHandle);
+    return pglPathSegmentStorageGetInvalidSamples(m_pathSegmentStorageHandle, nSamples);
 }
 
 OPENPGL_INLINE bool PathSegmentStorage::Validate() const

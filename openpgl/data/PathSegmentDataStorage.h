@@ -15,7 +15,9 @@ namespace openpgl
 {
 struct PathSegmentDataStorage
 {
-    PathSegmentDataStorage() = default;
+    PathSegmentDataStorage(bool trackInvalidSamples = false){
+        m_track_invalid_samples = trackInvalidSamples;
+    }
 
     PathSegmentDataStorage(const PathSegmentDataStorage&) = delete;
 
@@ -28,6 +30,9 @@ struct PathSegmentDataStorage
 
         if(m_sampleStorage)
             delete[] m_sampleStorage;
+
+        if(m_invalidSampleStorage)
+            delete[] m_invalidSampleStorage;
 #endif
     };
 
@@ -42,9 +47,15 @@ private:
     int m_sample_idx = {-1};
     int m_max_sample_size = {0};
 
+    bool m_track_invalid_samples {false};
+    InvalidSampleData* m_invalidSampleStorage {nullptr};
+    int m_invalid_sample_idx = {-1};
+    int m_max_invalid_sample_size = {0};
+
 #else
     std::vector<PathSegmentData> m_segmentStorage;  
     std::vector<SampleData> m_sampleStorage;
+    std::vector<InvalidSampleData> m_invalidSampleStorage;
 #endif
 public:
     void reserve(const size_t &size)
@@ -65,11 +76,20 @@ public:
         m_sampleStorage = new SampleData[size];
         m_sample_idx = -1;
         m_max_sample_size = size;
+
+        if(m_invalidSampleStorage)
+            delete[] m_invalidSampleStorage;
+
+        m_invalidSampleStorage = new InvalidSampleData[size];
+        m_invalid_sample_idx = -1;
+        m_max_invalid_sample_size = size;
+
 #else
         if(m_segmentStorage.size() == size)
             return;
         m_segmentStorage.reserve(size);
         m_sampleStorage.reserve(size);
+        m_invalidSampleStorage.reserve(size);
 #endif
     }
 
@@ -88,11 +108,13 @@ public:
         //std::cout << "PathSegmentDataStorage::clear: " << std::endl;
         m_seg_idx = -1;
         m_sample_idx = -1;
+        m_invalid_sample_idx = -1;
 #else
         //m_segmentStorage.clear();
         //m_sampleStorage.clear();
         m_segmentStorage.resize(0);
         m_sampleStorage.resize(0);
+        m_invalidSampleStorage.resize(0);
 #endif      
     }
 
@@ -303,6 +325,23 @@ public:
                     }
 */
                 }
+                else if(m_track_invalid_samples)
+                {
+#if defined(OPENPGL_PATHSEGMENT_STORAGE_USE_ARRAY)
+                    InvalidSampleData isd;
+                    isd.position.x = pos[0];
+                    isd.position.y = pos[1];
+                    isd.position.z = pos[2];
+                    isd.volume = insideVolume;
+                    if(m_invalid_sample_idx+1 <= m_max_invalid_sample_size)
+                    {
+                        m_invalid_sample_idx++;
+                        m_invalidSampleStorage[m_invalid_sample_idx] = isd;
+                    }
+#else
+                    m_invalidSampleStorage.emplace_back(isd);
+#endif
+                }
 
             }
         }
@@ -512,7 +551,6 @@ public:
             ss << "\t valid = " << isValid(sample);
             ss << std::endl;
         }
-
         return ss.str();
     }
 
@@ -524,9 +562,34 @@ public:
 #else
         sampleDataStorage->addSamples(m_sampleStorage.data(), m_sampleData.size());
 #endif
+        if(m_track_invalid_samples)
+        {
+#if defined(OPENPGL_PATHSEGMENT_STORAGE_USE_ARRAY)
+            sampleDataStorage->addInvalidSamples(m_invalidSampleStorage, m_invalid_sample_idx+1);
+#else
+            sampleDataStorage->addInvalidSamples(m_invalidSampleStorage.data(), m_invalidSampleStorage.size());
+#endif
+        }
         clear();
     }
 
+    const InvalidSampleData* getInvalidSamples()const
+    {
+#if defined(OPENPGL_PATHSEGMENT_STORAGE_USE_ARRAY)
+        return m_invalidSampleStorage;
+#else
+        return m_invalidSampleStorage.data();
+#endif
+    }
+
+    int getNumInvalidSamples() const
+    {
+#if defined(OPENPGL_PATHSEGMENT_STORAGE_USE_ARRAY)
+        return m_invalid_sample_idx + 1;
+#else
+        return m_invalidSampleStorage.size();
+#endif
+    }
 
 };
 }

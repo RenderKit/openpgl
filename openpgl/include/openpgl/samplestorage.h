@@ -42,6 +42,8 @@ OPENPGL_CORE_INTERFACE void pglSampleStorageAddSample(PGLSampleStorage sampleSto
 
 OPENPGL_CORE_INTERFACE void pglSampleStorageAddSamples(PGLSampleStorage sampleStorage, const PGLSampleData* samples, size_t numSamples);
 
+OPENPGL_CORE_INTERFACE void pglSampleStorageAddInvalidSamples(PGLSampleStorage sampleStorage, const PGLInvalidSampleData* samples, size_t numSamples);
+
 OPENPGL_CORE_INTERFACE void pglSampleStorageReserve(PGLSampleStorage sampleStorage, const size_t sizeSurface, const size_t sizeVolume);
 
 OPENPGL_CORE_INTERFACE void pglSampleStorageClear(PGLSampleStorage sampleStorage);
@@ -53,6 +55,10 @@ OPENPGL_CORE_INTERFACE void pglSampleStorageClearVolume(PGLSampleStorage sampleS
 OPENPGL_CORE_INTERFACE size_t pglSampleStorageGetSizeSurface(PGLSampleStorage sampleStorage);
 
 OPENPGL_CORE_INTERFACE size_t pglSampleStorageGetSizeVolume(PGLSampleStorage sampleStorage);
+
+OPENPGL_CORE_INTERFACE size_t pglSampleStorageGetSizeInvalidSurface(PGLSampleStorage sampleStorage);
+
+OPENPGL_CORE_INTERFACE size_t pglSampleStorageGetSizeInvalidVolume(PGLSampleStorage sampleStorage);
 
 OPENPGL_CORE_INTERFACE PGLSampleData pglSampleStorageGetSampleSurface(PGLSampleStorage sampleStorage, const int idx);
 

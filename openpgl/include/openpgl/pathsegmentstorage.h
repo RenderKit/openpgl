@@ -31,7 +31,7 @@ typedef PathSegmentStorage *PGLPathSegmentStorage;
 
 typedef PGLPathSegmentData *PGLPathSegment;
 
-OPENPGL_CORE_INTERFACE PGLPathSegmentStorage pglNewPathSegmentStorage();
+OPENPGL_CORE_INTERFACE PGLPathSegmentStorage pglNewPathSegmentStorage(bool trackInvalidSamples);
 
 OPENPGL_CORE_INTERFACE void pglReleasePathSegmentStorage(PGLPathSegmentStorage pathSegmentStorage);
 
@@ -47,11 +47,15 @@ OPENPGL_CORE_INTERFACE int pglPathSegmentGetNumSegments(PGLPathSegmentStorage pa
 
 OPENPGL_CORE_INTERFACE int pglPathSegmentGetNumSamples(PGLPathSegmentStorage pathSegmentStorage);
 
+OPENPGL_CORE_INTERFACE int pglPathSegmentGetNumInvalidSamples(PGLPathSegmentStorage pathSegmentStorage);
+
 OPENPGL_CORE_INTERFACE size_t pglPathSegmentStoragePrepareSamples(PGLPathSegmentStorage pathSegmentStorage, const bool useNEEMiWeights = false, const bool guideDirectLight = false, const bool rrAffectsDirectContribution = true);
 
 OPENPGL_CORE_INTERFACE pgl_vec3f pglPathSegmentStorageCalculatePixelEstimate(PGLPathSegmentStorage pathSegmentStorage, const bool rrAffectsDirectContribution = true);
 
 OPENPGL_CORE_INTERFACE const PGLSampleData* pglPathSegmentStorageGetSamples(PGLPathSegmentStorage pathSegmentStorage, size_t &nSamples);
+
+OPENPGL_CORE_INTERFACE const PGLInvalidSampleData* pglPathSegmentStorageGetInvalidSamples(PGLPathSegmentStorage pathSegmentStorage, size_t &nSamples);
 
 //OPENPGL_CORE_INTERFACE void pglPathSegmentStorageAddSegment(PGLPathSegmentStorage pathSegmentStorage, PGLPathSegment sample);
 
