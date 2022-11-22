@@ -12,7 +12,6 @@ namespace openpgl
     struct IRegion
     {
         virtual ~IRegion(){};
-        virtual void splatSample(SampleData &sample, const Point2 &sample2D) const = 0 ;
 
         public:
         bool valid{true};
