@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include "include/openpgl/common.h"
+
 #define USE_EMBREE_PARALLEL
 #define USE_INTEGER_ARITHMETIC_STATS
 

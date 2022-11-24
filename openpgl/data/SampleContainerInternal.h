@@ -11,17 +11,19 @@
 namespace openpgl
 {
 
-    struct SampleContainerInternal
+    template<typename Type>
+    struct ContainerInternal
     {
-        using value_type = SampleData;
+        //using value_type = SampleData;
         struct Iterator 
         {
             using iterator_category = std::forward_iterator_tag;
             using difference_type   = std::ptrdiff_t;
-            using value_type        = SampleData;
-            using pointer           = SampleData*;
-            using reference         = SampleData&;
+            using value_type        = Type;
+            using pointer           = Type*;
+            using reference         = Type&;
 
+            Iterator() : m_ptr(nullptr) {}
             Iterator(pointer ptr) : m_ptr(ptr) {}
 
             reference operator*() const { return *m_ptr; }
@@ -81,9 +83,10 @@ namespace openpgl
         };
 
         using iterator = Iterator;
+        using value_type = Type;
 
-        SampleContainerInternal() = default;
-        ~SampleContainerInternal()
+        ContainerInternal() = default;
+        ~ContainerInternal()
         {
             delete[] m_data;
             m_data = nullptr;
@@ -107,16 +110,16 @@ namespace openpgl
         }
         const Iterator end() const  { return Iterator(&m_data[m_size-1]); }
 
-        inline SampleData* data() { return m_data; }
+        inline Type* data() { return m_data; }
 
-        inline const SampleData* data() const { return m_data; }
+        inline const Type* data() const { return m_data; }
         
         inline void reserve(size_t size)
         {
             if (size > m_maxSize)
             {
                 delete[] m_data;
-                m_data = new SampleData[size];
+                m_data = new Type[size];
                 m_maxSize = size;
             }
         }
@@ -133,13 +136,13 @@ namespace openpgl
 
         inline void clear() { m_size = 0; }
 
-        SampleData& operator[](size_t idx) { 
+        Type& operator[](size_t idx) { 
             OPENPGL_ASSERT(m_data);
             OPENPGL_ASSERT(m_size > 0);
             OPENPGL_ASSERT( idx < m_size);
             return m_data[idx]; 
         }
-        const SampleData& operator[](size_t idx) const { 
+        const Type& operator[](size_t idx) const { 
             OPENPGL_ASSERT(m_data);
             OPENPGL_ASSERT(m_size > 0);
             OPENPGL_ASSERT(idx < m_size);
@@ -147,7 +150,7 @@ namespace openpgl
         }
 
     private:
-        SampleData* m_data {nullptr};
+        Type* m_data {nullptr};
         size_t m_size {0};
         size_t m_maxSize {0};
 

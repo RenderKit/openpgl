@@ -38,6 +38,10 @@ struct PGLSampleData
     /// a scalar representation of the incident radiance divide by @ref pdf
     float weight;
 
+#ifdef OPENPGL_RGB_WEIGHTS
+    pgl_vec3f weightRGB; 
+#endif
+
     /// the PDF used for sampling @ref direction at @ref position   
     float pdf;
 

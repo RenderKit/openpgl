@@ -13,15 +13,14 @@ namespace openpgl
 {
 
 
-template<int Vecsize, class TDirectionalDistributionFactory, template<typename, typename> class TSpatialStructureBuilder, typename TSurfaceSamplingDistribution, typename TVolumeSamplingDistribution>
+template<int Vecsize, class TDirectionalDistributionFactory, template<typename, typename, typename> class TSpatialStructureBuilder, typename TSurfaceSamplingDistribution, typename TVolumeSamplingDistribution>
 struct SurfaceVolumeField: public ISurfaceVolumeField
 {
 
 private:
 
     using FieldType = Field<Vecsize, TDirectionalDistributionFactory, TSpatialStructureBuilder>;
-    using SampleContainer = SampleDataStorage::SampleDataContainer;
-    using SampleContainerIntern = std::vector<SampleData>;
+    using SampleContainer = SampleDataStorage::SampleContainer;
 public:
 
     using Settings = typename FieldType::Settings;
@@ -106,14 +105,14 @@ public:
         // asyncronous deconsrution of the implicit initialized tbb::arenas and tbb::streams
         tbb::task_scheduler_init anonymous;
     #endif
-        if(samplesSurface.size() > 0) {
+        if(samplesSurface.samples.size() > 0) {
             if(!m_surfaceField.isInitialized()) {
                 m_surfaceField.buildField(samplesSurface);
             } else {
                 m_surfaceField.updateField(samplesSurface);
             }
         }
-        if(samplesVolume.size() > 0) {
+        if(samplesVolume.samples.size() > 0) {
             if(!m_volumeField.isInitialized()) {
                 m_volumeField.buildField(samplesVolume);
             } else {
@@ -125,7 +124,7 @@ public:
 
     void updateFieldSurface(SampleContainer& samplesSurface) override
     {
-        if(samplesSurface.size() > 0) {
+        if(samplesSurface.samples.size() > 0) {
             if(!m_surfaceField.isInitialized()) {
                 m_surfaceField.buildField(samplesSurface);
             } else {
@@ -137,7 +136,7 @@ public:
 
     void updateFieldVolume(SampleContainer& samplesVolume) override
     {
-        if(samplesVolume.size() > 0) {
+        if(samplesVolume.samples.size() > 0) {
             if(!m_volumeField.isInitialized()) { 
                 m_volumeField.buildField(samplesVolume);
             } else {

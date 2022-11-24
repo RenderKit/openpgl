@@ -43,6 +43,11 @@ struct DQTSurfaceSamplingDistribution: public ISurfaceSamplingDistribution {
         return distribution.pdf(dir);
     };
 
+    inline Vector3 incomingRadiance(const Vector3 dir) const override
+    {
+        return Vector3(0.f, 0.f, 0.f);
+    }
+
     inline bool validate() const override {
         return distribution.isValid();
     };

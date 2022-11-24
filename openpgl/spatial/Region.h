@@ -16,6 +16,7 @@ namespace openpgl
         BBox regionBounds;
         TTrainingStatistics trainingStatistics;
         SampleStatistics sampleStatistics;
+        size_t numInvalidSamples {0};
         bool splitFlag {false};
         //bool valid{true};
 
@@ -67,6 +68,7 @@ namespace openpgl
             stream.write(reinterpret_cast<const char*>(&regionBounds), sizeof(regionBounds));
             trainingStatistics.serialize(stream);
             sampleStatistics.serialize(stream);
+            stream.write(reinterpret_cast<const char*>(&numInvalidSamples), sizeof(numInvalidSamples));
             stream.write(reinterpret_cast<const char*>(&splitFlag), sizeof(splitFlag));
         }
 
@@ -77,6 +79,7 @@ namespace openpgl
             stream.read(reinterpret_cast<char*>(&regionBounds), sizeof(regionBounds));
             trainingStatistics.deserialize(stream);
             sampleStatistics.deserialize(stream);
+            stream.read(reinterpret_cast<char*>(&numInvalidSamples), sizeof(numInvalidSamples));
             stream.read(reinterpret_cast<char*>(&splitFlag), sizeof(splitFlag));
         }
 

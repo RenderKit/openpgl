@@ -91,6 +91,16 @@ namespace openpgl
                 (compA.direction.y    == compB.direction.y   &&  ( compA.direction.z < compB.direction.z  ))))))))))))))));
     }
 
+    inline bool InvalidSampleDataEqual(const PGLInvalidSampleData &compA,  const PGLInvalidSampleData &compB)
+    {
+        if(compA.position.x != compB.position.x || compA.position.y != compB.position.y ||
+           compA.position.z != compB.position.z)
+        {
+            return false;
+        }
+        return true;
+    }
+
     inline bool InvalidSampleDataLess(const PGLInvalidSampleData &compA,  const PGLInvalidSampleData &compB )
     {
         return  compA.position.x < compB.position.x    ||

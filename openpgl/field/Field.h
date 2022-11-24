@@ -24,7 +24,7 @@ namespace openpgl
 {
 
 
-template<int Vecsize, class TDirectionalDistributionFactory, template<typename, typename> class TSpatialStructureBuilder>
+template<int Vecsize, class TDirectionalDistributionFactory, template<typename, typename, typename> class TSpatialStructureBuilder>
 struct Field
 {
 public:
@@ -33,14 +33,16 @@ public:
     using DirectionalDistributionFactorySettings = typename TDirectionalDistributionFactory::Configuration;
     using DirectionalDistribution = typename TDirectionalDistributionFactory::Distribution;
 
-    using SampleContainer = SampleDataStorage::SampleDataContainer;
+    using SampleContainer = SampleDataStorage::SampleContainer;
+    using SampleContainerInternal = ContainerInternal<SampleData>;
+    using InvalidSampleContainerInternal = ContainerInternal<InvalidSampleData>;
 
     typedef Region<DirectionalDistribution, typename TDirectionalDistributionFactory::Statistics> RegionType;
     typedef openpgl::Range RangeType;
     typedef std::pair<RegionType, RangeType > RegionStorageType;
     typedef tbb::concurrent_vector< RegionStorageType > RegionStorageContainerType;
 
-    using SpatialStructureBuilder = TSpatialStructureBuilder<RegionType, SampleContainerInternal>;
+    using SpatialStructureBuilder = TSpatialStructureBuilder<RegionType,SampleContainerInternal, InvalidSampleContainerInternal>;
     using SpatialStructure = typename SpatialStructureBuilder::SpatialStructure;
     using SpatialBuilderSettings = typename SpatialStructureBuilder::Settings;
 
@@ -150,22 +152,35 @@ public:
     {
         m_iteration = 0;
         m_totalSPP  = 0;
-        if(samples.size() > 0)
+        if(samples.samples.size() > 0)
         {
             Timer updateAll;
             Timer updateStep;
             
-            if(samples_.capacity() < samples.size()) {
-                samples_.reserve(2 * samples.size());
+            if(samples_.capacity() < samples.samples.size()) {
+                samples_.reserve(2 * samples.samples.size());
             }
-            samples_.resize(samples.size());
+            samples_.resize(samples.samples.size());
 #ifdef USE_EMBREE_PARALLEL
-            embree::parallel_for( size_t(0), samples.size(), size_t(4*4096), [&](const embree::range<size_t>& r) {
+            embree::parallel_for( size_t(0), samples.samples.size(), size_t(4*4096), [&](const embree::range<size_t>& r) {
 #else
-            tbb::parallel_for( tbb::blocked_range<int>(0,samples.size()), [&](tbb::blocked_range<int> r) {
+            tbb::parallel_for( tbb::blocked_range<int>(0,samples.samples.size()), [&](tbb::blocked_range<int> r) {
 #endif
                 for (size_t i=r.begin(); i<r.end(); i++) 
-                    samples_[i] = samples[i];
+                    samples_[i] = samples.samples[i];
+            });
+
+            if(invalidSamples_.capacity() < samples.invalidSamples.size()) {
+                invalidSamples_.reserve(2 * samples.invalidSamples.size());
+            }
+            invalidSamples_.resize(samples.invalidSamples.size());
+#ifdef USE_EMBREE_PARALLEL
+            embree::parallel_for( size_t(0), samples.invalidSamples.size(), size_t(4*4096), [&](const embree::range<size_t>& r) {
+#else
+tbb::parallel_for( tbb::blocked_range<int>(0,samples.invalidSamples.size()), [&](tbb::blocked_range<int> r) {
+#endif
+                for (size_t i=r.begin(); i<r.end(); i++) 
+                    invalidSamples_[i] = samples.invalidSamples[i];
             });
             m_timeLastUpdateCopySamples = updateStep.elapsed() * 1e-3f;
             
@@ -188,27 +203,40 @@ public:
 
     void updateField(const SampleContainer& samples)
     {
-        if(samples.size() > 0)
+        if(samples.samples.size() > 0)
         {
             Timer updateAll;
             Timer updateStep;
 
-            if(samples_.capacity() < samples.size()) {
-                samples_.reserve(2 * samples.size());
+            if(samples_.capacity() < samples.samples.size()) {
+                samples_.reserve(2 * samples.samples.size());
             }
-            samples_.resize(samples.size());
+            samples_.resize(samples.samples.size());
 #ifdef USE_EMBREE_PARALLEL
-            embree::parallel_for( size_t(0), samples.size(), size_t(4*4096), [&](const embree::range<size_t>& r) {
+            embree::parallel_for( size_t(0), samples.samples.size(), size_t(4*4096), [&](const embree::range<size_t>& r) {
 #else
-        tbb::parallel_for( tbb::blocked_range<int>(0,samples.size()), [&](tbb::blocked_range<int> r) {
+        tbb::parallel_for( tbb::blocked_range<int>(0,samples.samples.size()), [&](tbb::blocked_range<int> r) {
 #endif
                 for (size_t i=r.begin(); i<r.end(); i++) 
-                    samples_[i] = samples[i];
+                    samples_[i] = samples.samples[i];
+            });
+
+            if(invalidSamples_.capacity() < samples.invalidSamples.size()) {
+                invalidSamples_.reserve(2 * samples.invalidSamples.size());
+            }
+            invalidSamples_.resize(samples.invalidSamples.size());
+#ifdef USE_EMBREE_PARALLEL
+            embree::parallel_for( size_t(0), samples.invalidSamples.size(), size_t(4*4096), [&](const embree::range<size_t>& r) {
+#else
+			tbb::parallel_for( tbb::blocked_range<int>(0,samples.invalidSamples.size()), [&](tbb::blocked_range<int> r) {
+#endif
+                for (size_t i=r.begin(); i<r.end(); i++) 
+                    invalidSamples_[i] = samples.invalidSamples[i];
             });
             m_timeLastUpdateCopySamples = updateStep.elapsed() * 1e-3f;
             
             updateStep.reset();
-            updateSpatialStructure(samples_);
+            updateSpatialStructure(samples_, invalidSamples_);
             m_timeLastUpdateSpatialStructureUpdate = updateStep.elapsed() * 1e-3f;
             
             updateStep.reset();
@@ -379,9 +407,10 @@ private:
         }
     }
 
-    inline void updateSpatialStructure(SampleContainerInternal& samples)
+    inline void updateSpatialStructure(SampleContainerInternal& samples, InvalidSampleContainerInternal& invalidSamples)
     {
         m_spatialSubdivBuilder.updateTree(m_spatialSubdiv, samples, m_regionStorageContainer, m_spatialSubdivBuilderSettings);
+		m_spatialSubdivBuilder.insertTree(m_spatialSubdiv, invalidSamples, m_regionStorageContainer);
         if (m_useStochasticNNLookUp)
         {
             m_regionKNNSearchTree.reset();
@@ -422,6 +451,8 @@ private:
                 	typename DirectionalDistributionFactory::FittingStatistics fittingStats;
                 	m_distributionFactory.prepareSamples(samples.data() + regionStorage.second.m_begin, regionStorage.second.m_end - regionStorage.second.m_begin, regionStorage.first.sampleStatistics, m_distributionFactorySettings);
                 	m_distributionFactory.fit(regionStorage.first.distribution, regionStorage.first.trainingStatistics, samples.data() + regionStorage.second.m_begin, regionStorage.second.m_end - regionStorage.second.m_begin, m_distributionFactorySettings, fittingStats);
+					m_distributionFactory.updateFluenceEstimate(regionStorage.first.distribution, samples.data() + regionStorage.second.m_begin, regionStorage.second.m_end - regionStorage.second.m_begin, regionStorage.first.numInvalidSamples, regionStorage.first.sampleStatistics);
+
 					// TODO: we should move setting the pivot to the factory
                 	regionStorage.first.distribution._pivotPosition = sampleMean;
                 	regionStorage.first.valid = regionStorage.first.distribution.isValid();
@@ -463,6 +494,7 @@ private:
             RegionStorageType &regionStorage = m_regionStorageContainer[n];
             if (regionStorage.first.splitFlag)
             {
+                regionStorage.first.distribution.decay(this->m_decayOnSpatialSplit);
                 regionStorage.first.trainingStatistics.decay(this->m_decayOnSpatialSplit);
                 regionStorage.first.splitFlag = false;
             }
@@ -490,7 +522,8 @@ private:
 	                typename DirectionalDistributionFactory::FittingStatistics fittingStats;
 	                m_distributionFactory.prepareSamples(samples.data() + regionStorage.second.m_begin, regionStorage.second.m_end - regionStorage.second.m_begin, regionStorage.first.sampleStatistics, m_distributionFactorySettings);
 	                m_distributionFactory.update(regionStorage.first.distribution, regionStorage.first.trainingStatistics, samples.data() + regionStorage.second.m_begin, regionStorage.second.m_end - regionStorage.second.m_begin, m_distributionFactorySettings, fittingStats);
-	                //regionStorage.first.valid = regionStorage.first.distribution.isValid();
+	                m_distributionFactory.updateFluenceEstimate(regionStorage.first.distribution, samples.data() + regionStorage.second.m_begin, regionStorage.second.m_end - regionStorage.second.m_begin, regionStorage.first.numInvalidSamples, regionStorage.first.sampleStatistics);
+					//regionStorage.first.valid = regionStorage.first.distribution.isValid();
 	                regionStorage.first.valid = regionStorage.first.isValid();
 #ifdef OPENPGL_DEBUG_MODE
 	                if(!regionStorage.first.valid)
@@ -680,6 +713,7 @@ private:
     KNearestRegionsSearchTree<Vecsize> m_regionKNNSearchTree;
 
     SampleContainerInternal samples_;
+    InvalidSampleContainerInternal invalidSamples_;
 
     float m_timeLastUpdate {0.f};
     float m_timeLastUpdateCopySamples {0.f};

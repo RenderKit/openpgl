@@ -16,7 +16,7 @@ struct FieldStatistics;
 struct ISurfaceVolumeField
 {
 
-    using SampleContainer = SampleDataStorage::SampleDataContainer;
+    using SampleContainer = SampleDataStorage::SampleContainer;
 
     virtual ~ISurfaceVolumeField(){};
 

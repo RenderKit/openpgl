@@ -305,6 +305,11 @@ public:
                         dsd.direction.y = dir[1];
                         dsd.direction.z = dir[2];
                         dsd.weight = weight;
+#ifdef OPENPGL_RGB_WEIGHTS
+                        dsd.weightRGB.x = contribution[0]/pdf;
+                        dsd.weightRGB.y = contribution[1]/pdf;
+                        dsd.weightRGB.z = contribution[2]/pdf;
+#endif
                         dsd.pdf = pdf;
                         dsd.distance = distance;
                         dsd.flags = flags;

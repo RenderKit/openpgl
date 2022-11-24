@@ -30,7 +30,7 @@
 namespace openpgl
 {
 
-template<typename TRegion, typename TContainer>
+template<typename TRegion, typename TSamplesContainer, typename TInvalidSamplesContainer>
 struct KDTreePartitionBuilder
 {
     const static PGL_SPATIAL_STRUCTURE_TYPE SPATIAL_STRUCTURE_TYPE = PGL_SPATIAL_STRUCTURE_KDTREE;
@@ -63,7 +63,7 @@ struct KDTreePartitionBuilder
         }
     };
 
-    void build(KDTree &kdTree, const BBox &bounds, TContainer &samples, tbb::concurrent_vector< std::pair<TRegion, Range> > &dataStorage, const Settings &buildSettings) const
+    void build(KDTree &kdTree, const BBox &bounds, TSamplesContainer &samples, tbb::concurrent_vector< std::pair<TRegion, Range> > &dataStorage, const Settings &buildSettings) const
     {
 
         kdTree.init(bounds, 4096);
@@ -73,7 +73,7 @@ struct KDTreePartitionBuilder
         updateTree(kdTree, samples, dataStorage, buildSettings);
     }
 
-    void updateTree(KDTree &kdTree, TContainer &samples, tbb::concurrent_vector< std::pair<TRegion, Range> > &dataStorage, const Settings &buildSettings) const
+    void updateTree(KDTree &kdTree, TSamplesContainer &samples, tbb::concurrent_vector< std::pair<TRegion, Range> > &dataStorage, const Settings &buildSettings) const
     {
         int numEstLeafs = dataStorage.size() + (samples.size()*2)/buildSettings.maxSamples+32;
         kdTree.m_nodes.reserve(4*numEstLeafs);
@@ -117,10 +117,40 @@ struct KDTreePartitionBuilder
         kdTree.finalize();
     }
 
+
+void insertTree(KDTree &kdTree, TInvalidSamplesContainer &samples, tbb::concurrent_vector< std::pair<TRegion, Range> > &dataStorage) const
+    {
+        //int numEstLeafs = dataStorage.size() + (samples.size()*2)/buildSettings.maxSamples+32;
+        //kdTree.m_nodes.reserve(4*numEstLeafs);
+        //dataStorage.reserve(2*numEstLeafs);
+
+        KDNode &root = kdTree.getRoot();
+        //SampleStatistics sampleStats;
+        //sampleStats.clear();
+
+        Range sampleRange;
+        sampleRange.m_begin = 0;
+        sampleRange.m_end = samples.size();
+
+        size_t depth =1;
+
+#ifdef OPENPGL_USE_OMP_THREADING
+    #pragma omp parallel num_threads(nCores)
+    #pragma omp single nowait
+#else
+/*
+#if !defined(__WIN32__) and !defined(__MACOSX__)
+        tbb::task_scheduler_init init(nCores);
+#endif
+*/
+#endif
+        insertTreeNode(&kdTree, root, depth, samples, sampleRange, &dataStorage);
+    }
+
     std::string toString() const;
 
 private:
-
+    template<class TContainer>
     inline typename TContainer::iterator pivotSplitSamples(typename TContainer::iterator begin, typename TContainer::iterator end,
                                                                         uint8_t splitDimension, float pivot) const
     {
@@ -135,11 +165,11 @@ private:
     }
 
 
-    inline typename TContainer::iterator pivotSplitSamplesWithStats(typename TContainer::iterator begin, typename TContainer::iterator end,
+    inline typename TSamplesContainer::iterator pivotSplitSamplesWithStats(typename TSamplesContainer::iterator begin, typename TSamplesContainer::iterator end,
                                                                             uint8_t splitDimension, float pivot, SampleStatistics &statsLeft, SampleStatistics &statsRight) const
     {
-        std::function<bool(typename TContainer::value_type)> pivotSplitPredicate
-                = [splitDimension, pivot, &statsLeft, &statsRight](typename TContainer::value_type sample) -> bool
+        std::function<bool(typename TSamplesContainer::value_type)> pivotSplitPredicate
+                = [splitDimension, pivot, &statsLeft, &statsRight](typename TSamplesContainer::value_type sample) -> bool
         {
             const Vector3 samplePosition(sample.position.x, sample.position.y, sample.position.z);
             bool left = samplePosition[splitDimension] < pivot;
@@ -154,10 +184,11 @@ private:
     }
 
 #ifdef USE_EMBREE_PARALLEL
-    inline size_t pivotSplitSamples2(PGLSampleData* samples, const size_t begin, const size_t end,
+    template<class DataType>
+    inline size_t pivotSplitSamples2(DataType* samples, const size_t begin, const size_t end,
                                                                     uint8_t splitDimension, float pivot) const
     {
-        auto isLeft = [&] (const PGLSampleData &sample) { return Vector3(sample.position.x, sample.position.y, sample.position.z)[splitDimension] < pivot; };
+        auto isLeft = [&] (const DataType &sample) { return Vector3(sample.position.x, sample.position.y, sample.position.z)[splitDimension] < pivot; };
         size_t center = 0;
         bool parallel = (end-begin) < PARALLEL_THRESHOLD ? false : true;
         if (!parallel) {
@@ -230,7 +261,7 @@ private:
     }
 
 
-    void updateTreeNode(KDTree *kdTree, KDNode &node, size_t depth, const BBox bounds, TContainer &samples, const Range sampleRange, const SampleStatistics& sampleStats, tbb::concurrent_vector< std::pair<TRegion, Range> > *dataStorage, const Settings &buildSettings, bool parallel = true) const
+    void updateTreeNode(KDTree *kdTree, KDNode &node, size_t depth, const BBox bounds, TSamplesContainer &samples, const Range sampleRange, const SampleStatistics sampleStats, tbb::concurrent_vector< std::pair<TRegion, Range> > *dataStorage, const Settings &buildSettings, bool parallel = true) const
     {
         if(sampleRange.size() <= 0)
         {
@@ -310,7 +341,7 @@ private:
 #ifdef USE_EMBREE_PARALLEL 
         size_t rPivotItr = 0;
 #else
-        typename TContainer::iterator rPivotItr(nullptr);
+        typename TSamplesContainer::iterator rPivotItr(nullptr);
         auto begin = samples.begin() + sampleRange.m_begin, end = samples.begin() + sampleRange.m_end;
 #endif
         if(kdTree->getNode(nodeIdsLeftRight[0]).isLeaf() || kdTree->getNode(nodeIdsLeftRight[1]).isLeaf() )
@@ -329,9 +360,9 @@ private:
         else
         {
 #ifdef USE_EMBREE_PARALLEL
-            rPivotItr = pivotSplitSamples2(samples.data(), sampleRange.m_begin, sampleRange.m_end, splitDim, splitPos);
+            rPivotItr = pivotSplitSamples2<typename TSamplesContainer::value_type>(samples.data(), sampleRange.m_begin, sampleRange.m_end, splitDim, splitPos);
 #else
-            rPivotItr = pivotSplitSamples(begin, end, splitDim, splitPos);
+            rPivotItr = pivotSplitSamples<TSamplesContainer>(begin, end, splitDim, splitPos);
 #endif
         }
 
@@ -349,19 +380,83 @@ private:
         );
     }
 
+    void insertTreeNode(KDTree *kdTree, KDNode &node, size_t depth, TInvalidSamplesContainer &samples, const Range sampleRange, tbb::concurrent_vector< std::pair<TRegion, Range> > *dataStorage) const
+    {
+        if(sampleRange.size() == 0)
+        {
+            return;
+        }
+        uint8_t splitDim = {0};
+        float splitPos = {0.0f};
+
+        uint32_t nodeIdsLeftRight[2];
+        Range sampleRangeLeftRight[2];
+
+        if (node.isLeaf())
+        {
+            uint32_t dataIdx = node.getDataIdx();
+            std::pair<TRegion, Range> &regionAndRangeData = dataStorage->operator[](dataIdx);
+            regionAndRangeData.first.sampleStatistics.addNumInvalidSamples(sampleRange.size());
+            regionAndRangeData.first.numInvalidSamples = sampleRange.size();
+            return;
+        }
+        else
+        {
+            splitDim = node.getSplitDim();
+            splitPos = node.getSplitPivot();
+            nodeIdsLeftRight[0] = node.getLeftChildIdx();
+            nodeIdsLeftRight[1] = nodeIdsLeftRight[0] + 1;
+        }
+
+        OPENPGL_ASSERT( !node.isLeaf() );
+        OPENPGL_ASSERT (sampleRange.size() > 0);
+
+#ifdef USE_EMBREE_PARALLEL 
+        size_t rPivotItr = 0;
+#else
+        typename TInvalidSamplesContainer::iterator rPivotItr;
+        auto begin = samples.begin() + sampleRange.m_begin, end = samples.begin() + sampleRange.m_end;
+#endif
+#ifdef USE_EMBREE_PARALLEL
+            rPivotItr = pivotSplitSamples2<typename TInvalidSamplesContainer::value_type>(samples.data(), sampleRange.m_begin, sampleRange.m_end, splitDim, splitPos);
+#else
+            rPivotItr = pivotSplitSamples<TInvalidSamplesContainer>(begin, end, splitDim, splitPos);
+#endif
+
+
+#ifdef USE_EMBREE_PARALLEL
+        sampleRangeLeftRight[0] = Range(sampleRange.m_begin, rPivotItr);
+        sampleRangeLeftRight[1] = Range(rPivotItr, sampleRange.m_end);
+#else
+        sampleRangeLeftRight[0] = Range(sampleRange.m_begin, std::distance(samples.begin(), rPivotItr));
+        sampleRangeLeftRight[1] = Range(std::distance(samples.begin(), rPivotItr), sampleRange.m_end);
+#endif
+		/* This assert is a sanity check which is only valid with the assumption that the number of samples grows at same pace
+		   as the number of spatial nodes: in practice this is not the case (e.g., after many 1spp iterations) 
+		*/
+        //OPENPGL_ASSERT(sampleRangeLeftRight[0].size() > 1);
+        //OPENPGL_ASSERT(sampleRangeLeftRight[1].size() > 1);
+
+        tbb::parallel_invoke(
+            [&]{insertTreeNode(kdTree, kdTree->getNode(nodeIdsLeftRight[0]), depth + 1, samples, sampleRangeLeftRight[0], dataStorage);},
+            [&]{insertTreeNode(kdTree, kdTree->getNode(nodeIdsLeftRight[1]), depth + 1, samples, sampleRangeLeftRight[1], dataStorage);}
+        );
+
+    }
+
 };
 
 
-template<class TRegion, typename TContainer>
-inline std::string KDTreePartitionBuilder<TRegion, TContainer>::toString() const
+template<class TRegion, typename TSamplesContainer, typename TInvalidSamplesContainer>
+inline std::string KDTreePartitionBuilder<TRegion, TSamplesContainer, TInvalidSamplesContainer>::toString() const
 {
     std::stringstream ss;
     ss << "KDTreePartitionBuilder" << std::endl;
     return ss.str();
 }
 
-template<class TRegion, typename TContainer>
-inline std::string KDTreePartitionBuilder<TRegion, TContainer>::Settings::toString() const
+template<class TRegion, typename TSamplesContainer, typename TInvalidSamplesContainer>
+inline std::string KDTreePartitionBuilder<TRegion, TSamplesContainer, TInvalidSamplesContainer>::Settings::toString() const
 {
     std::stringstream ss;
     ss << "KDTreePartitionBuilder::Settings:" << std::endl;
@@ -373,16 +468,16 @@ inline std::string KDTreePartitionBuilder<TRegion, TContainer>::Settings::toStri
 }
 
 
-template<class TRegion, typename TContainer>
-inline void KDTreePartitionBuilder<TRegion, TContainer>::Settings::serialize(std::ostream& stream)const
+template<class TRegion, typename TSamplesContainer, typename TInvalidSamplesContainer>
+inline void KDTreePartitionBuilder<TRegion, TSamplesContainer, TInvalidSamplesContainer>::Settings::serialize(std::ostream& stream)const
     {
         stream.write(reinterpret_cast<const char*>(&minSamples), sizeof(size_t));
         stream.write(reinterpret_cast<const char*>(&maxSamples), sizeof(size_t));
         stream.write(reinterpret_cast<const char*>(&maxDepth), sizeof(size_t));
     }
 
-template<class TRegion, typename TContainer>
-inline void KDTreePartitionBuilder<TRegion, TContainer>::Settings::deserialize(std::istream& stream)
+template<class TRegion, typename TSamplesContainer, typename TInvalidSamplesContainer>
+inline void KDTreePartitionBuilder<TRegion, TSamplesContainer, TInvalidSamplesContainer>::Settings::deserialize(std::istream& stream)
     {
         stream.read(reinterpret_cast<char*>(&minSamples), sizeof(size_t));
         stream.read(reinterpret_cast<char*>(&maxSamples), sizeof(size_t));

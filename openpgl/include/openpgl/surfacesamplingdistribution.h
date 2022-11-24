@@ -45,6 +45,8 @@ OPENPGL_CORE_INTERFACE void pglSurfaceSamplingDistributionClear(PGLSurfaceSampli
 
 OPENPGL_CORE_INTERFACE PGLRegion pglSurfaceSamplingGetRegion(PGLSurfaceSamplingDistribution surfaceSamplingDistribution);
 
+OPENPGL_CORE_INTERFACE pgl_vec3f pglSurfaceSamplingDistributionIncomingRadiance(PGLSurfaceSamplingDistribution surfaceSamplingDistribution, pgl_vec3f direction);
+
 #ifdef __cplusplus
 }  // extern "C"
 #endif

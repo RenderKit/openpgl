@@ -100,6 +100,9 @@ namespace openpgl {
             is.read(reinterpret_cast<char*>(nodes.data()), size * sizeof(nodes[0]));
         };
 
+        void decay(const float alpha)
+        {};
+
         size_t getNumComponents() const{
             return nodes.size();
         }

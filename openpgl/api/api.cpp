@@ -706,6 +706,16 @@ extern "C" OPENPGL_DLLEXPORT PGLRegion pglSurfaceSamplingGetRegion(PGLSurfaceSam
     return (PGLRegion) gRegion;
 }
 
+extern "C" OPENPGL_DLLEXPORT pgl_vec3f pglSurfaceSamplingDistributionIncomingRadiance(PGLSurfaceSamplingDistribution surfaceSamplingDistribution, pgl_vec3f direction)
+{
+    ISurfaceSamplingDistribution* gSurfaceSamplingDistribution =  (ISurfaceSamplingDistribution*)surfaceSamplingDistribution;
+    openpgl::Vector3 incomingRadiance = gSurfaceSamplingDistribution->incomingRadiance(openpgl::Vector3(direction.x, direction.y, direction.z));
+
+    pgl_vec3f pglIncomingRadiance;
+    pglVec3f(pglIncomingRadiance, incomingRadiance.x, incomingRadiance.y, incomingRadiance.z);
+    return pglIncomingRadiance;
+}
+
 /*
 extern "C" OPENPGL_DLLEXPORT PGLVolumeSamplingDistribution pglNewVolumeSamplingDistribution()OPENPGL_CATCH_BEGIN
 {

@@ -190,6 +190,8 @@ public:
 
     void partialUpdateMixture(VMM &vmm, PartialFittingMask &mask, SufficientStatistics &previousStats, const SampleData* samples, const size_t numSamples, const Configuration &cfg, FittingStatistics &fitStats) const;
 
+	void updateFluenceEstimate(VMM &vmm, const SampleData* samples, const size_t numSamples, const size_t numInvalidSamples, const SampleStatistics &sampleStatistics) const;
+    
     VMM VMMfromSufficientStatistics(const SufficientStatistics &suffStats, const Configuration &cfg) const;
 
     std::string toString() const
@@ -1317,6 +1319,84 @@ void ParallaxAwareVonMisesFisherWeightedEMFactory< TVMMDistribution>::updateComp
             sufficientStats.sumOfDistanceWeightes[cnt-1][i] = 0.0f;
         }
     }
+
+}
+
+
+template<class TVMMDistribution>
+void ParallaxAwareVonMisesFisherWeightedEMFactory<TVMMDistribution>::updateFluenceEstimate(VMM &vmm, const SampleData* samples, const size_t numSamples, const size_t numInvalidSamples, const SampleStatistics &sampleStatistics) const
+{
+    if(numSamples == 0)
+    {
+        return;
+    }
+    
+    const int cnt = (vmm._numComponents+VMM::VectorSize-1) / VMM::VectorSize;
+    const int rem = vmm._numComponents % VMM::VectorSize;
+
+    const embree::vfloat<VMM::VectorSize> zeros(0.0f);
+
+    float sumFluence {0.f};
+    Vector3 sumFluenceRGB {0.f, 0.f, 0.f};
+
+#ifdef OPENPGL_RGB_WEIGHTS
+    embree::Vec3<embree::vfloat<VMM::VectorSize> > sumFluenceRGBWeights[VMM::NumVectors];
+    typename VMM::SoftAssignment softAssign;
+
+    for (size_t k = 0; k < cnt; k++)
+    {
+        sumFluenceRGBWeights[k].x = zeros;
+        sumFluenceRGBWeights[k].y = zeros;
+        sumFluenceRGBWeights[k].z = zeros;
+    }
+
+#endif
+
+    for (size_t n = 0; n < numSamples; n++)
+    {            
+        sumFluence += samples[n].weight;
+#ifdef OPENPGL_RGB_WEIGHTS
+        const Vector3 sampleDirection(samples[n].direction.x, samples[n].direction.y, samples[n].direction.z);
+        const Vector3 weightRGB(samples[n].weightRGB.x, samples[n].weightRGB.y, samples[n].weightRGB.z);
+        sumFluenceRGB += weightRGB;
+        if (vmm.softAssignment(sampleDirection, softAssign))
+        {
+            for (size_t k = 0; k < cnt; k++)
+            {
+                sumFluenceRGBWeights[k].x += weightRGB.x * softAssign.assignments[k];
+                sumFluenceRGBWeights[k].y += weightRGB.y * softAssign.assignments[k];
+                sumFluenceRGBWeights[k].z += weightRGB.z * softAssign.assignments[k];
+            }
+        }
+#endif
+    }
+
+    const float oldNumFluenceSamples = vmm._numFluenceSamples;
+    const float newNumFluenceSamples = (oldNumFluenceSamples + float(numSamples+numInvalidSamples));
+
+#ifdef OPENPGL_RGB_WEIGHTS
+    if ( rem > 0 )
+    {
+        for ( size_t i = rem; i < VMM::VectorSize; i++)
+        {
+            sumFluenceRGBWeights[cnt-1].x[i] = 0.0f;
+            sumFluenceRGBWeights[cnt-1].y[i] = 0.0f;
+            sumFluenceRGBWeights[cnt-1].z[i] = 0.0f;
+        }
+    }
+
+    // TODO: switch to numerical more stable version
+    for (size_t k = 0; k < cnt; k++)
+    {
+        vmm._fluenceRGBWeights[k].x = ((vmm._fluenceRGBWeights[k].x * oldNumFluenceSamples) + sumFluenceRGBWeights[k].x) / newNumFluenceSamples;
+        vmm._fluenceRGBWeights[k].y = ((vmm._fluenceRGBWeights[k].y * oldNumFluenceSamples) + sumFluenceRGBWeights[k].y) / newNumFluenceSamples;
+        vmm._fluenceRGBWeights[k].z = ((vmm._fluenceRGBWeights[k].z * oldNumFluenceSamples) + sumFluenceRGBWeights[k].z) / newNumFluenceSamples;
+    }
+
+    vmm._fluenceRGB = ((vmm._fluenceRGB * oldNumFluenceSamples) + sumFluenceRGB) / newNumFluenceSamples;
+#endif
+    vmm._fluence = ((vmm._fluence * oldNumFluenceSamples) + sumFluence) / newNumFluenceSamples;
+    vmm._numFluenceSamples = newNumFluenceSamples;
 
 }
 
