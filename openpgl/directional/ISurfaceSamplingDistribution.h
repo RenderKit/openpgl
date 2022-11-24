@@ -31,6 +31,8 @@ struct ISurfaceSamplingDistribution
 
     virtual Vector3 incomingRadiance(const Vector3 dir) const = 0;
 
+    virtual Vector3 irradiance(const Vector3 normal) const = 0;
+
     virtual bool validate() const = 0;
 
     virtual void clear() = 0;

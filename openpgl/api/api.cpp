@@ -716,6 +716,16 @@ extern "C" OPENPGL_DLLEXPORT pgl_vec3f pglSurfaceSamplingDistributionIncomingRad
     return pglIncomingRadiance;
 }
 
+extern "C" OPENPGL_DLLEXPORT pgl_vec3f pglSurfaceSamplingDistributionIrradiance(PGLSurfaceSamplingDistribution surfaceSamplingDistribution, pgl_vec3f normal)
+{
+    ISurfaceSamplingDistribution* gSurfaceSamplingDistribution =  (ISurfaceSamplingDistribution*)surfaceSamplingDistribution;
+    openpgl::Vector3 irradiance = gSurfaceSamplingDistribution->irradiance(openpgl::Vector3(normal.x, normal.y, normal.z));
+
+    pgl_vec3f pglIrradiance;
+    pglVec3f(pglIrradiance, irradiance.x, irradiance.y, irradiance.z);
+    return pglIrradiance;
+}
+
 /*
 extern "C" OPENPGL_DLLEXPORT PGLVolumeSamplingDistribution pglNewVolumeSamplingDistribution()OPENPGL_CATCH_BEGIN
 {

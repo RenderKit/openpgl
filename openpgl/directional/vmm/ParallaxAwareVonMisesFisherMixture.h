@@ -20,6 +20,8 @@
 #include <fstream>
 #include <iostream>
 
+#define OPENPGL_MIN_KAPPA 1e-3f
+
 #define USE_SIMD_CDF_SAMPLING
 //#define VALIDATE_SELECT_COMPONENT_SIMD
 
@@ -106,6 +108,8 @@ public:
 
     Vector3 incomingRadiance( const Vector3 &direction ) const;
 
+    Vector3 irradiance( const Vector3 &normal ) const;
+
     // Product and convolution functions
     void convole(const float &meanCosine);
 
@@ -155,6 +159,9 @@ public:
     void _normalizeWeights();
 
     bool operator==(const ParallaxAwareVonMisesFisherMixture& b) const;
+
+private:
+    embree::vfloat<VecSize> _convolvePDF(const size_t k, const embree::Vec3< embree::vfloat<VecSize> >& normal, const embree::vfloat<VecSize>& meanCosine) const;
 
 };
 
@@ -1115,11 +1122,63 @@ Vector3 ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents,UseParallaxCom
 #endif
 }
 
+
+template<int VecSize, int maxComponents, bool UseParallaxCompensation>
+Vector3 ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents,UseParallaxCompensation>::irradiance( const Vector3 &normal ) const{
+#ifdef OPENPGL_RGB_WEIGHTS
+    const embree::vfloat<VecSize> cosine_meanCosine(KappaToMeanCosine<float>(2.18853f)); // TODO
+
+    const int cnt = (_numComponents+VecSize-1) / VecSize;
+
+    embree::Vec3< embree::vfloat<VecSize> > irradiance = {0.0f, 0.0f, 0.0f};
+    embree::Vec3< embree::vfloat<VecSize> > vec3Normal(normal[0], normal[1], normal[2]);
+
+    const embree::vfloat<VecSize> ones(1.0f);
+    const embree::vfloat<VecSize> zeros(0.0f);
+
+    for(int k = 0; k < cnt;k++)
+    {
+        const embree::vfloat<VecSize> eval = _convolvePDF(k, vec3Normal, cosine_meanCosine);
+        irradiance += _fluenceRGBWeights[k] * eval;
+    }
+    return Vector3(reduce_add(irradiance.x), reduce_add(irradiance.y), reduce_add(irradiance.z));
+#else
+    return Vector3(0.f, 0.f, 0.f);
+#endif
+}
+
+template<int VecSize, int maxComponents, bool UseParallaxCompensation>
+embree::vfloat<VecSize> ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents,UseParallaxCompensation>::_convolvePDF(const size_t k, const embree::Vec3< embree::vfloat<VecSize> >& normal, const embree::vfloat<VecSize>& meanCosine1) const {
+    const embree::vfloat<VecSize> ones(1.0f);
+    const embree::vfloat<VecSize> zeros(0.0f);
+    const embree::vfloat<VecSize> invFourPi(1.0f / (4.0f * M_PI));
+    
+    const embree::vfloat<VecSize> cosTheta = embree::dot(normal, _meanDirections[k]);
+    
+    const embree::vfloat<VecSize> meanCosine0 = _meanCosines[k];
+    
+    const embree::vfloat<VecSize> meanCosine = meanCosine0 * meanCosine1;
+    OPENPGL_ASSERT(embree::is_finite(meanCosine));
+
+    embree::vfloat<VecSize> kappa = MeanCosineToKappa<embree::vfloat<VecSize>>(meanCosine);
+    OPENPGL_ASSERT(embree::is_finite(kappa));
+    kappa = select(kappa < OPENPGL_MIN_KAPPA, zeros, kappa);
+
+    const embree::vfloat<VecSize> eMinus2Kappa = embree::fastapprox::exp(-2.0f * kappa);
+    embree::vfloat<VecSize> normalization = kappa / (2.0f * M_PI * (1.0f - eMinus2Kappa));
+    normalization = select(kappa > 0.f, normalization, invFourPi);
+    OPENPGL_ASSERT(embree::is_finite(normalization));
+
+    const embree::vfloat<VecSize> cosThetaMinusOne = embree::min(cosTheta - ones, zeros);
+    const embree::vfloat<VecSize> eval = embree::fastapprox::exp(kappa * cosThetaMinusOne);
+    return normalization * eval;
+}
+
 template<typename Type>
 inline Type KappaToMeanCosine(const Type &kappa)
 {
-    const Type ones( 1.0f);
-    const Type zeros( 0.0f);
+    const Type ones(1.0f);
+    const Type zeros(0.0f);
 
     Type meanCosine = ones / embree::tanh( kappa) - ones / kappa;
     return embree::select( kappa > 0.f, meanCosine, zeros);
@@ -1129,8 +1188,8 @@ inline Type KappaToMeanCosine(const Type &kappa)
 template<typename Type>
 inline Type MeanCosineToKappa(const Type &meanCosine)
 {
-    const Type ones( 1.0f);
-    const Type dim( 3.0f);
+    const Type ones(1.0f);
+    const Type dim(3.0f);
     const Type meanCosine2 = meanCosine * meanCosine;
     return ( meanCosine * dim - meanCosine * meanCosine2) / ( ones - meanCosine2 );
 }
