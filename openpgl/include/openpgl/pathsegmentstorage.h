@@ -65,7 +65,9 @@ OPENPGL_CORE_INTERFACE void pglPathSegmentStorageAddSegment(PGLPathSegmentStorag
 
 OPENPGL_CORE_INTERFACE bool pglPathSegmentStorageValidateSamples(PGLPathSegmentStorage pathSegmentStorage);
 
-OPENPGL_CORE_INTERFACE bool  pglPathSegmentStorageValidateSegments(PGLPathSegmentStorage pathSegmentStorage);
+OPENPGL_CORE_INTERFACE bool pglPathSegmentStorageValidateSegments(PGLPathSegmentStorage pathSegmentStorage);
+
+OPENPGL_CORE_INTERFACE void pglPathSegmentStoragePropagateSamples(PGLPathSegmentStorage pathSegmentStorage, PGLSampleStorage sampleStorage, bool guideDirectLight = false, bool useNEEMiWeights = false, bool rrAffectsDirectContribution = true);
 
 #ifdef __cplusplus
 }  // extern "C"

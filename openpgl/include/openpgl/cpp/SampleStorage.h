@@ -93,6 +93,7 @@ struct SampleStorage
     SampleData GetSampleVolume(const int idx) const;
 
     friend struct Field;
+    friend struct PathSegmentStorage;
     private:
         PGLSampleStorage m_sampleStorageHandle{nullptr};
 };

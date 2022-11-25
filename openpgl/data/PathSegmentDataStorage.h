@@ -515,6 +515,16 @@ public:
         return ss.str();
     }
 
+    void propagateSamples(SampleDataStorage* sampleDataStorage, const bool guideDirectLight = false, const bool useNEEMiWeights = false, const bool rrAffectsDirectContribution = true) 
+    {
+        prepareSamples(useNEEMiWeights, guideDirectLight, rrAffectsDirectContribution);
+#if defined(OPENPGL_PATHSEGMENT_STORAGE_USE_ARRAY)
+        sampleDataStorage->addSamples(m_sampleStorage, m_sample_idx+1);
+#else
+        sampleDataStorage->addSamples(m_sampleStorage.data(), m_sampleData.size());
+#endif
+        clear();
+    }
 
 
 };

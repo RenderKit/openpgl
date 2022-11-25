@@ -480,6 +480,13 @@ extern "C" OPENPGL_DLLEXPORT bool pglPathSegmentStorageValidateSegments(PGLPathS
 
 }
 
+extern "C" OPENPGL_DLLEXPORT void pglPathSegmentStoragePropagateSamples(PGLPathSegmentStorage pathSegmentStorage, PGLSampleStorage sampleStorage, bool guideDirectLight, bool useNEEMiWeights, bool rrAffectsDirectContribution)
+{
+    auto *gPathSegmentStorage = (openpgl::PathSegmentDataStorage *)pathSegmentStorage;
+    auto *gSampleStorage = (openpgl::SampleDataStorage *)sampleStorage;
+    gPathSegmentStorage->propagateSamples(gSampleStorage, guideDirectLight, useNEEMiWeights, rrAffectsDirectContribution);
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // Distribution ///// /////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////

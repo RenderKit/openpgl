@@ -6,6 +6,7 @@
 #include "../openpgl.h"
 #include "PathSegment.h"
 #include "SampleData.h"
+#include "SampleStorage.h"
 
 namespace openpgl
 {
@@ -139,6 +140,8 @@ struct PathSegmentStorage
      */
     bool ValidateSamples() const;
 
+    void PropagateSamples(SampleStorage* sampleStorage, const bool guideDirectLight = false, const bool useNEEMiWeights = false, const bool rrAffectsDirectContribution = true);
+
     private:
         PGLPathSegmentStorage m_pathSegmentStorageHandle{nullptr};
 };
@@ -249,6 +252,15 @@ OPENPGL_INLINE bool PathSegmentStorage::ValidateSamples() const
     OPENPGL_ASSERT(m_pathSegmentStorageHandle);
     return pglPathSegmentStorageValidateSamples(m_pathSegmentStorageHandle);
 }
+
+OPENPGL_INLINE void PathSegmentStorage::PropagateSamples(SampleStorage* sampleStorage, const bool guideDirectLight, const bool useNEEMiWeights, const bool rrAffectsDirectContribution)
+{
+    OPENPGL_ASSERT(m_pathSegmentStorageHandle);
+    OPENPGL_ASSERT(sampleStorage);
+    OPENPGL_ASSERT(sampleStorage->m_sampleStorageHandle);
+    return pglPathSegmentStoragePropagateSamples(m_pathSegmentStorageHandle, sampleStorage->m_sampleStorageHandle, guideDirectLight, useNEEMiWeights, rrAffectsDirectContribution);
+}
+
 
 }
 }
