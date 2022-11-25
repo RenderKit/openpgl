@@ -1,5 +1,19 @@
 Version History
 ===============
+## Open PGL X.X.X
+
+- Api changes:
+    - `PathSegmentStorage`:
+        - Removed support for splatting training samples due
+          to the fact that knn-lookups have proven to be better.
+          Therefore, the function attributes `spaltSamples` and `sampler`
+          have been removed from the `PrepareSamples` function.
+
+    - `Sampler`:
+        - Removed since it is not used/needed anymore.
+
+    - `SurfaceSamplingDistribution` and `VolumeSamplingDistribution`:
+        - The usage of parallax-compensation is now connected to the guiding distribution type. Therefore the explicit `useParallaxCompensation` parameter is removed from the `Init` functions of the `SamplingDistributions`.  
 
 ## Open PGL 0.4.1
 - Bugfixes:
