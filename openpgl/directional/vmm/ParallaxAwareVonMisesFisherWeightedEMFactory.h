@@ -557,7 +557,7 @@ void ParallaxAwareVonMisesFisherWeightedEMFactory< TVMMDistribution>::Sufficient
 }
 
 template<class TVMMDistribution>
-typename ParallaxAwareVonMisesFisherWeightedEMFactory< TVMMDistribution>::SufficientStatisitcs& ParallaxAwareVonMisesFisherWeightedEMFactory< TVMMDistribution>::SufficientStatisitcs::operator+=(const ParallaxAwareVonMisesFisherWeightedEMFactory< TVMMDistribution>::SufficientStatisitcs &stats)
+typename ParallaxAwareVonMisesFisherWeightedEMFactory< TVMMDistribution>::SufficientStatisitcs& ParallaxAwareVonMisesFisherWeightedEMFactory< TVMMDistribution>::SufficientStatisitcs::operator+=(const typename ParallaxAwareVonMisesFisherWeightedEMFactory< TVMMDistribution>::SufficientStatisitcs &stats)
 {
 
     // TODO: check for normalization

@@ -259,7 +259,7 @@ public:
         size_t nGuidingRegions = m_regionStorageContainer.size();
         for (int n = 0; n < nGuidingRegions; n++)
         {
-            valid = valid & m_regionStorageContainer[n].first.isValid() & m_regionStorageContainer[n].first.valid;
+            valid = valid && m_regionStorageContainer[n].first.isValid() && m_regionStorageContainer[n].first.valid;
         }
         return valid;
     }

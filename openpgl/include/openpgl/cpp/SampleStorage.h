@@ -10,6 +10,8 @@ namespace openpgl
 {
 namespace cpp
 {
+struct PathSegmentStorage;
+
 /**
  * @brief The container class holding the collected sample data generated during rendering.
  * 

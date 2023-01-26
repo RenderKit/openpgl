@@ -15,7 +15,7 @@ struct __aligned(TVMMDistribution::VectorSize*4) VMMVolumeSamplingDistribution: 
     
     OPENPGL_ALIGNED_STRUCT_(TVMMDistribution::VectorSize*4)
     VMMVolumeSamplingDistribution(): IVolumeSamplingDistribution(){};
-    ~VMMVolumeSamplingDistribution() = default;
+    ~VMMVolumeSamplingDistribution() override = default;
 
     typedef std::integral_constant<size_t, OPENPGL_VMM_NUM_PHASE_COMP> MaxNumProductDistributions;
 

@@ -50,6 +50,26 @@ using namespace openpgl;
     return a;                                                       \
   }
 
+#define OPENPGL_CATCH_END_VOID                                      \
+  }                                                                 \
+  catch (const std::bad_alloc &)                                    \
+  {                                                                 \
+    std::cout <<                                                    \
+             "Open PGL was unable to allocate memory" << std::endl; \
+    return;                                                         \
+  }                                                                 \
+  catch (const std::exception &e)                                   \
+  {                                                                 \
+    std::cout << e.what() << std::endl;              \
+    return;                                                         \
+  }                                                                 \
+  catch (...)                                                       \
+  {                                                                 \
+    std::cout <<                                                    \
+               "an unrecognized exception was caught" << std::endl; \
+    return;                                                         \
+  }
+
 typedef ISurfaceVolumeField IGuidingField;
 
 
@@ -106,7 +126,7 @@ extern "C" OPENPGL_DLLEXPORT void pglReleaseField(PGLField field)OPENPGL_CATCH_B
     auto *gField = (IGuidingField *)field;
     delete gField;
 }
-OPENPGL_CATCH_END()
+OPENPGL_CATCH_END_VOID
 
 extern "C" OPENPGL_DLLEXPORT bool pglFieldStoreToFile(PGLField field, const char* fieldFileName)OPENPGL_CATCH_BEGIN
 {
@@ -174,14 +194,14 @@ extern "C" OPENPGL_DLLEXPORT  void pglFieldUpdate(PGLField field, PGLSampleStora
         gField->updateField(gSampleStorage->m_surfaceContainer, gSampleStorage->m_volumeContainer);
     }
 }
-OPENPGL_CATCH_END()
+OPENPGL_CATCH_END_VOID
 
 extern "C" OPENPGL_DLLEXPORT  void pglFieldReset(PGLField field)OPENPGL_CATCH_BEGIN
 {
     auto *gField = (IGuidingField *)field;
     gField->resetField();
 }
-OPENPGL_CATCH_END()
+OPENPGL_CATCH_END_VOID
 
 extern "C" OPENPGL_DLLEXPORT  PGLSurfaceSamplingDistribution pglFieldNewSurfaceSamplingDistribution(PGLField field)OPENPGL_CATCH_BEGIN
 {
@@ -382,7 +402,7 @@ extern "C" OPENPGL_DLLEXPORT void pglReleasePathSegmentStorage(PGLPathSegmentSto
     auto *gPathSegmentStorage = (openpgl::PathSegmentDataStorage *)pathSegmentStorage;
     delete gPathSegmentStorage;
 }
-OPENPGL_CATCH_END()
+OPENPGL_CATCH_END_VOID
 
 extern "C" OPENPGL_DLLEXPORT void pglPathSegmentStorageReserve(PGLPathSegmentStorage pathSegmentStorage, size_t size)
 {
@@ -511,7 +531,7 @@ extern "C" OPENPGL_DLLEXPORT void pglReleaseSurfaceSamplingDistribution(PGLSurfa
     ISurfaceSamplingDistribution* gSurfaceSamplingDistribution =  (ISurfaceSamplingDistribution*)surfaceSamplingDistribution;
     delete gSurfaceSamplingDistribution;
 }
-OPENPGL_CATCH_END()
+OPENPGL_CATCH_END_VOID
 /*
 extern "C" OPENPGL_DLLEXPORT void pglSurfaceSamplingDistributionInit(PGLSurfaceSamplingDistribution surfaceSamplingDistribution, PGLRegion region, pgl_point3f samplePosition, bool useParallaxComp)
 {
@@ -592,7 +612,7 @@ extern "C" OPENPGL_DLLEXPORT void pglReleaseVolumeSamplingDistribution(PGLVolume
     IVolumeSamplingDistribution* gVolumeSamplingDistribution =  (IVolumeSamplingDistribution*)volumeSamplingDistribution;
     delete gVolumeSamplingDistribution;
 }
-OPENPGL_CATCH_END()
+OPENPGL_CATCH_END_VOID
 /*
 extern "C" OPENPGL_DLLEXPORT void pglVolumeSamplingDistributionInit(PGLVolumeSamplingDistribution volumeSamplingDistribution, PGLRegion region, pgl_point3f samplePosition, bool useParallaxComp)
 {
