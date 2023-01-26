@@ -213,7 +213,7 @@ struct KDTree
     ~KDTree()
     {
         if(m_nodesPtr)
-            delete m_nodesPtr;
+            delete[] m_nodesPtr;
     }
 
     inline void init(const BBox &bounds, size_t numNodesReseve = 0)
@@ -279,7 +279,7 @@ struct KDTree
     void finalize()
     {
         if(m_nodesPtr){
-            delete m_nodesPtr;
+            delete[] m_nodesPtr;
             m_nodesPtr = nullptr;
         }
         size_t nNodes = m_nodes.size();
