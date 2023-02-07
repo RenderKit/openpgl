@@ -580,6 +580,12 @@ extern "C" OPENPGL_DLLEXPORT float pglSurfaceSamplingDistributionSamplePDF(PGLSu
     return pdf;
 }
 
+extern "C" OPENPGL_DLLEXPORT float pglSurfaceSamplingDistributionIncomingRadiancePDF(PGLSurfaceSamplingDistribution surfaceSamplingDistribution, pgl_vec3f direction)
+{
+    ISurfaceSamplingDistribution* gSurfaceSamplingDistribution =  (ISurfaceSamplingDistribution*)surfaceSamplingDistribution;
+    return gSurfaceSamplingDistribution->pdfLi(openpgl::Vector3(direction.x, direction.y, direction.z));
+}
+
 extern "C" OPENPGL_DLLEXPORT bool pglSurfaceSamplingDistributionValidate(PGLSurfaceSamplingDistribution surfaceSamplingDistribution)
 {
     ISurfaceSamplingDistribution* gSurfaceSamplingDistribution =  (ISurfaceSamplingDistribution*)surfaceSamplingDistribution;
@@ -646,6 +652,12 @@ extern "C" OPENPGL_DLLEXPORT float pglVolumeSamplingDistributionSamplePDF(PGLVol
     float pdf = gVolumeSamplingDistribution->samplePdf({sample.x, sample.y}, dir);
     direction = {dir.x, dir.y, dir.z};
     return pdf;
+}
+
+extern "C" OPENPGL_DLLEXPORT float pglVolumeSamplingDistributionIncomingRadiancePDF(PGLVolumeSamplingDistribution volumeSamplingDistribution, pgl_vec3f direction)
+{
+    IVolumeSamplingDistribution* gVolumeSamplingDistribution =  (IVolumeSamplingDistribution*)volumeSamplingDistribution;
+    return gVolumeSamplingDistribution->pdfLi(openpgl::Vector3(direction.x, direction.y, direction.z));
 }
 
 extern "C" OPENPGL_DLLEXPORT bool pglVolumeSamplingDistributionValidate(PGLVolumeSamplingDistribution volumeSamplingDistribution)

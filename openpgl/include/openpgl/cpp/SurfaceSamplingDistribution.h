@@ -90,6 +90,16 @@ struct SurfaceSamplingDistribution
     float SamplePDF(const pgl_point2f& sample2D, pgl_vec3f& direction) const;
 
     /**
+     * @brief Returns the PDF for the incoming radiance distibution.
+     * This PDF does not need to relate to the sampling PDF. It is used
+     * to estimate the normalized incoming radiance distriubtion (e.g., for RIS). 
+	 * 
+     * @param direction 
+     * @return float The PDF for incoming radiance distribution for @ref direction
+     */
+    float IncomingRadiancePDF(const pgl_vec3f& direction) const;
+
+    /**
      * @brief Returns if the used representation supports for including the cosine 
      * product (e.g, for diffuse surfaces) into the guiding distribution. 
      * 
@@ -183,6 +193,12 @@ OPENPGL_INLINE float SurfaceSamplingDistribution::SamplePDF(const pgl_point2f& s
 {
     OPENPGL_ASSERT(m_surfaceSamplingDistributionHandle);
     return pglSurfaceSamplingDistributionSamplePDF(m_surfaceSamplingDistributionHandle, sample2D, direction);    
+}
+
+OPENPGL_INLINE float SurfaceSamplingDistribution::IncomingRadiancePDF(const pgl_vec3f& direction) const
+{
+    OPENPGL_ASSERT(m_surfaceSamplingDistributionHandle);
+    return pglSurfaceSamplingDistributionIncomingRadiancePDF(m_surfaceSamplingDistributionHandle, direction);
 }
 
 OPENPGL_INLINE bool SurfaceSamplingDistribution::Validate() const

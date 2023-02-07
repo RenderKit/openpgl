@@ -23,6 +23,8 @@ struct IVolumeSamplingDistribution
 
     virtual float samplePdf(const Point2 sample, Vector3 &dir) const = 0;
 
+    virtual float pdfLi(const Vector3 dir) const = 0;
+
     virtual bool validate() const = 0;
 
     virtual void clear() = 0;

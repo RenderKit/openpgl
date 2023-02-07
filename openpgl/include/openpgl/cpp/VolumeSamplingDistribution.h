@@ -93,6 +93,16 @@ struct VolumeSamplingDistribution
     float SamplePDF(const pgl_point2f& sample2D, pgl_vec3f& direction) const;
 
     /**
+     * @brief Returns the PDF for the incoming radiance distibution.
+     * This PDF does not need to relate to the sampling PDF. It is used
+     * to estimate the normalized incoming radiance distriubtion (e.g., for RIS). 
+	 * 
+     * @param direction 
+     * @return float The PDF for incoming radiance distribution for @ref direction
+     */
+    float IncomingRadiancePDF(const pgl_vec3f& direction) const;
+
+    /**
      * @brief Returns if the used representation supports for including the 
      * product with a single lobe HenyeyGreenstein phase function into the guiding distribution. 
      * 
@@ -187,6 +197,12 @@ OPENPGL_INLINE float VolumeSamplingDistribution::SamplePDF(const pgl_point2f& sa
 {
     OPENPGL_ASSERT(m_volumeSamplingDistributionHandle);
     return pglVolumeSamplingDistributionSamplePDF(m_volumeSamplingDistributionHandle, sample2D, direction);    
+}
+
+OPENPGL_INLINE float VolumeSamplingDistribution::IncomingRadiancePDF(const pgl_vec3f& direction) const
+{
+    OPENPGL_ASSERT(m_volumeSamplingDistributionHandle);
+    return pglVolumeSamplingDistributionIncomingRadiancePDF(m_volumeSamplingDistributionHandle, direction);
 }
 
 OPENPGL_INLINE bool VolumeSamplingDistribution::Validate() const

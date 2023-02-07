@@ -102,6 +102,11 @@ struct __aligned(TVMMDistribution::VectorSize*4) VMMSurfaceSamplingDistribution:
         return pdf(dir);
     }
 
+    inline float pdfLi(const Vector3 dir) const override
+    {
+        return m_liDistribution.pdf(dir);
+    }
+
     inline bool validate() const override
     {
         return m_numDistributions > 0;

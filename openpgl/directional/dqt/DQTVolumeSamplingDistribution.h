@@ -29,6 +29,10 @@ struct DQTVolumeSamplingDistribution: public IVolumeSamplingDistribution {
         return distribution.samplePdf(sample, dir);
     }
 
+    inline float pdfLi(const Vector3 dir) const override {
+        return distribution.pdf(dir);
+    };
+
     inline bool validate() const override {
         return distribution.isValid();
     };

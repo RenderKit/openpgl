@@ -1,6 +1,6 @@
 Version History
 ===============
-## Open PGL X.X.X
+## Open PGL 0.5.0
 
 - Api changes:
     - `PathSegmentStorage`:
@@ -14,6 +14,8 @@ Version History
 
     - `SurfaceSamplingDistribution` and `VolumeSamplingDistribution`:
         - The usage of parallax-compensation is now connected to the guiding distribution type. Therefore the explicit `useParallaxCompensation` parameter is removed from the `Init` functions of the `SamplingDistributions`.  
+        - Added `IncomingRadiancePDF` function that returns an approximation of the incoming radiance distribution. 
+          This PDF does not need to be related to the actual sampling PDF but can be used for Resampled Importance Sampling (RIS).
 
 ## Open PGL 0.4.1
 - Bugfixes:

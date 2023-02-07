@@ -41,7 +41,7 @@ struct PGLSampleData
     /// the PDF used for sampling @ref direction at @ref position   
     float pdf;
 
-    /// the distance to the source of the incomming radiance  
+    /// the distance to the source of the incoming radiance  
     float distance; 
 
     ///
