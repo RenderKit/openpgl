@@ -158,7 +158,7 @@ if (NOT BUILD_DEPENDENCIES_ONLY)
     )
   endif()
 
-  ExternalProject_Add(openpgl
+  ExternalProject_Add(ep_openpgl
     PREFIX openpgl
     DOWNLOAD_COMMAND ""
     STAMP_DIR openpgl/stamp
@@ -171,8 +171,8 @@ if (NOT BUILD_DEPENDENCIES_ONLY)
     BUILD_ALWAYS ON
   )
 
-  ExternalProject_Add_StepDependencies(openpgl
+  ExternalProject_Add_StepDependencies(ep_openpgl
   configure
-    $<$<BOOL:${BUILD_TBB}>:tbb>
+    $<$<BOOL:${BUILD_TBB}>:dep_tbb>
   )
 endif()

@@ -1,7 +1,7 @@
 ## Copyright 2019-2021 Intel Corporation
 ## SPDX-License-Identifier: Apache-2.0
 
-set(COMPONENT_NAME tbb)
+set(COMPONENT_NAME dep_tbb)
 
 set(COMPONENT_PATH ${INSTALL_DIR_ABSOLUTE})
 if (INSTALL_IN_SEPARATE_DIRECTORIES)
