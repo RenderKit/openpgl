@@ -64,7 +64,7 @@ cd $OPENPGL_BUILD_DIR
 
 # Setup environment variables for dependencies
 #export rkcommon_DIR=$DEP_INSTALL_DIR
-export embree_DIR=$DEP_INSTALL_DIR
+#export embree_DIR=$DEP_INSTALL_DIR
 #export glfw3_DIR=$DEP_INSTALL_DIR
 
 export OPENPGL_EXTRA_OPENVDB_OPTIONS="-DCMAKE_NO_SYSTEM_FROM_IMPORTED=ON"
@@ -93,4 +93,8 @@ cp -P $DEP_INSTALL_DIR/lib/lib*.dylib* $INSTALL_LIB_DIR
 # zip up the results
 cd $OPENPGL_INSTALL_DIR/..
 zip -ry $OPENPGL_PKG_BASE.zip $OPENPGL_PKG_BASE
+
+# sign
+$ROOT_DIR/gitlab/release/sign.sh $OPENPGL_PKG_BASE.zip
+
 mv *.zip $ROOT_DIR

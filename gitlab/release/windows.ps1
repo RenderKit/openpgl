@@ -40,7 +40,7 @@ cd $OPENPGL_BUILD_DIR
 
 # Setup environment variables for dependencies
 #$env:rkcommon_DIR = $DEP_INSTALL_DIR
-$env:embree_DIR = $DEP_INSTALL_DIR
+#$env:embree_DIR = $DEP_INSTALL_DIR
 #$env:glfw3_DIR = $DEP_INSTALL_DIR
 
 # set release settings
@@ -66,6 +66,9 @@ cmake --build . --config Release --target install -- /m /nologo
 $INSTALL_BIN_DIR = "$OPENPGL_INSTALL_DIR/bin"
 
 cp $DEP_INSTALL_DIR/bin/*.dll $INSTALL_BIN_DIR
+
+# sign
+;& $env:SIGN_FILE_WINDOWS -q -vv (Get-ChildItem $INSTALL_BIN_DIR\* | Select-Object -Expand FullName)
 
 # zip up the results
 $OPENPGL_PKG_BASE_ZIP = "$OPENPGL_PKG_BASE.zip"
