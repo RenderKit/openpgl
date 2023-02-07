@@ -1,6 +1,6 @@
 # Intel® Open Path Guiding Library
 
-This is release v0.4.1 of Intel® Open PGL. For changes and new features,
+This is release v0.5.0 of Intel® Open PGL. For changes and new features,
 see the [changelog](CHANGELOG.md). Visit http://www.openpgl.org for more
 information.
 
@@ -311,7 +311,7 @@ To make CMake aware of Open PGL’s CMake configuration scripts the
 `openpgl_DIR` has to be set to their location during configuration:
 
 ``` bash
-cmake -Dopenpgl_DIR=[openpgl_install]/lib/cmake/openpgl-0.4.1 ..
+cmake -Dopenpgl_DIR=[openpgl_install]/lib/cmake/openpgl-0.5.0 ..
 ```
 
 After that, adding OpenPGL to a CMake project/target is done by first
