@@ -27,6 +27,23 @@ jobs:
       cmd: |
         gitlab/build.sh
 
+  build-centos7-icx:
+    secrets: inherit
+    uses: intel-innersource/libraries.devops.renderkit.workflows/.github/workflows/docker.yml@main
+    with:
+      submodules: true
+      image: centos:7
+      #artifact-out: build-centos7-icx
+      #artifact-path: ./build/install ./build/openvkl/build
+      cmd: |
+        module load cmake
+        module load intel/2022.1
+        export CC=icx
+        export CXX=icpx
+        export CXXFLAGS="-fPIC -fp-model=precise"
+        export LDFLAGS="-static-intel"
+        gitlab/build.sh
+
   build-centos8:
     secrets: inherit
     uses: intel-innersource/libraries.devops.renderkit.workflows/.github/workflows/docker.yml@main
@@ -34,6 +51,7 @@ jobs:
       image: centos:8
       cmd: |
         gitlab/build.sh
+
 
   #build-ubuntu16-04:
   #  secrets: inherit
@@ -84,6 +102,18 @@ jobs:
     with:
       cmd: |
           gitlab/build.bat "Visual Studio 15 2017 Win64" "v141" '"-DTBB_VERSION=2021.1.1"' '"-DTBB_HASH="""'           
+
+  build-windows-icx:
+    secrets: inherit
+    uses: intel-innersource/libraries.devops.renderkit.workflows/.github/workflows/windows.yml@main
+    with:
+      shell: cmd
+      cmd: |
+        call "C:\Program Files (x86)\Intel\oneAPI\compiler\latest\env\vars.bat"
+        set CXX=icx.exe
+        set CC=icx.exe
+        Powershell.exe -ExecutionPolicy RemoteSigned -File gitlab\build_win.ps1 Ninja -DTBB_VERSION=2021.1.1 -DTBB_HASH=""          
+
 
   ### Build MacOS Jobs ###
 
