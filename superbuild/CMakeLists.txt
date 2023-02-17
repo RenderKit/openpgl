@@ -156,6 +156,11 @@ if (NOT BUILD_DEPENDENCIES_ONLY)
       -DTBB_ROOT=${OPENPGL_TBB_ROOT}
       -DOPENPGL_TBB_ROOT=${OPENPGL_TBB_ROOT}
     )
+  else()
+    set(OPENPGL_ARGS ${OPENPGL_ARGS}
+      -DTBB_ROOT=${CMAKE_INSTALL_PREFIX}
+      -DOPENPGL_TBB_ROOT=${CMAKE_INSTALL_PREFIX}
+    )
   endif()
 
   ExternalProject_Add(ep_openpgl

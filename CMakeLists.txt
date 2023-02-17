@@ -55,6 +55,15 @@ SET(OPENPGL_LIBRARY_NAME  "openpgl" CACHE STRING "Name of the Open PGL library f
 
 SET(OPENPGL_TBB_COMPONENT "tbb" CACHE STRING "The TBB component/library name.")
 
+
+if (NOT ${OPENPGL_TBB_ROOT} STREQUAL "")
+    set(TBB_FIND_PACKAGE_OPTION "NO_DEFAULT_PATH")
+    set(TBB_ROOT ${OPENPGL_TBB_ROOT})
+    list(APPEND CMAKE_PREFIX_PATH ${OPENPGL_TBB_ROOT})
+endif()
+
+FIND_PACKAGE(TBB REQUIRED ${OPENPGL_TBB_COMPONENT})
+
 ## Build library and  ##
 add_subdirectory(openpgl)
 
