@@ -112,7 +112,7 @@ jobs:
         call "C:\Program Files (x86)\Intel\oneAPI\compiler\latest\env\vars.bat"
         set CXX=icx.exe
         set CC=icx.exe
-        Powershell.exe -ExecutionPolicy RemoteSigned -File gitlab\build_win.ps1 Ninja -DTBB_VERSION=2021.1.1 -DTBB_HASH=""          
+        Powershell.exe -ExecutionPolicy RemoteSigned -File gitlab\build_win.ps1 Ninja -DTBB_VERSION=2021.1.1 -DTBB_HASH="" -DBUILD_TOOLS=ON          
 
 
   ### Build MacOS Jobs ###

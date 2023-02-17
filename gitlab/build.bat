@@ -14,6 +14,7 @@ cmake -L ^
 -T "%~2" ^
 -D CMAKE_INSTALL_LIBDIR=lib ^
 -D BUILD_PYTHON=OFF ^
+-D BUILD_TOOLS=ON ^
 %~3 %~4 %~5 %~6 %~7 %~8 %~9 ^
 ../superbuild
 

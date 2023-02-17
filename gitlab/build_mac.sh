@@ -10,6 +10,7 @@ cmake --version
 cmake \
   -DCMAKE_INSTALL_LIBDIR=lib \
   -DBUILD_PYTHON=OFF \
+  -DBUILD_TOOLS=ON \
   -DBUILD_EMBREE_FROM_SOURCE=ON \
   -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
   "$@" ../superbuild

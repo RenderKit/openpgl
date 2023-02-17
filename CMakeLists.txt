@@ -32,6 +32,8 @@ include(openpgl_macros)
 option(OPENPGL_USE_OMP_THREADING "Use omp instead of tbb for threading." OFF)
 option(OPENPGL_BUILD_STATIC "Build OpenPGL as static library." OFF)
 
+option(OPENPGL_BUILD_TOOLS "Build tool applications." OFF)
+
 try_compile(COMPILER_SUPPORTS_ARM_NEON "${CMAKE_BINARY_DIR}" "${PROJECT_SOURCE_DIR}/cmake/check_arm_neon.cpp")
 
 if(COMPILER_SUPPORTS_ARM_NEON)
@@ -67,6 +69,9 @@ FIND_PACKAGE(TBB REQUIRED ${OPENPGL_TBB_COMPONENT})
 ## Build library and  ##
 add_subdirectory(openpgl)
 
+if (OPENPGL_BUILD_TOOLS)
+  add_subdirectory(tools)
+endif()
 ## Configure CMake find_package() config files ##
 
 include(CMakePackageConfigHelpers)
