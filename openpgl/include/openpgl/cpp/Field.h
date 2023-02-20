@@ -87,11 +87,25 @@ struct Field
     pgl_box3f GetSceneBounds() const;
 
     /**
-     * @brief Updates the current approximation of the radiance field.
+     * @brief Updates the current approximation of the surface and radiance fields.
      *
      * @param sampleStorage
      */
     void Update(const SampleStorage& sampleStorage);
+
+    /**
+     * @brief Updates the current approximation of the surface radiance field.
+     *
+     * @param sampleStorage
+     */
+    void UpdateSurface(const SampleStorage& sampleStorage);
+
+    /**
+     * @brief Updates the current approximation of the volume radiance field.
+     *
+     * @param sampleStorage
+     */
+    void UpdateVolume(const SampleStorage& sampleStorage);
 
     void Reset();
 
@@ -162,6 +176,18 @@ OPENPGL_INLINE void Field::Update(const SampleStorage& sampleStorage)
 {
     OPENPGL_ASSERT(m_fieldHandle);
     pglFieldUpdate(m_fieldHandle, sampleStorage.m_sampleStorageHandle);
+}
+
+OPENPGL_INLINE void Field::UpdateSurface(const SampleStorage& sampleStorage)
+{
+    OPENPGL_ASSERT(m_fieldHandle);
+    pglFieldUpdateSurface(m_fieldHandle, sampleStorage.m_sampleStorageHandle);
+}
+
+OPENPGL_INLINE void Field::UpdateVolume(const SampleStorage& sampleStorage)
+{
+    OPENPGL_ASSERT(m_fieldHandle);
+    pglFieldUpdateVolume(m_fieldHandle, sampleStorage.m_sampleStorageHandle);
 }
 
 OPENPGL_INLINE void Field::Reset()

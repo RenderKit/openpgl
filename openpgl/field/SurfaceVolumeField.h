@@ -94,15 +94,6 @@ public:
         return sceneBounds;
     }
 
-    void buildField(SampleContainer& samplesSurface, SampleContainer& samplesVolume) override
-    {
-        if(samplesSurface.size() > 0)
-            m_surfaceField.buildField(samplesSurface);
-        if(samplesVolume.size() > 0)
-            m_volumeField.buildField(samplesVolume);
-        m_iteration++;
-    }
-
     void updateField(SampleContainer& samplesSurface, SampleContainer& samplesVolume) override
     {
         if(samplesSurface.size() > 0)
@@ -110,6 +101,26 @@ public:
                 m_surfaceField.buildField(samplesSurface);
             else
                 m_surfaceField.updateField(samplesSurface);
+        if(samplesVolume.size() > 0)
+            if(!m_volumeField.isInitialized())
+                m_volumeField.buildField(samplesVolume);
+            else
+                m_volumeField.updateField(samplesVolume);
+        m_iteration++;
+    }
+
+    void updateFieldSurface(SampleContainer& samplesSurface) override
+    {
+        if(samplesSurface.size() > 0)
+            if(!m_surfaceField.isInitialized())
+                m_surfaceField.buildField(samplesSurface);
+            else
+                m_surfaceField.updateField(samplesSurface);
+        m_iteration++;
+    }
+
+    void updateFieldVolume(SampleContainer& samplesVolume) override
+    {
         if(samplesVolume.size() > 0)
             if(!m_volumeField.isInitialized())
                 m_volumeField.buildField(samplesVolume);

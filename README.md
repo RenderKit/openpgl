@@ -67,6 +67,9 @@ specification is still in flux and might change with upcoming releases.
             approximation of the incoming radiance distribution. This
             PDF does not need to be related to the actual sampling PDF
             but can be used for Resampled Importance Sampling (RIS).
+      - `Field`:
+          - Adding `UpdateSurface` and `UpdateVolume` function to
+            update/train the surface and volume field separately.
       - `SampleStorage`:
           - Adding `ClearSurface` and `ClearVolume` function to clear
             the surface and volume samples separately. This allows to

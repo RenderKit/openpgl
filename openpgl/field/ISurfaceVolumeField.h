@@ -29,9 +29,11 @@ struct ISurfaceVolumeField
 
     virtual openpgl::BBox getSceneBounds() const = 0;
 
-    virtual void buildField(SampleContainer& samplesSurface, SampleContainer& samplesVolume) = 0;
-
     virtual void updateField(SampleContainer& samplesSurface, SampleContainer& samplesVolume) = 0;
+
+    virtual void updateFieldSurface(SampleContainer& samplesSurface) = 0;
+
+    virtual void updateFieldVolume(SampleContainer& samplesVolume) = 0;
 
     virtual void resetField() = 0;
 

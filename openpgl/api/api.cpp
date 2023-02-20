@@ -185,16 +185,27 @@ extern "C" OPENPGL_DLLEXPORT  void pglFieldUpdate(PGLField field, PGLSampleStora
 {
     auto *gField = (IGuidingField *)field;
     auto *gSampleStorage = (openpgl::SampleDataStorage *)sampleStorage;
-    if (gField->getIteration() == 0)
-    {
-        gField->buildField(gSampleStorage->m_surfaceContainer, gSampleStorage->m_volumeContainer);
-    }
-    else
-    {
-        gField->updateField(gSampleStorage->m_surfaceContainer, gSampleStorage->m_volumeContainer);
-    }
+    gField->updateField(gSampleStorage->m_surfaceContainer, gSampleStorage->m_volumeContainer);
 }
 OPENPGL_CATCH_END_VOID
+
+
+extern "C" OPENPGL_DLLEXPORT  void pglFieldUpdateSurface(PGLField field, PGLSampleStorage sampleStorage)OPENPGL_CATCH_BEGIN
+{
+    auto *gField = (IGuidingField *)field;
+    auto *gSampleStorage = (openpgl::SampleDataStorage *)sampleStorage;
+    gField->updateFieldSurface(gSampleStorage->m_surfaceContainer);
+}
+OPENPGL_CATCH_END_VOID
+
+extern "C" OPENPGL_DLLEXPORT  void pglFieldUpdateVolume(PGLField field, PGLSampleStorage sampleStorage)OPENPGL_CATCH_BEGIN
+{
+    auto *gField = (IGuidingField *)field;
+    auto *gSampleStorage = (openpgl::SampleDataStorage *)sampleStorage;
+    gField->updateFieldVolume(gSampleStorage->m_volumeContainer);
+}
+OPENPGL_CATCH_END_VOID
+
 
 extern "C" OPENPGL_DLLEXPORT  void pglFieldReset(PGLField field)OPENPGL_CATCH_BEGIN
 {
