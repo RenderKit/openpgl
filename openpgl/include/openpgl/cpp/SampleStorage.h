@@ -72,6 +72,12 @@ struct SampleStorage
     /// Clears all internal list of surface and volume samples.
     void Clear();
 
+    /// Clears all internal list of surfacs samples.
+    void ClearSurface();
+
+    /// Clears all internal list of volume samples.
+    void ClearVolume();
+
     /// Returns the number of surface samples currently stored inside the storage container.
     size_t GetSizeSurface() const;
 
@@ -152,6 +158,18 @@ OPENPGL_INLINE void SampleStorage::Clear()
 {
     OPENPGL_ASSERT(m_sampleStorageHandle);
     pglSampleStorageClear(m_sampleStorageHandle);
+}
+
+OPENPGL_INLINE void SampleStorage::ClearSurface()
+{
+    OPENPGL_ASSERT(m_sampleStorageHandle);
+    pglSampleStorageClearSurface(m_sampleStorageHandle);
+}
+
+OPENPGL_INLINE void SampleStorage::ClearVolume()
+{
+    OPENPGL_ASSERT(m_sampleStorageHandle);
+    pglSampleStorageClearVolume(m_sampleStorageHandle);
 }
 
 OPENPGL_INLINE size_t SampleStorage::GetSizeSurface() const

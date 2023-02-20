@@ -48,6 +48,10 @@ OPENPGL_CORE_INTERFACE void pglSampleStorageReserve(PGLSampleStorage sampleStora
 
 OPENPGL_CORE_INTERFACE void pglSampleStorageClear(PGLSampleStorage sampleStorage);
 
+OPENPGL_CORE_INTERFACE void pglSampleStorageClearSurface(PGLSampleStorage sampleStorage);
+
+OPENPGL_CORE_INTERFACE void pglSampleStorageClearVolume(PGLSampleStorage sampleStorage);
+
 OPENPGL_CORE_INTERFACE size_t pglSampleStorageGetSizeSurface(PGLSampleStorage sampleStorage);
 
 OPENPGL_CORE_INTERFACE size_t pglSampleStorageGetSizeVolume(PGLSampleStorage sampleStorage);

@@ -326,6 +326,18 @@ extern "C" OPENPGL_DLLEXPORT void pglSampleStorageClear(PGLSampleStorage sampleS
     gSampleStorage->clearVolume();
 }
 
+extern "C" OPENPGL_DLLEXPORT void pglSampleStorageClearSurface(PGLSampleStorage sampleStorage)
+{
+    auto *gSampleStorage = (openpgl::SampleDataStorage *)sampleStorage;
+    gSampleStorage->clearSurface();
+}
+
+extern "C" OPENPGL_DLLEXPORT void pglSampleStorageClearVolume(PGLSampleStorage sampleStorage)
+{
+    auto *gSampleStorage = (openpgl::SampleDataStorage *)sampleStorage;
+    gSampleStorage->clearVolume();
+}
+
 extern "C" OPENPGL_DLLEXPORT size_t pglSampleStorageGetSizeSurface(PGLSampleStorage sampleStorage)
 {
     auto *gSampleStorage = (openpgl::SampleDataStorage *)sampleStorage;

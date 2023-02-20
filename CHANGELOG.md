@@ -17,6 +17,11 @@ Version History
         - Added `IncomingRadiancePDF` function that returns an approximation of the incoming radiance distribution. 
           This PDF does not need to be related to the actual sampling PDF but can be used for Resampled Importance Sampling (RIS).
 
+    -   `SampleStorage`:
+        - Adding `ClearSurface` and `ClearVolume` function to clear the surface and volume samples separately.
+          This allows to wait until a specific number of samples is collected for the surface or volume cache before updating/fitting the `Field`.
+
+
 ## Open PGL 0.4.1
 - Bugfixes:
     - Fixing bug introduced in `0.4.0` when using
