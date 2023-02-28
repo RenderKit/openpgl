@@ -54,7 +54,7 @@ specification is still in flux and might change with upcoming releases.
       - `PathSegmentStorage`:
           - Removed support for splatting training samples due to the
             fact that knn-lookups have proven to be better. Therefore,
-            the function attributes `spaltSamples` and `sampler` have
+            the function attributes `splatSamples` and `sampler` have
             been removed from the `PrepareSamples` function.
       - `Sampler`:
           - Removed since it is not used/needed anymore.
