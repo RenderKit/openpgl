@@ -96,36 +96,44 @@ public:
 
     void updateField(SampleContainer& samplesSurface, SampleContainer& samplesVolume) override
     {
-        if(samplesSurface.size() > 0)
-            if(!m_surfaceField.isInitialized())
+        if(samplesSurface.size() > 0) {
+            if(!m_surfaceField.isInitialized()) {
                 m_surfaceField.buildField(samplesSurface);
-            else
+            } else {
                 m_surfaceField.updateField(samplesSurface);
-        if(samplesVolume.size() > 0)
-            if(!m_volumeField.isInitialized())
+            }
+        }
+        if(samplesVolume.size() > 0) {
+            if(!m_volumeField.isInitialized()) {
                 m_volumeField.buildField(samplesVolume);
-            else
+            } else {
                 m_volumeField.updateField(samplesVolume);
+            }
+        }
         m_iteration++;
     }
 
     void updateFieldSurface(SampleContainer& samplesSurface) override
     {
-        if(samplesSurface.size() > 0)
-            if(!m_surfaceField.isInitialized())
+        if(samplesSurface.size() > 0) {
+            if(!m_surfaceField.isInitialized()) {
                 m_surfaceField.buildField(samplesSurface);
-            else
+            } else {
                 m_surfaceField.updateField(samplesSurface);
+            }
+        }
         m_iteration++;
     }
 
     void updateFieldVolume(SampleContainer& samplesVolume) override
     {
-        if(samplesVolume.size() > 0)
-            if(!m_volumeField.isInitialized())
+        if(samplesVolume.size() > 0) {
+            if(!m_volumeField.isInitialized()) { 
                 m_volumeField.buildField(samplesVolume);
-            else
+            } else {
                 m_volumeField.updateField(samplesVolume);
+            }
+        }
         m_iteration++;
     }
 
