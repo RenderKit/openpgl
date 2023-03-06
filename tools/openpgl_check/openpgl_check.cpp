@@ -5,10 +5,10 @@
 
 int main (int argc, char *argv[]) {
 
-    openpgl::cpp::Device device(PGL_DEVICE_TYPE_CPU_4);
-    PGLFieldArguments fieldSettings;
-    pglFieldArgumentsSetDefaults(fieldSettings, PGL_SPATIAL_STRUCTURE_KDTREE, PGL_DIRECTIONAL_DISTRIBUTION_PARALLAX_AWARE_VMM);
-    openpgl::cpp::Field field(&device, fieldSettings);
+    openpgl::cpp::Device device(PGL_DEVICE_TYPE_NONE);
+    //PGLFieldArguments fieldSettings;
+    //pglFieldArgumentsSetDefaults(fieldSettings, PGL_SPATIAL_STRUCTURE_KDTREE, PGL_DIRECTIONAL_DISTRIBUTION_PARALLAX_AWARE_VMM);
+    //openpgl::cpp::Field field(&device, fieldSettings);
 
     return 0;
 }
