@@ -42,8 +42,8 @@ license](http://www.apache.org/licenses/LICENSE-2.0).
 
 # Disclaimer
 
-The current version of Open PGL is still in a beta stage and should be
-used with caution in any production related environment. The API
+The current version of Open PGL is still in a pre v1.0 stage and should
+be used with caution in any production related environment. The API
 specification is still in flux and might change with upcoming releases.
 
 # Version History
@@ -75,6 +75,9 @@ specification is still in flux and might change with upcoming releases.
             the surface and volume samples separately. This allows to
             wait until a specific number of samples is collected for the
             surface or volume cache before updating/fitting the `Field`.
+  - Bugfixes:
+      - Fixing bug causing crash during `Field::Update` when in previous
+        iterations no volume or surface samples were present.
 
 ## Open PGL 0.4.1
 
