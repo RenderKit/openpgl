@@ -110,18 +110,18 @@ else()
 endif()
 
 
-if(OPENPGL_USE_OMP_THREADING)
-  set(OPENPGL_RELEASE_OPTIONS -fopenmp)
-endif()
+#if(OPENPGL_USE_OMP_THREADING)
+#  set(OPENPGL_RELEASE_OPTIONS -fopenmp)
+#endif()
 
 target_compile_options(${PROJECT_NAME} PUBLIC "$<$<CONFIG:RELEASE>:${OPENPGL_RELEASE_OPTIONS}>")
 
 # CMAKE 3.8 feature
 #target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_11)
 
-if(OPENPGL_USE_OMP_THREADING)
-  add_compile_definitions(OPENPGL_USE_OMP_THREADING)
-endif()
+#if(OPENPGL_USE_OMP_THREADING)
+#  add_compile_definitions(OPENPGL_USE_OMP_THREADING)
+#endif()
 
 #add_compile_options()
 

@@ -51,6 +51,7 @@ specification is still in flux and might change with upcoming releases.
 ## Open PGL 0.5.0
 
   - Api changes:
+    
       - `PathSegmentStorage`:
           - Removed support for splatting training samples due to the
             fact that knn-lookups have proven to be better. Therefore,
@@ -75,7 +76,12 @@ specification is still in flux and might change with upcoming releases.
             the surface and volume samples separately. This allows to
             wait until a specific number of samples is collected for the
             surface or volume cache before updating/fitting the `Field`.
+
+  - Deactivating/removing `OMP` threading support since it would still
+    have a dependency on `TBB`
+
   - Bugfixes:
+    
       - Fixing bug causing crash during `Field::Update` when in previous
         iterations no volume or surface samples were present.
 

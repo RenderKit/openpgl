@@ -24,6 +24,8 @@ Version History
         - Adding `ClearSurface` and `ClearVolume` function to clear the surface and volume samples separately.
           This allows to wait until a specific number of samples is collected for the surface or volume cache before updating/fitting the `Field`.
 
+- Deactivating/removing `OMP` threading support since it would still have a dependency on `TBB`
+
 - Bugfixes:
     - Fixing bug causing crash during `Field::Update` when in previous iterations no volume or surface samples were present.
 
