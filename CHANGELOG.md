@@ -9,6 +9,9 @@ Version History
           Therefore, the function attributes `splatSamples` and `sampler`
           have been removed from the `PrepareSamples` function.
 
+        - Added `PropagateSamples` method prepare and push samples to the `SampleStorage`
+          The goal is to replace `PrepareSamples`, `GetSamples` and `AddSamples`.
+
     - `Sampler`:
         - Removed since it is not used/needed anymore.
 
