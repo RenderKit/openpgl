@@ -67,10 +67,14 @@ if(WIN32)
       set_source_files_properties(api/deviceCPU16.cpp PROPERTIES COMPILE_FLAGS "/D__SSE__ /D__SSE2__ /D__SSE3__ /D__SSE4_1__ /D__SSE4_2__ /arch:AVX /arch:AVX2 /arch:AVX512")
     endif()
   elseif(CMAKE_CXX_COMPILER_ID STREQUAL "IntelLLVM" OR CMAKE_CXX_COMPILER_ID STREQUAL "dpcpp")
-    set(OPENPGL_RELEASE_OPTIONS -O3 -Wall -ffp-model=precise)
+    set(OPENPGL_RELEASE_OPTIONS -O3)
+    list(APPEND OPENPGL_RELEASE_OPTIONS -Wall) 
+    list(APPEND OPENPGL_RELEASE_OPTIONS -ffp-model=precise)
+
     if(OPENPGL_ISA_SSE4 OR OPENPGL_ISA_AVX2 OR OPENPGL_ISA_AVX512)
-      set(OPENPGL_RELEASE_OPTIONS ${OPENPGL_RELEASE_OPTIONS} -msse2 -msse4.1)
+      list(APPEND OPENPGL_RELEASE_OPTIONS -msse2 -msse4.1)
     endif()
+
     if(OPENPGL_ISA_SSE4)
       set_source_files_properties(api/deviceCPU4.cpp PROPERTIES COMPILE_FLAGS "-msse2 -msse4.1")
     endif()
@@ -82,15 +86,29 @@ if(WIN32)
     endif()
   endif()
 else()
-  set(OPENPGL_RELEASE_OPTIONS -O3 -Wall)
+  set(OPENPGL_RELEASE_OPTIONS -O3)
   if (CMAKE_CXX_COMPILER_ID STREQUAL "IntelLLVM" OR CMAKE_CXX_COMPILER_ID STREQUAL "dpcpp")
-    set(OPENPGL_RELEASE_OPTIONS ${OPENPGL_RELEASE_OPTIONS} -ffp-model=precise)
+    list(APPEND OPENPGL_RELEASE_OPTIONS  -ffp-model=precise)
   endif()
+
+  list(APPEND OPENPGL_RELEASE_OPTIONS -Wall)                                 # enables most warnings
+  list(APPEND OPENPGL_RELEASE_OPTIONS -Wformat -Wformat-security)            # enables string format vulnerability warnings
+  #SET(OPENPGL_RELEASE_OPTIONS ${OPENPGL_RELEASE_OPTIONS} -std=c++11)        # enables C++11 features
+  list(APPEND OPENPGL_RELEASE_OPTIONS -fvisibility=hidden)                   # makes all symbols hidden by default
+  list(APPEND OPENPGL_RELEASE_OPTIONS -fvisibility-inlines-hidden)           # makes all inline symbols hidden by default
+  list(APPEND OPENPGL_RELEASE_OPTIONS -fno-strict-aliasing)                  # disables strict aliasing rules
+  list(APPEND OPENPGL_RELEASE_OPTIONS -fno-tree-vectorize)                   # disable auto vectorizer
+
+  if (OPENPGL_ARM)
+    list(APPEND OPENPGL_RELEASE_OPTIONS -fsigned-char)                       # treat 'char' as 'signed char'
+    list(APPEND OPENPGL_RELEASE_OPTIONS -flax-vector-conversions)            # allow lax vector type conversions
+  endif()
+
   #set(OPENPGL_RELEASE_OPTIONS ${OPENPGL_RELEASE_OPTIONS} -fno-strict-aliasing -Wno-padded -ftree-vectorize -mfpmath=sse -funsafe-math-optimizations -fno-rounding-math -fno-signaling-nans -fno-math-errno -fomit-frame-pointer )
   #set(OPENPGL_RELEASE_OPTIONS ${OPENPGL_RELEASE_OPTIONS} -fno-strict-aliasing -Wno-padded -ftree-vectorize -mfpmath=sse)
 
   if(OPENPGL_ISA_SSE4 OR OPENPGL_ISA_AVX2 OR OPENPGL_ISA_AVX512)
-    set(OPENPGL_RELEASE_OPTIONS ${OPENPGL_RELEASE_OPTIONS} -msse2 -msse4.1)
+    list(APPEND OPENPGL_RELEASE_OPTIONS -msse2 -msse4.1)
   endif()
   if(OPENPGL_ISA_SSE4)
     set_source_files_properties(api/deviceCPU4.cpp PROPERTIES COMPILE_FLAGS "-msse2 -msse4.1")
