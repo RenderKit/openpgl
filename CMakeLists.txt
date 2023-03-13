@@ -27,8 +27,22 @@ project(openpgl VERSION 0.5.0 LANGUAGES C CXX)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/cmake)
 include(openpgl_macros)
 
-## openpgl specific configuration ##
 
+##############################################################
+# Platform detection and defaults
+##############################################################
+SET(OPENPGL_ARM OFF)
+IF (APPLE AND CMAKE_SYSTEM_NAME STREQUAL "Darwin" AND (CMAKE_SYSTEM_PROCESSOR STREQUAL "arm64" OR CMAKE_OSX_ARCHITECTURES MATCHES "arm64"))
+  MESSAGE(STATUS "Building for Apple silicon")
+  SET(OPENPGL_ARM ON)
+ELSEIF(CMAKE_SYSTEM_PROCESSOR STREQUAL "aarch64")
+  MESSAGE(STATUS "Building for AArch64")
+  SET(OPENPGL_ARM ON)
+ENDIF()
+
+##############################################################
+# Open PGL specific configuration 
+##############################################################
 #option(OPENPGL_USE_OMP_THREADING "Use omp instead of tbb for threading." OFF)
 option(OPENPGL_BUILD_STATIC "Build OpenPGL as static library." OFF)
 
