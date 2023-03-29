@@ -14,13 +14,20 @@
 #include <cmath>
 #include <algorithm>
 
-#if defined(__WIN32__) || defined(__MACOSX__)
+#if defined(__WIN32__) || ( defined(__MACOSX__) && !defined(__INTEL_COMPILER) )
 
 inline void sincosf(const float theta, float* sin, float* cos)
 {
     embree::sincosf(theta, sin, cos);
 }
+#elif defined(__MACOSX__) && defined(__INTEL_COMPILER)
 
+inline void sincosf(const float theta, float* sin, float* cos)
+{
+    *sin = sinf(theta); 
+    *cos = cosf(theta);
+}
+ 
 #endif
 
 namespace openpgl
