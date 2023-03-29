@@ -44,6 +44,24 @@ jobs:
         export LDFLAGS="-static-intel"
         gitlab/build.sh
 
+
+  build-centos7-icc:
+    secrets: inherit
+    uses: intel-innersource/libraries.devops.renderkit.workflows/.github/workflows/docker.yml@main
+    with:
+      force-delete: true    # guarantees .gitattributes are respected in working dir
+      submodules: true
+      image: centos:7
+      #artifact-out: build-centos7-icc
+      #artifact-path: ./build/install ./build/openvkl/build
+      cmd: |
+        module load cmake
+        module load intel/2019.4
+        export CC=icc
+        export CXX=icpc
+        export CXXFLAGS="-static-intel -fPIC"
+        gitlab/build.sh
+
   build-centos8:
     secrets: inherit
     uses: intel-innersource/libraries.devops.renderkit.workflows/.github/workflows/docker.yml@main
@@ -123,6 +141,17 @@ jobs:
     with:
       runs-on: '[ "macOS", "build", "avx2", "x86_64" ]'
       cmd: |
+          gitlab/build_mac.sh
+
+  build-macOS-icc:
+    secrets: inherit
+    uses: intel-innersource/libraries.devops.renderkit.workflows/.github/workflows/macos.yml@main
+    with:
+      runs-on: '[ "macOS", "build", "avx2", "x86_64" ]'
+      cmd: |
+          export CC=icc
+          export CXX=icpc
+          export CXXFLAGS="-static-intel -fPIC"
           gitlab/build_mac.sh
 
   build-macOS-arm:
