@@ -120,6 +120,12 @@ struct VolumeSamplingDistribution
      */
     void ApplySingleLobeHenyeyGreensteinProduct(const pgl_vec3f& dir, const float meanCosine);
 
+    /**
+     * @brief Get the id of the guiding cache used to initialize the VolumeSamplingDistribution.
+     * 
+     * @return uint32_t The id of the cache.
+     */   
+    uint32_t GetId() const;
 
     ///////////////////////////////////////
     /// Future plans
@@ -148,9 +154,6 @@ struct VolumeSamplingDistribution
      * @return Region 
      */
     Region GetRegion() const;
-
-
-
 
     friend struct openpgl::cpp::Field;
     private:
@@ -241,6 +244,12 @@ OPENPGL_INLINE Region VolumeSamplingDistribution::GetRegion() const
     OPENPGL_ASSERT(m_volumeSamplingDistributionHandle);
     PGLRegion regionHandle = pglVolumeSamplingGetRegion(m_volumeSamplingDistributionHandle);
     return Region(regionHandle);
+}
+
+OPENPGL_INLINE uint32_t VolumeSamplingDistribution::GetId() const
+{
+    OPENPGL_ASSERT(m_volumeSamplingDistributionHandle);
+    return pglVolumeSamplingGetId(m_volumeSamplingDistributionHandle);
 }
 
 }

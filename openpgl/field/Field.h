@@ -93,7 +93,7 @@ public:
         m_isSurface = isSurface;
     }
 
-    inline const RegionType *getRegion(const openpgl::Point3 &p, float *sample1D) const
+    inline const RegionType *getRegion(const openpgl::Point3 &p, float *sample1D, uint32_t &id ) const
     {
         if (m_iteration >0 && embree::inside(m_spatialSubdiv.getBounds(), p))
         {
@@ -101,12 +101,12 @@ public:
             {
                 if (USE_PRECOMPUTED_NN)
                 {
-                    uint32_t regionIdx = getApproximateClosestRegionIdx(m_regionKNNSearchTree, p, sample1D);
+                    uint32_t regionIdx = getApproximateClosestRegionIdx(m_regionKNNSearchTree, p, sample1D, id);
                     return &m_regionStorageContainer[regionIdx].first;
                 }
                 else
                 {
-                    uint32_t regionIdx =  getClosestRegionIdx(m_regionKNNSearchTree, p, sample1D);
+                    uint32_t regionIdx =  getClosestRegionIdx(m_regionKNNSearchTree, p, sample1D, id);
                     if(regionIdx != -1)
                     {
                         return &m_regionStorageContainer[regionIdx].first;
@@ -121,6 +121,7 @@ public:
             {
                 uint32_t dataIdx = m_spatialSubdiv.getDataIdxAtPos(p);
                 OPENPGL_ASSERT(dataIdx < m_regionStorageContainer.size());
+                id = dataIdx;
                 return &m_regionStorageContainer[dataIdx].first;
             }
         }
@@ -291,18 +292,19 @@ private:
         }
     }
 
-    inline uint32_t getClosestRegionIdx(const KNearestRegionsSearchTree<Vecsize> &knnTree, const openpgl::Point3 &p, float *sample) const
+    inline uint32_t getClosestRegionIdx(const KNearestRegionsSearchTree<Vecsize> &knnTree, const openpgl::Point3 &p, float *sample, uint32_t &id) const
     {
         OPENPGL_ASSERT(knnTree.isBuild());
         const uint32_t regionIdx = knnTree.sampleClosestRegionIdx(p, sample);
         return regionIdx;
     }
 
-    inline uint32_t getApproximateClosestRegionIdx(const KNearestRegionsSearchTree<Vecsize> &knnTree, const openpgl::Point3 &p, float *sample) const
+    inline uint32_t getApproximateClosestRegionIdx(const KNearestRegionsSearchTree<Vecsize> &knnTree, const openpgl::Point3 &p, float *sample, uint32_t &id) const
     {
         OPENPGL_ASSERT(knnTree.isBuildNeighbours());
         uint32_t dataIdx = m_spatialSubdiv.getDataIdxAtPos(p);
         OPENPGL_ASSERT(dataIdx < m_regionStorageContainer.size());
+        id = dataIdx;
         return knnTree.sampleApproximateClosestRegionIdx(dataIdx, p, sample);
     }
 

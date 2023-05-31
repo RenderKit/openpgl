@@ -114,6 +114,13 @@ struct SurfaceSamplingDistribution
      * @param normal The surface normal at the curren sampling position.
      */
     void ApplyCosineProduct(const pgl_vec3f& normal);
+    
+    /**
+     * @brief Get the id of the guiding cache used to initialize the SurfaceSamplingDistribution.
+     * 
+     * @return uint32_t The id of the cache.
+     */
+    uint32_t GetId() const;
 
     ///////////////////////////////////////
     /// Future plans
@@ -237,6 +244,12 @@ OPENPGL_INLINE Region SurfaceSamplingDistribution::GetRegion() const
     OPENPGL_ASSERT(m_surfaceSamplingDistributionHandle);
     PGLRegion regionHandle = pglSurfaceSamplingGetRegion(m_surfaceSamplingDistributionHandle);
     return Region(regionHandle);
+}
+
+OPENPGL_INLINE uint32_t SurfaceSamplingDistribution::GetId() const
+{
+    OPENPGL_ASSERT(m_surfaceSamplingDistributionHandle);
+    return pglSurfaceSamplingDistributionGetId(m_surfaceSamplingDistributionHandle);
 }
 
 }

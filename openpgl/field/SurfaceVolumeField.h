@@ -48,13 +48,15 @@ public:
     bool initSurfaceSamplingDistribution(ISurfaceSamplingDistribution* surfaceSamplingDistribution, const Point3& position, float* sample1D) const override
     {
         TSurfaceSamplingDistribution* _surfaceSamplingDistribution = (TSurfaceSamplingDistribution*)surfaceSamplingDistribution;
-        const RegionType* region = m_surfaceField.getRegion(position, sample1D);
+        uint32_t id = -1;
+        const RegionType* region = m_surfaceField.getRegion(position, sample1D, id);
         if(!region || !region->valid)
         {
             return false;
         }
         const DirectionalDistribution* distribution = &region->distribution;
         _surfaceSamplingDistribution->init(distribution, position);
+        _surfaceSamplingDistribution->setId(id);
         _surfaceSamplingDistribution->setRegion(region);
         return true;
     }
@@ -67,13 +69,15 @@ public:
     bool initVolumeSamplingDistribution(IVolumeSamplingDistribution* volumeSamplingDistribution, const Point3& position, float* sample1D) const override
     {
         TVolumeSamplingDistribution* _volumeSamplingDistribution = (TVolumeSamplingDistribution*)volumeSamplingDistribution;
-        const RegionType* region = m_volumeField.getRegion(position, sample1D);
+        uint32_t id = -1;
+        const RegionType* region = m_volumeField.getRegion(position, sample1D, id);
         if(!region || !region->valid)
         {
             return false;
         }
         const DirectionalDistribution* distribution = region->getDistribution(position);
         _volumeSamplingDistribution->init(distribution, position);
+        _volumeSamplingDistribution->setId(id);
         _volumeSamplingDistribution->setRegion(region);
         return true;
     }
