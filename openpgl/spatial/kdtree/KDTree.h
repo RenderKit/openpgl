@@ -261,6 +261,12 @@ struct KDTree
     {
         if(m_nodesPtr)
             delete[] m_nodesPtr;
+
+        if(m_treeLets){
+            delete[] m_treeLets;
+            m_treeLets = nullptr;
+            m_numTreeLets = 0;
+        }
     }
 
     inline void init(const BBox &bounds, size_t numNodesReseve = 0)
