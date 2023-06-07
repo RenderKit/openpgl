@@ -146,6 +146,8 @@ struct SurfaceSamplingDistribution
      */
     pgl_vec3f Irradiance(pgl_vec3f &normal, const bool directLightMIS) const;
 #endif
+
+    float VolumeScatterProbability(pgl_vec3f &direction, bool contributionBased) const;
     ///////////////////////////////////////
     /// Future plans
     ///////////////////////////////////////
@@ -285,6 +287,12 @@ OPENPGL_INLINE pgl_vec3f SurfaceSamplingDistribution::Irradiance(pgl_vec3f &norm
     return pglSurfaceSamplingDistributionIrradiance(m_surfaceSamplingDistributionHandle, normal, directLightMIS);
 }
 #endif
+
+OPENPGL_INLINE float SurfaceSamplingDistribution::VolumeScatterProbability(pgl_vec3f &direction, bool contributionBased) const
+{
+    OPENPGL_ASSERT(m_surfaceSamplingDistributionHandle);
+    return pglSurfaceSamplingDistributionVolumeScatterProbability(m_surfaceSamplingDistributionHandle, direction, contributionBased);
+}
 
 }  // namespace cpp
 }  // namespace openpgl

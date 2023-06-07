@@ -462,6 +462,9 @@ struct Field
                                                                    zeroValueSamples.data() + regionStorage.second.m_is_begin,
                                                                    regionStorage.second.m_is_end - regionStorage.second.m_is_begin);
 #endif
+                        m_distributionFactory.updateVolumeScatterProbability(regionStorage.first.distribution, regionStorage.first.trainingStatistics,
+                                                                             samples.data() + regionStorage.second.m_begin,
+                                                                             regionStorage.second.m_end - regionStorage.second.m_begin);
                         // TODO: we should move setting the pivot to the factory
                         regionStorage.first.distribution._pivotPosition = sampleMean;
                         regionStorage.first.valid = regionStorage.first.distribution.isValid();
@@ -537,6 +540,7 @@ struct Field
                             OPENPGL_ASSERT(regionStorage.first.trainingStatistics.sufficientStatistics.isValid());
                         }
                         typename DirectionalDistributionFactory::FittingStatistics fittingStats;
+                        float numSamples = regionStorage.first.trainingStatistics.getNumSamples();
                         m_distributionFactory.prepareSamples(samples.data() + regionStorage.second.m_begin, regionStorage.second.m_end - regionStorage.second.m_begin,
                                                              regionStorage.first.sampleStatistics, m_distributionFactorySettings);
                         if (regionStorage.first.initialized)
@@ -558,6 +562,9 @@ struct Field
                                                                    zeroValueSamples.data() + regionStorage.second.m_is_begin,
                                                                    regionStorage.second.m_is_end - regionStorage.second.m_is_begin);
 #endif
+                        m_distributionFactory.updateVolumeScatterProbability(regionStorage.first.distribution, regionStorage.first.trainingStatistics,
+                                                                             samples.data() + regionStorage.second.m_begin,
+                                                                             regionStorage.second.m_end - regionStorage.second.m_begin);
                         regionStorage.first.valid = regionStorage.first.isValid();
 #ifdef OPENPGL_DEBUG_MODE
                         if (!regionStorage.first.valid)
@@ -577,6 +584,7 @@ struct Field
                     if (regionStorage.first.splitFlag)
                     {
                         regionStorage.first.trainingStatistics.decay(this->m_decayOnSpatialSplit);
+                        regionStorage.first.distribution.decay(this->m_decayOnSpatialSplit);
                         regionStorage.first.splitFlag = false;
                     }
                 }

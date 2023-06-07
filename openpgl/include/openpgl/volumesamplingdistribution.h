@@ -54,6 +54,9 @@ typedef ManagedObject VolumeSamplingDistribution;
     OPENPGL_CORE_INTERFACE pgl_vec3f pglVolumeSamplingDistributionFluence(PGLVolumeSamplingDistribution volumeSamplingDistribution, const bool directLightMIS);
 #endif
 
+    OPENPGL_CORE_INTERFACE float pglVolumeSamplingDistributionVolumeScatterProbability(PGLVolumeSamplingDistribution VolumeSamplingDistribution, pgl_vec3f direction,
+                                                                                       bool contributionBased);
+
 #ifdef __cplusplus
 }  // extern "C"
 #endif
