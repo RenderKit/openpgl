@@ -171,6 +171,13 @@ inline void pglVec3fAdd(pgl_vec3f &veca, const pgl_vec3f &vecb)
     veca.z += vecb.z;
 }
 
+inline void pglVec3fMultiply(pgl_vec3f &veca, const pgl_vec3f &vecb)
+{
+    veca.x *= vecb.x;
+    veca.y *= vecb.y;
+    veca.z *= vecb.z;
+}
+
 inline void pglVec2f(pgl_vec2f &vec, const float x, const float y)
 {
     vec.x = x;

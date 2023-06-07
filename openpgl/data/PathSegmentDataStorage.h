@@ -260,6 +260,11 @@ struct PathSegmentDataStorage
                     flags |= SampleData::EInsideVolume;
                 }
 
+                if (m_segmentStorage[i + 1].volumeScatter)
+                {
+                    flags |= SampleData::ENextEventVolume;
+                }
+
                 bool directLightSample = false;
 #ifdef OPENPGL_RADIANCE_CACHES
                 float misWeight = 1.f;

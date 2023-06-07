@@ -76,6 +76,9 @@ struct ParallaxAwareVonMisesFisherMixture
     embree::vfloat<VecSize> _distances[NumVectors];
     Point3 _pivotPosition{0.0f, 0.0f, 0.0f};
 
+    embree::vfloat<VecSize> _volumeScatterFirstMomentProbabilityWeights[NumVectors];
+    embree::vfloat<VecSize> _volumeScatterSecondMomentProbabilityWeights[NumVectors];
+
 #ifdef OPENPGL_RADIANCE_CACHES
     // fluence attributes
     // float _fluence {0.0f};
@@ -152,14 +155,11 @@ struct ParallaxAwareVonMisesFisherMixture
 
     void setComponentDistance(const size_t &idx, const float &distance);
 
-    void decay(const float alpha)
-    {
-#ifdef OPENPGL_RADIANCE_CACHES
-        _numFluenceSamples *= alpha;
-#endif
-    }
+    void decay(const float alpha);
 
     bool isValid() const;
+
+    float volumeScatterProbability(const Vector3 &direction, const bool contributionBased) const;
 
     std::string toString() const;
 
@@ -256,6 +256,8 @@ std::string ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents, UseParall
         ss << "\t eMinus2Kappa: " << this->_eMinus2Kappa[tmp.quot][tmp.rem];
         ss << "\t meanCosine: " << this->_meanCosines[tmp.quot][tmp.rem];
         ss << "\t distance: " << _distances[tmp.quot][tmp.rem];
+        ss << "\t volumeScatterProbabilityWeight: " << _volumeScatterFirstMomentProbabilityWeights[tmp.quot][tmp.rem];
+        ss << "\t volumeScatterProbabilityWeight: " << _volumeScatterSecondMomentProbabilityWeights[tmp.quot][tmp.rem];
 #ifdef OPENPGL_RADIANCE_CACHES
         ss << "\t fluenceRGBWeightWithMIS: " << _fluenceRGBWeightsWithMIS[tmp.quot].x[tmp.rem] << "\t" << _fluenceRGBWeightsWithMIS[tmp.quot].y[tmp.rem] << "\t"
            << _fluenceRGBWeightsWithMIS[tmp.quot].z[tmp.rem];
@@ -303,6 +305,9 @@ void ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents, UseParallaxCompe
     _meanDirections[tmpIdx1.quot].x[tmpIdx1.rem] = meanDirection1.x;
     _meanDirections[tmpIdx1.quot].y[tmpIdx1.rem] = meanDirection1.y;
     _meanDirections[tmpIdx1.quot].z[tmpIdx1.rem] = meanDirection1.z;
+
+    _volumeScatterFirstMomentProbabilityWeights[tmpIdx1.quot][tmpIdx1.rem] = _volumeScatterFirstMomentProbabilityWeights[tmpIdx0.quot][tmpIdx0.rem];
+    _volumeScatterSecondMomentProbabilityWeights[tmpIdx1.quot][tmpIdx1.rem] = _volumeScatterSecondMomentProbabilityWeights[tmpIdx0.quot][tmpIdx0.rem];
 
     // splitting PAVMM
     _distances[tmpIdx1.quot][tmpIdx1.rem] = _distances[tmpIdx0.quot][tmpIdx0.rem];
@@ -407,6 +412,20 @@ void ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents, UseParallaxCompe
         newDistance /= (weight0 + weight1);
 
         _distances[tmpIdx0.quot][tmpIdx0.rem] = newDistance;
+
+        const float volumeScatterFirstMomentProbability0 = _volumeScatterFirstMomentProbabilityWeights[tmpIdx0.quot][tmpIdx0.rem];
+        const float volumeScatterFirstMomentProbability1 = _volumeScatterFirstMomentProbabilityWeights[tmpIdx1.quot][tmpIdx1.rem];
+        const float volumeScatterSecondMomentProbability0 = _volumeScatterSecondMomentProbabilityWeights[tmpIdx0.quot][tmpIdx0.rem];
+        const float volumeScatterSecondMomentProbability1 = _volumeScatterSecondMomentProbabilityWeights[tmpIdx1.quot][tmpIdx1.rem];
+
+        float newVolumeFirstMomentScatterProbability = weight0 * volumeScatterFirstMomentProbability0 + weight1 * volumeScatterFirstMomentProbability1;
+        newVolumeFirstMomentScatterProbability /= (weight0 + weight1);
+        _volumeScatterFirstMomentProbabilityWeights[tmpIdx0.quot][tmpIdx0.rem] = newVolumeFirstMomentScatterProbability;
+
+        float newVolumeSecondMomentScatterProbability = weight0 * volumeScatterSecondMomentProbability0 + weight1 * volumeScatterSecondMomentProbability1;
+        newVolumeSecondMomentScatterProbability /= (weight0 + weight1);
+        _volumeScatterSecondMomentProbabilityWeights[tmpIdx0.quot][tmpIdx0.rem] = newVolumeSecondMomentScatterProbability;
+
 #ifdef OPENPGL_RADIANCE_CACHES
         const Vector3 fluenceRGBWeightsWithMIS0(_fluenceRGBWeightsWithMIS[tmpIdx0.quot].x[tmpIdx0.rem], _fluenceRGBWeightsWithMIS[tmpIdx0.quot].y[tmpIdx0.rem],
                                                 _fluenceRGBWeightsWithMIS[tmpIdx0.quot].z[tmpIdx0.rem]);
@@ -451,6 +470,9 @@ void ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents, UseParallaxCompe
         std::swap(_meanDirections[tmpIdx0.quot].z[tmpIdx0.rem], _meanDirections[tmpIdx1.quot].z[tmpIdx1.rem]);
 
         std::swap(_distances[tmpIdx0.quot][tmpIdx0.rem], _distances[tmpIdx1.quot][tmpIdx1.rem]);
+        std::swap(_volumeScatterFirstMomentProbabilityWeights[tmpIdx0.quot][tmpIdx0.rem], _volumeScatterFirstMomentProbabilityWeights[tmpIdx1.quot][tmpIdx1.rem]);
+        std::swap(_volumeScatterSecondMomentProbabilityWeights[tmpIdx0.quot][tmpIdx0.rem], _volumeScatterSecondMomentProbabilityWeights[tmpIdx1.quot][tmpIdx1.rem]);
+
 #ifdef OPENPGL_RADIANCE_CACHES
         std::swap(_fluenceRGBWeightsWithMIS[tmpIdx0.quot].x[tmpIdx0.rem], _fluenceRGBWeightsWithMIS[tmpIdx1.quot].x[tmpIdx1.rem]);
         std::swap(_fluenceRGBWeightsWithMIS[tmpIdx0.quot].y[tmpIdx0.rem], _fluenceRGBWeightsWithMIS[tmpIdx1.quot].y[tmpIdx1.rem]);
@@ -479,6 +501,8 @@ void ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents, UseParallaxCompe
     _meanDirections[tmpIdx.quot].z[tmpIdx.rem] = 1.f;
 
     _distances[tmpIdx.quot][tmpIdx.rem] = 0.0f;
+    _volumeScatterFirstMomentProbabilityWeights[tmpIdx.quot][tmpIdx.rem] = 0.0f;
+    _volumeScatterSecondMomentProbabilityWeights[tmpIdx.quot][tmpIdx.rem] = 0.0f;
 
 #ifdef OPENPGL_RADIANCE_CACHES
     _fluenceRGBWeightsWithMIS[tmpIdx.quot].x[tmpIdx.rem] = 0.f;
@@ -505,6 +529,9 @@ void ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents, UseParallaxCompe
     serializeVec3Vectors<NumVectors, VectorSize>(stream, _fluenceRGBWeightsWithMIS);
     serializeVec3Vectors<NumVectors, VectorSize>(stream, _fluenceRGBWeights);
 #endif
+    serializeFloatVectors<NumVectors, VectorSize>(stream, _volumeScatterFirstMomentProbabilityWeights);
+    serializeFloatVectors<NumVectors, VectorSize>(stream, _volumeScatterSecondMomentProbabilityWeights);
+
     stream.write(reinterpret_cast<const char *>(&_numComponents), sizeof(_numComponents));
     stream.write(reinterpret_cast<const char *>(&_pivotPosition), sizeof(Point3));
 
@@ -530,6 +557,9 @@ void ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents, UseParallaxCompe
     deserializeVec3Vectors<NumVectors, VectorSize>(stream, _fluenceRGBWeightsWithMIS);
     deserializeVec3Vectors<NumVectors, VectorSize>(stream, _fluenceRGBWeights);
 #endif
+    deserializeFloatVectors<NumVectors, VectorSize>(stream, _volumeScatterFirstMomentProbabilityWeights);
+    deserializeFloatVectors<NumVectors, VectorSize>(stream, _volumeScatterSecondMomentProbabilityWeights);
+
     stream.read(reinterpret_cast<char *>(&_numComponents), sizeof(_numComponents));
     stream.read(reinterpret_cast<char *>(&_pivotPosition), sizeof(Point3));
 
@@ -591,6 +621,16 @@ bool ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents, UseParallaxCompe
         valid = valid && embree::isvalid(_distances[tmpK.quot][tmpK.rem]);
         valid = valid && _distances[tmpK.quot][tmpK.rem] >= 0.0f;
         OPENPGL_ASSERT(valid);
+
+        valid = valid && embree::isvalid(_volumeScatterFirstMomentProbabilityWeights[tmpK.quot][tmpK.rem]);
+        valid = valid && _volumeScatterFirstMomentProbabilityWeights[tmpK.quot][tmpK.rem] >= 0.0f;
+        valid = valid && _volumeScatterFirstMomentProbabilityWeights[tmpK.quot][tmpK.rem] <= 1.0f;
+        OPENPGL_ASSERT(valid);
+
+        valid = valid && embree::isvalid(_volumeScatterSecondMomentProbabilityWeights[tmpK.quot][tmpK.rem]);
+        valid = valid && _volumeScatterSecondMomentProbabilityWeights[tmpK.quot][tmpK.rem] >= 0.0f;
+        valid = valid && _volumeScatterSecondMomentProbabilityWeights[tmpK.quot][tmpK.rem] <= 1.0f;
+        OPENPGL_ASSERT(valid);
     }
 
     // check unused componets
@@ -631,6 +671,14 @@ bool ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents, UseParallaxCompe
 
         valid = valid && embree::isvalid(_distances[tmpK.quot][tmpK.rem]);
         valid = valid && _distances[tmpK.quot][tmpK.rem] == 0.0f;
+        OPENPGL_ASSERT(valid);
+
+        valid = valid && embree::isvalid(_volumeScatterFirstMomentProbabilityWeights[tmpK.quot][tmpK.rem]);
+        valid = valid && _volumeScatterFirstMomentProbabilityWeights[tmpK.quot][tmpK.rem] == 0.0f;
+        OPENPGL_ASSERT(valid);
+
+        valid = valid && embree::isvalid(_volumeScatterSecondMomentProbabilityWeights[tmpK.quot][tmpK.rem]);
+        valid = valid && _volumeScatterSecondMomentProbabilityWeights[tmpK.quot][tmpK.rem] == 0.0f;
         OPENPGL_ASSERT(valid);
     }
 
@@ -1129,6 +1177,14 @@ void ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents, UseParallaxCompe
 }
 
 template <int VecSize, int maxComponents, bool UseParallaxCompensation>
+void ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents, UseParallaxCompensation>::decay(float alpha)
+{
+#ifdef OPENPGL_RADIANCE_CACHES
+    _numFluenceSamples *= alpha;
+#endif
+}
+
+template <int VecSize, int maxComponents, bool UseParallaxCompensation>
 void ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents, UseParallaxCompensation>::_calculateNormalization()
 {
     const embree::vfloat<VecSize> zeroKappaNorm(ONE_OVER_FOUR_PI);
@@ -1179,6 +1235,37 @@ bool ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents, UseParallaxCompe
     }
 
     return equal;
+}
+
+template <int VecSize, int maxComponents, bool UseParallaxCompensation>
+float ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents, UseParallaxCompensation>::volumeScatterProbability(const Vector3 &direction, const bool contributionBased) const
+{
+    const int cnt = (_numComponents + VecSize - 1) / VecSize;
+
+    embree::vfloat<VecSize> volumeScatterProbability = {0.0f};
+    embree::vfloat<VecSize> pdf = {0.0f};
+    embree::Vec3<embree::vfloat<VecSize>> vec3Direction(direction[0], direction[1], direction[2]);
+
+    const embree::vfloat<VecSize> ones(1.0f);
+    const embree::vfloat<VecSize> zeros(0.0f);
+
+    for (int k = 0; k < cnt; k++)
+    {
+        const embree::vfloat<VecSize> cosTheta = embree::dot(vec3Direction, _meanDirections[k]);
+        const embree::vfloat<VecSize> cosThetaMinusOne = embree::min(cosTheta - ones, zeros);
+        const embree::vfloat<VecSize> eval = _weights[k] * _normalizations[k] * embree::fastapprox::exp<embree::vfloat<VecSize>>(_kappas[k] * cosThetaMinusOne);
+        pdf += eval;
+        if (contributionBased)
+        {
+            volumeScatterProbability += _volumeScatterFirstMomentProbabilityWeights[k] * eval;
+        }
+        else
+        {
+            volumeScatterProbability += _volumeScatterSecondMomentProbabilityWeights[k] * eval;
+        }
+    }
+
+    return reduce_add(volumeScatterProbability) / reduce_add(pdf);
 }
 
 #ifdef OPENPGL_RADIANCE_CACHES
