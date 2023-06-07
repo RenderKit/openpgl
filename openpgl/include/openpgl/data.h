@@ -25,7 +25,9 @@ struct PGLSampleData
         /// point does not represent any real scene intersection point
         ESplatted = 1<<0, 
         /// point does not represent any real scene intersection point
-        EInsideVolume = 1<<1 
+        EInsideVolume = 1<<1, 
+
+        ENextEventVolume = 1<<2
     };
 
     /// the position of the sample (i.e., at which energy arrives)

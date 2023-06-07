@@ -61,6 +61,10 @@ struct DQTVolumeSamplingDistribution: public IVolumeSamplingDistribution {
         m_region = region;
     }
 
+    float volumeScatterProbability(Vector3 dir) const override {
+        return 0.f;
+    }
+
 private:
     TDirectionalQuadtree distribution;
     const IRegion* m_region {nullptr};

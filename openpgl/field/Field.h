@@ -360,9 +360,11 @@ private:
             if (dataPoints.size() > 0)
             {
                 typename DirectionalDistributionFactory::FittingStatistics fittingStats;
+                float numSamples = regionStorage.first.trainingStatistics.getNumSamples();
                 m_distributionFactory.prepareSamples(dataPoints.data(), dataPoints.size(), regionStorage.first.sampleStatistics, m_distributionFactorySettings);
                 m_distributionFactory.fit(regionStorage.first.distribution, regionStorage.first.trainingStatistics, dataPoints.data(), dataPoints.size(), m_distributionFactorySettings, fittingStats);
-				// TODO: we should move setting the pivot to the factory
+				m_distributionFactory.updateVolumeScatterProbability(regionStorage.first.distribution, numSamples, dataPoints.data(), dataPoints.size());
+                // TODO: we should move setting the pivot to the factory
                 regionStorage.first.distribution._pivotPosition = sampleMean;
                 regionStorage.first.valid = regionStorage.first.distribution.isValid();
 #ifdef OPENPGL_DEBUG_MODE
@@ -427,8 +429,10 @@ private:
                     OPENPGL_ASSERT(regionStorage.first.trainingStatistics.sufficientStatistics.isValid());
                 }
                 typename DirectionalDistributionFactory::FittingStatistics fittingStats;
+                float numSamples = regionStorage.first.trainingStatistics.getNumSamples();
                 m_distributionFactory.prepareSamples(dataPoints.data(), dataPoints.size(), regionStorage.first.sampleStatistics, m_distributionFactorySettings);
                 m_distributionFactory.update(regionStorage.first.distribution, regionStorage.first.trainingStatistics, dataPoints.data(), dataPoints.size(), m_distributionFactorySettings, fittingStats);
+                m_distributionFactory.updateVolumeScatterProbability(regionStorage.first.distribution, numSamples, dataPoints.data(), dataPoints.size());
                 //regionStorage.first.valid = regionStorage.first.distribution.isValid();
                 regionStorage.first.valid = regionStorage.first.isValid();
 #ifdef OPENPGL_DEBUG_MODE

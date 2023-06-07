@@ -18,8 +18,9 @@ namespace openpgl
     typedef PGLSampleData SampleData;
     enum SampleData_Flags
     {
-        ESplatted = 1<<0,      // point does not represent any real scene intersection point
-        EInsideVolume = 1<<1   // point does not represent any real scene intersection point
+        ESplatted = 1<<0,           // point does not represent any real scene intersection point
+        EInsideVolume = 1<<1,       // point does not represent any real scene intersection point
+        ENextEventVolume = 1<<2   // point does not represent any real scene intersection point
     };
 
     inline bool isValid(const SampleData& dsd)
@@ -48,6 +49,11 @@ namespace openpgl
     inline bool isInsideVolume(const SampleData& sd)
     {
         return (sd.flags & EInsideVolume);
+    }
+
+    inline bool isNextEventVolume(const SampleData& sd)
+    {
+        return (sd.flags & ENextEventVolume);
     }
 
     inline std::string toString(const SampleData& sd)

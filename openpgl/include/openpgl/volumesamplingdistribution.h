@@ -43,6 +43,8 @@ OPENPGL_CORE_INTERFACE bool pglVolumeSamplingDistributionSupportsApplySingleLobe
 
 OPENPGL_CORE_INTERFACE PGLRegion pglVolumeSamplingGetRegion(PGLVolumeSamplingDistribution VolumeSamplingDistribution);
 
+OPENPGL_CORE_INTERFACE float pglVolumeSamplingDistributionVolumeScatterProbability(PGLVolumeSamplingDistribution VolumeSamplingDistribution, pgl_vec3f direction);
+
 #ifdef __cplusplus
 }  // extern "C"
 #endif

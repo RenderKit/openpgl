@@ -115,6 +115,8 @@ struct SurfaceSamplingDistribution
      */
     void ApplyCosineProduct(const pgl_vec3f& normal);
 
+
+    float VolumeScatterProbability(pgl_vec3f& direction) const;
     ///////////////////////////////////////
     /// Future plans
     ///////////////////////////////////////
@@ -237,6 +239,12 @@ OPENPGL_INLINE Region SurfaceSamplingDistribution::GetRegion() const
     OPENPGL_ASSERT(m_surfaceSamplingDistributionHandle);
     PGLRegion regionHandle = pglSurfaceSamplingGetRegion(m_surfaceSamplingDistributionHandle);
     return Region(regionHandle);
+}
+
+OPENPGL_INLINE float SurfaceSamplingDistribution::VolumeScatterProbability(pgl_vec3f& direction) const
+{
+    OPENPGL_ASSERT(m_surfaceSamplingDistributionHandle);
+    return pglSurfaceSamplingDistributionVolumeScatterProbability(m_surfaceSamplingDistributionHandle, direction);
 }
 
 }

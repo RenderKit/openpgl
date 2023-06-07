@@ -158,6 +158,10 @@ struct __aligned(TVMMDistribution::VectorSize*4) VMMVolumeSamplingDistribution: 
     inline void setRegion(const IRegion* region) override {
         m_region = region;
     }
+
+    float volumeScatterProbability(Vector3 dir) const override {
+        return m_liDistribution.volumeScatterProbability(dir);
+    }
 };
 
 }

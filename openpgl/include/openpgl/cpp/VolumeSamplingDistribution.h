@@ -120,7 +120,7 @@ struct VolumeSamplingDistribution
      */
     void ApplySingleLobeHenyeyGreensteinProduct(const pgl_vec3f& dir, const float meanCosine);
 
-
+    float VolumeScatterProbability(pgl_vec3f& direction) const;
     ///////////////////////////////////////
     /// Future plans
     ///////////////////////////////////////
@@ -241,6 +241,12 @@ OPENPGL_INLINE Region VolumeSamplingDistribution::GetRegion() const
     OPENPGL_ASSERT(m_volumeSamplingDistributionHandle);
     PGLRegion regionHandle = pglVolumeSamplingGetRegion(m_volumeSamplingDistributionHandle);
     return Region(regionHandle);
+}
+
+OPENPGL_INLINE float VolumeSamplingDistribution::VolumeScatterProbability(pgl_vec3f& direction) const
+{
+    OPENPGL_ASSERT(m_volumeSamplingDistributionHandle);
+    return pglVolumeSamplingDistributionVolumeScatterProbability(m_volumeSamplingDistributionHandle, direction);
 }
 
 }

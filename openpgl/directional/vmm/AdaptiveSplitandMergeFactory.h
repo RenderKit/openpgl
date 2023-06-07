@@ -86,6 +86,10 @@ public:
             return sufficientStatistics.getNumComponents();
         }
 
+        inline float getNumSamples() const
+        {
+            return sufficientStatistics.getNumSamples();
+        };
         std::string toString() const;
 
     };
@@ -109,6 +113,8 @@ public:
     void fit(VMM &vmm, Statistics &stats, const SampleData* samples, const size_t numSamples, const Configuration &cfg, FittingStatistics &fitStats) const;
 
     void update(VMM &vmm, Statistics &stats, const SampleData* samples, const size_t numSamples, const Configuration &cfg, FittingStatistics &fitStats) const;
+
+    void updateVolumeScatterProbability(VMM &vmm, const float oldNumSamples, const SampleData* samples, const size_t numSamples) const;
 
     std::string toString() const{
         std::ostringstream oss;
@@ -430,6 +436,13 @@ void AdaptiveSplitAndMergeFactory<TVMMDistribution>::update(VMM &vmm, Statistics
     OPENPGL_ASSERT(stats.sufficientStatistics.isValid());
 }
 
+
+template<class TVMMDistribution>
+void AdaptiveSplitAndMergeFactory<TVMMDistribution>::updateVolumeScatterProbability(VMM &vmm, const float oldNumSamples, const SampleData* samples, const size_t numSamples) const
+{
+    WeightedEMFactory factory = WeightedEMFactory();
+    factory.updateVolumeScatterProbability(vmm, oldNumSamples, samples, numSamples);
+}
 
 }
 

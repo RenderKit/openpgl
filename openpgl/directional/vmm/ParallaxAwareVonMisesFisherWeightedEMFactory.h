@@ -185,6 +185,8 @@ public:
 
     void updateComponentDistances (VMM &vmm, SufficientStatisitcs &sufficientStats, const SampleData* samples, const size_t numSamples) const;
 
+    void updateVolumeScatterProbability(VMM &vmm, const float oldNumSamples, const SampleData* samples, const size_t numSamples) const;
+
 private:
     void _initUniformDirections();
 
@@ -1390,7 +1392,6 @@ void ParallaxAwareVonMisesFisherWeightedEMFactory< TVMMDistribution>::PartialFit
     //std::cout << mask[tmp.quot]<< "\t"<< tmp.quot << "\t"<< tmp.rem <<  std::endl;
 }
 
-
 template<class TVMMDistribution>
 std::string ParallaxAwareVonMisesFisherWeightedEMFactory< TVMMDistribution>::PartialFittingMask::toString() const
 {
@@ -1402,6 +1403,83 @@ std::string ParallaxAwareVonMisesFisherWeightedEMFactory< TVMMDistribution>::Par
             ss << "mask[" << k << "]: " << mask[tmp.quot][tmp.rem] << std::endl;
         }
     return ss.str();
+}
+
+template<class TVMMDistribution>
+void ParallaxAwareVonMisesFisherWeightedEMFactory<TVMMDistribution>::updateVolumeScatterProbability(VMM &vmm, const float oldNumSamples, const SampleData* samples, const size_t numSamples) const
+{
+
+    if(numSamples == 0)
+    {
+        return;
+    }
+    
+    const int cnt = (vmm._numComponents+VMM::VectorSize-1) / VMM::VectorSize;
+    const int rem = vmm._numComponents % VMM::VectorSize;
+
+    const embree::vfloat<VMM::VectorSize> zeros(0.0f);
+    const embree::vfloat<VMM::VectorSize> ones(1.0f);
+
+    float sumOneOverPDF = 0.0f;
+    embree::vfloat<VMM::VectorSize> sumVolumeContribution[VMM::NumVectors];
+    embree::vfloat<VMM::VectorSize> sumSurfaceAndVolumeContribution[VMM::NumVectors];
+    typename VMM::SoftAssignment softAssign;
+
+    for (size_t k = 0; k < cnt; k++)
+    {
+        sumVolumeContribution[k] = zeros;
+        sumSurfaceAndVolumeContribution[k] = zeros;
+    }
+
+    for (size_t n = 0; n < numSamples; n++)
+    {            
+        const float weight = samples[n].weight;
+        const Vector3 sampleDirection(samples[n].direction.x, samples[n].direction.y, samples[n].direction.z);
+
+        if (vmm.softAssignment(sampleDirection, softAssign))
+        {
+            for (size_t k = 0; k < cnt; k++)
+            {
+                sumSurfaceAndVolumeContribution[k] += weight * softAssign.assignments[k];
+            }
+            
+            if(isNextEventVolume(samples[n]))
+            {
+                for (size_t k = 0; k < cnt; k++)
+                {
+                    sumVolumeContribution[k] += weight * softAssign.assignments[k];
+                }
+            }
+        }
+    }
+
+    if ( rem > 0 )
+    {
+        for ( size_t i = rem; i < VMM::VectorSize; i++)
+        {
+            sumVolumeContribution[cnt-1][i] = 0.0f;
+            sumSurfaceAndVolumeContribution[cnt-1][i] = 1.0f;
+        }
+    }
+
+    //const float oldNumSamples = 0;//vmm._numFluenceSamples;
+    const float newNumSamples = (oldNumSamples + float(numSamples));
+
+    for (int i = 0; i < vmm._numComponents ; i++)
+    {
+        const div_t tmpK = div( i, VMM::VectorSize );
+        OPENPGL_ASSERT(embree::isvalid(vmm._volumeScatterProbabilityWeights[tmpK.quot][tmpK.rem]));
+        OPENPGL_ASSERT(embree::isvalid(sumVolumeContribution[tmpK.quot][tmpK.rem]));
+        OPENPGL_ASSERT(embree::isvalid(sumSurfaceAndVolumeContribution[tmpK.quot][tmpK.rem]));
+        //OPENPGL_ASSERT(embree::isvalid(sumVolumeContribution[tmpK.quot][tmpK.rem]/sumSurfaceAndVolumeContribution[tmpK.quot][tmpK.rem]));
+    }
+
+    for (size_t k = 0; k < cnt; k++)
+    {
+        sumSurfaceAndVolumeContribution[k] = select(sumSurfaceAndVolumeContribution[k] > 0.0f, sumSurfaceAndVolumeContribution[k], ones);
+        vmm._volumeScatterProbabilityWeights[k] = ((vmm._volumeScatterProbabilityWeights[k] * oldNumSamples) + ((sumVolumeContribution[k] / sumSurfaceAndVolumeContribution[k]) * float(numSamples)) ) / newNumSamples;
+    }
+    //OPENPGL_ASSERT(false);
 }
 
 }

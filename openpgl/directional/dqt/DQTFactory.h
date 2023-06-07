@@ -125,6 +125,11 @@ public:
             nodes = std::vector<StatsNode>(size);
             is.read(reinterpret_cast<char*>(nodes.data()), size * sizeof(nodes[0]));
         };
+
+        float getNumSamples() const
+        {
+            return numSamples;
+        };
     };
 
     struct FittingStatistics {
@@ -135,6 +140,9 @@ public:
     };
 
     void prepareSamples(SampleData* samples, const size_t numSamples, const SampleStatistics &sampleStatistics, const Configuration &cfg) const 
+    {};
+
+    void updateVolumeScatterProbability(Distribution &dist, const float oldNumSamples, const SampleData* samples, const size_t numSamples) const
     {};
 
     void fit(Distribution &dist, Statistics &stats, const SampleData* samples, const size_t numSamples, const Configuration &cfg, FittingStatistics &fitStats) {

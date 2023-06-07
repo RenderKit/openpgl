@@ -71,6 +71,8 @@ public:
     embree::vfloat<VecSize> _distances[NumVectors];
     Point3 _pivotPosition {0.0f, 0.0f, 0.0f};
 
+    embree::vfloat<VecSize> _volumeScatterProbabilityWeights[NumVectors];
+
     void serialize(std::ostream& stream) const;
 
     void deserialize(std::istream& stream);
@@ -123,6 +125,8 @@ public:
     void setComponentDistance(const size_t &idx, const float &distance);
 
     bool isValid() const;
+
+    float volumeScatterProbability( const Vector3 &direction ) const;
 
     std::string toString() const;
 
@@ -195,8 +199,8 @@ std::string ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents,UseParalla
     ss << "---------------------- "  << std::endl;
     ss << "numComponents: " << this->_numComponents << std::endl;
     float sumWeights = 0.0f;
-    //for ( int k = 0; k < this->_numComponents; k++)
-    for ( int k = 0; k < maxComponents; k++)
+    for ( int k = 0; k < this->_numComponents; k++)
+    //for ( int k = 0; k < maxComponents; k++)
     {
         const div_t tmp = div(k, static_cast<int>(VecSize));
         ss << "vmm[" << k << "]: " << "weight: " << this->_weights[tmp.quot][tmp.rem];
@@ -207,6 +211,7 @@ std::string ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents,UseParalla
         ss << "\t eMinus2Kappa: " <<  this->_eMinus2Kappa[tmp.quot][tmp.rem];
         ss << "\t meanCosine: " <<  this->_meanCosines[tmp.quot][tmp.rem];
         ss << "\t distance: " <<  _distances[tmp.quot][tmp.rem];
+        ss << "\t volumeScatterProbabilityWeight: " <<  _volumeScatterProbabilityWeights[tmp.quot][tmp.rem];
         ss << std::endl;
         sumWeights += this->_weights[tmp.quot][tmp.rem];
     }
@@ -242,6 +247,8 @@ void ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents,UseParallaxCompen
     _meanDirections[tmpIdx1.quot].x[tmpIdx1.rem] = meanDirection1.x;
     _meanDirections[tmpIdx1.quot].y[tmpIdx1.rem] = meanDirection1.y;
     _meanDirections[tmpIdx1.quot].z[tmpIdx1.rem] = meanDirection1.z;
+
+    _volumeScatterProbabilityWeights[tmpIdx1.quot][tmpIdx1.rem] = _volumeScatterProbabilityWeights[tmpIdx0.quot][tmpIdx0.rem];
 
     if (idx1 == _numComponents){
         _numComponents++;
@@ -330,6 +337,13 @@ void ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents,UseParallaxCompen
         newDistance /= (weight0 + weight1);
         _distances[tmpIdx0.quot][tmpIdx0.rem] = newDistance;
 
+        const float volumeScatterProbability0 = _volumeScatterProbabilityWeights[tmpIdx0.quot][tmpIdx0.rem];
+        const float volumeScatterProbability1 = _volumeScatterProbabilityWeights[tmpIdx1.quot][tmpIdx1.rem];
+
+        float newVolumeScatterProbability = weight0 * volumeScatterProbability0 + weight1 * volumeScatterProbability1;
+        newVolumeScatterProbability /= (weight0 + weight1);
+        _volumeScatterProbabilityWeights[tmpIdx0.quot][tmpIdx0.rem] = newVolumeScatterProbability;
+
         //std::cout << "mergeComponents: weight: " << weight << "\tkappa: " << kappa << "\tmeanDirection: " << meanDirectionX << "\t" << meanDirectionY << "\t" << meanDirectionZ << std::endl;
         swapComponents( idx1, _numComponents -1 );
         clearComponent( _numComponents -1 );
@@ -356,6 +370,7 @@ void ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents,UseParallaxCompen
         std::swap(_meanDirections[tmpIdx0.quot].z[tmpIdx0.rem], _meanDirections[tmpIdx1.quot].z[tmpIdx1.rem]);
 
         std::swap(_distances[tmpIdx0.quot][tmpIdx0.rem], _distances[tmpIdx1.quot][tmpIdx1.rem]);
+        std::swap(_volumeScatterProbabilityWeights[tmpIdx0.quot][tmpIdx0.rem], _volumeScatterProbabilityWeights[tmpIdx1.quot][tmpIdx1.rem]);
     }
 }
 
@@ -375,6 +390,8 @@ void ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents,UseParallaxCompen
     _meanDirections[tmpIdx.quot].z[tmpIdx.rem] = 1.f;
 
     _distances[tmpIdx.quot][tmpIdx.rem] = 0.0f;
+    _volumeScatterProbabilityWeights[tmpIdx.quot][tmpIdx.rem] = 0.0f;
+    
 }
 
 template<int VecSize, int maxComponents, bool UseParallaxCompensation>
@@ -390,6 +407,7 @@ void ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents,UseParallaxCompen
         stream.write(reinterpret_cast<const char*>(&_eMinus2Kappa[k]), sizeof(embree::vfloat<VecSize>));
         stream.write(reinterpret_cast<const char*>(&_meanCosines[k]), sizeof(embree::vfloat<VecSize>));
         stream.write(reinterpret_cast<const char*>(&_distances[k]), sizeof(embree::vfloat<VecSize>));
+        stream.write(reinterpret_cast<const char*>(&_volumeScatterProbabilityWeights[k]), sizeof(embree::vfloat<VecSize>));
     }
     stream.write(reinterpret_cast<const char*>(&_numComponents), sizeof(_numComponents));
     stream.write(reinterpret_cast<const char*>(&_pivotPosition), sizeof(Point3));
@@ -408,6 +426,7 @@ void ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents,UseParallaxCompen
         stream.read(reinterpret_cast<char*>(&_eMinus2Kappa[k]), sizeof(embree::vfloat<VecSize>));
         stream.read(reinterpret_cast<char*>(&_meanCosines[k]), sizeof(embree::vfloat<VecSize>));
         stream.read(reinterpret_cast<char*>(&_distances[k]), sizeof(embree::vfloat<VecSize>));
+        stream.read(reinterpret_cast<char*>(&_volumeScatterProbabilityWeights[k]), sizeof(embree::vfloat<VecSize>));
     }
     stream.read(reinterpret_cast<char*>(&_numComponents), sizeof(_numComponents));
     stream.read(reinterpret_cast<char*>(&_pivotPosition), sizeof(Point3));
@@ -462,6 +481,11 @@ bool ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents,UseParallaxCompen
         valid = valid && embree::isvalid(_distances[tmpK.quot][tmpK.rem]);
         valid = valid && _distances[tmpK.quot][tmpK.rem] >= 0.0f;
         OPENPGL_ASSERT(valid);
+
+        valid = valid && embree::isvalid(_volumeScatterProbabilityWeights[tmpK.quot][tmpK.rem]);
+        valid = valid && _volumeScatterProbabilityWeights[tmpK.quot][tmpK.rem] >= 0.0f;
+        valid = valid && _volumeScatterProbabilityWeights[tmpK.quot][tmpK.rem] <= 1.0f;
+        OPENPGL_ASSERT(valid);
     }
 
     // check unused componets
@@ -501,6 +525,10 @@ bool ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents,UseParallaxCompen
 
         valid = valid && embree::isvalid(_distances[tmpK.quot][tmpK.rem]);
         valid = valid && _distances[tmpK.quot][tmpK.rem] == 0.0f;
+        OPENPGL_ASSERT(valid);
+
+        valid = valid && embree::isvalid(_volumeScatterProbabilityWeights[tmpK.quot][tmpK.rem]);
+        valid = valid && _volumeScatterProbabilityWeights[tmpK.quot][tmpK.rem] == 0.0f;
         OPENPGL_ASSERT(valid);
     }
 
@@ -871,6 +899,28 @@ void ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents,UseParallaxCompen
     }
 }
 
+template<int VecSize, int maxComponents, bool UseParallaxCompensation>
+float ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents,UseParallaxCompensation>::volumeScatterProbability( const Vector3 &direction ) const{
+    const int cnt = (_numComponents+VecSize-1) / VecSize;
+
+    embree::vfloat<VecSize> volumeScatterProbability = {0.0f};
+    embree::vfloat<VecSize> pdf = {0.0f};
+    embree::Vec3< embree::vfloat<VecSize> > vec3Direction(direction[0], direction[1], direction[2]);
+
+    const embree::vfloat<VecSize> ones(1.0f);
+    const embree::vfloat<VecSize> zeros(0.0f);
+
+    for(int k = 0; k < cnt;k++)
+    {
+        const embree::vfloat<VecSize> cosTheta = embree::dot(vec3Direction, _meanDirections[k]);
+        const embree::vfloat<VecSize> cosThetaMinusOne = embree::min(cosTheta - ones, zeros);
+        const embree::vfloat<VecSize> eval = _weights[k] * _normalizations[k] * embree::fastapprox::exp< embree::vfloat<VecSize> >( _kappas[k] * cosThetaMinusOne );
+        pdf += eval;
+        volumeScatterProbability += _volumeScatterProbabilityWeights[k] * eval;
+    }
+
+    return reduce_add(volumeScatterProbability) / reduce_add(pdf);
+}
 
 template<typename Type>
 inline Type KappaToMeanCosine(const Type &kappa)

@@ -39,6 +39,8 @@ struct ISurfaceSamplingDistribution
 
     virtual const IRegion* getRegion() const = 0;
 
+    virtual float volumeScatterProbability(Vector3 dir) const = 0;
+
 protected:
     //const IRegion* m_region {nullptr};
 };

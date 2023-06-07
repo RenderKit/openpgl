@@ -609,6 +609,12 @@ extern "C" OPENPGL_DLLEXPORT float pglSurfaceSamplingDistributionIncomingRadianc
     return gSurfaceSamplingDistribution->pdfLi(openpgl::Vector3(direction.x, direction.y, direction.z));
 }
 
+extern "C" OPENPGL_DLLEXPORT float pglSurfaceSamplingDistributionVolumeScatterProbability(PGLSurfaceSamplingDistribution surfaceSamplingDistribution, pgl_vec3f direction)
+{
+    ISurfaceSamplingDistribution* gSurfaceSamplingDistribution =  (ISurfaceSamplingDistribution*)surfaceSamplingDistribution;
+    return gSurfaceSamplingDistribution->volumeScatterProbability(openpgl::Vector3(direction.x, direction.y, direction.z));
+}
+
 extern "C" OPENPGL_DLLEXPORT bool pglSurfaceSamplingDistributionValidate(PGLSurfaceSamplingDistribution surfaceSamplingDistribution)
 {
     ISurfaceSamplingDistribution* gSurfaceSamplingDistribution =  (ISurfaceSamplingDistribution*)surfaceSamplingDistribution;
@@ -681,6 +687,12 @@ extern "C" OPENPGL_DLLEXPORT float pglVolumeSamplingDistributionIncomingRadiance
 {
     IVolumeSamplingDistribution* gVolumeSamplingDistribution =  (IVolumeSamplingDistribution*)volumeSamplingDistribution;
     return gVolumeSamplingDistribution->pdfLi(openpgl::Vector3(direction.x, direction.y, direction.z));
+}
+
+extern "C" OPENPGL_DLLEXPORT float pglVolumeSamplingDistributionVolumeScatterProbability(PGLVolumeSamplingDistribution volumeSamplingDistribution, pgl_vec3f direction)
+{
+    IVolumeSamplingDistribution* gVolumeSamplingDistribution =  (IVolumeSamplingDistribution*)volumeSamplingDistribution;
+    return gVolumeSamplingDistribution->volumeScatterProbability(openpgl::Vector3(direction.x, direction.y, direction.z));
 }
 
 extern "C" OPENPGL_DLLEXPORT bool pglVolumeSamplingDistributionValidate(PGLVolumeSamplingDistribution volumeSamplingDistribution)
