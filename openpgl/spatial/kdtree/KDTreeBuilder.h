@@ -207,8 +207,12 @@ private:
         size_t center = 0;
         bool parallel = (end-begin) < 1024 ? false : true;
         if (!parallel) {
-            center = embree::serial_partitioning(samples, begin, end, statsLeft, statsRight, isLeft,
-                                [] (SampleStatistics& sstats, const PGLSampleData& sample) { sstats.addSample(Vector3(sample.position.x, sample.position.y, sample.position.z)); });
+            IntegerSampleStatistics iStatsLeft(bounds);
+            IntegerSampleStatistics iStatsRight(bounds);
+            center = embree::serial_partitioning(samples, begin, end, iStatsLeft, iStatsRight, isLeft,
+                                [] (IntegerSampleStatistics& sstats, const PGLSampleData& sample) { sstats.addSample(Vector3(sample.position.x, sample.position.y, sample.position.z)); });
+            statsLeft = iStatsLeft.getSampleStatistics();
+            statsRight = iStatsRight.getSampleStatistics();
         } else {    
             IntegerSampleStatistics iStatsLeft(bounds);
             IntegerSampleStatistics iStatsRight(bounds);
@@ -277,9 +281,9 @@ private:
                 regionAndRangeData.first.regionBounds.upper[splitDim] = splitPos;
                 regionAndRangeDataRight.first.regionBounds.lower[splitDim] = splitPos;
 
-                auto rigthDataItr = dataStorage->push_back(regionAndRangeDataRight);
+                auto rightDataItr = dataStorage->push_back(regionAndRangeDataRight);
 
-                uint32_t rightDataIdx = std::distance(dataStorage->begin(), rigthDataItr);
+                uint32_t rightDataIdx = std::distance(dataStorage->begin(), rightDataItr);
 
                 //we need to split the leaf node
                 nodeIdsLeftRight[0] = kdTree->addChildrenPair();
