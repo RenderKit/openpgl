@@ -15,6 +15,9 @@ enum DebugType{
     VALIDATE_FIELD,
     VALIDATE_SAMPLES,
     EXPORT_SAMPLES,
+    COMPARE_SAMPLES,
+    COMPARE_FIELDS,
+    UPDATE_COMPARE_FIELDS,
     NONE
 };
 
@@ -27,7 +30,9 @@ inline bool file_exists(const std::string& file_name)
 struct DebugParams {
     DebugType type {NONE};
     std::string field_file_name {""};
+    std::string field_file_name_comp {""};
     std::string samples_file_name {""};
+    std::string samples_file_name_comp {""};
     std::string obj_out_file_name {""};
 
     bool validate() {
@@ -75,7 +80,47 @@ struct DebugParams {
                     valid = false;
                 }
                 break;
-
+            case COMPARE_SAMPLES:
+                if(samples_file_name == "" || 
+                    !file_exists(samples_file_name)) {
+                        std::cout << "ERROR: Samples file not set or does not exists: " << samples_file_name << std::endl;
+                    valid = false;
+                }
+                if(samples_file_name_comp == "" || 
+                    !file_exists(samples_file_name_comp)) {
+                        std::cout << "ERROR: Samples file not set or does not exists: " << samples_file_name_comp << std::endl;
+                    valid = false;
+                }
+                break;
+            case COMPARE_FIELDS:
+                if(field_file_name == "" || 
+                    !file_exists(field_file_name)) {
+                        std::cout << "ERROR: Field file not set or does not exists: " << field_file_name << std::endl;
+                    valid = false;
+                }
+                if(field_file_name_comp == "" || 
+                    !file_exists(field_file_name_comp)) {
+                        std::cout << "ERROR: Field file not set or does not exists: " << field_file_name_comp << std::endl;
+                    valid = false;
+                }
+                break;
+            case UPDATE_COMPARE_FIELDS:
+                if(field_file_name == "" || 
+                    !file_exists(field_file_name)) {
+                        std::cout << "ERROR: Field file not set or does not exists: " << field_file_name << std::endl;
+                    valid = false;
+                }
+                if(samples_file_name == "" || 
+                    !file_exists(samples_file_name)) {
+                        std::cout << "ERROR: Samples file not set or does not exists: " << samples_file_name << std::endl;
+                    valid = false;
+                }
+                if(field_file_name_comp == "" || 
+                    !file_exists(field_file_name_comp)) {
+                        std::cout << "ERROR: Field file not set or does not exists: " << field_file_name_comp << std::endl;
+                    valid = false;
+                }
+                break;
             case NONE:
                 valid = false;
                 break;
@@ -109,9 +154,15 @@ bool parseCommandLine(std::list<std::string> &args,
                     debugParams.type = DebugType::VALIDATE_SAMPLES; 
                 } else if(str_type == "exportSamplesToOBJ") {
                     debugParams.type = DebugType::EXPORT_SAMPLES; 
+                } else if(str_type == "compareSamples") {
+                    debugParams.type = DebugType::COMPARE_SAMPLES; 
+                } else if(str_type == "compareFields") {
+                    debugParams.type = DebugType::COMPARE_FIELDS; 
+                } else if(str_type == "updateCompareFields") {
+                    debugParams.type = DebugType::UPDATE_COMPARE_FIELDS; 
                 } else {
                     std::cout << "ERROR: Unknown type: " << str_type << std::endl;
-                    std::cout << "       Valid types are: [updateField validateField validateSamples exportSamplesToOBJ] "<< std::endl;
+                    std::cout << "       Valid types are: [updateField validateField validateSamples exportSamplesToOBJ compareSamples compareFields] "<< std::endl;
                     return false;
                 }
             } else {
@@ -135,7 +186,24 @@ bool parseCommandLine(std::list<std::string> &args,
             } else {
                 return false;
             }
-        } else if (arg == "-out") {
+        } else if (arg == "-samplesComp") {
+            ++it;
+            if(it != args.end())
+            {
+                const std::string str_samples = *it;
+                debugParams.samples_file_name_comp = str_samples; 
+            } else {
+                return false;
+            }
+        } else if (arg == "-fieldComp") {
+            ++it;
+            if(it != args.end())
+            {
+                const std::string str_samples = *it;
+                debugParams.field_file_name_comp = str_samples; 
+            } else {
+                return false;
+            }        } else if (arg == "-out") {
             ++it;
             if(it != args.end())
             {
@@ -175,6 +243,65 @@ void validate_samples(DebugParams &debugParams){
 
 }
 
+void compare_samples(DebugParams &debugParams){
+    openpgl::cpp::SampleStorage sampleStorage(debugParams.samples_file_name);
+    openpgl::cpp::SampleStorage sampleStorageComp(debugParams.samples_file_name_comp);
+
+    bool equal = (sampleStorage.operator==(sampleStorageComp));
+    if(equal){
+        std::cout << "Compare Samples: EQUAL" << std::endl;
+        std::cout << "samplesA = "<< debugParams.samples_file_name << std::endl;
+        std::cout << "samplesB = "<< debugParams.samples_file_name_comp << std::endl;
+    } else {
+        std::cout << "Compare Samples: NOT-EQUAL" << std::endl;
+        std::cout << "samplesA = "<< debugParams.samples_file_name << std::endl;
+        std::cout << "samplesB = "<< debugParams.samples_file_name_comp << std::endl;
+    }
+}
+
+void compare_fields(DebugParams &debugParams){
+    openpgl::cpp::Device device(PGL_DEVICE_TYPE_CPU_4);
+    openpgl::cpp::Field field(&device, debugParams.field_file_name);
+    openpgl::cpp::Field fieldComp(&device, debugParams.field_file_name_comp);
+
+    field.PrepareCompare();
+    fieldComp.PrepareCompare();
+/* */
+    bool equal = (field.operator==(fieldComp));
+    if(equal){
+        std::cout << "Compare Fields: EQUAL" << std::endl;
+        std::cout << "fieldsA = "<< debugParams.field_file_name << std::endl;
+        std::cout << "fieldsB = "<< debugParams.field_file_name_comp << std::endl;
+    } else {
+        std::cout << "Compare Fields: NOT-EQUAL" << std::endl;
+        std::cout << "fieldsA = "<< debugParams.field_file_name << std::endl;
+        std::cout << "fieldsB = "<< debugParams.field_file_name_comp << std::endl;
+    }
+/**/
+}
+
+void update_compare_fields(DebugParams &debugParams){
+    openpgl::cpp::Device device(PGL_DEVICE_TYPE_CPU_4);
+    openpgl::cpp::Field field(&device, debugParams.field_file_name);
+    openpgl::cpp::SampleStorage sampleStorage(debugParams.samples_file_name);
+    field.Update(sampleStorage);
+    openpgl::cpp::Field fieldComp(&device, debugParams.field_file_name_comp);
+
+    field.PrepareCompare();
+    fieldComp.PrepareCompare();
+/* */
+    bool equal = (field.operator==(fieldComp));
+    if(equal){
+        std::cout << "Compare Fields: EQUAL" << std::endl;
+        std::cout << "fieldsA = "<< debugParams.field_file_name << std::endl;
+        std::cout << "fieldsB = "<< debugParams.field_file_name_comp << std::endl;
+    } else {
+        std::cout << "Compare Fields: NOT-EQUAL" << std::endl;
+        std::cout << "fieldsA = "<< debugParams.field_file_name << std::endl;
+        std::cout << "fieldsB = "<< debugParams.field_file_name_comp << std::endl;
+    }
+/**/
+}
 
 void export_samples(DebugParams &debugParams){
     std::ofstream objFile;
@@ -259,9 +386,18 @@ int main (int argc, char *argv[]) {
         case VALIDATE_SAMPLES:
             validate_samples(debugParams);
             break;
-         case EXPORT_SAMPLES:
+        case EXPORT_SAMPLES:
             export_samples(debugParams);
-            break;                       
+            break;  
+        case COMPARE_SAMPLES:
+            compare_samples(debugParams);
+            break;  
+        case COMPARE_FIELDS:
+            compare_fields(debugParams);
+            break;    
+        case UPDATE_COMPARE_FIELDS:
+            update_compare_fields(debugParams);
+            break;                  
         default:
             print_help();
             break;
