@@ -20,7 +20,19 @@
 
 #include "spatial/kdtree/KDTreeBuilder.h"
 
+#include "tbb/tbb.h"
+
+#define OPENPGL_TASK_CONTROL
+
 namespace openpgl {
+
+#ifdef OPENPGL_TASK_CONTROL
+#if TBB_INTERFACE_VERSION >= 11005
+  static tbb::global_control* g_tbb_thread_control = nullptr;
+#else
+  static tbb::task_scheduler_init g_tbb_threads(tbb::task_scheduler_init::deferred);
+#endif
+#endif
 
 struct IDevice {
     virtual ~IDevice() {};
@@ -30,8 +42,49 @@ struct IDevice {
 
 template<int VecSize>
 struct Device: public IDevice {
-    Device(){
+
+private:
+    size_t m_numThreads {0};
+public:
+    Device(size_t numThreads = 0)
+    {
+        if (numThreads == 0) 
+        {
+#if TBB_INTERFACE_VERSION >= 9100
+            m_numThreads = tbb::this_task_arena::max_concurrency();
+#else
+            m_numThreads = tbb::task_scheduler_init::default_num_threads();
+#endif
+        } else {
+#if TBB_INTERFACE_VERSION >= 9100
+            m_numThreads = std::min(numThreads, (size_t)tbb::this_task_arena::max_concurrency());
+#else
+            m_numThreads = std::min(numThreads, (size_t)tbb::task_scheduler_init::default_num_threads());
+#endif
+            
+        }
+#ifdef OPENPGL_TASK_CONTROL
+#if TBB_INTERFACE_VERSION >= 11005
+        g_tbb_thread_control = new tbb::global_control(tbb::global_control::max_allowed_parallelism,m_numThreads);
+#else
+        g_tbb_threads.initialize(int(m_numThreads));
+#endif
+#endif
+        std::cout << "Device: numThreads = " << m_numThreads << std::endl;
+
         VMMSingleLobeHenyeyGreensteinOracle::init();
+    }
+
+    ~Device() override
+    {
+#ifdef OPENPGL_TASK_CONTROL
+#if TBB_INTERFACE_VERSION >= 11005
+        delete g_tbb_thread_control;
+        g_tbb_thread_control = nullptr;
+#else
+        g_tbb_threads.terminate();
+#endif
+#endif
     }
 
     ISurfaceVolumeField* newField(PGLFieldArguments args) const override {
@@ -82,7 +135,7 @@ struct Device: public IDevice {
             gFieldSettings.distributionFactorySettings.minSamplesForMerging = directionalDistributionArguments->minSamplesForMerging;
             delete directionalDistributionArguments;
 
-            gField = new GuidingField(gFieldSettings);
+            gField = new GuidingField(gFieldSettings, m_numThreads);
         } else if (args.spatialStructureType == PGL_SPATIAL_STRUCTURE_KDTREE &&
             args.directionalDistributionType ==  PGL_DIRECTIONAL_DISTRIBUTION_VMM )
         {
@@ -128,7 +181,7 @@ struct Device: public IDevice {
             gFieldSettings.distributionFactorySettings.minSamplesForMerging = directionalDistributionArguments->minSamplesForMerging;
             delete directionalDistributionArguments;
 
-            gField = new GuidingField(gFieldSettings);
+            gField = new GuidingField(gFieldSettings, m_numThreads);
         } else if (args.spatialStructureType == PGL_SPATIAL_STRUCTURE_KDTREE &&
                    args.directionalDistributionType ==  PGL_DIRECTIONAL_DISTRIBUTION_QUADTREE )
         {
@@ -153,7 +206,7 @@ struct Device: public IDevice {
             gFieldSettings.distributionFactorySettings.footprintFactor = directionalDistributionArguments->footprintFactor;
             gFieldSettings.distributionFactorySettings.maxLevels = directionalDistributionArguments->maxLevels;
 
-            gField = new GuidingField(gFieldSettings);
+            gField = new GuidingField(gFieldSettings, m_numThreads);
         }else {
             throw std::runtime_error("error: unrecognized field type");
         }
@@ -219,13 +272,13 @@ struct Device: public IDevice {
 };
 
 #ifdef OPENPGL_DEVICE_TYPE_CPU_4
-IDevice* newDeviceCPU4();
+IDevice* newDeviceCPU4(size_t numThreads = 0);
 #endif
 #ifdef OPENPGL_DEVICE_TYPE_CPU_8
-IDevice* newDeviceCPU8();
+IDevice* newDeviceCPU8(size_t numThreads = 0);
 #endif
 #ifdef OPENPGL_DEVICE_TYPE_CPU_16
-IDevice* newDeviceCPU16();
+IDevice* newDeviceCPU16(size_t numThreads = 0);
 #endif
 
 }

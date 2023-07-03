@@ -70,7 +70,8 @@ public:
 
     Field() = default;
 
-    Field(const Settings &settings)
+    Field(const Settings &settings, size_t numThreads = 0):
+        m_numThreads(numThreads)
     {
         m_decayOnSpatialSplit = settings.settings.decayOnSpatialSplit;
         m_deterministic = settings.settings.deterministic;
@@ -226,7 +227,7 @@ public:
         os.write(reinterpret_cast<const char*>(&m_decayOnSpatialSplit), sizeof(m_decayOnSpatialSplit));
         os.write(reinterpret_cast<const char*>(&m_iteration), sizeof(m_iteration));
         os.write(reinterpret_cast<const char*>(&m_totalSPP), sizeof(m_totalSPP));
-        os.write(reinterpret_cast<const char*>(&m_nCores), sizeof(m_nCores));
+        os.write(reinterpret_cast<const char*>(&m_numThreads), sizeof(m_numThreads));
         os.write(reinterpret_cast<const char*>(&m_deterministic), sizeof(m_deterministic));
         os.write(reinterpret_cast<const char*>(&m_fitRegions), sizeof(m_fitRegions));
         os.write(reinterpret_cast<const char*>(&m_isSceneBoundsSet), sizeof(m_isSceneBoundsSet));
@@ -252,7 +253,7 @@ public:
         is.read(reinterpret_cast<char*>(&m_decayOnSpatialSplit), sizeof(m_decayOnSpatialSplit));
         is.read(reinterpret_cast<char*>(&m_iteration), sizeof(m_iteration));
         is.read(reinterpret_cast<char*>(&m_totalSPP), sizeof(m_totalSPP));
-        is.read(reinterpret_cast<char*>(&m_nCores), sizeof(m_nCores));
+        is.read(reinterpret_cast<char*>(&m_numThreads), sizeof(m_numThreads));
         is.read(reinterpret_cast<char*>(&m_deterministic), sizeof(m_deterministic));
         is.read(reinterpret_cast<char*>(&m_fitRegions), sizeof(m_fitRegions));
         is.read(reinterpret_cast<char*>(&m_isSceneBoundsSet), sizeof(m_isSceneBoundsSet));
@@ -350,7 +351,7 @@ private:
 
     inline void buildSpatialStructure(const BBox &bounds, SampleContainerInternal& samples)
     {
-        m_spatialSubdivBuilder.build(m_spatialSubdiv, bounds, samples, m_regionStorageContainer, m_spatialSubdivBuilderSettings, m_nCores);
+        m_spatialSubdivBuilder.build(m_spatialSubdiv, bounds, samples, m_regionStorageContainer, m_spatialSubdivBuilderSettings, m_numThreads);
         if (m_useStochasticNNLookUp)
         {
             m_regionKNNSearchTree.buildRegionSearchTree(m_regionStorageContainer);
@@ -363,7 +364,7 @@ private:
 
     inline void updateSpatialStructure(SampleContainerInternal& samples)
     {
-        m_spatialSubdivBuilder.updateTree(m_spatialSubdiv, samples, m_regionStorageContainer, m_spatialSubdivBuilderSettings, m_nCores);
+        m_spatialSubdivBuilder.updateTree(m_spatialSubdiv, samples, m_regionStorageContainer, m_spatialSubdivBuilderSettings, m_numThreads);
         if (m_useStochasticNNLookUp)
         {
             m_regionKNNSearchTree.reset();
@@ -382,7 +383,7 @@ private:
         std::cout << "fitRegion: "<< (m_isSurface? "surface":"volume") << "\tnGuidingRegions = " << nGuidingRegions << std::endl;
 #endif
 #if defined(OPENPGL_USE_OMP_THREADING)
-        #pragma omp parallel for num_threads(this->m_nCores) schedule(dynamic)
+        #pragma omp parallel for num_threads(this->m_numThreads) schedule(dynamic)
         for (size_t n=0; n < nGuidingRegions; n++)
 #else
 #ifndef USE_EMBREE_PARALLEL
@@ -440,7 +441,7 @@ private:
         std::cout << "updateRegion: " << (m_isSurface? "surface":"volume") << "\tnGuidingRegions = " << nGuidingRegions << std::endl;
 #endif
 #if defined(OPENPGL_USE_OMP_THREADING)
-        #pragma omp parallel for num_threads(this->m_nCores) schedule(dynamic)
+        #pragma omp parallel for num_threads(this->m_numThreads) schedule(dynamic)
         for (size_t n=0; n < nGuidingRegions; n++)
 #else
 #ifndef USE_EMBREE_PARALLEL
@@ -554,7 +555,7 @@ public:
         bool equal = true;
         if(m_isSurface != b.m_isSurface || m_decayOnSpatialSplit != b.m_decayOnSpatialSplit ||
             m_iteration != b.m_iteration || m_totalSPP != b.m_totalSPP ||
-            m_nCores != b.m_nCores || m_deterministic != b.m_deterministic || m_fitRegions != b.m_fitRegions ||
+            m_numThreads != b.m_numThreads || m_deterministic != b.m_deterministic || m_fitRegions != b.m_fitRegions ||
             m_isSceneBoundsSet != b.m_isSceneBoundsSet || m_sceneBounds.lower.x != b.m_sceneBounds.lower.x ||
             m_sceneBounds.lower.y != b.m_sceneBounds.lower.y || m_sceneBounds.lower.z != b.m_sceneBounds.lower.z ||
             m_sceneBounds.upper.x != b.m_sceneBounds.upper.x || m_sceneBounds.upper.y != b.m_sceneBounds.upper.y || 
@@ -586,7 +587,7 @@ private:
     size_t m_iteration {0};
     size_t m_totalSPP  {0};
 
-    size_t m_nCores {20};
+    size_t m_numThreads {0};
 
     bool m_fitRegions {true};
     bool m_deterministic {false};

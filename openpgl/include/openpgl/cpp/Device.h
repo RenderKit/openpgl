@@ -31,7 +31,7 @@ struct Device
      * 
      * @param deviceType The device optimization type.
      */
-    Device(PGL_DEVICE_TYPE deviceType);
+    Device(PGL_DEVICE_TYPE deviceType, size_t numThreads = 0);
 
     ~Device();
 
@@ -46,9 +46,9 @@ struct Device
 /// Implementation
 ////////////////////////////////////////////////////////////
 
-OPENPGL_INLINE Device::Device(PGL_DEVICE_TYPE deviceType)
+OPENPGL_INLINE Device::Device(PGL_DEVICE_TYPE deviceType, size_t numThreads)
 {
-    m_deviceHandle = pglNewDevice(deviceType);
+    m_deviceHandle = pglNewDevice(deviceType, numThreads);
 }
 
 OPENPGL_INLINE Device::~Device()

@@ -30,9 +30,9 @@ public:
 
     SurfaceVolumeField() = default;
 
-    SurfaceVolumeField(const Settings &settings):
-        m_surfaceField(settings),
-        m_volumeField(settings)
+    SurfaceVolumeField(const Settings &settings, size_t numThreads = 0):
+        m_surfaceField(settings, numThreads),
+        m_volumeField(settings, numThreads)
     { 
         m_surfaceField.setIsSurface(true);
         m_volumeField.setIsSurface(false);
@@ -227,7 +227,7 @@ public:
 private:
     size_t m_iteration {0};
     size_t m_totalSPP  {0};
-
+    
     FieldType m_surfaceField;
     FieldType m_volumeField;
 };

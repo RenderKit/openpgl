@@ -2,8 +2,8 @@
 
 namespace openpgl {
 
-IDevice* newDeviceCPU4() {
-    return (IDevice*) new Device<4>();
+IDevice* newDeviceCPU4(size_t numThreads) {
+    return (IDevice*) new Device<4>(numThreads);
 }
 
 }

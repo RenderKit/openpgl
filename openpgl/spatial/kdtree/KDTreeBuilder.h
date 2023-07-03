@@ -65,7 +65,7 @@ struct KDTreePartitionBuilder
         }
     };
 
-    void build(KDTree &kdTree, const BBox &bounds, TContainer &samples, tbb::concurrent_vector< std::pair<TRegion, Range> > &dataStorage, const Settings &buildSettings, const size_t &nCores) const
+    void build(KDTree &kdTree, const BBox &bounds, TContainer &samples, tbb::concurrent_vector< std::pair<TRegion, Range> > &dataStorage, const Settings &buildSettings, const size_t &numThreads) const
     {
 
         kdTree.init(bounds, 4096);
@@ -73,10 +73,10 @@ struct KDTreePartitionBuilder
         dataStorage[0].first.regionBounds = bounds;
 
         //KDNode &root kdTree.getRoot();
-        updateTree(kdTree, samples, dataStorage, buildSettings, nCores);
+        updateTree(kdTree, samples, dataStorage, buildSettings, numThreads);
     }
 
-    void updateTree(KDTree &kdTree, TContainer &samples, tbb::concurrent_vector< std::pair<TRegion, Range> > &dataStorage, const Settings &buildSettings, const uint32_t &nCores) const
+    void updateTree(KDTree &kdTree, TContainer &samples, tbb::concurrent_vector< std::pair<TRegion, Range> > &dataStorage, const Settings &buildSettings, const uint32_t &numThreads) const
     {
         int numEstLeafs = dataStorage.size() + (samples.size()*2)/buildSettings.maxSamples+32;
         kdTree.m_nodes.reserve(4*numEstLeafs);
@@ -117,12 +117,12 @@ struct KDTreePartitionBuilder
             sampleStats = iSampleStats.getSampleStatistics();
         }
 #ifdef OPENPGL_USE_OMP_THREADING
-    #pragma omp parallel num_threads(nCores)
+    #pragma omp parallel num_threads(numThreads)
     #pragma omp single nowait
 #else
 /*
 #if !defined(__WIN32__) and !defined(__MACOSX__)
-        tbb::task_scheduler_init init(nCores);
+        tbb::task_scheduler_init init(numThreads);
 #endif
 */
 #endif

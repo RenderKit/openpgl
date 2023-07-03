@@ -217,7 +217,7 @@ struct KNearestRegionsSearchTree
         }
         neighbours = (RN*) alignedMalloc(num_points*sizeof(RN), 32);
 #if defined(OPENPGL_USE_OMP_THREADING)
-        #pragma omp parallel for num_threads(this->m_nCores) schedule(dynamic)
+        #pragma omp parallel for num_threads(this->m_numThreads) schedule(dynamic)
         for (size_t n=0; n < num_points; n++)
 #else
         tbb::parallel_for( tbb::blocked_range<int>(0,num_points), [&](tbb::blocked_range<int> r)
