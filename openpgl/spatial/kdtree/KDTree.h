@@ -12,8 +12,6 @@
 #include <string>
 #include <iostream>
 
-#define MERGE_SPLITDIM_AND_NODE_IDX
-
 #define USE_TREELETS
 
 namespace openpgl
@@ -29,27 +27,17 @@ struct KDNode
     };
 
     float splitPosition {0.0f};
-#ifdef MERGE_SPLITDIM_AND_NODE_IDX
     uint32_t splitDimAndNodeIdx{0};
-#else
-    uint8_t splitDim{0};
-    uint32_t nodeIdx{0};
-#endif
+
     /////////////////////////////
     // Child node functions
     /////////////////////////////
     bool isChild() const
     {
-#ifdef MERGE_SPLITDIM_AND_NODE_IDX
         return ( splitDimAndNodeIdx >> 30) < ELeafNode;
-#else
-    return splitDim < ELeafNode;
-#endif
-
     }
 
     void setLeftChildIdx(const uint32_t &idx) {
-#ifdef MERGE_SPLITDIM_AND_NODE_IDX
         OPENPGL_ASSERT(idx < (1U<<31));
         OPENPGL_ASSERT( (splitDimAndNodeIdx & (3U << 30)) != (3U<<30));
         OPENPGL_ASSERT( (splitDimAndNodeIdx >> 30)  != 3);
@@ -57,22 +45,14 @@ struct KDNode
 
         splitDimAndNodeIdx = ((splitDimAndNodeIdx >> 30) << 30)|idx;
         OPENPGL_ASSERT( idx == getLeftChildIdx());
-#else
-    splitDim = ELeafNode;
-    nodeIdx = idx;
-#endif
     }
 
     uint32_t getLeftChildIdx() const {
-#ifdef MERGE_SPLITDIM_AND_NODE_IDX
         OPENPGL_ASSERT( (splitDimAndNodeIdx & (3U << 30)) != (3U<<30));
         OPENPGL_ASSERT( (splitDimAndNodeIdx >> 30)  != 3);
         OPENPGL_ASSERT( !isLeaf() );
 
         return (splitDimAndNodeIdx << 2) >> 2;
-#else
-        return  nodeIdx;
-#endif
         }
 
     /////////////////////////////
@@ -81,14 +61,10 @@ struct KDNode
 
     void setToInnerNode( const uint8_t &_splitDim, const float &_splitPos, const uint32_t &_leftChildIdx) {
         splitPosition = _splitPos;
-    #ifdef MERGE_SPLITDIM_AND_NODE_IDX
         splitDimAndNodeIdx = 0;
         splitDimAndNodeIdx = (uint32_t(_splitDim)<<30);
         splitDimAndNodeIdx = ((splitDimAndNodeIdx >> 30) << 30)|_leftChildIdx;
-    #else
-        splitDim = _splitDim;
-        nodeIdx = _leftChildIdx;
-    #endif
+
         OPENPGL_ASSERT(_splitDim == getSplitDim());
         OPENPGL_ASSERT(_leftChildIdx == getLeftChildIdx());
     }
@@ -99,24 +75,15 @@ struct KDNode
     /////////////////////////////
 
     void setLeaf(){
-#ifdef MERGE_SPLITDIM_AND_NODE_IDX
         splitDimAndNodeIdx = (3U<<30);
         OPENPGL_ASSERT(isLeaf());
-#else
-        splitDim = ELeafNode;
-#endif
     }
 
     bool isLeaf() const {
-#ifdef MERGE_SPLITDIM_AND_NODE_IDX
         return (splitDimAndNodeIdx >> 30) == 3;
-#else
-        return splitDim == ELeafNode;
-#endif
     }
 
     void setChildNodeIdx(const uint32_t &idx) {
-#ifdef MERGE_SPLITDIM_AND_NODE_IDX
         OPENPGL_ASSERT(idx < (1U<<31));
         OPENPGL_ASSERT( (splitDimAndNodeIdx & (3U << 30)) != (3U<<30));
         OPENPGL_ASSERT( (splitDimAndNodeIdx >> 30)  != 3);
@@ -124,33 +91,21 @@ struct KDNode
 
         splitDimAndNodeIdx = ((splitDimAndNodeIdx >> 30) << 30)|idx;
         OPENPGL_ASSERT( idx == getLeftChildIdx());
-#else
-        nodeIdx = idx;
-#endif
     }
 
     void setDataNodeIdx(const uint32_t &idx)
     {
-#ifdef MERGE_SPLITDIM_AND_NODE_IDX
         OPENPGL_ASSERT(idx < (1U<<31)); // checks if the idx is in the right range
         setLeaf();
         splitDimAndNodeIdx = ((splitDimAndNodeIdx >> 30) << 30)|idx;
         OPENPGL_ASSERT( isLeaf());
         OPENPGL_ASSERT( getDataIdx() == idx);
-#else
-        setLeaf();
-        nodeIdx = idx;
-#endif
     }
 
     uint32_t getDataIdx() const
     {
-#ifdef MERGE_SPLITDIM_AND_NODE_IDX
         OPENPGL_ASSERT(isLeaf());
         return (splitDimAndNodeIdx << 2) >> 2;
-#else
-    return nodeIdx;
-#endif
     }
 
 
@@ -160,21 +115,13 @@ struct KDNode
 
     uint8_t getSplitDim() const
     {
-#ifdef MERGE_SPLITDIM_AND_NODE_IDX
         return (splitDimAndNodeIdx >> 30);
-#else
-        return splitDim;
-#endif
     }
 
     void setSplitDim(const uint8_t &splitAxis) {
-#ifdef MERGE_SPLITDIM_AND_NODE_IDX
         OPENPGL_ASSERT(splitAxis<ELeafNode);
         splitDimAndNodeIdx = (uint32_t(splitAxis)<<30);
         OPENPGL_ASSERT (splitAxis == getSplitDim());
-#else
-        splitDim = splitAxis;
-#endif
     }
 
     float getSplitPivot() const {
@@ -188,26 +135,13 @@ struct KDNode
     void serialize(std::ostream& stream)const
     {
         stream.write(reinterpret_cast<const char*>(&splitPosition), sizeof(float));
-#ifdef MERGE_SPLITDIM_AND_NODE_IDX
         stream.write(reinterpret_cast<const char*>(&splitDimAndNodeIdx), sizeof(uint32_t));
-#else
-        stream.write(reinterpret_cast<const char*>(&splitDim), sizeof(uint8_t));
-        stream.write(reinterpret_cast<const char*>(&nodeIdx), sizeof(uint32_t));
-#endif
     }
 
     void deserialize(std::istream& stream)
     {
         stream.read(reinterpret_cast<char*>(&splitPosition), sizeof(float));
-#ifdef MERGE_SPLITDIM_AND_NODE_IDX
         stream.read(reinterpret_cast<char*>(&splitDimAndNodeIdx), sizeof(uint32_t));
-#else
-        stream.read(reinterpret_cast<char*>(&splitDim), sizeof(uint8_t));
-        stream.read(reinterpret_cast<char*>(&nodeIdx), sizeof(uint32_t));
-
-        OPENPGL_ASSERT(splitDim >= 0);
-        OPENPGL_ASSERT(splitDim <=ELeafNode);
-#endif
     }
 
     bool operator==(const KDNode& b) const {
@@ -400,9 +334,6 @@ struct KDTree
                 uint32_t newChildIdx = insertNode(m_nodesPtr[childIdx], 1, treeLetIdx, treeDepth+1,treeLets);
                 insertNode(m_nodesPtr[childIdx+1], 2, treeLetIdx, treeDepth+1,treeLets);
                 treeLets[treeLetIdx].nodes[nodeIdx].setLeftChildIdx(newChildIdx);
-#ifndef MERGE_SPLITDIM_AND_NODE_IDX
-                treeLets[treeLetIdx].nodes[nodeIdx].setSplitDim(node.getSplitDim());
-#endif
                 OPENPGL_ASSERT(node.getSplitDim() == treeLets[treeLetIdx].nodes[nodeIdx].getSplitDim());
                 OPENPGL_ASSERT(node.getSplitPivot() == treeLets[treeLetIdx].nodes[nodeIdx].getSplitPivot());
                 OPENPGL_ASSERT(newChildIdx == treeLets[treeLetIdx].nodes[nodeIdx].getLeftChildIdx());
@@ -413,9 +344,6 @@ struct KDTree
                     uint32_t newChildIdx = insertNode(m_nodesPtr[childIdx], 3, treeLetIdx, treeDepth+1,treeLets);
                     insertNode(m_nodesPtr[childIdx+1], 4, treeLetIdx, treeDepth+1,treeLets);
                     treeLets[treeLetIdx].nodes[nodeIdx].setLeftChildIdx(newChildIdx);
-#ifndef MERGE_SPLITDIM_AND_NODE_IDX
-                    treeLets[treeLetIdx].nodes[nodeIdx].setSplitDim(node.getSplitDim());
-#endif
                     OPENPGL_ASSERT(node.getSplitDim() == treeLets[treeLetIdx].nodes[nodeIdx].getSplitDim());
                     OPENPGL_ASSERT(node.getSplitPivot() == treeLets[treeLetIdx].nodes[nodeIdx].getSplitPivot());
                     OPENPGL_ASSERT(newChildIdx == treeLets[treeLetIdx].nodes[nodeIdx].getLeftChildIdx());
@@ -424,9 +352,6 @@ struct KDTree
                     uint32_t newChildIdx = insertNode(m_nodesPtr[childIdx], 5, treeLetIdx, treeDepth+1,treeLets);
                     insertNode(m_nodesPtr[childIdx+1], 6, treeLetIdx, treeDepth+1,treeLets);
                     treeLets[treeLetIdx].nodes[nodeIdx].setLeftChildIdx(newChildIdx);
-#ifndef MERGE_SPLITDIM_AND_NODE_IDX
-                    treeLets[treeLetIdx].nodes[nodeIdx].setSplitDim(node.getSplitDim());
-#endif
                     OPENPGL_ASSERT(node.getSplitDim() == treeLets[treeLetIdx].nodes[nodeIdx].getSplitDim());
                     OPENPGL_ASSERT(node.getSplitPivot() == treeLets[treeLetIdx].nodes[nodeIdx].getSplitPivot());
                     OPENPGL_ASSERT(newChildIdx == treeLets[treeLetIdx].nodes[nodeIdx].getLeftChildIdx());
@@ -445,9 +370,6 @@ struct KDTree
                     insertNode(m_nodesPtr[childIdx+1], 0, leftTreeLetIdx+1, treeDepth+1,treeLets);
                     OPENPGL_ASSERT(node.getSplitDim() == treeLets[treeLetIdx].nodes[nodeIdx].getSplitDim());
                     treeLets[treeLetIdx].nodes[nodeIdx].setLeftChildIdx(leftTreeLetIdx);
-#ifndef MERGE_SPLITDIM_AND_NODE_IDX
-                    treeLets[treeLetIdx].nodes[nodeIdx].setSplitDim(node.getSplitDim());
-#endif
                     OPENPGL_ASSERT(node.getSplitDim() == treeLets[treeLetIdx].nodes[nodeIdx].getSplitDim());
 
                     OPENPGL_ASSERT(node.getSplitDim() == treeLets[treeLetIdx].nodes[nodeIdx].getSplitDim());
