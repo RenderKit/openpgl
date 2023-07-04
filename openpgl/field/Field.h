@@ -10,9 +10,7 @@
 #define TASKING_TBB
 #include <embreeSrc/common/algorithms/parallel_for.h>
 
-#if !defined (OPENPGL_USE_OMP_THREADING)
 #include <tbb/parallel_for.h>
-#endif
 #include <tbb/parallel_sort.h>
 
 #define USE_PRECOMPUTED_NN 1
@@ -382,10 +380,7 @@ private:
 #if defined( OPENPGL_SHOW_PRINT_OUTS)
         std::cout << "fitRegion: "<< (m_isSurface? "surface":"volume") << "\tnGuidingRegions = " << nGuidingRegions << std::endl;
 #endif
-#if defined(OPENPGL_USE_OMP_THREADING)
-        #pragma omp parallel for num_threads(this->m_numThreads) schedule(dynamic)
-        for (size_t n=0; n < nGuidingRegions; n++)
-#else
+
 #ifndef USE_EMBREE_PARALLEL
         tbb::parallel_for( tbb::blocked_range<int>(0,nGuidingRegions), [&](tbb::blocked_range<int> r)
         {
@@ -393,7 +388,6 @@ private:
 #else
         embree::parallel_for(0,(int)nGuidingRegions, 1, [&] ( const embree::range<unsigned>& r ) {
         for (size_t n=r.begin(); n<r.end(); n++)
-#endif
 #endif
         {
             RegionStorageType &regionStorage = m_regionStorageContainer[n];
@@ -428,9 +422,7 @@ private:
             }
 			regionStorage.second.reset();
         }
-#if !defined (OPENPGL_USE_OMP_THREADING)
         });
-#endif
         m_initialized = true;
     }
 
@@ -440,10 +432,6 @@ private:
 #if defined( OPENPGL_SHOW_PRINT_OUTS)
         std::cout << "updateRegion: " << (m_isSurface? "surface":"volume") << "\tnGuidingRegions = " << nGuidingRegions << std::endl;
 #endif
-#if defined(OPENPGL_USE_OMP_THREADING)
-        #pragma omp parallel for num_threads(this->m_numThreads) schedule(dynamic)
-        for (size_t n=0; n < nGuidingRegions; n++)
-#else
 #ifndef USE_EMBREE_PARALLEL
         tbb::parallel_for( tbb::blocked_range<int>(0,nGuidingRegions), [&](tbb::blocked_range<int> r)
         {
@@ -451,7 +439,6 @@ private:
 #else
         embree::parallel_for(0,(int)nGuidingRegions, 1, [&] ( const embree::range<unsigned>& r ) {
         for (size_t n=r.begin(); n<r.end(); n++)
-#endif
 #endif
         {
             RegionStorageType &regionStorage = m_regionStorageContainer[n];
@@ -507,9 +494,7 @@ private:
             }
             regionStorage.second.reset();
         }
-#if !defined (OPENPGL_USE_OMP_THREADING)
         });
-#endif
     }
 
     static void storeInvalidRegionData(const std::string &fileName, const RegionType &regionBeforeUpdate, const std::vector<SampleData> &samples, const DirectionalDistributionFactorySettings &factorySettings)

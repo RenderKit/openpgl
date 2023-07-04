@@ -43,7 +43,7 @@ ENDIF()
 ##############################################################
 # Open PGL specific configuration 
 ##############################################################
-#option(OPENPGL_USE_OMP_THREADING "Use omp instead of tbb for threading." OFF)
+
 option(OPENPGL_BUILD_STATIC "Build OpenPGL as static library." OFF)
 
 option(OPENPGL_BUILD_TOOLS "Build tool applications." OFF)

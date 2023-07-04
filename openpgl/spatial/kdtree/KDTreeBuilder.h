@@ -114,16 +114,6 @@ struct KDTreePartitionBuilder
 #endif
             sampleStats = iSampleStats.getSampleStatistics();
         }
-#ifdef OPENPGL_USE_OMP_THREADING
-    #pragma omp parallel num_threads(numThreads)
-    #pragma omp single nowait
-#else
-/*
-#if !defined(__WIN32__) and !defined(__MACOSX__)
-        tbb::task_scheduler_init init(numThreads);
-#endif
-*/
-#endif
         updateTreeNode(&kdTree, root, depth, bounds, samples, sampleRange, sampleStats, &dataStorage, buildSettings);
         kdTree.finalize();
     }
@@ -358,14 +348,7 @@ private:
 		/* This assert is a sanity check which is only valid with the assumption that the number of samples grows at same pace
 		   as the number of spatial nodes: in practice this is not the case (e.g., after many 1spp iterations) 
 		*/
-        //OPENPGL_ASSERT(sampleRangeLeftRight[0].size() > 1);
-        //OPENPGL_ASSERT(sampleRangeLeftRight[1].size() > 1);
 
-#ifdef OPENPGL_USE_OMP_THREADING
-    #pragma omp task mergeable
-        updateTreeNode(kdTree, kdTree->getNode(nodeIdsLeftRight[0]), depth + 1, bondsLeftRight[0], sampleRangeLeftRight[0], sampleStatsLeftRight[0], dataStorage, buildSettings);
-        updateTreeNode(kdTree, kdTree->getNode(nodeIdsLeftRight[1]), depth + 1, bondsLeftRight[1], sampleRangeLeftRight[1], sampleStatsLeftRight[1], dataStorage, buildSettings);
-#else
 //#ifndef USE_EMBREE_PARALLEL
     tbb::parallel_invoke(
         [&]{updateTreeNode(kdTree, kdTree->getNode(nodeIdsLeftRight[0]), depth + 1, bondsLeftRight[0], samples, sampleRangeLeftRight[0], sampleStatsLeftRight[0], dataStorage, buildSettings, true);},
@@ -390,7 +373,6 @@ private:
     }
 #endif
 */
-#endif
     }
 
 };

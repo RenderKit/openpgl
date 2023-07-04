@@ -10,9 +10,7 @@
 #include <functional>
 #include <queue>
 
-#if !defined (OPENPGL_USE_OMP_THREADING)
 #include <tbb/parallel_for.h>
-#endif
 
 #define NUM_KNN 4
 #define NUM_KNN_NEIGHBOURS 8
@@ -216,14 +214,10 @@ struct KNearestRegionsSearchTree
             alignedFree(neighbours);
         }
         neighbours = (RN*) alignedMalloc(num_points*sizeof(RN), 32);
-#if defined(OPENPGL_USE_OMP_THREADING)
-        #pragma omp parallel for num_threads(this->m_numThreads) schedule(dynamic)
-        for (size_t n=0; n < num_points; n++)
-#else
+
         tbb::parallel_for( tbb::blocked_range<int>(0,num_points), [&](tbb::blocked_range<int> r)
         {
         for (int n = r.begin(); n<r.end(); ++n)
-#endif
         {
             Point &point = points[n];
 
@@ -262,9 +256,7 @@ struct KNearestRegionsSearchTree
             }
 #endif
         }
-#if !defined (OPENPGL_USE_OMP_THREADING)
         });
-#endif
 
         _isBuildNeighbours = true;
     }

@@ -134,11 +134,6 @@ else()
   endif()
 endif()
 
-
-#if(OPENPGL_USE_OMP_THREADING)
-#  set(OPENPGL_RELEASE_OPTIONS -fopenmp)
-#endif()
-
 target_compile_options(${PROJECT_NAME} PRIVATE ${OPENPGL_COMMON_OPTIONS})
 target_compile_options(${PROJECT_NAME} PRIVATE "$<$<CONFIG:Release>:${OPENPGL_RELEASE_OPTIONS}>")
 target_compile_options(${PROJECT_NAME} PRIVATE "$<$<CONFIG:RelWithDebInfo>:${OPENPGL_RELEASE_OPTIONS}>")
@@ -146,12 +141,6 @@ target_compile_options(${PROJECT_NAME} PRIVATE "$<$<CONFIG:MinSizeRel>:${OPENPGL
 
 # CMAKE 3.8 feature
 #target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_11)
-
-#if(OPENPGL_USE_OMP_THREADING)
-#  add_compile_definitions(OPENPGL_USE_OMP_THREADING)
-#endif()
-
-#add_compile_options()
 
 message(STATUS "CMAKE_CURRENT_LIST_DIR = ${CMAKE_CURRENT_LIST_DIR}")
 message(STATUS "CMAKE_CURRENT_SOURCE_DIR = ${CMAKE_CURRENT_SOURCE_DIR}")
