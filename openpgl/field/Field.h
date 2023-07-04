@@ -7,6 +7,9 @@
 #include "../spatial/Region.h"
 #include "../spatial/KNN.h"
 
+#define TASKING_TBB
+#include <embreeSrc/common/algorithms/parallel_for.h>
+
 #if !defined (OPENPGL_USE_OMP_THREADING)
 #include <tbb/parallel_for.h>
 #endif
@@ -28,13 +31,14 @@ public:
     using DirectionalDistribution = typename TDirectionalDistributionFactory::Distribution;
 
     using SampleContainer = SampleDataStorage::SampleDataContainer;
+    using SampleContainerInternal = std::vector<SampleData>;
 
     typedef Region<DirectionalDistribution, typename TDirectionalDistributionFactory::Statistics> RegionType;
     typedef openpgl::Range RangeType;
     typedef std::pair<RegionType, RangeType > RegionStorageType;
     typedef tbb::concurrent_vector< RegionStorageType > RegionStorageContainerType;
 
-    using SpatialStructureBuilder = TSpatialStructureBuilder<RegionType,SampleDataStorage::SampleDataContainer>;
+    using SpatialStructureBuilder = TSpatialStructureBuilder<RegionType, SampleContainerInternal>;
     using SpatialStructure = typename SpatialStructureBuilder::SpatialStructure;
     using SpatialBuilderSettings = typename SpatialStructureBuilder::Settings;
 
@@ -74,6 +78,7 @@ public:
         m_spatialSubdivBuilderSettings = settings.settings.spatialSubdivBuilderSettings;
 
         m_distributionFactorySettings = settings.distributionFactorySettings;
+        samples_.reserve(1e6);
     }
 
     ~Field()
@@ -135,15 +140,25 @@ public:
         }
     }
 
-    void buildField(SampleContainer& samples)
+    void buildField(const SampleContainer& samples)
     {
         m_iteration = 0;
         m_totalSPP  = 0;
         if(samples.size() > 0)
         {
+            if(samples_.capacity() < samples.size()) {
+                samples_.reserve(2 * samples.size());
+            }
+            samples_.resize(samples.size());
+
+            embree::parallel_for( size_t(0), samples.size(), size_t(4*4096), [&](const embree::range<size_t>& r) {
+                for (size_t i=r.begin(); i<r.end(); i++) 
+                    samples_[i] = samples[i];
+            });
+            
             if (m_deterministic)
             {
-                tbb::parallel_sort(samples.begin(), samples.end(), SampleDataLess);
+                tbb::parallel_sort(samples_.begin(), samples_.end(), SampleDataLess);
                 //std::sort(samples.begin(), samples.end(), SampleDataLess);
             }
 
@@ -151,28 +166,37 @@ public:
             //std::cout << "buildField: samplesSurface = " << samplesSurface.size() << "\t samplesVolume = " << samplesVolume.size() << std::endl;
             if(!m_isSceneBoundsSet)
             {
-                estimateSceneBounds(samples);
+                estimateSceneBounds(samples_);
             }
 
-            buildSpatialStructure(m_sceneBounds, samples);
-            fitRegions(samples);
+            buildSpatialStructure(m_sceneBounds, samples_);
+            fitRegions(samples_);
         }
         m_iteration++;
     }
 
-    void updateField(SampleContainer& samples)
+    void updateField(const SampleContainer& samples)
     {
         if(samples.size() > 0)
         {
+            if(samples_.capacity() < samples.size()) {
+                samples_.reserve(2 * samples.size());
+            }
+            samples_.resize(samples.size());
+
+            embree::parallel_for( size_t(0), samples.size(), size_t(4*4096), [&](const embree::range<size_t>& r) {
+                for (size_t i=r.begin(); i<r.end(); i++) 
+                    samples_[i] = samples[i];
+            });
             //std::cout << "updateField: samplesSurface = " << samplesSurface.size() << "\t samplesVolume = " << samplesVolume.size() << std::endl;
             if (m_deterministic)
             {
-                tbb::parallel_sort(samples.begin(), samples.end(), SampleDataLess);
+                tbb::parallel_sort(samples_.begin(), samples_.end(), SampleDataLess);
                 //std::sort(samples.begin(), samples.end(), SampleDataLess);
             }
 
-            updateSpatialStructure(samples);
-            updateRegions(samples);
+            updateSpatialStructure(samples_);
+            updateRegions(samples_);
         }
         m_iteration++;
     }
@@ -272,7 +296,7 @@ public:
 
 private:
 
-    void estimateSceneBounds(const SampleContainer& samples)
+    void estimateSceneBounds(const SampleContainerInternal& samples)
     {
         m_sceneBounds.lower = Vector3(std::numeric_limits<float>::max());
         m_sceneBounds.upper = Vector3(std::numeric_limits<float>::min());
@@ -308,7 +332,7 @@ private:
         return knnTree.sampleApproximateClosestRegionIdx(dataIdx, p, sample);
     }
 
-    inline void buildSpatialStructure(const BBox &bounds, SampleContainer& samples)
+    inline void buildSpatialStructure(const BBox &bounds, SampleContainerInternal& samples)
     {
         m_spatialSubdivBuilder.build(m_spatialSubdiv, bounds, samples, m_regionStorageContainer, m_spatialSubdivBuilderSettings, m_nCores);
         if (m_useStochasticNNLookUp)
@@ -321,7 +345,7 @@ private:
         }
     }
 
-    inline void updateSpatialStructure(SampleContainer& samples)
+    inline void updateSpatialStructure(SampleContainerInternal& samples)
     {
         m_spatialSubdivBuilder.updateTree(m_spatialSubdiv, samples, m_regionStorageContainer, m_spatialSubdivBuilderSettings, m_nCores);
         if (m_useStochasticNNLookUp)
@@ -335,7 +359,7 @@ private:
         }
     }
 
-    inline void fitRegions(SampleContainer& samples)
+    inline void fitRegions(SampleContainerInternal& samples)
     {
         size_t nGuidingRegions = m_regionStorageContainer.size();
 #if defined( OPENPGL_SHOW_PRINT_OUTS)
@@ -345,26 +369,25 @@ private:
         #pragma omp parallel for num_threads(this->m_nCores) schedule(dynamic)
         for (size_t n=0; n < nGuidingRegions; n++)
 #else
+#ifndef USE_EMBREE_PARALLEL
         tbb::parallel_for( tbb::blocked_range<int>(0,nGuidingRegions), [&](tbb::blocked_range<int> r)
         {
         for (int n = r.begin(); n<r.end(); ++n)
+#else
+        embree::parallel_for(0,(int)nGuidingRegions, 1, [&] ( const embree::range<unsigned>& r ) {
+        for (size_t n=r.begin(); n<r.end(); n++)
+#endif
 #endif
         {
-        if(m_fitRegions) {
+	        if(m_fitRegions) {
 	            RegionStorageType &regionStorage = m_regionStorageContainer[n];
 	            openpgl::Point3 sampleMean = regionStorage.first.sampleStatistics.mean;
 				//TODO: we need a better way to do this so that we avoid allocating memory
-	            std::vector<openpgl::SampleData> dataPoints;
-	            for (auto i = regionStorage.second.m_begin; i < regionStorage.second.m_end; i++)
-	            {
-	                auto sample = samples[i];
-	                dataPoints.push_back(sample);
-	            }
-	            if (dataPoints.size() > 0)
+	            if(regionStorage.second.m_end - regionStorage.second.m_begin > 0)
 	            {
 					typename DirectionalDistributionFactory::FittingStatistics fittingStats;
-                	m_distributionFactory.prepareSamples(dataPoints.data(), dataPoints.size(), regionStorage.first.sampleStatistics, m_distributionFactorySettings);
-                	m_distributionFactory.fit(regionStorage.first.distribution, regionStorage.first.trainingStatistics, dataPoints.data(), dataPoints.size(), m_distributionFactorySettings, fittingStats);
+                	m_distributionFactory.prepareSamples(samples.data() + regionStorage.second.m_begin, regionStorage.second.m_end - regionStorage.second.m_begin, regionStorage.first.sampleStatistics, m_distributionFactorySettings);
+                	m_distributionFactory.fit(regionStorage.first.distribution, regionStorage.first.trainingStatistics, samples.data() + regionStorage.second.m_begin, regionStorage.second.m_end - regionStorage.second.m_begin, m_distributionFactorySettings, fittingStats);
 					// TODO: we should move setting the pivot to the factory
                 	regionStorage.first.distribution._pivotPosition = sampleMean;
                 	regionStorage.first.valid = regionStorage.first.distribution.isValid();
@@ -387,7 +410,7 @@ private:
         m_initialized = true;
     }
 
-    void updateRegions(SampleContainer& samples)
+    void updateRegions(SampleContainerInternal& samples)
     {
         size_t nGuidingRegions = m_regionStorageContainer.size();
 #if defined( OPENPGL_SHOW_PRINT_OUTS)
@@ -397,9 +420,14 @@ private:
         #pragma omp parallel for num_threads(this->m_nCores) schedule(dynamic)
         for (size_t n=0; n < nGuidingRegions; n++)
 #else
+#ifndef USE_EMBREE_PARALLEL
         tbb::parallel_for( tbb::blocked_range<int>(0,nGuidingRegions), [&](tbb::blocked_range<int> r)
         {
         for (int n = r.begin(); n<r.end(); ++n)
+#else
+        embree::parallel_for(0,(int)nGuidingRegions, 1, [&] ( const embree::range<unsigned>& r ) {
+        for (size_t n=r.begin(); n<r.end(); n++)
+#endif
 #endif
         {
             RegionStorageType &regionStorage = m_regionStorageContainer[n];
@@ -412,13 +440,7 @@ private:
 			if (m_fitRegions) {
 	            openpgl::Point3 sampleMean = regionStorage.first.sampleStatistics.mean;
 	            //TODO: we need a better way to do this so that we avoid allocating memory
-	            std::vector<openpgl::SampleData> dataPoints;
-	            for (auto i = regionStorage.second.m_begin; i < regionStorage.second.m_end; i++)
-	            {
-	                auto sample = samples[i];
-	                dataPoints.push_back(sample);
-	            }
-	            if (dataPoints.size() > 0)
+	            if(regionStorage.second.m_end - regionStorage.second.m_begin > 0)
 	            {
 #ifdef OPENPGL_DEBUG_MODE
 	                RegionType oldRegion = regionStorage.first;
@@ -432,8 +454,8 @@ private:
 	                    OPENPGL_ASSERT(regionStorage.first.trainingStatistics.sufficientStatistics.isValid());
 	                }
 	                typename DirectionalDistributionFactory::FittingStatistics fittingStats;
-	                m_distributionFactory.prepareSamples(dataPoints.data(), dataPoints.size(), regionStorage.first.sampleStatistics, m_distributionFactorySettings);
-	                m_distributionFactory.update(regionStorage.first.distribution, regionStorage.first.trainingStatistics, dataPoints.data(), dataPoints.size(), m_distributionFactorySettings, fittingStats);
+	                m_distributionFactory.prepareSamples(samples.data() + regionStorage.second.m_begin, regionStorage.second.m_end - regionStorage.second.m_begin, regionStorage.first.sampleStatistics, m_distributionFactorySettings);
+                	m_distributionFactory.update(regionStorage.first.distribution, regionStorage.first.trainingStatistics, samples.data() + regionStorage.second.m_begin, regionStorage.second.m_end - regionStorage.second.m_begin, m_distributionFactorySettings, fittingStats);
 	                //regionStorage.first.valid = regionStorage.first.distribution.isValid();
 	                regionStorage.first.valid = regionStorage.first.isValid();
 #ifdef OPENPGL_DEBUG_MODE
@@ -528,6 +550,8 @@ private:
 
     bool m_useStochasticNNLookUp {false};
     KNearestRegionsSearchTree<Vecsize> m_regionKNNSearchTree;
+
+    SampleContainerInternal samples_;
 };
 
 }

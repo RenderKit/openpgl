@@ -20,6 +20,7 @@ private:
 
     using FieldType = Field<Vecsize, TDirectionalDistributionFactory, TSpatialStructureBuilder>;
     using SampleContainer = SampleDataStorage::SampleDataContainer;
+    using SampleContainerIntern = std::vector<SampleData>;
 public:
 
     using Settings = typename FieldType::Settings;
