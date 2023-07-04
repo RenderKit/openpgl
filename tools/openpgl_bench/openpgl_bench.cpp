@@ -235,7 +235,8 @@ void init_field(BenchParams &benchParams){
     
     PGLFieldArguments fieldSettings;
     pglFieldArgumentsSetDefaults(fieldSettings,PGL_SPATIAL_STRUCTURE_KDTREE, PGL_DIRECTIONAL_DISTRIBUTION_PARALLAX_AWARE_VMM);
-    fieldSettings.deterministic = true;
+    fieldSettings.deterministic = false;
+    fieldSettings.debugArguments.fitRegions = false;
     openpgl::cpp::Field* field = new openpgl::cpp::Field(&device, fieldSettings);
     
     std::vector<openpgl::cpp::SampleStorage*> sampleStorages;
@@ -253,7 +254,7 @@ void init_field(BenchParams &benchParams){
         Timer updateTimer;
         updateTimer.reset();
         field->Update(*sampleStorages[i]);
-        std::cout << "Field::Update() setpTime: "<< updateTimer.elapsed() * 1e-3f <<"ms"<< std::endl;
+        std::cout << "Field::Update() stepTime: "<< updateTimer.elapsed() * 1e-3f <<"ms"<< std::endl;
     }
     std::cout << "Field::Update() overallTime: "<< overallTimer.elapsed() * 1e-3f <<"ms"<< std::endl;
     field->Store(benchParams.field_file_name);

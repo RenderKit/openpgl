@@ -96,6 +96,11 @@ struct PGLDQTFactoryArguments
     uint32_t maxLevels { 12 };
 };
 
+struct PGLDebugArguments
+{
+    bool fitRegions {true};
+};
+
 struct PGLFieldArguments
 {
     PGL_SPATIAL_STRUCTURE_TYPE spatialStructureType;
@@ -104,6 +109,7 @@ struct PGLFieldArguments
     void *directionalDistributionArguments;
     // for debugging
     bool deterministic {false};
+    PGLDebugArguments debugArguments;
 };
 
 

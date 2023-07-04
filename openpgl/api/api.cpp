@@ -732,7 +732,8 @@ extern "C" OPENPGL_DLLEXPORT void pglFieldArgumentsSetDefaults(PGLFieldArguments
     }
 
     fieldArguments.deterministic = false;
-
+    fieldArguments.debugArguments.fitRegions = true;
+    
     switch (directionalType)
     {
     default:

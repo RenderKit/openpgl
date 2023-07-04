@@ -38,7 +38,10 @@ public:
     using SpatialStructure = typename SpatialStructureBuilder::SpatialStructure;
     using SpatialBuilderSettings = typename SpatialStructureBuilder::Settings;
 
-
+    struct DebugSettings
+    {
+        bool fitRegions {true};
+    };
 
     struct SpatialSettings
     {
@@ -54,7 +57,7 @@ public:
     {
         SpatialSettings settings;
         DirectionalDistributionFactorySettings distributionFactorySettings;
-
+        DebugSettings debugSettings;
         std::string toString()const;
     };
 
@@ -66,6 +69,7 @@ public:
     {
         m_decayOnSpatialSplit = settings.settings.decayOnSpatialSplit;
         m_deterministic = settings.settings.deterministic;
+        m_fitRegions = settings.debugSettings.fitRegions;
         m_useStochasticNNLookUp = settings.settings.useStochasticNNLookUp;
         m_spatialSubdivBuilderSettings = settings.settings.spatialSubdivBuilderSettings;
 
@@ -191,12 +195,6 @@ public:
         return m_iteration;
     }
 
-    //std::string toString() const;
-
-    //void serialize(std::ostream& stream) const;
-
-    //void deserialize(std::istream& stream);
-
     void serialize(std::ostream &os) const {
         os.write(reinterpret_cast<const char*>(&m_isSurface), sizeof(m_isSurface));
         os.write(reinterpret_cast<const char*>(&m_decayOnSpatialSplit), sizeof(m_decayOnSpatialSplit));
@@ -204,6 +202,7 @@ public:
         os.write(reinterpret_cast<const char*>(&m_totalSPP), sizeof(m_totalSPP));
         os.write(reinterpret_cast<const char*>(&m_nCores), sizeof(m_nCores));
         os.write(reinterpret_cast<const char*>(&m_deterministic), sizeof(m_deterministic));
+        os.write(reinterpret_cast<const char*>(&m_fitRegions), sizeof(m_fitRegions));
         os.write(reinterpret_cast<const char*>(&m_isSceneBoundsSet), sizeof(m_isSceneBoundsSet));
         os.write(reinterpret_cast<const char*>(&m_sceneBounds), sizeof(m_sceneBounds));
         os.write(reinterpret_cast<const char*>(&m_initialized), sizeof(m_initialized));
@@ -229,6 +228,7 @@ public:
         is.read(reinterpret_cast<char*>(&m_totalSPP), sizeof(m_totalSPP));
         is.read(reinterpret_cast<char*>(&m_nCores), sizeof(m_nCores));
         is.read(reinterpret_cast<char*>(&m_deterministic), sizeof(m_deterministic));
+        is.read(reinterpret_cast<char*>(&m_fitRegions), sizeof(m_fitRegions));
         is.read(reinterpret_cast<char*>(&m_isSceneBoundsSet), sizeof(m_isSceneBoundsSet));
         is.read(reinterpret_cast<char*>(&m_sceneBounds), sizeof(m_sceneBounds));
         is.read(reinterpret_cast<char*>(&m_initialized), sizeof(m_initialized));
@@ -350,34 +350,36 @@ private:
         for (int n = r.begin(); n<r.end(); ++n)
 #endif
         {
-            RegionStorageType &regionStorage = m_regionStorageContainer[n];
-            openpgl::Point3 sampleMean = regionStorage.first.sampleStatistics.mean;
-			//TODO: we need a better way to do this so that we avoid allocating memory
-            std::vector<openpgl::SampleData> dataPoints;
-            for (auto i = regionStorage.second.m_begin; i < regionStorage.second.m_end; i++)
-            {
-                auto sample = samples[i];
-                dataPoints.push_back(sample);
-            }
-            if (dataPoints.size() > 0)
-            {
-                typename DirectionalDistributionFactory::FittingStatistics fittingStats;
-                m_distributionFactory.prepareSamples(dataPoints.data(), dataPoints.size(), regionStorage.first.sampleStatistics, m_distributionFactorySettings);
-                m_distributionFactory.fit(regionStorage.first.distribution, regionStorage.first.trainingStatistics, dataPoints.data(), dataPoints.size(), m_distributionFactorySettings, fittingStats);
-				// TODO: we should move setting the pivot to the factory
-                regionStorage.first.distribution._pivotPosition = sampleMean;
-                regionStorage.first.valid = regionStorage.first.distribution.isValid();
+        if(m_fitRegions) {
+	            RegionStorageType &regionStorage = m_regionStorageContainer[n];
+	            openpgl::Point3 sampleMean = regionStorage.first.sampleStatistics.mean;
+				//TODO: we need a better way to do this so that we avoid allocating memory
+	            std::vector<openpgl::SampleData> dataPoints;
+	            for (auto i = regionStorage.second.m_begin; i < regionStorage.second.m_end; i++)
+	            {
+	                auto sample = samples[i];
+	                dataPoints.push_back(sample);
+	            }
+	            if (dataPoints.size() > 0)
+	            {
+					typename DirectionalDistributionFactory::FittingStatistics fittingStats;
+                	m_distributionFactory.prepareSamples(dataPoints.data(), dataPoints.size(), regionStorage.first.sampleStatistics, m_distributionFactorySettings);
+                	m_distributionFactory.fit(regionStorage.first.distribution, regionStorage.first.trainingStatistics, dataPoints.data(), dataPoints.size(), m_distributionFactorySettings, fittingStats);
+					// TODO: we should move setting the pivot to the factory
+                	regionStorage.first.distribution._pivotPosition = sampleMean;
+                	regionStorage.first.valid = regionStorage.first.distribution.isValid();
 #ifdef OPENPGL_DEBUG_MODE
-                if(!regionStorage.first.valid)
-                    std::cout << "!!!! " << (m_isSurface? "Surface":"Volume") << " regionStorage.first.valid !!! " << regionStorage.first.distribution.toString() << std::endl;
+                	if(!regionStorage.first.valid)
+                    	std::cout << "!!!! " << (m_isSurface? "Surface":"Volume") << " regionStorage.first.valid !!! " << regionStorage.first.distribution.toString() << std::endl;
 #endif
-                regionStorage.first.splitFlag = false;
-            }
-            else
-            {
-                regionStorage.first.valid = false;
-                regionStorage.first.splitFlag = false;
-            }
+	                regionStorage.first.splitFlag = false;
+				}
+	            else
+	            {
+	                regionStorage.first.valid = false;
+	                regionStorage.first.splitFlag = false;
+	            }
+			}
         }
 #if !defined (OPENPGL_USE_OMP_THREADING)
         });
@@ -407,45 +409,47 @@ private:
                 regionStorage.first.splitFlag = false;
             }
 
-            openpgl::Point3 sampleMean = regionStorage.first.sampleStatistics.mean;
-            //TODO: we need a better way to do this so that we avoid allocating memory
-            std::vector<openpgl::SampleData> dataPoints;
-            for (auto i = regionStorage.second.m_begin; i < regionStorage.second.m_end; i++)
-            {
-                auto sample = samples[i];
-                dataPoints.push_back(sample);
-            }
-            if (dataPoints.size() > 0)
-            {
+			if (m_fitRegions) {
+	            openpgl::Point3 sampleMean = regionStorage.first.sampleStatistics.mean;
+	            //TODO: we need a better way to do this so that we avoid allocating memory
+	            std::vector<openpgl::SampleData> dataPoints;
+	            for (auto i = regionStorage.second.m_begin; i < regionStorage.second.m_end; i++)
+	            {
+	                auto sample = samples[i];
+	                dataPoints.push_back(sample);
+	            }
+	            if (dataPoints.size() > 0)
+	            {
 #ifdef OPENPGL_DEBUG_MODE
-                RegionType oldRegion = regionStorage.first;
+	                RegionType oldRegion = regionStorage.first;
 #endif
-				// TODO: we should move applying the paralax comp to the Distribution to the factory
-                if(DirectionalDistribution::ParallaxCompensation == 1)
-                {
-					regionStorage.first.trainingStatistics.sufficientStatistics.applyParallaxShift(regionStorage.first.distribution, regionStorage.first.distribution._pivotPosition - sampleMean);
-                    regionStorage.first.distribution.performRelativeParallaxShift(regionStorage.first.distribution._pivotPosition - sampleMean);
-                    OPENPGL_ASSERT(regionStorage.first.distribution.isValid());
-                    OPENPGL_ASSERT(regionStorage.first.trainingStatistics.sufficientStatistics.isValid());
-                }
-                typename DirectionalDistributionFactory::FittingStatistics fittingStats;
-                m_distributionFactory.prepareSamples(dataPoints.data(), dataPoints.size(), regionStorage.first.sampleStatistics, m_distributionFactorySettings);
-                m_distributionFactory.update(regionStorage.first.distribution, regionStorage.first.trainingStatistics, dataPoints.data(), dataPoints.size(), m_distributionFactorySettings, fittingStats);
-                //regionStorage.first.valid = regionStorage.first.distribution.isValid();
-                regionStorage.first.valid = regionStorage.first.isValid();
+					// TODO: we should move applying the paralax comp to the Distribution to the factory
+	                if(DirectionalDistribution::ParallaxCompensation == 1)
+	                {
+						regionStorage.first.trainingStatistics.sufficientStatistics.applyParallaxShift(regionStorage.first.distribution, regionStorage.first.distribution._pivotPosition - sampleMean);
+	                    regionStorage.first.distribution.performRelativeParallaxShift(regionStorage.first.distribution._pivotPosition - sampleMean);
+	                    OPENPGL_ASSERT(regionStorage.first.distribution.isValid());
+	                    OPENPGL_ASSERT(regionStorage.first.trainingStatistics.sufficientStatistics.isValid());
+	                }
+	                typename DirectionalDistributionFactory::FittingStatistics fittingStats;
+	                m_distributionFactory.prepareSamples(dataPoints.data(), dataPoints.size(), regionStorage.first.sampleStatistics, m_distributionFactorySettings);
+	                m_distributionFactory.update(regionStorage.first.distribution, regionStorage.first.trainingStatistics, dataPoints.data(), dataPoints.size(), m_distributionFactorySettings, fittingStats);
+	                //regionStorage.first.valid = regionStorage.first.distribution.isValid();
+	                regionStorage.first.valid = regionStorage.first.isValid();
 #ifdef OPENPGL_DEBUG_MODE
-                if(!regionStorage.first.valid)
-                {
-                    std::cout << "!!!! " << (m_isSurface? "Surface":"Volume") << " regionStorage.first.valid !!! " << regionStorage.first.distribution.toString() << std::endl;
-                    storeInvalidRegionData("regionBeforeUpdate_"+ std::string((m_isSurface? "surf":"vol")) + "_itr" + std::to_string(this->m_iteration) + "_region" + std::to_string(n)+".dump", oldRegion, dataPoints, m_distributionFactorySettings);
-                }
+	                if(!regionStorage.first.valid)
+	                {
+	                    std::cout << "!!!! " << (m_isSurface? "Surface":"Volume") << " regionStorage.first.valid !!! " << regionStorage.first.distribution.toString() << std::endl;
+	                    storeInvalidRegionData("regionBeforeUpdate_"+ std::string((m_isSurface? "surf":"vol")) + "_itr" + std::to_string(this->m_iteration) + "_region" + std::to_string(n)+".dump", oldRegion, dataPoints, m_distributionFactorySettings);
+	                }
 #endif
-            }
-            else
-            {
-                regionStorage.first.valid = false;
-                regionStorage.first.splitFlag = false;
-            }
+	            }
+	            else
+	            {
+	                regionStorage.first.valid = false;
+	                regionStorage.first.splitFlag = false;
+	            }
+			}
         }
 #if !defined (OPENPGL_USE_OMP_THREADING)
         });
@@ -502,6 +506,7 @@ private:
 
     size_t m_nCores {20};
 
+    bool m_fitRegions {true};
     bool m_deterministic {false};
 
     bool m_isSceneBoundsSet{false};

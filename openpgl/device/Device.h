@@ -46,6 +46,7 @@ struct Device: public IDevice {
             typename GuidingField::Settings gFieldSettings;
             gFieldSettings.settings.decayOnSpatialSplit   = 0.25f;
             gFieldSettings.settings.deterministic         = args.deterministic;
+            gFieldSettings.debugSettings.fitRegions       = args.debugArguments.fitRegions;
 
             PGLKDTreeArguments *spatialSturctureArguments = (PGLKDTreeArguments*)args.spatialSturctureArguments;
             gFieldSettings.settings.useStochasticNNLookUp = spatialSturctureArguments->knnLookup;
@@ -91,6 +92,7 @@ struct Device: public IDevice {
             typename GuidingField::Settings gFieldSettings;
             gFieldSettings.settings.decayOnSpatialSplit   = 0.25f;
             gFieldSettings.settings.deterministic         = args.deterministic;
+            gFieldSettings.debugSettings.fitRegions       = args.debugArguments.fitRegions;\
 
             PGLKDTreeArguments *spatialSturctureArguments = (PGLKDTreeArguments*)args.spatialSturctureArguments;
             gFieldSettings.settings.useStochasticNNLookUp = spatialSturctureArguments->knnLookup;
@@ -134,6 +136,10 @@ struct Device: public IDevice {
             using GuidingField = SurfaceVolumeField<VecSize, DirectionalDistributionFactory, KDTreePartitionBuilder, DQTSurfaceSamplingDistribution<DirectionalDistributionFactory::Distribution>, DQTVolumeSamplingDistribution<DirectionalDistributionFactory::Distribution>>;
 
             typename GuidingField::Settings gFieldSettings;
+            gFieldSettings.settings.decayOnSpatialSplit   = 0.25f;
+            gFieldSettings.settings.deterministic         = args.deterministic;
+            gFieldSettings.debugSettings.fitRegions       = args.debugArguments.fitRegions;
+
             PGLKDTreeArguments *spatialSturctureArguments = (PGLKDTreeArguments*)args.spatialSturctureArguments;
             gFieldSettings.settings.useStochasticNNLookUp = spatialSturctureArguments->knnLookup;
             gFieldSettings.settings.spatialSubdivBuilderSettings.minSamples = spatialSturctureArguments->minSamples;
