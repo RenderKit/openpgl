@@ -235,15 +235,27 @@ void init_field(BenchParams &benchParams){
     
     PGLFieldArguments fieldSettings;
     pglFieldArgumentsSetDefaults(fieldSettings,PGL_SPATIAL_STRUCTURE_KDTREE, PGL_DIRECTIONAL_DISTRIBUTION_PARALLAX_AWARE_VMM);
+    fieldSettings.deterministic = true;
     openpgl::cpp::Field* field = new openpgl::cpp::Field(&device, fieldSettings);
-
+    
+    std::vector<openpgl::cpp::SampleStorage*> sampleStorages;
     for (int i = 0; i < benchParams.samples_file_names.size(); i++){
-        std::cout << "sampleStorage["<< i << "]: " << benchParams.samples_file_names[i] << std::endl;
-        
-        openpgl::cpp::SampleStorage sampleStorage(benchParams.samples_file_names[i]);
-        field->Update(sampleStorage);
-    }
 
+        std::cout << "sampleStorage["<< i << "]: " << benchParams.samples_file_names[i];
+        openpgl::cpp::SampleStorage* sampleStorage = new openpgl::cpp::SampleStorage(benchParams.samples_file_names[i]);
+        std::cout << "\t nSamples = " << sampleStorage->GetSizeSurface() << std::endl;
+        sampleStorages.push_back(sampleStorage);
+    }
+    Timer overallTimer;
+    overallTimer.reset();
+    for (int i = 0; i < benchParams.samples_file_names.size(); i++){
+       
+        Timer updateTimer;
+        updateTimer.reset();
+        field->Update(*sampleStorages[i]);
+        std::cout << "Field::Update() setpTime: "<< updateTimer.elapsed() * 1e-3f <<"ms"<< std::endl;
+    }
+    std::cout << "Field::Update() overallTime: "<< overallTimer.elapsed() * 1e-3f <<"ms"<< std::endl;
     field->Store(benchParams.field_file_name);
     delete field;
 }
