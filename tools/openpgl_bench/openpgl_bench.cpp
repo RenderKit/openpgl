@@ -259,6 +259,12 @@ void init_field(BenchParams &benchParams){
     std::cout << "Field::Update() overallTime: "<< overallTimer.elapsed() * 1e-3f <<"ms"<< std::endl;
     field->Store(benchParams.field_file_name);
     delete field;
+
+    for (int n = 0; n < sampleStorages.size(); n++){
+        delete sampleStorages[n];
+        sampleStorages[n] = nullptr;
+    }
+
 }
 
 void validate_field(BenchParams &benchParams){

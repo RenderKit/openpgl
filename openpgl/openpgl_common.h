@@ -4,6 +4,7 @@
 #pragma once
 
 #define USE_EMBREE_PARALLEL
+#define USE_INTEGER_ARITHMETIC_STATS
 
 #define ONE_OVER_FOUR_PI 0.07957747154594767
 
@@ -69,7 +70,11 @@ namespace openpgl
     typedef embree::Vec2<float> Point2;
     typedef embree::Vec3<float> Point3;
 
+    typedef embree::Vec3<int64_t> Point3i;
+    typedef embree::Vec3<int64_t>  Vector3i;
+
     typedef embree::BBox<Vector3> BBox;
+    typedef embree::BBox<Vector3i> BBoxi;
 
     inline float dot(Vector2 &a, Vector2 &b)
     {

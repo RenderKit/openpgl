@@ -9,15 +9,23 @@ namespace openpgl
 {
     struct Range
     {
-        size_t m_begin;
-        size_t m_end;
+        size_t m_begin {0};
+        size_t m_end {0};
 
         Range() = default;
         Range(size_t begin, size_t end) : m_begin(begin), m_end(end) {}
 
         inline size_t size() const
         {
+            if(int(m_end) - int(m_begin) < 0)
+                std::cout << "WTF" << std::endl;
             return m_end - m_begin;
+        }
+
+        inline void reset()
+        {
+            m_begin = 0;
+            m_end = 0;
         }
 
         void serialize(std::ostream &os) const {

@@ -5,6 +5,8 @@
 
 #include "../openpgl_common.h"
 
+#define INTERGER_V2
+
 namespace openpgl
 {
     struct SampleStatistics
@@ -46,7 +48,7 @@ namespace openpgl
             return mean; //  / float(numSamples);
         }
 
-        inline Vector3 getVaraince() const
+        inline Vector3 getVariance() const
         {
             OPENPGL_ASSERT( numSamples > 0.f);
             return sampleVariance / float(numSamples);
@@ -139,7 +141,7 @@ namespace openpgl
 
         std::string toString() const
         {
-            Vector3 variance = getVaraince();
+            Vector3 variance = getVariance();
             std::stringstream ss;
             ss.precision(5);
             ss << "SampleStatistics:" << std::endl;
@@ -166,6 +168,155 @@ namespace openpgl
             stream.read(reinterpret_cast<char*>(&sampleVariance), sizeof(Vector3));
             stream.read(reinterpret_cast<char*>(&numSamples), sizeof(float));
             stream.read(reinterpret_cast<char*>(&sampleBounds), sizeof(BBox));
+        }
+
+    };
+
+    #define  INTEGER_BINS 4096.f
+    struct IntegerSampleStatistics
+    {
+        Point3i mean{0};
+        Vector3i variance {0};
+        uint32_t numSamples {0};
+        BBoxi sampleBounds{openpgl::Vector3i(std::numeric_limits<int>::max()), openpgl::Vector3i(-std::numeric_limits<int>::max())};
+        Vector3 sampleBoundsMin {0};
+        Vector3 sampleBoundsMax {0};
+        Vector3 sampleBoundsExtend {0};
+        Vector3 invSampleBoundsExtend {0};
+#ifdef INTERGER_V2
+        Vector3 sampleBoundsCenter {0};
+        Vector3 sampleBoundsHalfExtend {0};
+        Vector3 invSampleBoundsHalfExtend {0};
+#endif      
+        IntegerSampleStatistics(){
+            mean = Point3i(0);
+            variance = Vector3i(0);
+            numSamples = 0;
+            sampleBounds = BBoxi(openpgl::Vector3i(std::numeric_limits<int>::max()), openpgl::Vector3i(-std::numeric_limits<int>::max()));
+            sampleBoundsMin = Vector3(0);
+            sampleBoundsMax = Vector3(0);
+            sampleBoundsExtend = Vector3(0);
+            invSampleBoundsExtend = Vector3(0);
+#ifdef INTERGER_V2
+            sampleBoundsCenter = Vector3(0);
+            sampleBoundsHalfExtend = Vector3(0);
+            invSampleBoundsHalfExtend = Vector3(0);
+#endif
+        }
+        
+        IntegerSampleStatistics(const BBox& bounds){
+            mean = Point3i(0);
+            variance = Vector3i(0);
+            numSamples = 0;
+            sampleBounds = BBoxi(openpgl::Vector3i(std::numeric_limits<int>::max()), openpgl::Vector3i(-std::numeric_limits<int>::max()));
+            sampleBoundsMin = bounds.lower;
+            sampleBoundsMax = bounds.upper;
+            sampleBoundsExtend = bounds.upper - bounds.lower;
+            invSampleBoundsExtend = embree::rcp(sampleBoundsExtend);
+#ifdef INTERGER_V2
+            sampleBoundsHalfExtend = sampleBoundsExtend * 0.5f;
+            invSampleBoundsHalfExtend = embree::rcp(sampleBoundsHalfExtend);
+            sampleBoundsCenter = sampleBoundsMin + sampleBoundsHalfExtend;
+#endif
+        }
+
+
+        void clear() {
+            mean = Point3i(0);
+            variance = Vector3i(0);
+            numSamples = 0;
+
+            sampleBounds = BBoxi(openpgl::Vector3i(std::numeric_limits<int>::max()), openpgl::Vector3i(-std::numeric_limits<int>::max()));
+            sampleBoundsMin = Vector3(0);
+            sampleBoundsMax = Vector3(0);
+            sampleBoundsExtend = Vector3(0);
+            invSampleBoundsExtend = Vector3(0);
+#ifdef INTERGER_V2
+            sampleBoundsCenter = Vector3(0);
+            sampleBoundsHalfExtend = Vector3(0);
+            invSampleBoundsHalfExtend = Vector3(0);
+#endif
+        }
+
+        inline void addSample( const Point3 sample)
+        {
+            numSamples++;
+#ifdef INTERGER_V2
+            Point3 tmpSample = ((sample - sampleBoundsCenter) * invSampleBoundsHalfExtend); //* INTEGER_BINS;
+#else
+            Point3 tmpSample = ((sample - sampleBoundsMin) * invSampleBoundsExtend); //* INTEGER_BINS;
+#endif
+            Vector3 tmpVariance = (tmpSample * tmpSample) * INTEGER_BINS;
+            tmpSample *= INTEGER_BINS;
+
+            Point3i iSample(tmpSample.x, tmpSample.y, tmpSample.z);
+            mean += iSample;
+            variance += Vector3i(tmpVariance.x, tmpVariance.y, tmpVariance.z);
+
+            sampleBounds.extend(iSample);
+        }
+
+        void merge( const IntegerSampleStatistics &b)
+        {
+            mean += b.mean;
+            variance += b.variance;
+            numSamples += b.numSamples;
+            sampleBounds.extend(b.sampleBounds);
+        }
+
+        static IntegerSampleStatistics merge(const IntegerSampleStatistics &a, const IntegerSampleStatistics &b)
+        {
+            IntegerSampleStatistics stats = a;
+            stats.mean += b.mean;
+            stats.variance += b.variance;
+            stats.numSamples += b.numSamples;
+            stats.sampleBounds.extend(b.sampleBounds);
+            return stats;
+        }
+
+        SampleStatistics getSampleStatistics() const {
+            
+            SampleStatistics sampleStats;
+            if (numSamples > 0) {
+                float invNumSamples = 1.f / float(numSamples);
+                Point3 sampleMean = (Point3(mean.x, mean.y, mean.z) / INTEGER_BINS) * invNumSamples;
+                Vector3 sampleVariance = (Vector3(variance.x, variance.y, variance.z) / (INTEGER_BINS) ) * invNumSamples;
+                sampleVariance -= sampleMean * sampleMean;
+                sampleVariance = Vector3(std::fabs(sampleVariance.x), std::fabs(sampleVariance.y), std::fabs(sampleVariance.z));
+#ifdef INTERGER_V2
+                sampleMean = sampleMean * sampleBoundsHalfExtend;
+                sampleMean += sampleBoundsCenter;
+                sampleVariance = sampleVariance * (sampleBoundsHalfExtend * sampleBoundsHalfExtend);
+#else
+                sampleMean = sampleMean * sampleBoundsExtend;
+                sampleMean += sampleBoundsMin;
+                sampleVariance = sampleVariance * (sampleBoundsExtend * sampleBoundsExtend);
+#endif
+
+                sampleStats.mean = sampleMean;
+                sampleStats.numSamples = numSamples;
+                sampleStats.sampleVariance = sampleVariance * float(numSamples);
+                Point3 sampleBoundLower = Point3(float(sampleBounds.lower.x) - 0.0f, float(sampleBounds.lower.y) - 0.0f, float(sampleBounds.lower.z) - 0.0f) / INTEGER_BINS;
+#ifdef INTERGER_V2
+                sampleBoundLower = sampleBoundLower * sampleBoundsHalfExtend;
+                sampleBoundLower = sampleBoundLower + sampleBoundsCenter;
+#else
+                sampleBoundLower = sampleBoundLower * sampleBoundsExtend;
+                sampleBoundLower = sampleBoundLower + sampleBoundsMin;
+#endif
+                
+                Point3 sampleBoundUpper = Point3(float(sampleBounds.upper.x) + 0.0f, float(sampleBounds.upper.y) + 0.0f, float(sampleBounds.upper.z) + 0.0f) / INTEGER_BINS;
+#ifdef INTERGER_V2
+                sampleBoundUpper = sampleBoundUpper * sampleBoundsHalfExtend;
+                sampleBoundUpper = sampleBoundUpper + sampleBoundsCenter;
+#else
+                sampleBoundUpper = sampleBoundUpper * sampleBoundsExtend;
+                sampleBoundUpper = sampleBoundUpper + sampleBoundsMin;
+#endif
+                sampleStats.sampleBounds.lower = sampleBoundLower;
+                sampleStats.sampleBounds.upper = sampleBoundUpper;
+            }
+            return sampleStats;
         }
 
     };

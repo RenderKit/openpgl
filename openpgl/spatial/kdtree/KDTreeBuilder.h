@@ -12,6 +12,7 @@
 #ifdef USE_EMBREE_PARALLEL
 #define TASKING_TBB
 #include <embreeSrc/common/algorithms/parallel_partition.h>
+#include <embreeSrc/common/algorithms/parallel_reduce.h>
 #endif
 /*
 #if !defined(__WIN32__) and !defined(__MACOSX__)
@@ -75,31 +76,35 @@ struct KDTreePartitionBuilder
         SampleStatistics sampleStats;
         sampleStats.clear();
 
+        BBox bounds = kdTree.getBounds();
+
         Range sampleRange;
         sampleRange.m_begin = 0;
         sampleRange.m_end = samples.size();
 
         size_t depth =1;
 
-
         if (root.isLeaf())
         {
-            double x = 0.0f;
-            double y = 0.0f;
-            double z = 0.0f;
-
+#ifndef USE_EMBREE_PARALLEL
+            IntegerSampleStatistics iSampleStats(bounds);
             for (const auto& sample : samples)
             {
                 const Point3 samplePosition(sample.position.x, sample.position.y, sample.position.z);
-                sampleStats.addSample(samplePosition);
-                x += samplePosition[0];
-                y += samplePosition[1];
-                z += samplePosition[2];
+                iSampleStats.addSample(samplePosition);
             }
-
-            x /= double(samples.size());
-            y /= double(samples.size());
-            z /= double(samples.size());
+#else
+            IntegerSampleStatistics iSampleStats = embree::parallel_reduce(size_t(0), samples.size(), IntegerSampleStatistics(bounds), [&] (const embree::range<size_t>& r) -> IntegerSampleStatistics {  
+              IntegerSampleStatistics stats(bounds);
+              for (size_t i=r.begin(); i<r.end(); i++) {
+                const PGLSampleData sample = samples[i];
+                const Point3 samplePosition(sample.position.x, sample.position.y, sample.position.z);
+                stats.addSample(samplePosition);
+              }
+              return stats;
+            }, [] (const IntegerSampleStatistics& a, const IntegerSampleStatistics& b) { return IntegerSampleStatistics::merge(a,b); });
+#endif
+            sampleStats = iSampleStats.getSampleStatistics();
         }
 #ifdef OPENPGL_USE_OMP_THREADING
     #pragma omp parallel num_threads(nCores)
@@ -111,7 +116,7 @@ struct KDTreePartitionBuilder
 #endif
 */
 #endif
-        updateTreeNode(&kdTree, root, depth, samples, sampleRange, sampleStats, &dataStorage, buildSettings);
+        updateTreeNode(&kdTree, root, depth, bounds, samples, sampleRange, sampleStats, &dataStorage, buildSettings);
         kdTree.finalize();
     }
 
@@ -184,11 +189,34 @@ private:
         }
         return center;
     }
+
+    inline size_t pivotSplitSamplesWithStats3(const BBox& bounds, PGLSampleData* samples, const size_t begin, const size_t end,
+                                                                    uint8_t splitDimension, float pivot, SampleStatistics &statsLeft, SampleStatistics &statsRight) const
+    {
+        auto isLeft = [&] (const PGLSampleData &sample) { const Vector3 v(sample.position.x, sample.position.y, sample.position.z); return v[splitDimension] < pivot; };
+        size_t center = 0;
+        bool parallel = (end-begin) < 1024 ? false : true;
+        if (!parallel) {
+            center = embree::serial_partitioning(samples, begin, end, statsLeft, statsRight, isLeft,
+                                [] (SampleStatistics& sstats, const PGLSampleData& sample) { sstats.addSample(Vector3(sample.position.x, sample.position.y, sample.position.z)); });
+        } else {    
+            IntegerSampleStatistics iStatsLeft(bounds);
+            IntegerSampleStatistics iStatsRight(bounds);
+            center = embree::parallel_partitioning(samples, begin, end, IntegerSampleStatistics(bounds), 
+                iStatsLeft, iStatsRight, isLeft, 
+                [] (IntegerSampleStatistics& sstats, const PGLSampleData& sample) { sstats.addSample(Vector3(sample.position.x, sample.position.y, sample.position.z)); },
+                [] (IntegerSampleStatistics& sstats0,const IntegerSampleStatistics& sstats1) { sstats0.merge(sstats1); },
+            PARALLEL_PARTITION_BLOCK_SIZE);
+            statsLeft = iStatsLeft.getSampleStatistics();
+            statsRight = iStatsRight.getSampleStatistics();
+        }
+        return center;
+    }
 #endif
 
     inline void getSplitDimensionAndPosition(const SampleStatistics &sampleStats, uint8_t &splitDim, float &splitPos) const
     {
-        const Vector3 sampleVariance = sampleStats.getVaraince();
+        const Vector3 sampleVariance = sampleStats.getVariance();
         const Point3 sampleMean = sampleStats.getMean();
 
         auto maxDimension = [](const Vector3& v) -> uint8_t
@@ -201,9 +229,9 @@ private:
     }
 
 
-    void updateTreeNode(KDTree *kdTree, KDNode &node, size_t depth, TContainer &samples, const Range sampleRange, const SampleStatistics sampleStats, tbb::concurrent_vector< std::pair<TRegion, Range> > *dataStorage, const Settings &buildSettings) const
+    void updateTreeNode(KDTree *kdTree, KDNode &node, size_t depth, const BBox bounds, TContainer &samples, const Range sampleRange, const SampleStatistics sampleStats, tbb::concurrent_vector< std::pair<TRegion, Range> > *dataStorage, const Settings &buildSettings) const
     {
-        if(sampleRange.size() == 0)
+        if(sampleRange.size() <= 0)
         {
             return;
         }
@@ -213,6 +241,8 @@ private:
         uint32_t nodeIdsLeftRight[2];
         Range sampleRangeLeftRight[2];
         SampleStatistics sampleStatsLeftRight[2];
+
+        BBox bondsLeftRight[2];
 
         if (node.isLeaf())
         {
@@ -272,16 +302,26 @@ private:
         sampleStatsLeftRight[0].clear();
         sampleStatsLeftRight[1].clear();
 
+        bondsLeftRight[0] = bondsLeftRight[1] = bounds;
+        bondsLeftRight[0].upper[splitDim] = splitPos;
+        bondsLeftRight[1].lower[splitDim] = splitPos;
+
 #ifdef USE_EMBREE_PARALLEL 
-        size_t rPivotItr;
+        size_t rPivotItr = 0;
 #else
         typename TContainer::iterator rPivotItr;
         auto begin = samples.begin() + sampleRange.m_begin, end = samples.begin() + sampleRange.m_end;
 #endif
+        bool splitStats = false;
         if(kdTree->getNode(nodeIdsLeftRight[0]).isLeaf() || kdTree->getNode(nodeIdsLeftRight[1]).isLeaf() )
         {
+            splitStats = true;
 #ifdef USE_EMBREE_PARALLEL
+#ifndef USE_INTEGER_ARITHMETIC_STATS
             rPivotItr = pivotSplitSamplesWithStats2(samples.data(), sampleRange.m_begin, sampleRange.m_end, splitDim, splitPos, sampleStatsLeftRight[0], sampleStatsLeftRight[1]);
+#else
+            rPivotItr = pivotSplitSamplesWithStats3(bounds, samples.data(), sampleRange.m_begin, sampleRange.m_end, splitDim, splitPos, sampleStatsLeftRight[0], sampleStatsLeftRight[1]);
+#endif
 #else
             rPivotItr = pivotSplitSamplesWithStats(begin, end, splitDim, splitPos, sampleStatsLeftRight[0], sampleStatsLeftRight[1]);
 #endif
@@ -311,13 +351,13 @@ private:
 
 #ifdef OPENPGL_USE_OMP_THREADING
     #pragma omp task mergeable
-        updateTreeNode(kdTree, kdTree->getNode(nodeIdsLeftRight[0]), depth + 1, sampleRangeLeftRight[0], sampleStatsLeftRight[0], dataStorage, buildSettings);
-        updateTreeNode(kdTree, kdTree->getNode(nodeIdsLeftRight[1]), depth + 1, sampleRangeLeftRight[1], sampleStatsLeftRight[1], dataStorage, buildSettings);
+        updateTreeNode(kdTree, kdTree->getNode(nodeIdsLeftRight[0]), depth + 1, bondsLeftRight[0], sampleRangeLeftRight[0], sampleStatsLeftRight[0], dataStorage, buildSettings);
+        updateTreeNode(kdTree, kdTree->getNode(nodeIdsLeftRight[1]), depth + 1, bondsLeftRight[1], sampleRangeLeftRight[1], sampleStatsLeftRight[1], dataStorage, buildSettings);
 #else
 #ifndef USE_EMBREE_PARALLEL
     tbb::parallel_invoke(
-        [&]{updateTreeNode(kdTree, kdTree->getNode(nodeIdsLeftRight[0]), depth + 1, samples, sampleRangeLeftRight[0], sampleStatsLeftRight[0], dataStorage, buildSettings);},
-        [&]{updateTreeNode(kdTree, kdTree->getNode(nodeIdsLeftRight[1]), depth + 1, samples, sampleRangeLeftRight[1], sampleStatsLeftRight[1], dataStorage, buildSettings);}
+        [&]{updateTreeNode(kdTree, kdTree->getNode(nodeIdsLeftRight[0]), depth + 1, bondsLeftRight[0], samples, sampleRangeLeftRight[0], sampleStatsLeftRight[0], dataStorage, buildSettings);},
+        [&]{updateTreeNode(kdTree, kdTree->getNode(nodeIdsLeftRight[1]), depth + 1, bondsLeftRight[1], samples, sampleRangeLeftRight[1], sampleStatsLeftRight[1], dataStorage, buildSettings);}
     );
 #else
 
@@ -329,13 +369,13 @@ private:
     tbb::parallel_for( tbb::blocked_range<int>(0,2), [&](tbb::blocked_range<int> r)
     {
         for (int i = r.begin(); i<r.end(); ++i){
-            updateTreeNode(kdTree, kdTree->getNode(nodeIdsLeftRight[i]), depth + 1, samples, sampleRangeLeftRight[i], sampleStatsLeftRight[i], dataStorage, buildSettings);
+            updateTreeNode(kdTree, kdTree->getNode(nodeIdsLeftRight[i]), depth + 1, bondsLeftRight[i], samples, sampleRangeLeftRight[i], sampleStatsLeftRight[i], dataStorage, buildSettings);
         }
     });
     }
     else{
-      updateTreeNode(kdTree, kdTree->getNode(nodeIdsLeftRight[0]), depth + 1, samples, sampleRangeLeftRight[0], sampleStatsLeftRight[0], dataStorage, buildSettings);
-      updateTreeNode(kdTree, kdTree->getNode(nodeIdsLeftRight[1]), depth + 1, samples, sampleRangeLeftRight[1], sampleStatsLeftRight[1], dataStorage, buildSettings);  
+      updateTreeNode(kdTree, kdTree->getNode(nodeIdsLeftRight[0]), depth + 1, bondsLeftRight[0], samples, sampleRangeLeftRight[0], sampleStatsLeftRight[0], dataStorage, buildSettings);
+      updateTreeNode(kdTree, kdTree->getNode(nodeIdsLeftRight[1]), depth + 1, bondsLeftRight[1], samples, sampleRangeLeftRight[1], sampleStatsLeftRight[1], dataStorage, buildSettings);  
     }
 #endif
 #endif

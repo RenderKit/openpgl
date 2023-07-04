@@ -1144,7 +1144,7 @@ void ParallaxAwareVonMisesFisherWeightedEMFactory< TVMMDistribution>::prepareSam
 {
     if(TVMMDistribution::ParallaxCompensation) 
     {
-        openpgl::Vector3 sampleVariance = sampleStatistics.getVaraince();
+        openpgl::Vector3 sampleVariance = sampleStatistics.getVariance();
         float minDistance = length(sampleVariance);
         minDistance = 3.f * 3.f * sqrt(minDistance);
         for (size_t n = 0; n < numSamples; n++)
