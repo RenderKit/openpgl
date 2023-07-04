@@ -11,7 +11,6 @@
 #include <fstream>
 #include <string>
 #include <iostream>
-//#include <iomanip>
 
 #define MERGE_SPLITDIM_AND_NODE_IDX
 
@@ -19,36 +18,6 @@
 
 namespace openpgl
 {
-
-#if defined(MERGE_SPLITDIM_AND_NODE_IDX) 
-struct KDNodeOld
-{
-    enum{
-        ESPlitDimX = 0,
-        ESPlitDimY = 1,
-        ESPlitDimZ = 2,
-        ELeafNode  = 3,
-    };
-    
-    float splitPosition {0.0f};
-    uint8_t splitDim{0};
-    uint32_t nodeIdx{0};
-
-
-    bool isLeaf() const {
-        return splitDim == ELeafNode;
-    }
-
-    void deserialize(std::istream& stream)
-    {
-        stream.read(reinterpret_cast<char*>(&splitPosition), sizeof(float));
-        stream.read(reinterpret_cast<char*>(&splitDim), sizeof(uint8_t));
-        stream.read(reinterpret_cast<char*>(&nodeIdx), sizeof(uint32_t));
-
-        OPENPGL_ASSERT(splitDim <=ELeafNode);
-    }
-};
-#endif
 
 struct KDNode
 {
@@ -61,7 +30,6 @@ struct KDNode
 
     float splitPosition {0.0f};
 #ifdef MERGE_SPLITDIM_AND_NODE_IDX
-    //uint8_t splitDim{0};
     uint32_t splitDimAndNodeIdx{0};
 #else
     uint8_t splitDim{0};
@@ -121,8 +89,6 @@ struct KDNode
         splitDim = _splitDim;
         nodeIdx = _leftChildIdx;
     #endif
-        //setSplitDim(splitDim);
-        //setLeftChildIdx(leftChildIdx);
         OPENPGL_ASSERT(_splitDim == getSplitDim());
         OPENPGL_ASSERT(_leftChildIdx == getLeftChildIdx());
     }
@@ -195,7 +161,6 @@ struct KDNode
     uint8_t getSplitDim() const
     {
 #ifdef MERGE_SPLITDIM_AND_NODE_IDX
-        //OPENPGL_ASSERT((splitDimAndNodeIdx >> 30) < ELeafNode);
         return (splitDimAndNodeIdx >> 30);
 #else
         return splitDim;
@@ -250,9 +215,6 @@ struct KDNode
         if (splitPosition != b.splitPosition || isLeaf() != b.isLeaf()) 
         {
             equal = false;
-            //std::cout << std::fixed;
-            //std::cout << std::setprecision(12);
-            //std::cout << "KNODE NOT-EQUAL: " << std::endl <<"splitPosition = " << splitPosition << "\t b.splitPosition = " << b.splitPosition << std::endl;
         }
         if (!isLeaf())
         {
@@ -260,17 +222,13 @@ struct KDNode
                 getLeftChildIdx() != b.getLeftChildIdx())
             {
                 equal = false;
-                //std::cout << "KNODE NOT-EQUAL:" << std::endl <<"splitDim = " << getSplitDim() << "\t b.splitDim = " << b.getSplitDim()  << std::endl << std::endl <<"LeftChildIdx = " << getLeftChildIdx() << "\t b.LeftChildIdx = " << b.getLeftChildIdx()  << std::endl;
             }
         } else {
             if (getDataIdx() != b.getDataIdx()) 
             {
                 equal = false;
-                //std::cout << "KNODE NOT-EQUAL:" << std::endl <<"dataIdx = " << getDataIdx() << "\t b.dataIdx = " << b.getDataIdx()  << std::endl << std::endl <<"LeftChildIdx = " << getLeftChildIdx() << "\t b.LeftChildIdx = " << b.getLeftChildIdx()  << std::endl;
             }
         }
-        //if(!equal)
-        //    std::cout << "KNODE NOT-EQUAL" << std::endl;
         return equal;
     }
 
@@ -338,7 +296,6 @@ struct KDTree
 
     const KDNode& getNode( const size_t &idx ) const
     {
-        //OPENPGL_ASSERT( m_isInit );
         OPENPGL_ASSERT( m_nodes.size() > idx );
         return m_nodes[idx];
     }
@@ -372,12 +329,10 @@ struct KDTree
             rearrangeNode(nodeLeft, newIdx, newNodes, dataStorageIndices);
             rearrangeNode(nodeRight, newIdx+1, newNodes, dataStorageIndices);
         } else {
-            /* */
             uint32_t dataIdx = node.getDataIdx();
             uint32_t newDataIdx = dataStorageIndices.size();
             dataStorageIndices.push_back(dataIdx);
             newNodes[idx].setDataNodeIdx(newDataIdx);
-            /* */
         }
     }
 
@@ -388,15 +343,10 @@ struct KDTree
             KDNode root = m_nodes[0];
             newNodes.push_back(root);
             rearrangeNode(root, 0, newNodes, dataStorageIndices);
-            //if(m_nodes.size() != newNodes.size())
-            //{
-            //    std::cout << "ARGHHHH: m_nodes.size = " << m_nodes.size() << "\t newNodes.size = " << newNodes.size() << std::endl;
-            //}
 
             for (int n = 0; n < m_nodes.size(); n++){
                 m_nodes[n] = newNodes[n];
             }
-
             finalize();
         }
     }
@@ -499,7 +449,6 @@ struct KDTree
                     treeLets[treeLetIdx].nodes[nodeIdx].setSplitDim(node.getSplitDim());
 #endif
                     OPENPGL_ASSERT(node.getSplitDim() == treeLets[treeLetIdx].nodes[nodeIdx].getSplitDim());
-                    //return lefTreeLetIdx;
 
                     OPENPGL_ASSERT(node.getSplitDim() == treeLets[treeLetIdx].nodes[nodeIdx].getSplitDim());
                     OPENPGL_ASSERT(node.getSplitPivot() == treeLets[treeLetIdx].nodes[nodeIdx].getSplitPivot());
@@ -526,13 +475,10 @@ struct KDTree
             nodeIdx = m_nodesPtr[nodeIdx].getLeftChildIdx();
             nodeIdx += pos[splitDim] >= pivot ? 1 : 0;
         }
-
-//        std::cout << "dataID = " << m_nodesPtr[nodeIdx].getDataIdx() << std::endl;
         return m_nodesPtr[nodeIdx].getDataIdx();
     }
 
 #else
-    //uint32_t getDataIdxAtPosTreeLets(const Vector3 &pos) const
     uint32_t getDataIdxAtPos(const Vector3 &pos) const
     {
         OPENPGL_ASSERT(m_isInit);
@@ -542,11 +488,8 @@ struct KDTree
         uint32_t nodeIdx = 0;
         uint32_t depth = 0;
         KDTreeLet treeLet = m_treeLets[treeIdx];
-        //uint8_t splitDim = treeLet.nodes[nodeIdx].getSplitDim();
-        //uint32_t childIdx = treeLet.nodes[nodeIdx].getLeftChildIdx();
         
         while(!treeLet.nodes[nodeIdx].isLeaf())
-        //while(splitDim != KDNode::ELeafNode)
         {
             uint8_t splitDim = treeLet.nodes[nodeIdx].getSplitDim();
             uint32_t childIdx = treeLet.nodes[nodeIdx].getLeftChildIdx();
@@ -561,13 +504,8 @@ struct KDTree
                 nodeIdx = childIdx - (treeIdx * 8);
                 nodeIdx += pos[splitDim] >= pivot ? 1 : 0;
             }
-            //splitDim = treeLet.nodes[nodeIdx].getSplitDim();
-            //childIdx = splitDim != 3 ? treeLet.nodes[nodeIdx].getLeftChildIdx() : treeLet.nodes[nodeIdx].getDataIdx();
             depth++;
         }
-
-        //std::cout << "dataID = " << treeLet.nodes[nodeIdx].getDataIdx() << "\t treeIdx = " << treeIdx << "\t nodeIdx = " << nodeIdx << std::endl;
-        //return childIdx;
         return treeLet.nodes[nodeIdx].getDataIdx();
     }
 #endif
@@ -732,7 +670,6 @@ struct KDTree
             objFile << "f " << vertexIDOffset+1 + 7 << "\t" << vertexIDOffset+1 + 3 << "\t" << vertexIDOffset+1 + 2 << "\t" << vertexIDOffset+1 + 6 << std::endl;
 
             vertexIDOffset += 8;
-            //std::cout << "BBox: lower = [" << sampleBound.lower[0] << ",\t"<< sampleBound.lower[1] << ",\t"<< sampleBound.lower[2] << "] \t upper = ["<< sampleBound.upper[0] << ",\t"<< sampleBound.upper[1] << ",\t"<< sampleBound.upper[2] << std::endl;
         }
     }
 
@@ -756,36 +693,13 @@ struct KDTree
         stream.read(reinterpret_cast<char*>(&num_nodes), sizeof(size_t));
         m_nodes.reserve(num_nodes);
         m_nodesPtr = new KDNode[num_nodes];
-        //std::cout << "KDNode = " << sizeof(KDNode) << "\t KDNodeOld = " << sizeof(KDNodeOld) << std::endl;
         for (size_t n = 0; n < num_nodes; n++)
         {
             KDNode node;
-/*
-#if defined(MERGE_SPLITDIM_AND_NODE_IDX) 
-            KDNodeOld nodeOld;
-            nodeOld.deserialize(stream);
-            if (nodeOld.isLeaf()){
-                node.setLeaf();
-                node.setDataNodeIdx(nodeOld.nodeIdx);
-            } else {
-                node.splitPosition = nodeOld.splitPosition;
-                node.setSplitDim(nodeOld.splitDim);
-                node.setChildNodeIdx(nodeOld.nodeIdx);
-            }
-            
-#else */
             node.deserialize(stream);
-//#endif
             m_nodes.push_back(node);
             m_nodesPtr[n] = node;
         }
-/*
-        if(num_nodes > 0) {
-            rearrangeNodes();
-            finalize();
-        }
-        */
-/* */
 #ifdef USE_TREELETS
         if(num_nodes > 0)
             buildTreeLets();
