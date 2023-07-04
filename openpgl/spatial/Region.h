@@ -103,5 +103,15 @@ namespace openpgl
             return ss.str();
         }
 
+        bool operator==(const Region& b) const {
+            bool equal = true;
+            if (!sampleStatistics.operator==(b.sampleStatistics) || splitFlag != b.splitFlag)
+            {
+                equal = false;
+            }
+
+            return equal;
+        }
+
     };
 }

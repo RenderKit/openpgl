@@ -170,6 +170,26 @@ namespace openpgl
             stream.read(reinterpret_cast<char*>(&sampleBounds), sizeof(BBox));
         }
 
+        bool operator==(const SampleStatistics& b) const { 
+            bool equal = true;
+            if(mean.x != b.mean.x || mean.y != b.mean.y ||
+                mean.z != b.mean.z || sampleVariance.x != b.sampleVariance.x || 
+                sampleVariance.y != b.sampleVariance.y || sampleVariance.z != b.sampleVariance.z ||
+                numSamples != b.numSamples || sampleBounds.lower.x != b.sampleBounds.lower.x || 
+                sampleBounds.lower.y != b.sampleBounds.lower.y || sampleBounds.lower.z != b.sampleBounds.lower.z ||
+                sampleBounds.upper.x != b.sampleBounds.upper.x || sampleBounds.upper.y != b.sampleBounds.upper.y || 
+                sampleBounds.upper.z != b.sampleBounds.upper.z)
+                {
+                    equal = false;
+                    //std::cout << std::fixed;
+                    //std::cout << std::setprecision(12);
+                    //std::cout << "SampleStatistics: NOT-EQUAL" << std::endl;
+                    //std::cout << "SampleStatisticsLeft:  numSamples = " << numSamples << "\t mean = " << mean.x << "\t" << mean.y << "\t" << mean.z << "\t sampleVariance = "<< sampleVariance.x << "\t" << sampleVariance.y << "\t" << sampleVariance.z << std::endl;
+                    //std::cout << "SampleStatisticsRight: numSamples = " << b.numSamples << "\t mean = " << b.mean.x << "\t" << b.mean.y << "\t" << b.mean.z << "\t sampleVariance = "<< b.sampleVariance.x << "\t" << b.sampleVariance.y << "\t" << b.sampleVariance.z << std::endl;
+                }
+            return equal;
+        }
+
     };
 
     #define  INTEGER_BINS 4096.f

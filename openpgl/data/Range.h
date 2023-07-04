@@ -38,5 +38,14 @@ namespace openpgl
             is.read(reinterpret_cast<char*>(&m_begin), sizeof(m_begin));
             is.read(reinterpret_cast<char*>(&m_end), sizeof(m_end));
         }
+
+        bool operator==(const Range& b) const {
+            bool equal = true;
+            if(m_begin != b.m_begin || m_end != b.m_end)
+            {
+                equal = false;
+            }
+            return equal;
+        }
     };
 }

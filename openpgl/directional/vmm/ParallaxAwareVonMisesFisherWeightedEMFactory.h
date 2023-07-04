@@ -55,6 +55,19 @@ public:
         void deserialize(std::istream& stream);
 
         std::string toString() const;
+
+        bool operator==(const Configuration& b) const {
+            bool equal = true;
+            if(initK != b.initK || initKappa != b.initKappa ||
+                maxK != b.maxK || maxEMIterrations != b.maxEMIterrations ||
+                maxKappa != b.maxKappa || maxMeanCosine != b.maxMeanCosine ||
+                convergenceThreshold != b.convergenceThreshold || weightPrior != b.weightPrior ||
+                meanCosinePriorStrength != b.meanCosinePriorStrength || meanCosinePrior != b.meanCosinePrior)
+            {
+                equal = false;
+            }
+            return equal;
+        }
     };
 
     struct FittingStatistics

@@ -54,6 +54,19 @@ public:
         void deserialize(std::istream& stream);
 
         std::string toString() const;
+
+        bool operator==(const Configuration& b) const {
+            bool equal = true;
+            if(splittingThreshold != b.splittingThreshold || mergingThreshold != b.mergingThreshold ||
+                useSplitAndMerge != b.useSplitAndMerge || partialReFit != b.partialReFit ||
+                maxSplitItr != b.maxSplitItr || minSamplesForSplitting != b.minSamplesForSplitting ||
+                minSamplesForPartialRefitting != b.minSamplesForPartialRefitting || minSamplesForMerging != b.minSamplesForMerging ||
+                !weightedEMCfg.operator==(b.weightedEMCfg)) 
+            {
+                equal = false;
+            }
+            return equal;
+        }
     };
 
 

@@ -66,6 +66,18 @@ namespace openpgl
         return ss.str();   
     }
 
+    inline bool SampleDataEqual(const PGLSampleData &compA,  const PGLSampleData &compB)
+    {
+        if(compA.position.x != compB.position.x || compA.position.y != compB.position.y ||
+           compA.position.z != compB.position.z || compA.direction.x != compB.direction.x ||
+           compA.direction.y != compB.direction.y || compA.direction.z != compB.direction.z ||
+           compA.weight != compB.weight || compA.pdf != compB.pdf || 
+           compA.distance != compB.distance || compA.flags != compB.flags)
+        {
+            return false;
+        }
+        return true;
+    }
 
     inline bool SampleDataLess(const PGLSampleData &compA,  const PGLSampleData &compB )
     {

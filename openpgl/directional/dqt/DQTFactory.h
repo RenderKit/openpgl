@@ -63,6 +63,10 @@ public:
         void deserialize(std::istream& stream) {
             stream.read(reinterpret_cast<char*>(this), sizeof(*this));
         };
+
+        bool operator==(const Configuration& b) const {
+            return true;
+        }
     };
 
     struct StatsNode {

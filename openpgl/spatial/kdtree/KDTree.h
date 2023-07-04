@@ -11,6 +11,7 @@
 #include <fstream>
 #include <string>
 #include <iostream>
+//#include <iomanip>
 
 #define MERGE_SPLITDIM_AND_NODE_IDX
 
@@ -244,6 +245,35 @@ struct KDNode
 #endif
     }
 
+    bool operator==(const KDNode& b) const {
+        bool equal = true;
+        if (splitPosition != b.splitPosition || isLeaf() != b.isLeaf()) 
+        {
+            equal = false;
+            //std::cout << std::fixed;
+            //std::cout << std::setprecision(12);
+            //std::cout << "KNODE NOT-EQUAL: " << std::endl <<"splitPosition = " << splitPosition << "\t b.splitPosition = " << b.splitPosition << std::endl;
+        }
+        if (!isLeaf())
+        {
+            if(getSplitDim() != b.getSplitDim() || 
+                getLeftChildIdx() != b.getLeftChildIdx())
+            {
+                equal = false;
+                //std::cout << "KNODE NOT-EQUAL:" << std::endl <<"splitDim = " << getSplitDim() << "\t b.splitDim = " << b.getSplitDim()  << std::endl << std::endl <<"LeftChildIdx = " << getLeftChildIdx() << "\t b.LeftChildIdx = " << b.getLeftChildIdx()  << std::endl;
+            }
+        } else {
+            if (getDataIdx() != b.getDataIdx()) 
+            {
+                equal = false;
+                //std::cout << "KNODE NOT-EQUAL:" << std::endl <<"dataIdx = " << getDataIdx() << "\t b.dataIdx = " << b.getDataIdx()  << std::endl << std::endl <<"LeftChildIdx = " << getLeftChildIdx() << "\t b.LeftChildIdx = " << b.getLeftChildIdx()  << std::endl;
+            }
+        }
+        //if(!equal)
+        //    std::cout << "KNODE NOT-EQUAL" << std::endl;
+        return equal;
+    }
+
 };
 
 struct KDTreeLet
@@ -329,6 +359,48 @@ struct KDTree
         return m_bounds;
     }
 
+    void rearrangeNode(const KDNode& node, int idx, std::vector<KDNode>& newNodes, std::vector< uint32_t > &dataStorageIndices) {
+        if (!node.isLeaf())
+        {
+            uint32_t leftIdx = node.getLeftChildIdx();
+            KDNode nodeLeft = m_nodes[leftIdx];
+            KDNode nodeRight = m_nodes[leftIdx+1];
+            uint32_t newIdx = newNodes.size();
+            newNodes[idx].setLeftChildIdx(newIdx);
+            newNodes.push_back(nodeLeft);
+            newNodes.push_back(nodeRight);
+            rearrangeNode(nodeLeft, newIdx, newNodes, dataStorageIndices);
+            rearrangeNode(nodeRight, newIdx+1, newNodes, dataStorageIndices);
+        } else {
+            /* */
+            uint32_t dataIdx = node.getDataIdx();
+            uint32_t newDataIdx = dataStorageIndices.size();
+            dataStorageIndices.push_back(dataIdx);
+            newNodes[idx].setDataNodeIdx(newDataIdx);
+            /* */
+        }
+    }
+
+    void rearrangeNodes(std::vector< uint32_t > &dataStorageIndices)
+    {
+        if (m_nodes.size() > 0) {
+            std::vector<KDNode> newNodes;
+            KDNode root = m_nodes[0];
+            newNodes.push_back(root);
+            rearrangeNode(root, 0, newNodes, dataStorageIndices);
+            //if(m_nodes.size() != newNodes.size())
+            //{
+            //    std::cout << "ARGHHHH: m_nodes.size = " << m_nodes.size() << "\t newNodes.size = " << newNodes.size() << std::endl;
+            //}
+
+            for (int n = 0; n < m_nodes.size(); n++){
+                m_nodes[n] = newNodes[n];
+            }
+
+            finalize();
+        }
+    }
+
     void finalize()
     {
         if(m_nodesPtr){
@@ -351,8 +423,6 @@ struct KDTree
 
     void buildTreeLets()
     {
-        std::cout << "buildTreeLets: sizeof(KDNode) = " << sizeof(KDNode) << "\t sizeof(KDTreeLet) = " << sizeof(KDTreeLet) << std::endl;
-        
         if(m_treeLets){
             delete[] m_treeLets;
             m_treeLets = nullptr;
@@ -368,8 +438,6 @@ struct KDTree
         for ( int i = 0; i < m_numTreeLets; i++){
             m_treeLets[i] = treeLets[i];
         }
-
-        std::cout << "buildTreeLets: m_numTreeLets = " << m_numTreeLets << std::endl;
     }
 
     uint32_t insertNode(const KDNode& node, uint32_t nodeIdx, uint32_t treeLetIdx, uint32_t treeDepth, std::vector<KDTreeLet>& treeLets) {
@@ -692,6 +760,7 @@ struct KDTree
         for (size_t n = 0; n < num_nodes; n++)
         {
             KDNode node;
+/*
 #if defined(MERGE_SPLITDIM_AND_NODE_IDX) 
             KDNodeOld nodeOld;
             nodeOld.deserialize(stream);
@@ -704,17 +773,49 @@ struct KDTree
                 node.setChildNodeIdx(nodeOld.nodeIdx);
             }
             
-#else
+#else */
             node.deserialize(stream);
-#endif
+//#endif
             m_nodes.push_back(node);
             m_nodesPtr[n] = node;
         }
-
+/*
+        if(num_nodes > 0) {
+            rearrangeNodes();
+            finalize();
+        }
+        */
+/* */
 #ifdef USE_TREELETS
         if(num_nodes > 0)
             buildTreeLets();
 #endif
+
+    }
+
+    bool operator==(const KDTree& b) const {
+        bool equal = true;
+        if (m_isInit != b.m_isInit || m_bounds.lower.x != b.m_bounds.lower.x ||
+            m_bounds.lower.y != b.m_bounds.lower.y || m_bounds.lower.z != b.m_bounds.lower.z ||
+            m_bounds.upper.x != b.m_bounds.upper.x || m_bounds.upper.y != b.m_bounds.upper.y || 
+            m_bounds.upper.z != b.m_bounds.upper.z || 
+            m_numTreeLets != b.m_numTreeLets) 
+        {
+            equal = false;
+        }
+        std::cout << "Tree: nodes.size = " << m_nodes.size() << "\t b.nodes.size = " << b.m_nodes.size() << std::endl;
+        if (m_nodes.size() == b.m_nodes.size())
+        {
+            for (int n = 0; n < m_nodes.size(); n++) {
+                if (!m_nodes[n].operator==(b.m_nodes[n])) {
+                    equal = false;
+
+                }
+            }
+        } else {
+            equal = false;
+        }
+        return equal;
     }
 
 public:

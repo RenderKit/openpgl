@@ -53,6 +53,16 @@ struct KDTreePartitionBuilder
         void serialize(std::ostream& stream) const;
         void deserialize(std::istream& stream);
         std::string toString() const;
+
+        bool operator==(const Settings& b) const {
+            bool equal = true;
+            if(minSamples != b.minSamples || maxSamples != b.maxSamples ||
+                maxDepth != b.maxDepth)
+            {
+                equal = false;
+            }
+            return equal;
+        }
     };
 
     void build(KDTree &kdTree, const BBox &bounds, TContainer &samples, tbb::concurrent_vector< std::pair<TRegion, Range> > &dataStorage, const Settings &buildSettings, const size_t &nCores) const

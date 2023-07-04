@@ -251,6 +251,19 @@ extern "C" OPENPGL_DLLEXPORT  bool pglFieldValidate(PGLField field)
     return gField->validate(true, true);
 }
 
+extern "C" OPENPGL_DLLEXPORT bool pglFieldCompare(PGLField fieldA, PGLField fieldB)
+{
+    auto *gFieldA = (const IGuidingField *)fieldA;
+    auto *gFieldB = (const IGuidingField *)fieldB;
+    return gFieldA->operator==(gFieldB);
+}
+
+extern "C" OPENPGL_DLLEXPORT void pglFieldPrepareCompare(PGLField fieldA)
+{
+    auto *gFieldA = (IGuidingField *)fieldA;
+    gFieldA->prepareCompare();
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // Region /////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
@@ -373,6 +386,12 @@ extern "C" OPENPGL_DLLEXPORT PGLSampleData pglSampleStorageGetSampleVolume(PGLSa
     return gSampleStorage->getSampleVolume(idx);
 }
 
+extern "C" OPENPGL_DLLEXPORT bool pglSampleStorageCompare(PGLSampleStorage sampleStorageA, PGLSampleStorage sampleStorageB)
+{
+    auto *gSampleStorageA = (openpgl::SampleDataStorage *)sampleStorageA;
+    auto *gSampleStorageB = (openpgl::SampleDataStorage *)sampleStorageB;
+    return gSampleStorageA->operator==(*gSampleStorageB);
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 // SampleData /////////////////////////////////////////////////////////////////

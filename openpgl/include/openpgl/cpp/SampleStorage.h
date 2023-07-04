@@ -100,6 +100,8 @@ struct SampleStorage
      */
     SampleData GetSampleVolume(const int idx) const;
 
+    bool operator==(const SampleStorage& b) const;
+    
     friend struct Field;
     friend struct PathSegmentStorage;
     private:
@@ -196,6 +198,12 @@ OPENPGL_INLINE SampleData SampleStorage::GetSampleVolume(const int idx) const
     return pglSampleStorageGetSampleVolume(m_sampleStorageHandle, idx);
 }
 
+OPENPGL_INLINE bool SampleStorage::operator==(const SampleStorage& b) const
+{
+    OPENPGL_ASSERT(m_sampleStorageHandle);
+    OPENPGL_ASSERT(b.m_sampleStorageHandle);
+    return pglSampleStorageCompare(m_sampleStorageHandle, b.m_sampleStorageHandle);
+}
 
 }
 }

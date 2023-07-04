@@ -62,6 +62,10 @@ OPENPGL_CORE_INTERFACE bool pglFieldInitVolumeSamplingDistribution(PGLField fiel
 
 OPENPGL_CORE_INTERFACE bool pglFieldValidate(PGLField field);
 
+OPENPGL_CORE_INTERFACE bool pglFieldCompare(PGLField fieldA, PGLField fieldB);
+
+OPENPGL_CORE_INTERFACE void pglFieldPrepareCompare(PGLField fieldA);
+
 #ifdef __cplusplus
 }  // extern "C"
 #endif

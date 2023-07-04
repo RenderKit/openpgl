@@ -208,6 +208,22 @@ public:
         fb.close();
     }
 
+    virtual bool operator==(const ISurfaceVolumeField* b) const override {
+        bool equal = true;
+        const SurfaceVolumeField* fieldB = dynamic_cast<const SurfaceVolumeField*>(b);
+        if (!fieldB || m_iteration != fieldB->m_iteration ||
+            m_totalSPP != fieldB->m_totalSPP ||
+            !m_surfaceField.operator==(fieldB->m_surfaceField) ||
+            !m_volumeField.operator==(fieldB->m_volumeField)) {
+                equal = false;
+            }
+        return equal;
+    }
+
+    virtual void prepareCompare() override {
+        m_surfaceField.prepareCompare();
+        m_volumeField.prepareCompare();
+    }
 private:
     size_t m_iteration {0};
     size_t m_totalSPP  {0};

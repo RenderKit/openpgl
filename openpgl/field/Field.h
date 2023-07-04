@@ -296,6 +296,20 @@ public:
         return m_initialized;
     }
 
+    void prepareCompare(){
+        std::vector< uint32_t > dataStorageIndices;
+        m_spatialSubdiv.rearrangeNodes(dataStorageIndices);
+        /* */
+        RegionStorageContainerType oldRegionStorageContainer = m_regionStorageContainer;
+        if(oldRegionStorageContainer.size() != dataStorageIndices.size())
+        {
+            std::cout << "ARGHHHH: oldRegionStorageContainer.size = " << oldRegionStorageContainer.size() << "\t dataStorageIndices.size = " << dataStorageIndices.size() << std::endl;
+        }
+        for (int n = 0; n < dataStorageIndices.size(); n++){
+            m_regionStorageContainer[n] = oldRegionStorageContainer[dataStorageIndices[n]];
+        }
+    }
+
 private:
 
     void estimateSceneBounds(const SampleContainerInternal& samples)
@@ -534,6 +548,33 @@ public:
         }
         regionBeforeUpdate.deserialize(dumpIStream);
         fbDumpIn.close();
+    }
+
+    bool operator==(const Field& b) const {
+        bool equal = true;
+        if(m_isSurface != b.m_isSurface || m_decayOnSpatialSplit != b.m_decayOnSpatialSplit ||
+            m_iteration != b.m_iteration || m_totalSPP != b.m_totalSPP ||
+            m_nCores != b.m_nCores || m_deterministic != b.m_deterministic || m_fitRegions != b.m_fitRegions ||
+            m_isSceneBoundsSet != b.m_isSceneBoundsSet || m_sceneBounds.lower.x != b.m_sceneBounds.lower.x ||
+            m_sceneBounds.lower.y != b.m_sceneBounds.lower.y || m_sceneBounds.lower.z != b.m_sceneBounds.lower.z ||
+            m_sceneBounds.upper.x != b.m_sceneBounds.upper.x || m_sceneBounds.upper.y != b.m_sceneBounds.upper.y || 
+            m_sceneBounds.upper.z != b.m_sceneBounds.upper.z || m_initialized != b.m_initialized ||
+            !m_distributionFactorySettings.operator==(b.m_distributionFactorySettings) ||
+            !m_spatialSubdivBuilderSettings.operator==(b.m_spatialSubdivBuilderSettings) ||
+            !m_spatialSubdiv.operator==(b.m_spatialSubdiv) ||
+            m_useStochasticNNLookUp != b.m_useStochasticNNLookUp)
+        {
+            equal = false;
+        }
+
+        uint32_t bRegionStorageSize = b.m_regionStorageContainer.size();
+        for (int n = 0; n < m_regionStorageContainer.size(); n++) {
+            if (n < bRegionStorageSize  && (!m_regionStorageContainer[n].second.operator==(b.m_regionStorageContainer[n].second) || 
+                !m_regionStorageContainer[n].first.operator==(b.m_regionStorageContainer[n].first))){
+                equal = false;
+            }
+        }
+        return equal;
     }
 
 private:

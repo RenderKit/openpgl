@@ -8,6 +8,7 @@
 #include "SampleData.h"
 
 #include <tbb/concurrent_vector.h>
+#include <tbb/parallel_sort.h>
 
 #define SAMPLE_DATA_STORAGE_FILE_HEADER_STRING "OPENPGL_" OPENPGL_VERSION_STRING "_SAMPLE_STORAGE"
 
@@ -212,6 +213,59 @@ struct SampleDataStorage
             stream.read(reinterpret_cast<char*>(&dsd), sizeof(SampleData));
             m_volumeContainer.push_back(dsd);
         }
+    }
+
+bool operator==(const SampleDataStorage& b) const {
+        std::vector<SampleData> surfaceSampleDataA;
+        std::vector<SampleData> volumeSampleDataA;
+
+        std::vector<SampleData> surfaceSampleDataB;
+        std::vector<SampleData> volumeSampleDataB;
+
+        surfaceSampleDataA.resize(m_surfaceContainer.size());        
+        volumeSampleDataA.resize(m_volumeContainer.size());
+
+        for (int i = 0; i < m_surfaceContainer.size(); i++){
+            surfaceSampleDataA[i] = m_surfaceContainer[i];
+        }
+        tbb::parallel_sort(surfaceSampleDataA.begin(), surfaceSampleDataA.end(), SampleDataLess);
+
+        for (int i = 0; i < m_volumeContainer.size(); i++){
+            volumeSampleDataA[i] = m_volumeContainer[i];
+        }
+        tbb::parallel_sort(volumeSampleDataA.begin(), volumeSampleDataA.end(), SampleDataLess);
+
+        surfaceSampleDataB.resize(b.m_surfaceContainer.size());        
+        volumeSampleDataB.resize(b.m_volumeContainer.size());
+
+        for (int i = 0; i < b.m_surfaceContainer.size(); i++){
+            surfaceSampleDataB[i] = b.m_surfaceContainer[i];
+        }
+        tbb::parallel_sort(surfaceSampleDataB.begin(), surfaceSampleDataB.end(), SampleDataLess);
+
+        for (int i = 0; i < b.m_volumeContainer.size(); i++){
+            volumeSampleDataB[i] = b.m_volumeContainer[i];
+        }
+        tbb::parallel_sort(volumeSampleDataB.begin(), volumeSampleDataB.end(), SampleDataLess); 
+
+        bool equal = true;
+        int sizeB = surfaceSampleDataB.size();
+        for (int i = 0; i < surfaceSampleDataA.size(); i++) {
+            if( i< sizeB && !SampleDataEqual(surfaceSampleDataA[i], surfaceSampleDataB[i])){
+                equal = false;
+                //std::cout << "Non-equal surfaceSample[" << i << "]: " << std::endl << " left = " << toString(surfaceSampleDataA[i]) << std::endl << " right = " << toString(surfaceSampleDataB[i]) << std::endl;
+            }
+        }
+
+        sizeB = volumeSampleDataB.size();
+        for (int i = 0; i < volumeSampleDataA.size(); i++) {
+            if( i< sizeB && !SampleDataEqual(volumeSampleDataA[i], volumeSampleDataB[i])){
+                equal = false;
+                //std::cout << "Non-equal volumeSample[" << i << "]: " << std::endl << " left = " << toString(volumeSampleDataA[i]) << std::endl << " right = " << toString(volumeSampleDataB[i]) << std::endl;
+            }
+        }
+
+        return equal;
     }
 
     private:

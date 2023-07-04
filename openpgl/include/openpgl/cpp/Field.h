@@ -115,6 +115,10 @@ struct Field
     /// Checks if the guiding information of the Field is valid (e.g., contains no invalid directional distributions). 
     bool Validate() const;
 
+    bool operator==(const Field& b) const;
+
+    void PrepareCompare();
+
     friend struct openpgl::cpp::SurfaceSamplingDistribution;
     friend struct openpgl::cpp::VolumeSamplingDistribution;
     private:
@@ -200,6 +204,19 @@ OPENPGL_INLINE bool Field::Validate() const
 {
     OPENPGL_ASSERT(m_fieldHandle);
     return pglFieldValidate(m_fieldHandle);
+}
+
+OPENPGL_INLINE bool Field::operator==(const Field& b) const
+{
+    OPENPGL_ASSERT(m_fieldHandle);
+    OPENPGL_ASSERT(b.m_fieldHandle);
+    return pglFieldCompare(m_fieldHandle, b.m_fieldHandle);
+}
+
+OPENPGL_INLINE void Field::PrepareCompare()
+{
+    OPENPGL_ASSERT(m_fieldHandle);
+    pglFieldPrepareCompare(m_fieldHandle);
 }
 
 } // api
