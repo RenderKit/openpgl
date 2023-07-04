@@ -38,17 +38,15 @@ struct KDTreePartitionBuilder
     typedef KDTree SpatialStructure;
 
 #ifdef USE_EMBREE_PARALLEL
-    static const size_t PARALLEL_THRESHOLD = 3 * 1024;
-    static const size_t PARALLEL_FIND_BLOCK_SIZE = 1024;
-    //static const size_t PARALLEL_PARTITION_BLOCK_SIZE = 128;
-    static const size_t PARALLEL_PARTITION_BLOCK_SIZE = 1024;
+    static const size_t PARALLEL_THRESHOLD = 4 * 1024;
+    static const size_t PARALLEL_PARTITION_BLOCK_SIZE = 4 * 1024;
 #endif
 
     struct Settings
     {
         size_t minSamples {100};
         size_t maxSamples {32000};
-        size_t maxDepth{32};
+        size_t maxDepth {32};
 
         void serialize(std::ostream& stream) const;
         void deserialize(std::istream& stream);
@@ -172,7 +170,7 @@ private:
     {
         auto isLeft = [&] (const PGLSampleData &sample) { return Vector3(sample.position.x, sample.position.y, sample.position.z)[splitDimension] < pivot; };
         size_t center = 0;
-        bool parallel = (end-begin) < 1024 ? false : true;
+        bool parallel = (end-begin) < PARALLEL_THRESHOLD ? false : true;
         if (!parallel) {
             center = embree::serial_partitioning(samples, begin, end, isLeft);
         } else {
@@ -186,7 +184,7 @@ private:
     {
         auto isLeft = [&] (const PGLSampleData &sample) { const Vector3 v(sample.position.x, sample.position.y, sample.position.z); return v[splitDimension] < pivot; };
         size_t center = 0;
-        bool parallel = (end-begin) < 1024 ? false : true;
+        bool parallel = (end-begin) < PARALLEL_THRESHOLD ? false : true;
         if (!parallel) {
             center = embree::serial_partitioning(samples, begin, end, statsLeft, statsRight, isLeft,
                                 [] (SampleStatistics& sstats, const PGLSampleData& sample) { sstats.addSample(Vector3(sample.position.x, sample.position.y, sample.position.z)); });
@@ -201,12 +199,12 @@ private:
     }
 
     inline size_t pivotSplitSamplesWithStats3(const BBox& bounds, PGLSampleData* samples, const size_t begin, const size_t end,
-                                                                    uint8_t splitDimension, float pivot, SampleStatistics &statsLeft, SampleStatistics &statsRight) const
+                                                                    uint8_t splitDimension, float pivot, SampleStatistics &statsLeft, SampleStatistics &statsRight, bool parallel = true) const
     {
         auto isLeft = [&] (const PGLSampleData &sample) { const Vector3 v(sample.position.x, sample.position.y, sample.position.z); return v[splitDimension] < pivot; };
         size_t center = 0;
-        bool parallel = (end-begin) < 1024 ? false : true;
-        if (!parallel) {
+        bool runParallel = (end-begin) < PARALLEL_THRESHOLD || parallel == false ? false : true;
+        if (!runParallel) {
             IntegerSampleStatistics iStatsLeft(bounds);
             IntegerSampleStatistics iStatsRight(bounds);
             center = embree::serial_partitioning(samples, begin, end, iStatsLeft, iStatsRight, isLeft,
@@ -243,7 +241,7 @@ private:
     }
 
 
-    void updateTreeNode(KDTree *kdTree, KDNode &node, size_t depth, const BBox bounds, TContainer &samples, const Range sampleRange, const SampleStatistics sampleStats, tbb::concurrent_vector< std::pair<TRegion, Range> > *dataStorage, const Settings &buildSettings) const
+    void updateTreeNode(KDTree *kdTree, KDNode &node, size_t depth, const BBox bounds, TContainer &samples, const Range sampleRange, const SampleStatistics sampleStats, tbb::concurrent_vector< std::pair<TRegion, Range> > *dataStorage, const Settings &buildSettings, bool parallel = true) const
     {
         if(sampleRange.size() <= 0)
         {
@@ -334,7 +332,7 @@ private:
 #ifndef USE_INTEGER_ARITHMETIC_STATS
             rPivotItr = pivotSplitSamplesWithStats2(samples.data(), sampleRange.m_begin, sampleRange.m_end, splitDim, splitPos, sampleStatsLeftRight[0], sampleStatsLeftRight[1]);
 #else
-            rPivotItr = pivotSplitSamplesWithStats3(bounds, samples.data(), sampleRange.m_begin, sampleRange.m_end, splitDim, splitPos, sampleStatsLeftRight[0], sampleStatsLeftRight[1]);
+            rPivotItr = pivotSplitSamplesWithStats3(bounds, samples.data(), sampleRange.m_begin, sampleRange.m_end, splitDim, splitPos, sampleStatsLeftRight[0], sampleStatsLeftRight[1], parallel);
 #endif
 #else
             rPivotItr = pivotSplitSamplesWithStats(begin, end, splitDim, splitPos, sampleStatsLeftRight[0], sampleStatsLeftRight[1]);
@@ -368,14 +366,13 @@ private:
         updateTreeNode(kdTree, kdTree->getNode(nodeIdsLeftRight[0]), depth + 1, bondsLeftRight[0], sampleRangeLeftRight[0], sampleStatsLeftRight[0], dataStorage, buildSettings);
         updateTreeNode(kdTree, kdTree->getNode(nodeIdsLeftRight[1]), depth + 1, bondsLeftRight[1], sampleRangeLeftRight[1], sampleStatsLeftRight[1], dataStorage, buildSettings);
 #else
-#ifndef USE_EMBREE_PARALLEL
+//#ifndef USE_EMBREE_PARALLEL
     tbb::parallel_invoke(
-        [&]{updateTreeNode(kdTree, kdTree->getNode(nodeIdsLeftRight[0]), depth + 1, bondsLeftRight[0], samples, sampleRangeLeftRight[0], sampleStatsLeftRight[0], dataStorage, buildSettings);},
-        [&]{updateTreeNode(kdTree, kdTree->getNode(nodeIdsLeftRight[1]), depth + 1, bondsLeftRight[1], samples, sampleRangeLeftRight[1], sampleStatsLeftRight[1], dataStorage, buildSettings);}
+        [&]{updateTreeNode(kdTree, kdTree->getNode(nodeIdsLeftRight[0]), depth + 1, bondsLeftRight[0], samples, sampleRangeLeftRight[0], sampleStatsLeftRight[0], dataStorage, buildSettings, true);},
+        [&]{updateTreeNode(kdTree, kdTree->getNode(nodeIdsLeftRight[1]), depth + 1, bondsLeftRight[1], samples, sampleRangeLeftRight[1], sampleStatsLeftRight[1], dataStorage, buildSettings, true);}
     );
+/*
 #else
-
-    
     //if (pow(2,depth) < 128*2)
     //if (false)
     if (true)
@@ -383,15 +380,16 @@ private:
     tbb::parallel_for( tbb::blocked_range<int>(0,2), [&](tbb::blocked_range<int> r)
     {
         for (int i = r.begin(); i<r.end(); ++i){
-            updateTreeNode(kdTree, kdTree->getNode(nodeIdsLeftRight[i]), depth + 1, bondsLeftRight[i], samples, sampleRangeLeftRight[i], sampleStatsLeftRight[i], dataStorage, buildSettings);
+            updateTreeNode(kdTree, kdTree->getNode(nodeIdsLeftRight[i]), depth + 1, bondsLeftRight[i], samples, sampleRangeLeftRight[i], sampleStatsLeftRight[i], dataStorage, buildSettings, true);
         }
     });
     }
     else{
-      updateTreeNode(kdTree, kdTree->getNode(nodeIdsLeftRight[0]), depth + 1, bondsLeftRight[0], samples, sampleRangeLeftRight[0], sampleStatsLeftRight[0], dataStorage, buildSettings);
-      updateTreeNode(kdTree, kdTree->getNode(nodeIdsLeftRight[1]), depth + 1, bondsLeftRight[1], samples, sampleRangeLeftRight[1], sampleStatsLeftRight[1], dataStorage, buildSettings);  
+      updateTreeNode(kdTree, kdTree->getNode(nodeIdsLeftRight[0]), depth + 1, bondsLeftRight[0], samples, sampleRangeLeftRight[0], sampleStatsLeftRight[0], dataStorage, buildSettings, false);
+      updateTreeNode(kdTree, kdTree->getNode(nodeIdsLeftRight[1]), depth + 1, bondsLeftRight[1], samples, sampleRangeLeftRight[1], sampleStatsLeftRight[1], dataStorage, buildSettings, false);  
     }
 #endif
+*/
 #endif
     }
 
