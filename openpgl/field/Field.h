@@ -4,6 +4,7 @@
 #pragma once
 
 #include "../data/Range.h"
+#include "../data/SampleContainerInternal.h"
 #include "../spatial/Region.h"
 #include "../spatial/KNN.h"
 
@@ -30,7 +31,6 @@ public:
     using DirectionalDistribution = typename TDirectionalDistributionFactory::Distribution;
 
     using SampleContainer = SampleDataStorage::SampleDataContainer;
-    using SampleContainerInternal = std::vector<SampleData>;
 
     typedef Region<DirectionalDistribution, typename TDirectionalDistributionFactory::Statistics> RegionType;
     typedef openpgl::Range RangeType;
