@@ -83,12 +83,13 @@ namespace embree
   public:
     atomic<bool> flag;
   };
-
+  /*
   class PaddedSpinLock : public SpinLock
   {
     private:
       char padding[CPU_CACHELINE_SIZE - sizeof(SpinLock)];
   };
+  */
   /*! safe mutex lock and unlock helper */
   template<typename Mutex> class Lock {
   public:

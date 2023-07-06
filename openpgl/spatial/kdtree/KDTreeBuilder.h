@@ -314,10 +314,9 @@ private:
         typename TContainer::iterator rPivotItr;
         auto begin = samples.begin() + sampleRange.m_begin, end = samples.begin() + sampleRange.m_end;
 #endif
-        bool splitStats = false;
         if(kdTree->getNode(nodeIdsLeftRight[0]).isLeaf() || kdTree->getNode(nodeIdsLeftRight[1]).isLeaf() )
         {
-            splitStats = true;
+            //splitStats = true;
 #ifdef USE_EMBREE_PARALLEL
 #ifndef USE_INTEGER_ARITHMETIC_STATS
             rPivotItr = pivotSplitSamplesWithStats2(samples.data(), sampleRange.m_begin, sampleRange.m_end, splitDim, splitPos, sampleStatsLeftRight[0], sampleStatsLeftRight[1]);

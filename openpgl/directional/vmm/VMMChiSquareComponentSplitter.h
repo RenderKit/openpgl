@@ -294,8 +294,7 @@ void VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::PerformRecursiveSpli
     SufficientStatisitcs tempSuffStatistics = suffStatistics;
 
     //bool stopSplitting = false;
-
-    size_t splitItr = 0;
+    //size_t splitItr = 0;
 
     VMMFactory vmmFactory;
     typename VMMFactory::FittingStatistics vmmFitStats;
@@ -349,7 +348,7 @@ void VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::PerformRecursiveSpli
             suffStatistics.maskedReplace(mask, tempSuffStatistics);
         }
         //std::cout << "vmmpartialUpdate: " << vmm.toString() << std::endl;
-        splitItr++;
+        //splitItr++;
     }
 }
 
@@ -443,7 +442,7 @@ void VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::UpdateSplitStatistic
     typename VMM::SoftAssignment softAssign;
     const embree::vfloat<VMM::VectorSize> zeros(0.f);
     const int cnt = (splitStats.numComponents + VMM::VectorSize-1) / VMM::VectorSize;
-    size_t validDataCount = 0.0f;
+    //size_t validDataCount = 0.0f;
 
     for (size_t n = 0; n < numData; n++)
     {
@@ -512,7 +511,7 @@ void VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::UpdateSplitStatistic
                 OPENPGL_ASSERT(embree::all(embree::isvalid(splitStats.splitWeightedSampleCovariances[k].z)));
                 //splitStats.sumWeights[k] += assignedWeight;
             }
-            validDataCount++;
+            //validDataCount++;
             //std::cout << std::endl;
         }
     }
