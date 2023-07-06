@@ -51,11 +51,12 @@ endif()
 
 if(WIN32)
   if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
-    set(OPENPGL_RELEASE_OPTIONS /Ox /Oi /fp:precise)
+    set(OPENPGL_RELEASE_OPTIONS /Ox /Oi)  
+    set(OPENPGL_COMMON_OPTIONS /fp:precise)
     #set(OPENPGL_RELEASE_OPTIONS ${OPENPGL_RELEASE_OPTIONS} -ftree-vectorize -mfpmath=sse -funsafe-math-optimizations -fno-rounding-math -fno-signaling-nans -fno-math-errno -fomit-frame-pointer )
 
     if(OPENPGL_ISA_SSE4 OR OPENPGL_ISA_AVX2 OR OPENPGL_ISA_AVX512)
-      set(OPENPGL_RELEASE_OPTIONS ${OPENPGL_RELEASE_OPTIONS} /D__SSE__ /D__SSE2__ /D__SSE3__ /D__SSE4_1__ /D__SSE4_2__)
+      set(OPENPGL_COMMON_OPTIONS ${OPENPGL_COMMON_OPTIONS} /D__SSE__ /D__SSE2__ /D__SSE3__ /D__SSE4_1__ /D__SSE4_2__)
     endif()
     if(OPENPGL_ISA_SSE4)
       set_source_files_properties(api/deviceCPU4.cpp PROPERTIES COMPILE_FLAGS "/D__SSE__ /D__SSE2__ /D__SSE3__ /D__SSE4_1__ /D__SSE4_2__")
@@ -68,11 +69,11 @@ if(WIN32)
     endif()
   elseif(CMAKE_CXX_COMPILER_ID STREQUAL "IntelLLVM" OR CMAKE_CXX_COMPILER_ID STREQUAL "dpcpp")
     set(OPENPGL_RELEASE_OPTIONS -O3)
-    list(APPEND OPENPGL_RELEASE_OPTIONS -Wall) 
-    list(APPEND OPENPGL_RELEASE_OPTIONS -ffp-model=precise)
+    set(OPENPGL_COMMON_OPTIONS -Wall) 
+    list(APPEND OPENPGL_COMMON_OPTIONS -ffp-model=precise)
 
     if(OPENPGL_ISA_SSE4 OR OPENPGL_ISA_AVX2 OR OPENPGL_ISA_AVX512)
-      list(APPEND OPENPGL_RELEASE_OPTIONS -msse2 -msse4.1)
+      list(APPEND OPENPGL_COMMON_OPTIONS -msse2 -msse4.1)
     endif()
 
     if(OPENPGL_ISA_SSE4)
@@ -87,28 +88,28 @@ if(WIN32)
   endif()
 else()
   set(OPENPGL_RELEASE_OPTIONS -O3)
-  if (CMAKE_CXX_COMPILER_ID STREQUAL "IntelLLVM" OR CMAKE_CXX_COMPILER_ID STREQUAL "dpcpp")
-    list(APPEND OPENPGL_RELEASE_OPTIONS  -ffp-model=precise)
-  endif()
-
-  list(APPEND OPENPGL_RELEASE_OPTIONS -Wall)                                 # enables most warnings
-  list(APPEND OPENPGL_RELEASE_OPTIONS -Wformat -Wformat-security)            # enables string format vulnerability warnings
+  set(OPENPGL_COMMON_OPTIONS -Wall)                                         # enables most warnings
+  list(APPEND OPENPGL_COMMON_OPTIONS -Wformat -Wformat-security)            # enables string format vulnerability warnings
   #SET(OPENPGL_RELEASE_OPTIONS ${OPENPGL_RELEASE_OPTIONS} -std=c++11)        # enables C++11 features
-  list(APPEND OPENPGL_RELEASE_OPTIONS -fvisibility=hidden)                   # makes all symbols hidden by default
-  list(APPEND OPENPGL_RELEASE_OPTIONS -fvisibility-inlines-hidden)           # makes all inline symbols hidden by default
-  list(APPEND OPENPGL_RELEASE_OPTIONS -fno-strict-aliasing)                  # disables strict aliasing rules
-  list(APPEND OPENPGL_RELEASE_OPTIONS -fno-tree-vectorize)                   # disable auto vectorizer
+  list(APPEND OPENPGL_COMMON_OPTIONS -fvisibility=hidden)                   # makes all symbols hidden by default
+  list(APPEND OPENPGL_COMMON_OPTIONS -fvisibility-inlines-hidden)           # makes all inline symbols hidden by default
+  list(APPEND OPENPGL_COMMON_OPTIONS -fno-strict-aliasing)                  # disables strict aliasing rules
+  list(APPEND OPENPGL_COMMON_OPTIONS -fno-tree-vectorize)                   # disable auto vectorizer
 
   if (OPENPGL_ARM)
-    list(APPEND OPENPGL_RELEASE_OPTIONS -fsigned-char)                       # treat 'char' as 'signed char'
-    list(APPEND OPENPGL_RELEASE_OPTIONS -flax-vector-conversions)            # allow lax vector type conversions
+    list(APPEND OPENPGL_COMMON_OPTIONS -fsigned-char)                       # treat 'char' as 'signed char'
+    list(APPEND OPENPGL_COMMON_OPTIONS -flax-vector-conversions)            # allow lax vector type conversions
+  endif()
+
+  if (CMAKE_CXX_COMPILER_ID STREQUAL "IntelLLVM" OR CMAKE_CXX_COMPILER_ID STREQUAL "dpcpp")
+    list(APPEND OPENPGL_COMMON_OPTIONS  -ffp-model=precise)
   endif()
 
   #set(OPENPGL_RELEASE_OPTIONS ${OPENPGL_RELEASE_OPTIONS} -fno-strict-aliasing -Wno-padded -ftree-vectorize -mfpmath=sse -funsafe-math-optimizations -fno-rounding-math -fno-signaling-nans -fno-math-errno -fomit-frame-pointer )
   #set(OPENPGL_RELEASE_OPTIONS ${OPENPGL_RELEASE_OPTIONS} -fno-strict-aliasing -Wno-padded -ftree-vectorize -mfpmath=sse)
 
   if(OPENPGL_ISA_SSE4 OR OPENPGL_ISA_AVX2 OR OPENPGL_ISA_AVX512)
-    list(APPEND OPENPGL_RELEASE_OPTIONS -msse2 -msse4.1)
+    list(APPEND OPENPGL_COMMON_OPTIONS -msse2 -msse4.1)
   endif()
   if(OPENPGL_ISA_SSE4)
     set_source_files_properties(api/deviceCPU4.cpp PROPERTIES COMPILE_FLAGS "-msse2 -msse4.1")
@@ -132,7 +133,10 @@ endif()
 #  set(OPENPGL_RELEASE_OPTIONS -fopenmp)
 #endif()
 
-target_compile_options(${PROJECT_NAME} PUBLIC "$<$<CONFIG:RELEASE>:${OPENPGL_RELEASE_OPTIONS}>")
+target_compile_options(${PROJECT_NAME} PRIVATE ${OPENPGL_COMMON_OPTIONS})
+target_compile_options(${PROJECT_NAME} PRIVATE "$<$<CONFIG:Release>:${OPENPGL_RELEASE_OPTIONS}>")
+target_compile_options(${PROJECT_NAME} PRIVATE "$<$<CONFIG:RelWithDebInfo>:${OPENPGL_RELEASE_OPTIONS}>")
+target_compile_options(${PROJECT_NAME} PRIVATE "$<$<CONFIG:MinSizeRel>:${OPENPGL_RELEASE_OPTIONS}>")
 
 # CMAKE 3.8 feature
 #target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_11)
@@ -149,10 +153,6 @@ message(STATUS "CMAKE_CURRENT_BINARY_DIR = ${CMAKE_CURRENT_BINARY_DIR}")
 
 target_include_directories(${PROJECT_NAME}
   PUBLIC
-    #$<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/../third-party/>
-    #$<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include/>
-
-    #$<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/>
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
