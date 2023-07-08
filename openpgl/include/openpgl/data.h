@@ -60,7 +60,7 @@ struct PGLPathSegmentData
     pgl_vec3f directionIn {0.f, 1.f, 0.f};
     /// The direction to the starting position of the previous path segment
     pgl_vec3f directionOut {1.f, 0.f, 0.f};
-    /// The surface normal at the current @ref position. Inside volumes @ref normal can be an arbritrary valid direction.
+    /// The surface normal at the current @ref position. Inside volumes @ref normal can be an arbritray valid direction.
     pgl_vec3f normal {0.f, 0.f, 1.f};
 
     //float distance {0.0f};
@@ -71,10 +71,10 @@ struct PGLPathSegmentData
     /// The PDF of sampling @ref directionIn at @ref position towards the next segment
     float pdfDirectionIn {1.0f};
 
-    /// If the scattering interaction at @ref position whas a delta Dirac (e.g., perfect mirror or glass).
+    /// If the scattering interaction at @ref position was a delta Dirac (e.g., perfect mirror or glass).
     bool isDelta {false};
 
-    /// The BSDF*cos or phase function evaluation at @ref position for the out-going direction @ref directionOut and the in-comming direction @ref directionIn divided by the sampling PDF @ref pdfDirectionIn.
+    /// The BSDF*cos or phase function evaluation at @ref position for the out-going direction @ref directionOut and the incoming direction @ref directionIn divided by the sampling PDF @ref pdfDirectionIn.
     pgl_vec3f scatteringWeight{1.0f, 1.0f, 1.0f};
 
     /// The transmittance from the current @ref position to the @ref position of the next segment divided by the corresponding distance sampling PDF.
