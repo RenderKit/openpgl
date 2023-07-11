@@ -197,7 +197,7 @@ public:
                 // prepare the current pos, direction, distance, pdf at the current
                 // path vertex
                 openpgl::Point3 pos = openpgl::Point3(currentPathSegment.position.x, currentPathSegment.position.y, currentPathSegment.position.z);
-                // using the direction directly is numerically more stable than recalcuating
+                // using the direction directly is numerically more stable than recalculating
                 // it using position of the next segment when the distance is small. 
                 openpgl::Vector3 dir = openpgl::Vector3(currentPathSegment.directionIn.x, currentPathSegment.directionIn.y, currentPathSegment.directionIn.z);
                 float pdf = std::max(minPDF,currentPathSegment.pdfDirectionIn);
@@ -207,9 +207,14 @@ public:
                 bool insideVolume = currentPathSegment.volumeScatter;
                 if(insideVolume)
                 {
-                    flags |= SampleData::EInsideVolume;
+                    flags = flags | SampleData::EInsideVolume;
                 }
                 
+                if(m_segmentStorage[i+1].volumeScatter)
+                {
+                    flags = flags | SampleData::ENextEventVolume;
+                }
+
                 // evalaute the incident radiance the incident
                 openpgl::Vector3 throughput {1.0f};
                 openpgl::Vector3 contribution {0.0f};
