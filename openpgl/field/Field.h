@@ -9,6 +9,8 @@
 #include "../spatial/KNN.h"
 #include "../spatial/kdtree/KDTree.h"
 
+#include "FieldStatistics.h"
+
 #define TASKING_TBB
 #include <embreeSrc/common/algorithms/parallel_for.h>
 
@@ -560,6 +562,39 @@ public:
             }
         }
         return equal;
+    }
+
+
+    FieldStatistics* getStatistics() const
+    {
+        FieldStatistics* stats =  new FieldStatistics();
+        stats->numCacheRegions = m_regionStorageContainer.size();
+        stats->numCacheRegionsReserved = m_regionStorageContainer.capacity();
+        stats->sizePerCacheRegions = sizeof(RegionStorageType);
+        stats->sizeAllCacheRegionsUsed = sizeof(RegionStorageType) * m_regionStorageContainer.size();
+        stats->sizeAllCacheRegionsReserved = sizeof(RegionStorageType) * m_regionStorageContainer.capacity();
+        stats->spatialStructureStatistics = m_spatialSubdiv.getStatistics();
+
+
+        stats->directionalDistributionStatistics.sizePerDistribution = sizeof(DirectionalDistribution);
+        stats->directionalDistributionStatistics.minNumberOfComponents = 1e10f;
+        stats->directionalDistributionStatistics.maxNumberOfComponents = 0.0f;
+        stats->directionalDistributionStatistics.averageNumberOfComponents = 0.0f;
+        stats->directionalDistributionStatistics.secondMomentNumberOfComponents = 0.0f;
+
+        int numDistributions = m_regionStorageContainer.size();
+        for (int i=0; i < numDistributions; i++)
+        {
+            int numDistributionComponents = m_regionStorageContainer[i].first.distribution.getNumComponents();
+            stats->directionalDistributionStatistics.minNumberOfComponents = std::min(stats->directionalDistributionStatistics.minNumberOfComponents, (float)numDistributionComponents);
+            stats->directionalDistributionStatistics.maxNumberOfComponents = std::max(stats->directionalDistributionStatistics.maxNumberOfComponents, (float)numDistributionComponents);
+            stats->directionalDistributionStatistics.averageNumberOfComponents += numDistributionComponents;
+            stats->directionalDistributionStatistics.secondMomentNumberOfComponents += numDistributionComponents*numDistributionComponents;
+        }
+        stats->directionalDistributionStatistics.averageNumberOfComponents /= float(numDistributions);
+        stats->directionalDistributionStatistics.secondMomentNumberOfComponents /= float(numDistributions);
+        stats->directionalDistributionStatistics.secondMomentNumberOfComponents = std::sqrt(stats->directionalDistributionStatistics.secondMomentNumberOfComponents);
+        return stats;
     }
 
 private:

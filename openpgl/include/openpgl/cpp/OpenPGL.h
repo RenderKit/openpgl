@@ -11,6 +11,7 @@
 #include "Common.h"
 #include "Distribution.h"
 #include "Field.h"
+#include "FieldStatistics.h"
 #include "PathSegmentStorage.h"
 #include "Region.h"
 #include "SampleData.h"

@@ -8,6 +8,7 @@
 
 #include "device/Device.h"
 #include "field/ISurfaceVolumeField.h"
+#include "field/FieldStatistics.h"
 #include "directional/ISurfaceSamplingDistribution.h"
 #include "directional/IVolumeSamplingDistribution.h"
 
@@ -256,6 +257,18 @@ extern "C" OPENPGL_DLLEXPORT bool pglFieldCompare(PGLField fieldA, PGLField fiel
     auto *gFieldA = (const IGuidingField *)fieldA;
     auto *gFieldB = (const IGuidingField *)fieldB;
     return gFieldA->operator==(gFieldB);
+}
+
+extern "C" OPENPGL_DLLEXPORT PGLFieldStatistics pglFieldGetSurfaceStatistics(PGLField field)
+{
+    const auto *gField = (const IGuidingField *)field;
+    return (PGLFieldStatistics)gField->getSurfaceStatistics();
+}
+
+extern "C" OPENPGL_DLLEXPORT PGLFieldStatistics pglFieldGetVolumeStatistics(PGLField field)
+{
+    const auto *gField = (const IGuidingField *)field;
+    return (PGLFieldStatistics)gField->getVolumeStatistics();
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -770,6 +783,64 @@ extern "C" OPENPGL_DLLEXPORT void pglFieldArgumentsSetDefaults(PGLFieldArguments
         break;
     }
 
+}
 
+///////////////////////////////////////////////////////////////////////////////
+// FieldStatistics ////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+
+extern "C" OPENPGL_DLLEXPORT void pglReleaseFieldStatistics(PGLFieldStatistics fieldStatistics)
+{
+    auto *gFieldStatistics = (openpgl::FieldStatistics *)fieldStatistics;
+    delete gFieldStatistics;
+
+}
+
+extern "C" OPENPGL_DLLEXPORT PGLString pglFieldStatisticsToString(PGLFieldStatistics fieldStatistics)
+{
+    auto *gFieldStatistics = (openpgl::FieldStatistics *)fieldStatistics;
+    std::string str = gFieldStatistics->toString();
+    PGLString pglStr;
+    pglStr.m_size = str.length()+1;
+    pglStr.m_str = new char[pglStr.m_size];
+    strcpy(pglStr.m_str, str.c_str());
+    return pglStr;
+}
+
+extern "C" OPENPGL_DLLEXPORT PGLString pglFieldStatisticsHeaderCSVString(PGLFieldStatistics fieldStatistics)
+{
+    auto *gFieldStatistics = (openpgl::FieldStatistics *)fieldStatistics;
+    std::string str = gFieldStatistics->headerCSVString();
+    PGLString pglStr;
+    pglStr.m_size = str.length()+1;
+    pglStr.m_str = new char[pglStr.m_size];
+    strcpy(pglStr.m_str, str.c_str());
+    return pglStr;
+}
+
+extern "C" OPENPGL_DLLEXPORT PGLString pglFieldStatisticsToCSVString(PGLFieldStatistics fieldStatistics)
+{
+    auto *gFieldStatistics = (openpgl::FieldStatistics *)fieldStatistics;
+    std::string str = gFieldStatistics->toCSVString();
+    PGLString pglStr;
+    pglStr.m_size = str.length()+1;
+    pglStr.m_str = new char[pglStr.m_size];
+    strcpy(pglStr.m_str, str.c_str());
+    return pglStr;
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+// String /////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+
+extern "C" OPENPGL_DLLEXPORT void pglReleaseString(PGLString str)
+{
+    if (str.m_str)
+    {
+        delete[] str.m_str;
+        str.m_str = nullptr;
+        str.m_size = 0;
+    }
 }
 

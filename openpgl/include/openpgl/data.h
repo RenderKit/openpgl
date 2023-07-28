@@ -102,3 +102,19 @@ struct PGLPathSegmentData
     /// The pointer to the Region
     const void* regionPtr{nullptr};
 };
+
+struct PGLString{
+    char* m_str {nullptr};
+    size_t m_size {0};
+};
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+OPENPGL_CORE_INTERFACE void pglReleaseString(PGLString str);
+
+
+#ifdef __cplusplus
+}  // extern "C"
+#endif

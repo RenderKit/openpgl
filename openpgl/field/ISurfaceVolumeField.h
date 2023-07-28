@@ -10,6 +10,9 @@
 
 namespace openpgl
 {
+
+struct FieldStatistics;
+
 struct ISurfaceVolumeField
 {
 
@@ -52,5 +55,9 @@ struct ISurfaceVolumeField
     virtual void storeToFile(const std::string fieldFileName) const = 0;
 
     virtual bool operator==(const ISurfaceVolumeField* b) const = 0;
+
+    virtual FieldStatistics* getSurfaceStatistics() const = 0;
+
+    virtual FieldStatistics* getVolumeStatistics() const = 0;
 };
 }

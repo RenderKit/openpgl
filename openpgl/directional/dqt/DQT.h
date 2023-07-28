@@ -100,6 +100,10 @@ namespace openpgl {
             is.read(reinterpret_cast<char*>(nodes.data()), size * sizeof(nodes[0]));
         };
 
+        size_t getNumComponents() const{
+            return nodes.size();
+        }
+
     private:
         // Internal Sampling Routines
         // TODO prepare weights so that no rescaling needed? (i.e. three thresholds per cell)

@@ -17,6 +17,7 @@
 #include "region.h"
 #include "surfacesamplingdistribution.h"
 #include "volumesamplingdistribution.h"
+#include "fieldstatistics.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -63,6 +64,10 @@ OPENPGL_CORE_INTERFACE bool pglFieldInitVolumeSamplingDistribution(PGLField fiel
 OPENPGL_CORE_INTERFACE bool pglFieldValidate(PGLField field);
 
 OPENPGL_CORE_INTERFACE bool pglFieldCompare(PGLField fieldA, PGLField fieldB);
+
+OPENPGL_CORE_INTERFACE PGLFieldStatistics pglFieldGetSurfaceStatistics(PGLField field);
+
+OPENPGL_CORE_INTERFACE PGLFieldStatistics pglFieldGetVolumeStatistics(PGLField field);
 
 #ifdef __cplusplus
 }  // extern "C"

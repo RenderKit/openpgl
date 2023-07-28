@@ -5,6 +5,7 @@
 
 #include "ISurfaceVolumeField.h"
 #include "Field.h"
+#include "FieldStatistics.h"
 
 #define FIELD_FILE_HEADER_STRING "OPENPGL_" OPENPGL_VERSION_STRING "_FIELD"
 
@@ -219,6 +220,18 @@ public:
         return equal;
     }
 
+    FieldStatistics* getSurfaceStatistics() const override
+    {
+        FieldStatistics* stats =  m_surfaceField.getStatistics();
+        return stats;
+    }
+
+	FieldStatistics* getVolumeStatistics() const override
+    {
+        FieldStatistics* stats =  m_volumeField.getStatistics();
+        return stats;
+    }
+    
 private:
     size_t m_iteration {0};
     size_t m_totalSPP  {0};

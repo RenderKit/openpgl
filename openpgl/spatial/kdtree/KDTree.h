@@ -7,6 +7,7 @@
 
 #include <tbb/concurrent_vector.h>
 
+#include "KDTreeStatistics.h"
 
 #include <fstream>
 #include <string>
@@ -646,6 +647,32 @@ struct KDTree
         }
         return equal;
     }
+
+    int calculateMaxDepth(const KDNode& node) const 
+    {
+        if(node.isLeaf()){
+            return 1;
+        } else {
+            int childIdxLeft = node.getLeftChildIdx();
+
+            int depthLeft = calculateMaxDepth(m_nodes[childIdxLeft]);
+            int depthRight = calculateMaxDepth(m_nodes[childIdxLeft+1]);
+            return 1 + std::max(depthLeft, depthRight);
+        }
+    }
+
+    KDTreeStatistics getStatistics() const 
+    {
+        KDTreeStatistics treeStats;
+        treeStats.maxDepth = calculateMaxDepth(m_nodes[0]);
+        treeStats.numberOfNodes = m_nodes.size();
+        treeStats.sizePerNode = sizeof(KDNode);
+        treeStats.numberOfReservedNodes = m_nodes.capacity();
+        treeStats.sizeAllNodesUsed = m_nodes.size() * sizeof(KDNode);
+        treeStats.sizeAllNodesReserved = m_nodes.capacity() * sizeof(KDNode);
+        return treeStats;
+    }
+
 
 public:
     bool m_isInit { false };

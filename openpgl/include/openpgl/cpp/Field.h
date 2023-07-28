@@ -8,6 +8,7 @@
 #include "Region.h"
 #include "Device.h"
 #include "SampleStorage.h"
+#include "FieldStatistics.h"
 
 #include <string>
 
@@ -115,6 +116,20 @@ struct Field
     /// Checks if the guiding information of the Field is valid (e.g., contains no invalid directional distributions). 
     bool Validate() const;
 
+    /**
+     * @brief Gets the statistics for the surface guiding Field.
+     * 
+     * @return FieldStatistics 
+     */
+    FieldStatistics GetSurfaceStatistics() const;
+
+    /**
+     * @brief Gets the statistics for the volume guiding Field.
+     * 
+     * @return FieldStatistics 
+     */
+    FieldStatistics GetVolumeStatistics() const;
+    
     /// Checks if the spatial structure and directional distribution of this Field are similar to the ones stored in another Field.
     bool operator==(const Field& b) const;
 
@@ -210,6 +225,18 @@ OPENPGL_INLINE bool Field::operator==(const Field& b) const
     OPENPGL_ASSERT(m_fieldHandle);
     OPENPGL_ASSERT(b.m_fieldHandle);
     return pglFieldCompare(m_fieldHandle, b.m_fieldHandle);
+}
+
+OPENPGL_INLINE FieldStatistics Field::GetSurfaceStatistics() const{
+    OPENPGL_ASSERT(m_fieldHandle);
+    PGLFieldStatistics fieldStats = pglFieldGetSurfaceStatistics(m_fieldHandle);
+    return FieldStatistics(fieldStats);
+}
+
+OPENPGL_INLINE FieldStatistics Field::GetVolumeStatistics() const{
+    OPENPGL_ASSERT(m_fieldHandle);
+    PGLFieldStatistics fieldStats = pglFieldGetVolumeStatistics(m_fieldHandle);
+    return FieldStatistics(fieldStats);
 }
 
 } // api

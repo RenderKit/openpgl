@@ -23,5 +23,6 @@
 #include "pathsegmentstorage.h"
 #include "device.h"
 #include "field.h"
+#include "fieldstatistics.h"
 #include "surfacesamplingdistribution.h"
 #include "volumesamplingdistribution.h"
