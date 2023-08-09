@@ -47,6 +47,20 @@ struct FieldConfig
     void SetSpatialStructureArgMaxDepth(const size_t maxDepth);
 
     /**
+     * @brief Enables or disables K-nearest neighbor lookup when querying a guiding cache.
+     * 
+     * @param useKnnLookup if KNN lookup should be used
+    */
+    void SetUseKnnLookup(const bool useKnnLookup);
+
+    /**
+     * @brief Enables or disables if selected neighbor from the KNN-lookup is imporatnce sampled based on the distance (i.e., using a Gaussian kernel).
+     * 
+     * @param useKnnIsLookup if distance based importance sampling of the neighbors should be used
+    */
+    void SetUseKnnIsLookup(const bool useKnnIsLookup);
+
+    /**
      * @brief For debugging and benchmarking the update of the spatial structure this function can disable 
      * the training of the directional distribution during the update iterations.
      * 
@@ -69,6 +83,14 @@ OPENPGL_INLINE void FieldConfig::SetDebugArgFitRegions(const bool fitRegions){
 
 OPENPGL_INLINE void FieldConfig::SetSpatialStructureArgMaxDepth(const size_t maxDepth){
     reinterpret_cast<PGLKDTreeArguments *>(m_args.spatialSturctureArguments)->maxDepth = maxDepth;
+}
+
+OPENPGL_INLINE void FieldConfig::SetUseKnnLookup(const bool useKnnLookup){
+    reinterpret_cast<PGLKDTreeArguments *>(m_args.spatialSturctureArguments)->knnLookup = useKnnLookup;
+}
+
+OPENPGL_INLINE void FieldConfig::SetUseKnnIsLookup(const bool useKnnIsLookup){
+    reinterpret_cast<PGLKDTreeArguments *>(m_args.spatialSturctureArguments)->isKnnLookup = useKnnIsLookup;
 }
 
 } // cpp

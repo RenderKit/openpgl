@@ -103,6 +103,7 @@ public:
 
             PGLKDTreeArguments *spatialSturctureArguments = (PGLKDTreeArguments*)args.spatialSturctureArguments;
             gFieldSettings.settings.useStochasticNNLookUp = spatialSturctureArguments->knnLookup;
+            gFieldSettings.settings.useISNNLookUp = spatialSturctureArguments->isKnnLookup;
             gFieldSettings.settings.spatialSubdivBuilderSettings.minSamples = spatialSturctureArguments->minSamples;
             gFieldSettings.settings.spatialSubdivBuilderSettings.maxSamples = spatialSturctureArguments->maxSamples;
             gFieldSettings.settings.spatialSubdivBuilderSettings.maxDepth   = spatialSturctureArguments->maxDepth;
@@ -149,6 +150,7 @@ public:
 
             PGLKDTreeArguments *spatialSturctureArguments = (PGLKDTreeArguments*)args.spatialSturctureArguments;
             gFieldSettings.settings.useStochasticNNLookUp = spatialSturctureArguments->knnLookup;
+            gFieldSettings.settings.useISNNLookUp = spatialSturctureArguments->isKnnLookup;
             gFieldSettings.settings.spatialSubdivBuilderSettings.minSamples = spatialSturctureArguments->minSamples;
             gFieldSettings.settings.spatialSubdivBuilderSettings.maxSamples = spatialSturctureArguments->maxSamples;
             gFieldSettings.settings.spatialSubdivBuilderSettings.maxDepth   = spatialSturctureArguments->maxDepth;
@@ -195,6 +197,7 @@ public:
 
             PGLKDTreeArguments *spatialSturctureArguments = (PGLKDTreeArguments*)args.spatialSturctureArguments;
             gFieldSettings.settings.useStochasticNNLookUp = spatialSturctureArguments->knnLookup;
+            gFieldSettings.settings.useISNNLookUp = spatialSturctureArguments->isKnnLookup;
             gFieldSettings.settings.spatialSubdivBuilderSettings.minSamples = spatialSturctureArguments->minSamples;
             gFieldSettings.settings.spatialSubdivBuilderSettings.maxSamples = spatialSturctureArguments->maxSamples;
             gFieldSettings.settings.spatialSubdivBuilderSettings.maxDepth   = spatialSturctureArguments->maxDepth;

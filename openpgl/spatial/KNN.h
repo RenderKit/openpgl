@@ -10,6 +10,8 @@
 #include <functional>
 #include <queue>
 
+#include <embreeSrc/common/math/transcendental.h>
+
 #include <tbb/parallel_for.h>
 
 #define NUM_KNN 4
@@ -110,6 +112,52 @@ struct RegionNeighbours<4>
         if (d0[i0] < d1[i1]) return ids[0][asInt(d0)[i0] & 3];
         else                 return ids[1][asInt(d1)[i1] & 3];
     }
+
+    inline uint32_t sampleApproximateClosestRegionIdxIS(const openpgl::Point3 &p, float* sample) const {
+        //uint32_t selected = draw(sample, size);
+        const embree::Vec3< embree::vfloat<4>> _p(p[0], p[1], p[2]);
+        embree::Vec3<embree::vfloat<4>> d[2];
+        d[0] = this->points[0] - _p;
+        d[1] = this->points[1] - _p;
+
+        embree::vfloat<4> dist[2];
+        dist[0] = embree::dot(d[0],d[0]);
+        dist[1] = embree::dot(d[1],d[1]);
+
+        const float maxDist = std::max(embree::reduce_max(dist[0]), embree::reduce_max(dist[1]));
+        const float sigma = std::sqrt(maxDist) / 4.0f;
+        dist[0] = embree::fastapprox::exp(-0.5f * dist[0] / (sigma * sigma));
+        dist[1] = embree::fastapprox::exp(-0.5f * dist[1] / (sigma * sigma));
+        
+        const float sumDist0 = embree::reduce_add(dist[0]);
+        const float sumDist1 = embree::reduce_add(dist[1]);
+        float sumDist = sumDist0 + sumDist1;
+        size_t idx = 0;
+        float sumCDF = 0.0f;
+        float searched = *sample * sumDist;
+        if(searched > sumDist0) 
+        {
+            sumCDF = sumDist0;
+            idx = 1;
+        }
+        float cdf = 0.f;
+        size_t sidx = 0;
+        while(true){
+            cdf = dist[idx][sidx];
+            if(sumCDF+cdf >= searched || sidx+1 >=4)
+            {
+                break;
+            } 
+            else 
+            {
+                sumCDF += cdf;
+                sidx++;
+            }
+        }
+
+        *sample = std::min(1 - FLT_EPSILON, (searched - sumCDF) / cdf);
+        return this->ids[idx][sidx];
+    }
 };
 
 #if defined(__AVX__)
@@ -145,6 +193,37 @@ struct RegionNeighbours<8>
         distances = sort_ascending(distances);
 
         return this->ids[asInt(distances)[selected] & 7];
+    }
+
+    inline uint32_t sampleApproximateClosestRegionIdxIS(const openpgl::Point3 &p, float* sample) const {
+        const embree::Vec3< embree::vfloat<8>> _p(p[0], p[1], p[2]);
+        embree::Vec3<embree::vfloat<8>> d;
+        d = this->points - _p;
+        embree::vfloat<8> dist = embree::dot(d,d);
+        const float maxDist = embree::reduce_max(dist);
+        const float sigma = std::sqrt(maxDist) / 4.0f;
+        dist = embree::fastapprox::exp(-0.5f * dist / (sigma * sigma));
+        const float sumDist = embree::reduce_add(dist);
+
+        size_t idx = 0;
+        float sumCDF = 0.0f;
+        float searched = *sample * sumDist;
+        float cdf = 0.f;
+        while(true){
+            cdf = dist[idx];
+            if(sumCDF+cdf >= searched || idx+1 >=4)
+            {
+                break;
+            } 
+            else 
+            {
+                sumCDF += cdf;
+                idx++;
+            }
+        }
+
+        *sample = std::min(1 - FLT_EPSILON, (searched - sumCDF) / cdf);
+        return this->ids[idx];
     }
 };
 
@@ -299,6 +378,12 @@ struct KNearestRegionsSearchTree
         OPENPGL_ASSERT(ref == out);
 #endif
 
+        return out;
+    }
+
+    uint32_t sampleApproximateClosestRegionIdxIS(unsigned int regionIdx, const openpgl::Point3 &p, float* sample) const {
+        OPENPGL_ASSERT(_isBuildNeighbours);
+        uint32_t out = neighbours[regionIdx].sampleApproximateClosestRegionIdxIS(p, sample);
         return out;
     }
 

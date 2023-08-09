@@ -53,6 +53,7 @@ public:
     {
         SpatialBuilderSettings spatialSubdivBuilderSettings;
         bool useStochasticNNLookUp {false};
+        bool useISNNLookUp {false};
         bool deterministic {false};
         float decayOnSpatialSplit {0.25f};
 
@@ -79,6 +80,7 @@ public:
         m_deterministic = settings.settings.deterministic;
         m_fitRegions = settings.debugSettings.fitRegions;
         m_useStochasticNNLookUp = settings.settings.useStochasticNNLookUp;
+        m_useISNNLookUp = settings.settings.useISNNLookUp;
         m_spatialSubdivBuilderSettings = settings.settings.spatialSubdivBuilderSettings;
 
         m_distributionFactorySettings = settings.distributionFactorySettings;
@@ -263,6 +265,7 @@ public:
             m_regionStorageContainer[i].second.serialize(os);
         }
         os.write(reinterpret_cast<const char*>(&m_useStochasticNNLookUp), sizeof(m_useStochasticNNLookUp));
+        os.write(reinterpret_cast<const char*>(&m_useISNNLookUp), sizeof(m_useISNNLookUp));
         m_regionKNNSearchTree.serialize(os);
     }
 
@@ -297,6 +300,7 @@ public:
 
         }
         is.read(reinterpret_cast<char*>(&m_useStochasticNNLookUp), sizeof(m_useStochasticNNLookUp));
+        is.read(reinterpret_cast<char*>(&m_useISNNLookUp), sizeof(m_useISNNLookUp));
         m_regionKNNSearchTree.deserialize(is);
 
         if (m_useStochasticNNLookUp && USE_PRECOMPUTED_NN && m_regionKNNSearchTree.isBuild()) {
@@ -356,7 +360,10 @@ private:
         uint32_t dataIdx = m_spatialSubdiv.getDataIdxAtPos(p);
         OPENPGL_ASSERT(dataIdx < m_regionStorageContainer.size());
         id = dataIdx;
-        return knnTree.sampleApproximateClosestRegionIdx(dataIdx, p, sample);
+        if(m_useISNNLookUp)
+            return knnTree.sampleApproximateClosestRegionIdxIS(dataIdx, p, sample);
+        else
+            return knnTree.sampleApproximateClosestRegionIdx(dataIdx, p, sample);
     }
 
     inline void buildSpatialStructure(const BBox &bounds, SampleContainerInternal& samples)
@@ -669,6 +676,7 @@ private:
     RegionStorageContainerType m_regionStorageContainer;
 
     bool m_useStochasticNNLookUp {false};
+    bool m_useISNNLookUp {false};
     KNearestRegionsSearchTree<Vecsize> m_regionKNNSearchTree;
 
     SampleContainerInternal samples_;
