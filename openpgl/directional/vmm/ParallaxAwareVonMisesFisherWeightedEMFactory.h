@@ -1344,7 +1344,7 @@ std::string ParallaxAwareVonMisesFisherWeightedEMFactory< TVMMDistribution>::Con
 {
     std::stringstream ss;
     ss << "Configuration:" << std::endl;
-    ss << "\tinitComponent = " << initK << std::endl;
+    ss << "\tinitKappa = " << initKappa << std::endl;
     ss << "\tmaxComponents = " << maxK << std::endl;
     ss << "\tinitNumComponents = " << initK << std::endl;
     ss << "\tmaxEMIterrations = " << maxEMIterrations << std::endl;

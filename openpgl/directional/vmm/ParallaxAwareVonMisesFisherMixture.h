@@ -188,7 +188,10 @@ template<int VecSize, int maxComponents, bool UseParallaxCompensation>
 std::string ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents,UseParallaxCompensation>::toString() const{
     std::stringstream ss;
     ss.precision(5);
-    ss << "ParallaxAwareVonMisesFisherMixture:" << std::endl;
+    if(UseParallaxCompensation)
+        ss << "ParallaxAwareVonMisesFisherMixture:" << std::endl;
+    else
+        ss << "VonMisesFisherMixture:" << std::endl;
     ss << "maxComponents: " << maxComponents << std::endl;
     ss << "VecSize: " << VecSize << std::endl;
     ss << "numVectors: " << NumVectors << std::endl;
