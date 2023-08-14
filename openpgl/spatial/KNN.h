@@ -18,6 +18,8 @@
 #define NUM_KNN_NEIGHBOURS 8
 #define DEBUG_SAMPLE_APPROXIMATE_CLOSEST_REGION_IDX 0
 
+#define KNN_IS_SIMD
+
 namespace openpgl
 {
 
@@ -28,6 +30,39 @@ inline uint32_t draw(float* sample, uint32_t size) {
     OPENPGL_ASSERT(*sample >= 0.f && *sample < 1.0f);
     return std::min(selected, size - 1);
 }
+
+template<int imm>
+__forceinline embree::vfloat4 vshift_left(const embree::vfloat4& v)
+{
+    return embree::asFloat(_mm_slli_si128(asInt(v), imm));
+}
+
+__forceinline embree::vfloat4 vinclusive_prefix_sum(const embree::vfloat4& v)
+{
+    embree::vfloat4 x = v;
+    x += vshift_left<4>(x);
+    x += vshift_left<8>(x);
+    return x;
+}
+
+//__forceinline vint8   asInt  (const vfloat8& a) { return _mm256_castps_si256(a); }
+#if defined(__AVX__)
+template<int imm>
+__forceinline embree::vfloat8 vshift_left(const embree::vfloat8& v)
+{
+    return embree::asFloat(_mm256_slli_si256(asInt(v), imm));
+
+}
+
+__forceinline embree::vfloat8 vinclusive_prefix_sum(const embree::vfloat8& v)
+{
+    embree::vfloat8 x = v;
+    x += vshift_left<4>(x);
+    x += vshift_left<8>(x);
+    x += embree::vfloat8(0.0f, 0.0f, 0.0f, 0.0f, x[3], x[3], x[3], x[3]);
+    return x;
+}
+#endif
 
 template<typename RegionNeighbours>
 uint32_t sampleApproximateClosestRegionIdxRef(const RegionNeighbours &nh, const openpgl::Point3 &p, float sample) {
@@ -114,7 +149,7 @@ struct RegionNeighbours<4>
     }
 
     inline uint32_t sampleApproximateClosestRegionIdxIS(const openpgl::Point3 &p, float* sample) const {
-        //uint32_t selected = draw(sample, size);
+
         const embree::Vec3< embree::vfloat<4>> _p(p[0], p[1], p[2]);
         embree::Vec3<embree::vfloat<4>> d[2];
         d[0] = this->points[0] - _p;
@@ -128,9 +163,29 @@ struct RegionNeighbours<4>
         const float sigma = std::sqrt(maxDist) / 4.0f;
         dist[0] = embree::fastapprox::exp(-0.5f * dist[0] / (sigma * sigma));
         dist[1] = embree::fastapprox::exp(-0.5f * dist[1] / (sigma * sigma));
-        
+#ifdef KNN_IS_SIMD        
+        embree::vfloat<4> cdfs[2];        
+        cdfs[0] = vinclusive_prefix_sum(dist[0]);
+        cdfs[1] = vinclusive_prefix_sum(dist[1]);
+
+        const float sumDist0 = cdfs[0][3];
+        const float sumDist1 = cdfs[1][3];
+        const float sumDist = sumDist0 + sumDist1;
+        float searched = *sample * sumDist;
+        size_t idx = 0;
+        if(searched > sumDist0) 
+        {
+            searched -= sumDist0;
+            idx = 1;
+        }
+        const size_t sidx = embree::select_min(cdfs[idx] >= searched, cdfs[idx]);
+        const float sumCDF = sidx > 0 ? cdfs[idx][sidx-1] : 0.f;
+        *sample = std::min(1 - FLT_EPSILON, (searched - sumCDF) / dist[idx][sidx]);
+        return this->ids[idx][sidx];
+#else
         const float sumDist0 = embree::reduce_add(dist[0]);
         const float sumDist1 = embree::reduce_add(dist[1]);
+
         float sumDist = sumDist0 + sumDist1;
         size_t idx = 0;
         float sumCDF = 0.0f;
@@ -157,6 +212,7 @@ struct RegionNeighbours<4>
 
         *sample = std::min(1 - FLT_EPSILON, (searched - sumCDF) / cdf);
         return this->ids[idx][sidx];
+#endif
     }
 };
 
@@ -203,6 +259,16 @@ struct RegionNeighbours<8>
         const float maxDist = embree::reduce_max(dist);
         const float sigma = std::sqrt(maxDist) / 4.0f;
         dist = embree::fastapprox::exp(-0.5f * dist / (sigma * sigma));
+
+#ifdef KNN_IS_SIMD
+        const embree::vfloat<8> cdfs = vinclusive_prefix_sum(dist);
+        const float sumDist = cdfs[7];
+        const float searched = *sample * sumDist;
+        const size_t idx = embree::select_min(cdfs >= searched, cdfs);
+        const float sumCDF = idx > 0 ? cdfs[idx-1] : 0.f;
+        *sample = std::min(1 - FLT_EPSILON, (searched - sumCDF) / dist[idx]);
+        return this->ids[idx];
+#else
         const float sumDist = embree::reduce_add(dist);
 
         size_t idx = 0;
@@ -224,6 +290,7 @@ struct RegionNeighbours<8>
 
         *sample = std::min(1 - FLT_EPSILON, (searched - sumCDF) / cdf);
         return this->ids[idx];
+#endif
     }
 };
 
