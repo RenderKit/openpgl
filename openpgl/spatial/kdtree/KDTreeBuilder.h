@@ -230,7 +230,7 @@ private:
     }
 
 
-    void updateTreeNode(KDTree *kdTree, KDNode &node, size_t depth, const BBox bounds, TContainer &samples, const Range sampleRange, const SampleStatistics sampleStats, tbb::concurrent_vector< std::pair<TRegion, Range> > *dataStorage, const Settings &buildSettings, bool parallel = true) const
+    void updateTreeNode(KDTree *kdTree, KDNode &node, size_t depth, const BBox bounds, TContainer &samples, const Range sampleRange, const SampleStatistics& sampleStats, tbb::concurrent_vector< std::pair<TRegion, Range> > *dataStorage, const Settings &buildSettings, bool parallel = true) const
     {
         if(sampleRange.size() <= 0)
         {

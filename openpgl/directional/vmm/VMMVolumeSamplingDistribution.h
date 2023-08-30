@@ -27,9 +27,9 @@ struct __aligned(TVMMDistribution::VectorSize*4) VMMVolumeSamplingDistribution: 
     /// distribution sampling weights, sum up to 1.0f
     std::array<float, MaxNumProductDistributions::value> m_weights;
     /// when 0 use the non-product distribution instead
-    uint32_t m_numDistributions;
+    uint32_t m_numDistributions {0};
     /// guiding cosine/BSDF product integral (= irradiance/flux, for cosine)
-    float m_productIntegral;
+    float m_productIntegral {0.f};
 
     const IRegion* m_region {nullptr};
 

@@ -93,8 +93,7 @@ public:
 
     openpgl::BBox getSceneBounds() const override
     {
-        openpgl::BBox sceneBounds;
-        sceneBounds.extend(m_surfaceField.getSceneBounds());
+        openpgl::BBox sceneBounds = m_surfaceField.getSceneBounds();
         sceneBounds.extend(m_volumeField.getSceneBounds());
         return sceneBounds;
     }

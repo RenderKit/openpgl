@@ -179,6 +179,8 @@ struct KDTree
 {
     KDTree() = default;
 
+    KDTree(const KDTree&) = delete;
+
     ~KDTree()
     {
         if(m_nodesPtr)
@@ -352,7 +354,7 @@ struct KDTree
                 } else {
                     OPENPGL_ASSERT(false);
                 }
-            } else if (treeLetLevel == 2) {
+            } else {
                     OPENPGL_ASSERT(node.getSplitDim() == treeLets[treeLetIdx].nodes[nodeIdx].getSplitDim());
                     uint32_t childIdx = node.getLeftChildIdx();
                     treeLets.push_back(KDTreeLet());
@@ -369,9 +371,6 @@ struct KDTree
                     OPENPGL_ASSERT(node.getSplitDim() == treeLets[treeLetIdx].nodes[nodeIdx].getSplitDim());
                     OPENPGL_ASSERT(node.getSplitPivot() == treeLets[treeLetIdx].nodes[nodeIdx].getSplitPivot());
                     OPENPGL_ASSERT(leftTreeLetIdx == treeLets[treeLetIdx].nodes[nodeIdx].getLeftChildIdx());
-
-            } else {
-                OPENPGL_ASSERT(false);
             }
         }
         return globalNodeId;

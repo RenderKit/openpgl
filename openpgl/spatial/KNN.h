@@ -175,6 +175,10 @@ struct KNearestRegionsSearchTree
 
     using RN = RegionNeighbours<Vecsize>;
 
+    KNearestRegionsSearchTree() = default;
+
+    KNearestRegionsSearchTree(const KNearestRegionsSearchTree&) = delete;
+
     ~KNearestRegionsSearchTree()
     {
         alignedFree(points);

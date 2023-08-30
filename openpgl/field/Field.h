@@ -68,6 +68,8 @@ public:
 
     Field() = default;
 
+    Field(const Field&) = delete;
+
     Field(const Settings &settings, size_t numThreads = 0):
         m_numThreads(numThreads)
     {
