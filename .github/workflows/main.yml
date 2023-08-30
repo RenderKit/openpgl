@@ -171,12 +171,13 @@ jobs:
     with:
       project: OpenPGL
       #submodules: true
-      prebuild: |
-        export LD_LIBRARY_PATH=`pwd`/build_deps/install/lib:${LD_LIBRARY_PATH}
-        cmake -S superbuild -B build_deps -DBUILD_JOBS=`nproc` -DBUILD_DEPENDENCIES_ONLY=ON
-        cmake --build build_deps
-        DEP_INSTALL_DIR=build_deps/install
-        export embree_DIR=$DEP_INSTALL_DIR
+      coverity: true
+      prebuild: > 
+        export LD_LIBRARY_PATH=`pwd`/build_deps/install/lib:${LD_LIBRARY_PATH} &&
+        cmake -S superbuild -B build_deps -DBUILD_JOBS=`nproc` -DBUILD_DEPENDENCIES_ONLY=ON &&
+        cmake --build build_deps &&
+        DEP_INSTALL_DIR=build_deps/install &&
+        export embree_DIR=$DEP_INSTALL_DIR &&
         cmake -S . -B build -DTBB_ROOT=$DEP_INSTALL_DIR
       build: cmake --build build
 
