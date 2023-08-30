@@ -51,6 +51,8 @@ option(OPENPGL_BUILD_CHECK_TOOL "Build check tool application." OFF)
 
 try_compile(COMPILER_SUPPORTS_ARM_NEON "${CMAKE_BINARY_DIR}" "${PROJECT_SOURCE_DIR}/cmake/check_arm_neon.cpp")
 
+OPTION(OPENPGL_EF_RADIANCE_CACHES "Enables experimental feature (ir)radiance caches." ON)
+
 if(COMPILER_SUPPORTS_ARM_NEON)
   option(OPENPGL_ISA_NEON "Build with support for NEON." ON)
   option(OPENPGL_ISA_NEON2X "Build with support for NEON double pumped." ON)

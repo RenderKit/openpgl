@@ -16,6 +16,7 @@
 //#define OPENPGL_ASSERT_MSG(cond, msg)
 #endif
 
+#include "defines.h"
 #include "common.h"
 #include "data.h"
 #include "region.h"

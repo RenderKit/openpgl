@@ -121,11 +121,11 @@ struct SurfaceSamplingDistribution
      * @return uint32_t The id of the cache.
      */
     uint32_t GetId() const;
-
+#ifdef OPENPGL_EF_RADIANCE_CACHES
     pgl_vec3f IncomingRadiance(pgl_vec3f& direction) const;
 
     pgl_vec3f Irradiance(pgl_vec3f& normal) const;
-
+#endif
     ///////////////////////////////////////
     /// Future plans
     ///////////////////////////////////////
@@ -255,7 +255,7 @@ OPENPGL_INLINE uint32_t SurfaceSamplingDistribution::GetId() const
     OPENPGL_ASSERT(m_surfaceSamplingDistributionHandle);
     return pglSurfaceSamplingDistributionGetId(m_surfaceSamplingDistributionHandle);
 }
-
+#ifdef OPENPGL_EF_RADIANCE_CACHES
 OPENPGL_INLINE pgl_vec3f SurfaceSamplingDistribution::IncomingRadiance(pgl_vec3f& direction) const
 {
     OPENPGL_ASSERT(m_surfaceSamplingDistributionHandle);
@@ -267,6 +267,7 @@ OPENPGL_INLINE pgl_vec3f SurfaceSamplingDistribution::Irradiance(pgl_vec3f& norm
     OPENPGL_ASSERT(m_surfaceSamplingDistributionHandle);
     return pglSurfaceSamplingDistributionIrradiance(m_surfaceSamplingDistributionHandle, normal);
 }
+#endif
 
 }
 }
