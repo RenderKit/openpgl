@@ -125,6 +125,8 @@ struct SurfaceSamplingDistribution
     pgl_vec3f IncomingRadiance(pgl_vec3f& direction) const;
 
     pgl_vec3f Irradiance(pgl_vec3f& normal) const;
+
+    pgl_vec3f OutgoingRadiance(pgl_vec3f& direction) const;
 #endif
     ///////////////////////////////////////
     /// Future plans
@@ -266,6 +268,12 @@ OPENPGL_INLINE pgl_vec3f SurfaceSamplingDistribution::Irradiance(pgl_vec3f& norm
 {
     OPENPGL_ASSERT(m_surfaceSamplingDistributionHandle);
     return pglSurfaceSamplingDistributionIrradiance(m_surfaceSamplingDistributionHandle, normal);
+}
+
+OPENPGL_INLINE pgl_vec3f SurfaceSamplingDistribution::OutgoingRadiance(pgl_vec3f& direction) const
+{
+    OPENPGL_ASSERT(m_surfaceSamplingDistributionHandle);
+    return pglSurfaceSamplingDistributionOutgoingRadiance(m_surfaceSamplingDistributionHandle, direction); 
 }
 #endif
 

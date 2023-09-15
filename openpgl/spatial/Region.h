@@ -5,6 +5,7 @@
 
 #include "../openpgl_common.h"
 #include "../data/SampleStatistics.h"
+#include "../directional/OutgoingRadianceHistogram.h"
 #include "IRegion.h"
 
 namespace openpgl
@@ -18,6 +19,8 @@ namespace openpgl
         SampleStatistics sampleStatistics;
         size_t numInvalidSamples {0};
         bool splitFlag {false};
+
+        OutgoingRadianceHistogram outRadianceHist;
         //bool valid{true};
 
         inline const BBox &getRegionBounds() const
@@ -28,6 +31,11 @@ namespace openpgl
         inline const BBox &getSampleBounds() const
         {
             return sampleStatistics.sampleBounds;
+        }
+
+        Vector3 getOutgoingRadiance(const Vector3 dir) const override
+        {
+            return outRadianceHist.getOugoingRadiance(dir);
         }
 
 /*
@@ -68,6 +76,7 @@ namespace openpgl
             stream.write(reinterpret_cast<const char*>(&regionBounds), sizeof(regionBounds));
             trainingStatistics.serialize(stream);
             sampleStatistics.serialize(stream);
+            outRadianceHist.serialize(stream);
             stream.write(reinterpret_cast<const char*>(&numInvalidSamples), sizeof(numInvalidSamples));
             stream.write(reinterpret_cast<const char*>(&splitFlag), sizeof(splitFlag));
         }
@@ -79,6 +88,7 @@ namespace openpgl
             stream.read(reinterpret_cast<char*>(&regionBounds), sizeof(regionBounds));
             trainingStatistics.deserialize(stream);
             sampleStatistics.deserialize(stream);
+            outRadianceHist.deserialize(stream);
             stream.read(reinterpret_cast<char*>(&numInvalidSamples), sizeof(numInvalidSamples));
             stream.read(reinterpret_cast<char*>(&splitFlag), sizeof(splitFlag));
         }

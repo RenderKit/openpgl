@@ -50,6 +50,10 @@ struct PGLSampleData
 
     ///
     uint32_t flags;
+
+
+    pgl_vec3f directionOut;
+    pgl_vec3f radianceOut;  
 };
 
 

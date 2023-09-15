@@ -106,6 +106,11 @@ struct __aligned(TVMMDistribution::VectorSize*4) VMMSurfaceSamplingDistribution:
         return m_liDistribution.irradiance(normal);
     }
 
+    inline Vector3 outgoingRadiance(const Vector3 dir) const override
+    {
+        return m_region->getOutgoingRadiance(dir);
+    }
+
     inline float samplePdf(const Point2 sample, Vector3 &dir) const override
     {
         dir = this->sample(sample);

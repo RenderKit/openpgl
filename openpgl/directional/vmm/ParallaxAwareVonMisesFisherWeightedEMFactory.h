@@ -813,6 +813,7 @@ void ParallaxAwareVonMisesFisherWeightedEMFactory< TVMMDistribution>::partialUpd
             mask.setToTrue(vmm._numComponents-1);
         }
 
+        OPENPGL_ASSERT(currentStats.isValid());
         OPENPGL_ASSERT(!currentStats.isNormalized());
         currentStats.normalize(currentStats.numSamples);
         OPENPGL_ASSERT(currentStats.isValid());

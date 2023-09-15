@@ -13,6 +13,8 @@ namespace openpgl
     {
         virtual ~IRegion(){};
 
+        virtual Vector3 getOutgoingRadiance(const Vector3 dir) const = 0;
+
         public:
         bool valid{true};
     };
