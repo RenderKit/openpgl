@@ -7,7 +7,7 @@
 
 #define OPENPGL_INLINE_INTER inline
 
-#define OPENPGL_HISTOGRAM_RESOLUTION 4
+#define OPENPGL_HISTOGRAM_RESOLUTION 8
 #define OPENPGL_HISTOGRAM_SIZE OPENPGL_HISTOGRAM_RESOLUTION * OPENPGL_HISTOGRAM_RESOLUTION
 
 namespace openpgl
@@ -40,7 +40,7 @@ private:
 
 OPENPGL_INLINE_INTER OutgoingRadianceHistogram::OutgoingRadianceHistogram()
 {
-    for(int i=0; i< OPENPGL_HISTOGRAM_RESOLUTION;i++)
+    for(int i=0; i< OPENPGL_HISTOGRAM_SIZE;i++)
     {
         data[i] = openpgl::Vector3(0.f);
         numSamples[i]= 0.f;
@@ -65,7 +65,7 @@ OPENPGL_INLINE_INTER void OutgoingRadianceHistogram::addSample(Vector3 dir, open
         std::min(int(p.x * res), res - 1) +
         std::min(int(p.y * res), res - 1) * res;
     numSamples[histIdx] += 1.f;
-    data[histIdx] += (data[histIdx]-sample) / numSamples[histIdx];
+    data[histIdx] += (sample-data[histIdx]) / numSamples[histIdx];
 }
 
 OPENPGL_INLINE_INTER void OutgoingRadianceHistogram::decay(const float alpha){
@@ -97,6 +97,14 @@ OPENPGL_INLINE_INTER void OutgoingRadianceHistogram::update(const SampleData* sa
         Vector3 col = Vector3(samples[n].radianceOut.x, samples[n].radianceOut.y, samples[n].radianceOut.z);
         addSample(dir, col);
     }
+    /*
+    std::cout << "OutgoingRadianceHistogram: ";
+    for (int i = 0; i < OPENPGL_HISTOGRAM_SIZE; i++)
+    {
+        std::cout << data[i].x << ", " << data[i].y << ", " << data[i].z << "\t\t";
+    }
+    std::cout << std::endl;
+    */
 }
 
 OPENPGL_INLINE_INTER void OutgoingRadianceHistogram::serialize(std::ostream& stream) const

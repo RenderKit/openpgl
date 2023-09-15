@@ -452,8 +452,9 @@ private:
                 	m_distributionFactory.prepareSamples(samples.data() + regionStorage.second.m_begin, regionStorage.second.m_end - regionStorage.second.m_begin, regionStorage.first.sampleStatistics, m_distributionFactorySettings);
                 	m_distributionFactory.fit(regionStorage.first.distribution, regionStorage.first.trainingStatistics, samples.data() + regionStorage.second.m_begin, regionStorage.second.m_end - regionStorage.second.m_begin, m_distributionFactorySettings, fittingStats);
 					m_distributionFactory.updateFluenceEstimate(regionStorage.first.distribution, samples.data() + regionStorage.second.m_begin, regionStorage.second.m_end - regionStorage.second.m_begin, regionStorage.first.numInvalidSamples, regionStorage.first.sampleStatistics);
-
+#ifdef OPENPGL_EF_RADIANCE_CACHES
                     regionStorage.first.outRadianceHist.update(samples.data() + regionStorage.second.m_begin, regionStorage.second.m_end - regionStorage.second.m_begin);
+#endif
 					// TODO: we should move setting the pivot to the factory
                 	regionStorage.first.distribution._pivotPosition = sampleMean;
                 	regionStorage.first.valid = regionStorage.first.distribution.isValid();
@@ -497,7 +498,9 @@ private:
             {
                 regionStorage.first.distribution.decay(this->m_decayOnSpatialSplit);
                 regionStorage.first.trainingStatistics.decay(this->m_decayOnSpatialSplit);
+#ifdef OPENPGL_EF_RADIANCE_CACHES
                 regionStorage.first.outRadianceHist.decay(this->m_decayOnSpatialSplit);
+#endif
                 regionStorage.first.splitFlag = false;
             }
 
@@ -526,8 +529,9 @@ private:
 	                m_distributionFactory.update(regionStorage.first.distribution, regionStorage.first.trainingStatistics, samples.data() + regionStorage.second.m_begin, regionStorage.second.m_end - regionStorage.second.m_begin, m_distributionFactorySettings, fittingStats);
 	                m_distributionFactory.updateFluenceEstimate(regionStorage.first.distribution, samples.data() + regionStorage.second.m_begin, regionStorage.second.m_end - regionStorage.second.m_begin, regionStorage.first.numInvalidSamples, regionStorage.first.sampleStatistics);
 					//regionStorage.first.valid = regionStorage.first.distribution.isValid();
+#ifdef OPENPGL_EF_RADIANCE_CACHES
 	                regionStorage.first.outRadianceHist.update(samples.data() + regionStorage.second.m_begin, regionStorage.second.m_end - regionStorage.second.m_begin);
-                    
+#endif                    
                     regionStorage.first.valid = regionStorage.first.isValid();
 #ifdef OPENPGL_DEBUG_MODE
 	                if(!regionStorage.first.valid)

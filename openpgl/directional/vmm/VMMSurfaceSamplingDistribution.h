@@ -106,10 +106,12 @@ struct __aligned(TVMMDistribution::VectorSize*4) VMMSurfaceSamplingDistribution:
         return m_liDistribution.irradiance(normal);
     }
 
+#ifdef OPENPGL_EF_RADIANCE_CACHES
     inline Vector3 outgoingRadiance(const Vector3 dir) const override
     {
         return m_region->getOutgoingRadiance(dir);
     }
+#endif
 
     inline float samplePdf(const Point2 sample, Vector3 &dir) const override
     {

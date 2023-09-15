@@ -79,7 +79,7 @@ public:
     // fluence attributes
     float _fluence {0.0f};
     float _numFluenceSamples {0.f};
-#ifdef OPENPGL_RGB_WEIGHTS
+#ifdef OPENPGL_EF_RADIANCE_CACHES
     Vector3 _fluenceRGB {0.0f, 0.0f, 0.0f};
     embree::Vec3<embree::vfloat<VecSize> > _fluenceRGBWeights[NumVectors];
 #endif
@@ -241,7 +241,7 @@ std::string ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents,UseParalla
         ss << "\t eMinus2Kappa: " <<  this->_eMinus2Kappa[tmp.quot][tmp.rem];
         ss << "\t meanCosine: " <<  this->_meanCosines[tmp.quot][tmp.rem];
         ss << "\t distance: " <<  _distances[tmp.quot][tmp.rem];
-#ifdef OPENPGL_RGB_WEIGHTS
+#ifdef OPENPGL_EF_RADIANCE_CACHES
         ss << "\t fluenceRGBWeight: " <<  _fluenceRGBWeights[tmp.quot].x[tmp.rem] << "\t" <<  _fluenceRGBWeights[tmp.quot].y[tmp.rem] << "\t" <<  _fluenceRGBWeights[tmp.quot].z[tmp.rem];
 #endif
         ss << std::endl;
@@ -251,7 +251,7 @@ std::string ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents,UseParalla
     ss << "pivot: " << _pivotPosition << std::endl;
     ss << "sumWeights: " << sumWeights << std::endl;
     ss << "fluence: " << _fluence << std::endl;
-#ifdef OPENPGL_RGB_WEIGHTS
+#ifdef OPENPGL_EF_RADIANCE_CACHES
     ss << "fluenceRGB: " << _fluenceRGB.x << "\t" << _fluenceRGB.y << "\t" << _fluenceRGB.z << std::endl;
 #endif
     ss << "numFluenceSamples: " << _numFluenceSamples << std::endl;
@@ -285,7 +285,7 @@ void ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents,UseParallaxCompen
 
     // splitting PAVMM
     _distances[tmpIdx1.quot][tmpIdx1.rem] = _distances[tmpIdx0.quot][tmpIdx0.rem];
-#ifdef OPENPGL_RGB_WEIGHTS
+#ifdef OPENPGL_EF_RADIANCE_CACHES
     const float nWeight0 = weight0 / (weight0 + weight1);
     const float nWeight1 = weight1 / (weight0 + weight1);
     _fluenceRGBWeights[tmpIdx1.quot].x[tmpIdx1.rem] = _fluenceRGBWeights[tmpIdx0.quot].x[tmpIdx0.rem] * nWeight1;
@@ -389,7 +389,7 @@ void ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents,UseParallaxCompen
         newDistance /= (weight0 + weight1);
 
         _distances[tmpIdx0.quot][tmpIdx0.rem] = newDistance;
-#ifdef OPENPGL_RGB_WEIGHTS
+#ifdef OPENPGL_EF_RADIANCE_CACHES
         const Vector3 fluenceRGBWeights0(_fluenceRGBWeights[tmpIdx0.quot].x[tmpIdx0.rem], _fluenceRGBWeights[tmpIdx0.quot].y[tmpIdx0.rem], _fluenceRGBWeights[tmpIdx0.quot].z[tmpIdx0.rem]);
         const Vector3 fluenceRGBWeights1(_fluenceRGBWeights[tmpIdx1.quot].x[tmpIdx1.rem], _fluenceRGBWeights[tmpIdx1.quot].y[tmpIdx1.rem], _fluenceRGBWeights[tmpIdx1.quot].z[tmpIdx1.rem]);  
 
@@ -423,7 +423,7 @@ void ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents,UseParallaxCompen
         std::swap(_meanDirections[tmpIdx0.quot].z[tmpIdx0.rem], _meanDirections[tmpIdx1.quot].z[tmpIdx1.rem]);
 
         std::swap(_distances[tmpIdx0.quot][tmpIdx0.rem], _distances[tmpIdx1.quot][tmpIdx1.rem]);
-#ifdef OPENPGL_RGB_WEIGHTS
+#ifdef OPENPGL_EF_RADIANCE_CACHES
         std::swap(_fluenceRGBWeights[tmpIdx0.quot].x[tmpIdx0.rem], _fluenceRGBWeights[tmpIdx1.quot].x[tmpIdx1.rem]);
         std::swap(_fluenceRGBWeights[tmpIdx0.quot].y[tmpIdx0.rem], _fluenceRGBWeights[tmpIdx1.quot].y[tmpIdx1.rem]);
         std::swap(_fluenceRGBWeights[tmpIdx0.quot].z[tmpIdx0.rem], _fluenceRGBWeights[tmpIdx1.quot].z[tmpIdx1.rem]);
@@ -448,7 +448,7 @@ void ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents,UseParallaxCompen
 
     _distances[tmpIdx.quot][tmpIdx.rem] = 0.0f;
 
-#ifdef OPENPGL_RGB_WEIGHTS
+#ifdef OPENPGL_EF_RADIANCE_CACHES
     _fluenceRGBWeights[tmpIdx.quot].x[tmpIdx.rem] = 0.f;
     _fluenceRGBWeights[tmpIdx.quot].y[tmpIdx.rem] = 0.f;
     _fluenceRGBWeights[tmpIdx.quot].z[tmpIdx.rem] = 0.f;
@@ -465,14 +465,14 @@ void ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents,UseParallaxCompen
     serializeFloatVectors<NumVectors, VectorSize>(stream, _eMinus2Kappa);
     serializeFloatVectors<NumVectors, VectorSize>(stream, _meanCosines);
     serializeFloatVectors<NumVectors, VectorSize>(stream, _distances);
-#ifdef OPENPGL_RGB_WEIGHTS
+#ifdef OPENPGL_EF_RADIANCE_CACHES
 	serializeVec3Vectors<NumVectors, VectorSize>(stream, _fluenceRGBWeights);
 #endif
     stream.write(reinterpret_cast<const char*>(&_numComponents), sizeof(_numComponents));
     stream.write(reinterpret_cast<const char*>(&_pivotPosition), sizeof(Point3));
 
     stream.write(reinterpret_cast<const char*>(&_fluence), sizeof(float));
-#ifdef OPENPGL_RGB_WEIGHTS
+#ifdef OPENPGL_EF_RADIANCE_CACHES
     stream.write(reinterpret_cast<const char*>(&_fluenceRGB), sizeof(Vector3));
     stream.write(reinterpret_cast<const char*>(&_numFluenceSamples), sizeof(float));
 #endif
@@ -488,14 +488,14 @@ void ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents,UseParallaxCompen
     deserializeFloatVectors<NumVectors, VectorSize>(stream, _eMinus2Kappa);
     deserializeFloatVectors<NumVectors, VectorSize>(stream, _meanCosines);
     deserializeFloatVectors<NumVectors, VectorSize>(stream, _distances);
-#ifdef OPENPGL_RGB_WEIGHTS
+#ifdef OPENPGL_EF_RADIANCE_CACHES
 	deserializeVec3Vectors<NumVectors, VectorSize>(stream, _fluenceRGBWeights);
 #endif
     stream.read(reinterpret_cast<char*>(&_numComponents), sizeof(_numComponents));
     stream.read(reinterpret_cast<char*>(&_pivotPosition), sizeof(Point3));
 
     stream.read(reinterpret_cast<char*>(&_fluence), sizeof(float));
-#ifdef OPENPGL_RGB_WEIGHTS
+#ifdef OPENPGL_EF_RADIANCE_CACHES
     stream.read(reinterpret_cast<char*>(&_fluenceRGB), sizeof(Vector3));
     stream.read(reinterpret_cast<char*>(&_numFluenceSamples), sizeof(float));
 #endif
@@ -1099,7 +1099,7 @@ bool ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents,UseParallaxCompen
 
 template<int VecSize, int maxComponents, bool UseParallaxCompensation>
 Vector3 ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents,UseParallaxCompensation>::incomingRadiance( const Vector3 &direction ) const{
-#ifdef OPENPGL_RGB_WEIGHTS
+#ifdef OPENPGL_EF_RADIANCE_CACHES
     const int cnt = (_numComponents+VecSize-1) / VecSize;
 
     embree::Vec3< embree::vfloat<VecSize> > incomingRadiance = {0.0f, 0.0f, 0.0f};
@@ -1125,7 +1125,7 @@ Vector3 ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents,UseParallaxCom
 
 template<int VecSize, int maxComponents, bool UseParallaxCompensation>
 Vector3 ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents,UseParallaxCompensation>::irradiance( const Vector3 &normal ) const{
-#ifdef OPENPGL_RGB_WEIGHTS
+#ifdef OPENPGL_EF_RADIANCE_CACHES
     const embree::vfloat<VecSize> cosine_meanCosine(KappaToMeanCosine<float>(2.18853f)); // TODO
 
     const int cnt = (_numComponents+VecSize-1) / VecSize;

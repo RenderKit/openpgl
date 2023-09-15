@@ -38,7 +38,7 @@ struct PGLSampleData
     /// a scalar representation of the incident radiance divide by @ref pdf
     float weight;
 
-#ifdef OPENPGL_RGB_WEIGHTS
+#ifdef OPENPGL_EF_RADIANCE_CACHES
     pgl_vec3f weightRGB; 
 #endif
 
@@ -51,9 +51,10 @@ struct PGLSampleData
     ///
     uint32_t flags;
 
-
+#ifdef OPENPGL_EF_RADIANCE_CACHES
     pgl_vec3f directionOut;
-    pgl_vec3f radianceOut;  
+    pgl_vec3f radianceOut;
+#endif
 };
 
 

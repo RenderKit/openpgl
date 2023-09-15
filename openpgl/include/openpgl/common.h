@@ -3,8 +3,6 @@
 
 #pragma once
 
-#define OPENPGL_RGB_WEIGHTS
-
 #ifdef BUILD_SHARED
   #ifdef _WIN32
   #  ifdef openpgl_EXPORTS

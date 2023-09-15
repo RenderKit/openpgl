@@ -5,7 +5,9 @@
 
 #include "../openpgl_common.h"
 #include "../data/SampleStatistics.h"
-#include "../directional/OutgoingRadianceHistogram.h"
+#ifdef OPENPGL_EF_RADIANCE_CACHES
+    #include "../directional/OutgoingRadianceHistogram.h"
+#endif
 #include "IRegion.h"
 
 namespace openpgl
@@ -19,8 +21,9 @@ namespace openpgl
         SampleStatistics sampleStatistics;
         size_t numInvalidSamples {0};
         bool splitFlag {false};
-
+#ifdef OPENPGL_EF_RADIANCE_CACHES
         OutgoingRadianceHistogram outRadianceHist;
+#endif
         //bool valid{true};
 
         inline const BBox &getRegionBounds() const
@@ -33,11 +36,12 @@ namespace openpgl
             return sampleStatistics.sampleBounds;
         }
 
+#ifdef OPENPGL_EF_RADIANCE_CACHES
         Vector3 getOutgoingRadiance(const Vector3 dir) const override
         {
             return outRadianceHist.getOugoingRadiance(dir);
         }
-
+#endif
 /*
         TDistribution getDistribution(Point3 samplePosition, const bool &useParallaxComp) const
         {
@@ -76,7 +80,9 @@ namespace openpgl
             stream.write(reinterpret_cast<const char*>(&regionBounds), sizeof(regionBounds));
             trainingStatistics.serialize(stream);
             sampleStatistics.serialize(stream);
+#ifdef OPENPGL_EF_RADIANCE_CACHES
             outRadianceHist.serialize(stream);
+#endif
             stream.write(reinterpret_cast<const char*>(&numInvalidSamples), sizeof(numInvalidSamples));
             stream.write(reinterpret_cast<const char*>(&splitFlag), sizeof(splitFlag));
         }
@@ -88,7 +94,9 @@ namespace openpgl
             stream.read(reinterpret_cast<char*>(&regionBounds), sizeof(regionBounds));
             trainingStatistics.deserialize(stream);
             sampleStatistics.deserialize(stream);
+#ifdef OPENPGL_EF_RADIANCE_CACHES
             outRadianceHist.deserialize(stream);
+#endif
             stream.read(reinterpret_cast<char*>(&numInvalidSamples), sizeof(numInvalidSamples));
             stream.read(reinterpret_cast<char*>(&splitFlag), sizeof(splitFlag));
         }

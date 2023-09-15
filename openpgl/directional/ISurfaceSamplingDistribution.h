@@ -33,7 +33,9 @@ struct ISurfaceSamplingDistribution
 
     virtual Vector3 irradiance(const Vector3 normal) const = 0;
 
+#ifdef OPENPGL_EF_RADIANCE_CACHES
     virtual Vector3 outgoingRadiance(const Vector3 dir) const = 0;
+#endif
 
     virtual bool validate() const = 0;
 
