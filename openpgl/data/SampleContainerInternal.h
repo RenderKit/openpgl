@@ -136,13 +136,13 @@ namespace openpgl
         SampleData& operator[](size_t idx) { 
             OPENPGL_ASSERT(m_data);
             OPENPGL_ASSERT(m_size > 0);
-            OPENPGL_ASSERT(m_size < idx);
+            OPENPGL_ASSERT( idx < m_size);
             return m_data[idx]; 
         }
         const SampleData& operator[](size_t idx) const { 
             OPENPGL_ASSERT(m_data);
             OPENPGL_ASSERT(m_size > 0);
-            OPENPGL_ASSERT(m_size < idx);
+            OPENPGL_ASSERT(idx < m_size);
             return m_data[idx]; 
         }
 
