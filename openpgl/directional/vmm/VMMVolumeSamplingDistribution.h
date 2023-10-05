@@ -127,6 +127,28 @@ struct __aligned(TVMMDistribution::VectorSize*4) VMMVolumeSamplingDistribution: 
         return m_liDistribution.pdf(dir);
     }
 
+#ifdef OPENPGL_RADIANCE_CACHES
+    inline Vector3 incomingRadiance(const Vector3 dir) const override
+    {
+        return m_liDistribution.incomingRadiance(dir);
+    }
+
+    inline Vector3 outgoingRadiance(const Vector3 dir) const override
+    {
+        return m_region->getOutgoingRadiance(dir);
+    }
+
+    inline Vector3 inScatteredRadiance(const Vector3 dir, const float g) const
+    {
+        return Vector3(0.f, 0.f, 0.f);
+    }
+
+    inline Vector3 fluence() const override
+    {
+        return m_liDistribution.fluence();
+    } 
+#endif
+
     inline bool validate() const override
     {
         return m_numDistributions > 0;

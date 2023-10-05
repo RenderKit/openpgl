@@ -13,7 +13,7 @@ namespace openpgl
     {
         virtual ~IRegion(){};
 
-#ifdef OPENPGL_EF_RADIANCE_CACHES
+#ifdef OPENPGL_RADIANCE_CACHES
         virtual Vector3 getOutgoingRadiance(const Vector3 dir) const = 0;
 #endif
         public:

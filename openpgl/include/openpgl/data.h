@@ -62,6 +62,10 @@ struct PGLInvalidSampleData
 {
     /// the position of the invalid sample
     pgl_point3f position;
+
+#ifdef OPENPGL_EF_RADIANCE_CACHES
+    pgl_vec3f directionOut;
+#endif
     /// if the position is inside a volume
     bool volume;
 };

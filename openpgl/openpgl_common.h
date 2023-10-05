@@ -5,10 +5,17 @@
 
 #include "include/openpgl/common.h"
 
+#ifdef OPENPGL_RADIANCE_CACHES
+#ifndef OPENPGL_EF_RADIANCE_CACHES
+#define OPENPGL_EF_RADIANCE_CACHES
+#endif
+#endif
+
 #define USE_EMBREE_PARALLEL
 #define USE_INTEGER_ARITHMETIC_STATS
 
-#define ONE_OVER_FOUR_PI 0.07957747154594767
+#define ONE_OVER_FOUR_PI 0.07957747154594767f
+#define M_PI_F 3.14159265358979323846f	/* pi */
 
 #include <embreeSrc/common/math/constants.h>
 #include <embreeSrc/common/math/emath.h>
@@ -297,7 +304,7 @@ namespace openpgl
             std::atan2(v.y, v.x)
         );
         if (result.y < 0)
-            result.y += 2.0f*(float)M_PI;
+            result.y += 2.0f*M_PI_F;
         return result;
     }
 
@@ -322,7 +329,7 @@ namespace openpgl
         float z = 1.0f - 2.0f * sample.y;
         float r = std::sqrt(std::max(0.f,(1.0f - z*z)));
         float sinPhi, cosPhi;
-        sincosf(2.0f * M_PI * sample.x, &sinPhi, &cosPhi);
+        sincosf(2.0f * M_PI_F * sample.x, &sinPhi, &cosPhi);
         return Vector3(r * cosPhi, r * sinPhi, z);
     }
 

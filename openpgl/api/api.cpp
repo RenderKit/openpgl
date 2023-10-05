@@ -706,7 +706,7 @@ extern "C" OPENPGL_DLLEXPORT PGLRegion pglSurfaceSamplingGetRegion(PGLSurfaceSam
     return (PGLRegion) gRegion;
 }
 
-#ifdef OPENPGL_EF_RADIANCE_CACHES
+#ifdef OPENPGL_RADIANCE_CACHES
 extern "C" OPENPGL_DLLEXPORT pgl_vec3f pglSurfaceSamplingDistributionIncomingRadiance(PGLSurfaceSamplingDistribution surfaceSamplingDistribution, pgl_vec3f direction)
 {
     ISurfaceSamplingDistribution* gSurfaceSamplingDistribution =  (ISurfaceSamplingDistribution*)surfaceSamplingDistribution;
@@ -715,6 +715,16 @@ extern "C" OPENPGL_DLLEXPORT pgl_vec3f pglSurfaceSamplingDistributionIncomingRad
     pgl_vec3f pglIncomingRadiance;
     pglVec3f(pglIncomingRadiance, incomingRadiance.x, incomingRadiance.y, incomingRadiance.z);
     return pglIncomingRadiance;
+}
+
+extern "C" OPENPGL_DLLEXPORT pgl_vec3f pglSurfaceSamplingDistributionOutgoingRadiance(PGLSurfaceSamplingDistribution surfaceSamplingDistribution, pgl_vec3f direction)
+{
+    ISurfaceSamplingDistribution* gSurfaceSamplingDistribution =  (ISurfaceSamplingDistribution*)surfaceSamplingDistribution;
+    openpgl::Vector3 outgoingRadiance = gSurfaceSamplingDistribution->outgoingRadiance(openpgl::Vector3(direction.x, direction.y, direction.z));
+
+    pgl_vec3f pglOutgoingRadiance;
+    pglVec3f(pglOutgoingRadiance, outgoingRadiance.x, outgoingRadiance.y, outgoingRadiance.z);
+    return pglOutgoingRadiance;
 }
 
 extern "C" OPENPGL_DLLEXPORT pgl_vec3f pglSurfaceSamplingDistributionIrradiance(PGLSurfaceSamplingDistribution surfaceSamplingDistribution, pgl_vec3f normal)
@@ -727,15 +737,6 @@ extern "C" OPENPGL_DLLEXPORT pgl_vec3f pglSurfaceSamplingDistributionIrradiance(
     return pglIrradiance;
 }
 
-extern "C" OPENPGL_DLLEXPORT pgl_vec3f pglSurfaceSamplingDistributionOutgoingRadiance(PGLSurfaceSamplingDistribution surfaceSamplingDistribution, pgl_vec3f direction)
-{
-    ISurfaceSamplingDistribution* gSurfaceSamplingDistribution =  (ISurfaceSamplingDistribution*)surfaceSamplingDistribution;
-    openpgl::Vector3 irradiance = gSurfaceSamplingDistribution->outgoingRadiance(openpgl::Vector3(direction.x, direction.y, direction.z));
-
-    pgl_vec3f pglIrradiance;
-    pglVec3f(pglIrradiance, irradiance.x, irradiance.y, irradiance.z);
-    return pglIrradiance;
-}
 #endif
 
 /*
@@ -823,6 +824,49 @@ extern "C" OPENPGL_DLLEXPORT bool pglVolumeSamplingDistributionSupportsApplySing
     IVolumeSamplingDistribution* gVolumeSamplingDistribution = (IVolumeSamplingDistribution*)volumeSamplingDistribution;
     return gVolumeSamplingDistribution->supportsApplySingleLobeHenyeyGreensteinProduct();
 }
+
+#ifdef OPENPGL_RADIANCE_CACHES
+extern "C" OPENPGL_DLLEXPORT pgl_vec3f pglVolumeSamplingDistributionIncomingRadiance(PGLVolumeSamplingDistribution volumeSamplingDistribution, pgl_vec3f direction)
+{
+    IVolumeSamplingDistribution* gVolumeSamplingDistribution =  (IVolumeSamplingDistribution*)volumeSamplingDistribution;
+    openpgl::Vector3 incomingRadiance = gVolumeSamplingDistribution->incomingRadiance(openpgl::Vector3(direction.x, direction.y, direction.z));
+
+    pgl_vec3f pglIncomingRadiance;
+    pglVec3f(pglIncomingRadiance, incomingRadiance.x, incomingRadiance.y, incomingRadiance.z);
+    return pglIncomingRadiance;
+}
+
+extern "C" OPENPGL_DLLEXPORT pgl_vec3f pglVolumeSamplingDistributionOutgoingRadiance(PGLVolumeSamplingDistribution volumeSamplingDistribution, pgl_vec3f direction)
+{
+    IVolumeSamplingDistribution* gVolumeSamplingDistribution =  (IVolumeSamplingDistribution*)volumeSamplingDistribution;
+    openpgl::Vector3 outgoingRadiance = gVolumeSamplingDistribution->outgoingRadiance(openpgl::Vector3(direction.x, direction.y, direction.z));
+
+    pgl_vec3f pglOutgoingRadiance;
+    pglVec3f(pglOutgoingRadiance, outgoingRadiance.x, outgoingRadiance.y, outgoingRadiance.z);
+    return pglOutgoingRadiance;
+}
+
+extern "C" OPENPGL_DLLEXPORT pgl_vec3f pglVolumeSamplingDistributionInscatteredRadiance(PGLVolumeSamplingDistribution volumeSamplingDistribution, pgl_vec3f direction, float g)
+{
+    IVolumeSamplingDistribution* gVolumeSamplingDistribution =  (IVolumeSamplingDistribution*)volumeSamplingDistribution;
+    openpgl::Vector3 inscatteredRadiance = gVolumeSamplingDistribution->inScatteredRadiance(openpgl::Vector3(direction.x, direction.y, direction.z), g);
+
+    pgl_vec3f pglInscatteredRadiance;
+    pglVec3f(pglInscatteredRadiance, inscatteredRadiance.x, inscatteredRadiance.y, inscatteredRadiance.z);
+    return pglInscatteredRadiance;
+}
+
+extern "C" OPENPGL_DLLEXPORT pgl_vec3f pglVolumeSamplingDistributionFluence(PGLVolumeSamplingDistribution volumeSamplingDistribution)
+{
+    IVolumeSamplingDistribution* gVolumeSamplingDistribution =  (IVolumeSamplingDistribution*)volumeSamplingDistribution;
+    openpgl::Vector3 fluence = gVolumeSamplingDistribution->fluence();
+
+    pgl_vec3f pglFluence;
+    pglVec3f(pglFluence, fluence.x, fluence.y, fluence.z);
+    return pglFluence;
+}
+
+#endif
 
 extern "C" OPENPGL_DLLEXPORT void pglFieldArgumentsSetDefaults(PGLFieldArguments &fieldArguments, const PGL_SPATIAL_STRUCTURE_TYPE spatialType, const PGL_DIRECTIONAL_DISTRIBUTION_TYPE directionalType, const bool deterministic, const size_t maxSamplesPerLeaf)
 {

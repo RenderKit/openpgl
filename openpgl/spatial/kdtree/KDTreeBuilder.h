@@ -398,6 +398,9 @@ private:
             std::pair<TRegion, Range> &regionAndRangeData = dataStorage->operator[](dataIdx);
             regionAndRangeData.first.sampleStatistics.addNumInvalidSamples(sampleRange.size());
             regionAndRangeData.first.numInvalidSamples = sampleRange.size();
+
+            regionAndRangeData.second.m_is_begin = sampleRange.m_begin;
+            regionAndRangeData.second.m_is_end = sampleRange.m_end;
             return;
         }
         else

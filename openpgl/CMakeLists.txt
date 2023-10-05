@@ -43,7 +43,7 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE BUILD_SHARED)
 endif()
 
 if(OPENPGL_EF_RADIANCE_CACHES)
-target_compile_definitions(${PROJECT_NAME} PRIVATE OPENPGL_EF_RADIANCE_CACHES)
+target_compile_definitions(${PROJECT_NAME} PRIVATE OPENPGL_RADIANCE_CACHES)
 endif()
 
 #target_compile_definitions(${PROJECT_NAME} PRIVATE OPENPGL_DEBUG_MODE)

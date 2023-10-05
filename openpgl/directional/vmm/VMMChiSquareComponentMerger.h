@@ -134,7 +134,7 @@ float VonMisesFisherChiSquareComponentMerger<TVMMFactory>::CalculateMergeCost (c
         kappa = kappa < 1e-3f ? 0.f : kappa;
         //eMin2Kappa = math::fastexp( -2.0f * kappa );
         eMinus2Kappa = embree::exp( -2.0f * kappa );
-        normalization = kappa / ( 2.0f * M_PI * ( 1.0f - eMinus2Kappa ) );
+        normalization = kappa / ( 2.0f * M_PI_F * ( 1.0f - eMinus2Kappa ) );
 
         meanDirection /= meanCosine;
     }
@@ -250,7 +250,7 @@ bool VonMisesFisherChiSquareComponentMerger<TVMMFactory>::ThresholdedMergeNext (
         std::cout << "merge: " << "\tidx0: " << mergeCandidateI << "\tidx1: " << mergeCandidateJ << "\tK: " << vmm._numComponents <<std::endl;
         std::cout << "\tweightI: " << vmm.getComponentWeight(mergeCandidateI) << "\tweightJ: " << vmm.getComponentWeight(mergeCandidateJ);
         std::cout << "\tkappaI: " << vmm.getComponentKappa(mergeCandidateI)<< "\tkappaJ: " << vmm.getComponentKappa(mergeCandidateJ);
-        std::cout << "\t angle: " << std::acos(dot(vmm.getComponentMeanDirection(mergeCandidateI), vmm.getComponentMeanDirection(mergeCandidateJ))) * 180.0f / M_PI << std::endl;
+        std::cout << "\t angle: " << std::acos(dot(vmm.getComponentMeanDirection(mergeCandidateI), vmm.getComponentMeanDirection(mergeCandidateJ))) * 180.0f / M_PI_F << std::endl;
 #endif
         // get old (before merge) mean directions and weights
         Vector3 meanDirectionI = vmm.getComponentMeanDirection(mergeCandidateI);
@@ -313,12 +313,12 @@ float VonMisesFisherChiSquareComponentMerger<TVMMFactory>::_IntegratedProduct(co
 
     float productKappa = embree::sqrt( dot( productMeanDirection, productMeanDirection));
 
-    float productNormalization = 1.0f / (4.0f * M_PI);
+    float productNormalization = 1.0f / (4.0f * M_PI_F);
     float productEMinus2Kappa = 1.0f;
     if ( productKappa > 1e-3f)
     {
         productEMinus2Kappa = std::exp(-2.0f * productKappa);
-        productNormalization = productKappa / (2.0f * M_PI * ( 1.0f - productEMinus2Kappa ));
+        productNormalization = productKappa / (2.0f * M_PI_F * ( 1.0f - productEMinus2Kappa ));
         productMeanDirection /= productKappa;
     }
     else
@@ -342,12 +342,12 @@ float VonMisesFisherChiSquareComponentMerger<TVMMFactory>::_IntegratedDivision(c
 
     float productKappa = embree::sqrt( dot( productMeanDirection, productMeanDirection));
 
-    float productNormalization = 1.0f / (4.0f * M_PI);
+    float productNormalization = 1.0f / (4.0f * M_PI_F);
     float productEMinus2Kappa = 1.0f;
     if ( productKappa > 1e-3f)
     {
         productEMinus2Kappa = std::exp(-2.0f * productKappa);
-        productNormalization = productKappa / (2.0f * M_PI * ( 1.0f - productEMinus2Kappa ));
+        productNormalization = productKappa / (2.0f * M_PI_F * ( 1.0f - productEMinus2Kappa ));
         productMeanDirection /= productKappa;
     }
     else
@@ -359,7 +359,7 @@ float VonMisesFisherChiSquareComponentMerger<TVMMFactory>::_IntegratedDivision(c
     float scale = ( normalization0 * normalization1 ) / productNormalization;
     float cosTheta0 = dot( meanDirection0, productMeanDirection);
     float cosTheta1 = dot( meanDirection1, productMeanDirection);
-    scale *= (4.0f * M_PI * M_PI * ( 1.0f - eMinus2Kappa1) ) / (kappa1 * kappa1);
+    scale *= (4.0f * M_PI_F * M_PI_F * ( 1.0f - eMinus2Kappa1) ) / (kappa1 * kappa1);
     scale *= std::exp( (kappa0 * ( cosTheta0 - 1.0f ) + kappa1 * ( cosTheta1 - 1.0f )) + (2.0f * kappa1) );
 
     return scale;
@@ -373,12 +373,12 @@ float VonMisesFisherChiSquareComponentMerger<TVMMFactory>::_Product(const Vector
     productMeanDirection = kappa0 * meanDirection0 + kappa1 * meanDirection1;
     productKappa = embree::sqrt( dot( productMeanDirection, productMeanDirection));
 
-    productNormalization = 1.0f / (4.0f * M_PI);
+    productNormalization = 1.0f / (4.0f * M_PI_F);
     float productEMinus2Kappa = 1.0f;
     if ( productKappa > 1e-3f)
     {
         productEMinus2Kappa = std::exp(-2.0f * productKappa);
-        productNormalization = productKappa / (2.0f * M_PI * ( 1.0f - productEMinus2Kappa ));
+        productNormalization = productKappa / (2.0f * M_PI_F * ( 1.0f - productEMinus2Kappa ));
         productMeanDirection /= productKappa;
     }
     else

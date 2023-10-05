@@ -21,9 +21,11 @@ struct OutgoingRadianceHistogram
 
     void addSample(openpgl::Vector3 dir, openpgl::Vector3 sample);
 
+    void addInvalidSample(openpgl::Vector3 dir);
+
     void decay(const float alpha);
 
-    void update(const SampleData* samples, const size_t numSamples);
+    void update(const SampleData* samples, const size_t numSamples, const InvalidSampleData* invalidSamples, const size_t numInvalidSamples);
 
     void serialize(std::ostream& stream) const;
         
@@ -68,10 +70,21 @@ OPENPGL_INLINE_INTER void OutgoingRadianceHistogram::addSample(Vector3 dir, open
     data[histIdx] += (sample-data[histIdx]) / numSamples[histIdx];
 }
 
+OPENPGL_INLINE_INTER void OutgoingRadianceHistogram::addInvalidSample(Vector3 dir)
+{
+    const openpgl::Point2 p = dirToCanonical(dir);
+    const int res = OPENPGL_HISTOGRAM_RESOLUTION;
+    const int histIdx =
+        std::min(int(p.x * res), res - 1) +
+        std::min(int(p.y * res), res - 1) * res;
+    numSamples[histIdx] += 1.f;
+    data[histIdx] -= data[histIdx] / numSamples[histIdx];
+}
+
 OPENPGL_INLINE_INTER void OutgoingRadianceHistogram::decay(const float alpha){
     for(int i=0; i< OPENPGL_HISTOGRAM_SIZE; i++)
     {
-        numSamples[i]*= alpha;
+        numSamples[i] *= alpha;
     }
 }
 
@@ -83,28 +96,26 @@ OPENPGL_INLINE_INTER openpgl::Point2 OutgoingRadianceHistogram::dirToCanonical(c
     const float cosTheta = std::min(std::max(d.z, -1.0f), 1.0f);
     float phi = std::atan2(d.y, d.x);
     while (phi < 0)
-        phi += 2.0f * M_PI;
+        phi += 2.0f * M_PI_F;
 
-    return {(cosTheta + 1.f) / 2.f, phi / (2.f * M_PI)};
+    return {(cosTheta + 1.f) / 2.f, phi / (2.f * M_PI_F)};
 }
 
 
-OPENPGL_INLINE_INTER void OutgoingRadianceHistogram::update(const SampleData* samples, const size_t numSamples)
+OPENPGL_INLINE_INTER void OutgoingRadianceHistogram::update(const SampleData* samples, const size_t numSamples, const InvalidSampleData* invalidSamples, const size_t numInvalidSamples)
 {
+    //std::cout << "OutgoingRadianceHistogram::update: numSamples = " << numSamples << "\t numInvalidSamples = " << numInvalidSamples << std::endl; 
     for(int n = 0; n < numSamples; n++)
     {
         Vector3 dir = Vector3(samples[n].directionOut.x, samples[n].directionOut.y, samples[n].directionOut.z);
         Vector3 col = Vector3(samples[n].radianceOut.x, samples[n].radianceOut.y, samples[n].radianceOut.z);
         addSample(dir, col);
     }
-    /*
-    std::cout << "OutgoingRadianceHistogram: ";
-    for (int i = 0; i < OPENPGL_HISTOGRAM_SIZE; i++)
+    for(int n = 0; n < numInvalidSamples; n++)
     {
-        std::cout << data[i].x << ", " << data[i].y << ", " << data[i].z << "\t\t";
+        Vector3 dir = Vector3(invalidSamples[n].directionOut.x, invalidSamples[n].directionOut.y, invalidSamples[n].directionOut.z);
+        addInvalidSample(dir);
     }
-    std::cout << std::endl;
-    */
 }
 
 OPENPGL_INLINE_INTER void OutgoingRadianceHistogram::serialize(std::ostream& stream) const

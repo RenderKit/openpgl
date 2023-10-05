@@ -25,6 +25,16 @@ struct IVolumeSamplingDistribution
 
     virtual float pdfLi(const Vector3 dir) const = 0;
 
+#ifdef OPENPGL_RADIANCE_CACHES
+    virtual Vector3 incomingRadiance(const Vector3 dir) const = 0;
+
+    virtual Vector3 outgoingRadiance(const Vector3 dir) const = 0;
+
+    virtual Vector3 inScatteredRadiance(const Vector3 dir, const float g) const = 0;
+
+    virtual Vector3 fluence() const = 0;    
+#endif
+
     virtual bool validate() const = 0;
 
     virtual void clear() = 0;

@@ -180,7 +180,7 @@ inline Vec3Type Map2DTo3D(const Vec2Type &vec2D)
 {
     Vec3Type vec3D = Vec3Type(0.0f);
     ScalarType length = embree::sqrt(vec2D.x*vec2D.x + vec2D.y*vec2D.y);
-    OPENPGL_ASSERT(length < M_PI);
+    OPENPGL_ASSERT(length < M_PI_F);
     ScalarType sinc = embree::fastapprox::sin(length) / length;
 
     vec3D.x = embree::select(length > 0.0f, vec2D.x * sinc, vec3D.x);
@@ -614,7 +614,7 @@ bool VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::SplitComponent(VMM &
         //std::cout << "eigenValue0: " << splitInfo.eigenValue0 << "\t eigenVector0: " << splitInfo.eigenVector0 << std::endl;
         //std::cout << "eigenValue1: " << splitInfo.eigenValue1 << "\t eigenVector1: " << splitInfo.eigenVector1 << std::endl;
         std::cout << "D: " << D << "\t idx: " << idx << " \t assignedSamples: " << numAssignedSamples <<std::endl;
-        //std::cout << "kappa: " << kappa <<  " \t newKkappa: " <<  newKkappa0  << " \t costheta0: " <<  dot(meanDirection, meanDirection0) << "\t angle: " << std::acos(dot(meanDirection, meanDirection0)) * 180.0f / M_PI<< std::endl;
+        //std::cout << "kappa: " << kappa <<  " \t newKkappa: " <<  newKkappa0  << " \t costheta0: " <<  dot(meanDirection, meanDirection0) << "\t angle: " << std::acos(dot(meanDirection, meanDirection0)) * 180.0f / M_PI_F<< std::endl;
 #endif
     }
     else
@@ -756,7 +756,7 @@ bool VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::SplitComponentIntoTh
         //std::cout << "eigenValue0: " << splitInfo.eigenValue0 << "\t eigenVector0: " << splitInfo.eigenVector0 << std::endl;
         //std::cout << "eigenValue1: " << splitInfo.eigenValue1 << "\t eigenVector1: " << splitInfo.eigenVector1 << std::endl;
         std::cout << "D: " << D << "\t idx: " << idx << " \t assignedSamples: " << numAssignedSamples <<std::endl;
-        std::cout << "kappa: " << kappa <<  " \t newKkappa: " <<  newKkappa0  << " \t costheta0: " <<  dot(meanDirection, meanDirection0) << "\t angle: " << std::acos(dot(meanDirection, meanDirection0)) * 180.0f / M_PI<< std::endl;
+        std::cout << "kappa: " << kappa <<  " \t newKkappa: " <<  newKkappa0  << " \t costheta0: " <<  dot(meanDirection, meanDirection0) << "\t angle: " << std::acos(dot(meanDirection, meanDirection0)) * 180.0f / M_PI_F<< std::endl;
 #endif
     }
     else

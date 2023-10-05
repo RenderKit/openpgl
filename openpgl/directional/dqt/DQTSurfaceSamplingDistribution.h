@@ -53,7 +53,7 @@ struct DQTSurfaceSamplingDistribution: public ISurfaceSamplingDistribution {
         return Vector3(0.f, 0.f, 0.f);
     }
 
-#ifdef OPENPGL_EF_RADIANCE_CACHES
+#ifdef OPENPGL_RADIANCE_CACHES
     inline Vector3 outgoingRadiance(const Vector3 dir) const override
     {
         return m_region->getOutgoingRadiance(dir);

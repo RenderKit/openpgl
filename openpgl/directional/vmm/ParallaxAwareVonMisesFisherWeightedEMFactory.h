@@ -676,7 +676,7 @@ void ParallaxAwareVonMisesFisherWeightedEMFactory<TVMMDistribution>::_initUnifor
             for(uint32_t i=0; i< VMM::VectorSize; i++){
 
                 if(n<l+1){
-                    float phi = 2.0f*M_PI*((float)n / gr);
+                    float phi = 2.0f*M_PI_F*((float)n / gr);
                     float z = 1.0f - ((2.0f*n + 1.0f) / float(l+1));
                     float theta = std::acos(z);
 
@@ -1340,7 +1340,7 @@ void ParallaxAwareVonMisesFisherWeightedEMFactory<TVMMDistribution>::updateFluen
     float sumFluence {0.f};
     Vector3 sumFluenceRGB {0.f, 0.f, 0.f};
 
-#ifdef OPENPGL_EF_RADIANCE_CACHES
+#ifdef OPENPGL_RADIANCE_CACHES
     embree::Vec3<embree::vfloat<VMM::VectorSize> > sumFluenceRGBWeights[VMM::NumVectors];
     typename VMM::SoftAssignment softAssign;
 
@@ -1356,7 +1356,7 @@ void ParallaxAwareVonMisesFisherWeightedEMFactory<TVMMDistribution>::updateFluen
     for (size_t n = 0; n < numSamples; n++)
     {            
         sumFluence += samples[n].weight;
-#ifdef OPENPGL_EF_RADIANCE_CACHES
+#ifdef OPENPGL_RADIANCE_CACHES
         const Vector3 sampleDirection(samples[n].direction.x, samples[n].direction.y, samples[n].direction.z);
         const Vector3 weightRGB(samples[n].weightRGB.x, samples[n].weightRGB.y, samples[n].weightRGB.z);
         sumFluenceRGB += weightRGB;
@@ -1373,9 +1373,9 @@ void ParallaxAwareVonMisesFisherWeightedEMFactory<TVMMDistribution>::updateFluen
     }
 
     const float oldNumFluenceSamples = vmm._numFluenceSamples;
-    const float newNumFluenceSamples = (oldNumFluenceSamples + float(numSamples+numInvalidSamples));
+    const float newNumFluenceSamples = (oldNumFluenceSamples + float(numSamples/*+numInvalidSamples*/));
 
-#ifdef OPENPGL_EF_RADIANCE_CACHES
+#ifdef OPENPGL_RADIANCE_CACHES
     if ( rem > 0 )
     {
         for ( size_t i = rem; i < VMM::VectorSize; i++)

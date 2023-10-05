@@ -118,7 +118,9 @@ public:
             {
                 if (USE_PRECOMPUTED_NN)
                 {
+                    //std::cout << "sample1D = " << *sample1D<< std::endl;
                     uint32_t regionIdx = getApproximateClosestRegionIdx(m_regionKNNSearchTree, p, sample1D, id);
+                    //std::cout << "id = " << id << "\t regionIdx = " << regionIdx << std::endl;
                     return &m_regionStorageContainer[regionIdx].first;
                 }
                 else
@@ -194,7 +196,7 @@ tbb::parallel_for( tbb::blocked_range<int>(0,samples.invalidSamples.size()), [&]
             m_timeLastUpdateSpatialStructureUpdate = updateStep.elapsed() * 1e-3f;
             
             updateStep.reset();
-            fitRegions(samples_);
+            fitRegions(samples_, invalidSamples_);
             m_timeLastUpdateDirectionalDistriubtionUpdate = updateStep.elapsed() * 1e-3f;
             m_timeLastUpdate = updateAll.elapsed() * 1e-3f;
         }
@@ -240,7 +242,7 @@ tbb::parallel_for( tbb::blocked_range<int>(0,samples.invalidSamples.size()), [&]
             m_timeLastUpdateSpatialStructureUpdate = updateStep.elapsed() * 1e-3f;
             
             updateStep.reset();
-            updateRegions(samples_);
+            updateRegions(samples_, invalidSamples_);
             
             m_timeLastUpdateDirectionalDistriubtionUpdate = updateStep.elapsed() * 1e-3f;
             m_timeLastUpdate = updateAll.elapsed() * 1e-3f;
@@ -422,7 +424,7 @@ private:
         }
     }
 
-    inline void fitRegions(SampleContainerInternal& samples)
+    inline void fitRegions(SampleContainerInternal& samples, InvalidSampleContainerInternal& invalidSamples)
     {
         size_t nGuidingRegions = m_regionStorageContainer.size();
 #if defined( OPENPGL_SHOW_PRINT_OUTS)
@@ -452,8 +454,8 @@ private:
                 	m_distributionFactory.prepareSamples(samples.data() + regionStorage.second.m_begin, regionStorage.second.m_end - regionStorage.second.m_begin, regionStorage.first.sampleStatistics, m_distributionFactorySettings);
                 	m_distributionFactory.fit(regionStorage.first.distribution, regionStorage.first.trainingStatistics, samples.data() + regionStorage.second.m_begin, regionStorage.second.m_end - regionStorage.second.m_begin, m_distributionFactorySettings, fittingStats);
 					m_distributionFactory.updateFluenceEstimate(regionStorage.first.distribution, samples.data() + regionStorage.second.m_begin, regionStorage.second.m_end - regionStorage.second.m_begin, regionStorage.first.numInvalidSamples, regionStorage.first.sampleStatistics);
-#ifdef OPENPGL_EF_RADIANCE_CACHES
-                    regionStorage.first.outRadianceHist.update(samples.data() + regionStorage.second.m_begin, regionStorage.second.m_end - regionStorage.second.m_begin);
+#ifdef OPENPGL_RADIANCE_CACHES
+                    regionStorage.first.outRadianceHist.update(samples.data() + regionStorage.second.m_begin, regionStorage.second.m_end - regionStorage.second.m_begin, invalidSamples.data() + regionStorage.second.m_is_begin, regionStorage.second.m_is_end - regionStorage.second.m_is_begin);
 #endif
 					// TODO: we should move setting the pivot to the factory
                 	regionStorage.first.distribution._pivotPosition = sampleMean;
@@ -478,7 +480,7 @@ private:
         OPENPGL_ASSERT(this->isValid());
     }
 
-    void updateRegions(SampleContainerInternal& samples)
+    void updateRegions(SampleContainerInternal& samples, InvalidSampleContainerInternal& invalidSamples)
     {
         size_t nGuidingRegions = m_regionStorageContainer.size();
 #if defined( OPENPGL_SHOW_PRINT_OUTS)
@@ -498,7 +500,7 @@ private:
             {
                 regionStorage.first.distribution.decay(this->m_decayOnSpatialSplit);
                 regionStorage.first.trainingStatistics.decay(this->m_decayOnSpatialSplit);
-#ifdef OPENPGL_EF_RADIANCE_CACHES
+#ifdef OPENPGL_RADIANCE_CACHES
                 regionStorage.first.outRadianceHist.decay(this->m_decayOnSpatialSplit);
 #endif
                 regionStorage.first.splitFlag = false;
@@ -529,8 +531,8 @@ private:
 	                m_distributionFactory.update(regionStorage.first.distribution, regionStorage.first.trainingStatistics, samples.data() + regionStorage.second.m_begin, regionStorage.second.m_end - regionStorage.second.m_begin, m_distributionFactorySettings, fittingStats);
 	                m_distributionFactory.updateFluenceEstimate(regionStorage.first.distribution, samples.data() + regionStorage.second.m_begin, regionStorage.second.m_end - regionStorage.second.m_begin, regionStorage.first.numInvalidSamples, regionStorage.first.sampleStatistics);
 					//regionStorage.first.valid = regionStorage.first.distribution.isValid();
-#ifdef OPENPGL_EF_RADIANCE_CACHES
-	                regionStorage.first.outRadianceHist.update(samples.data() + regionStorage.second.m_begin, regionStorage.second.m_end - regionStorage.second.m_begin);
+#ifdef OPENPGL_RADIANCE_CACHES
+	                regionStorage.first.outRadianceHist.update(samples.data() + regionStorage.second.m_begin, regionStorage.second.m_end - regionStorage.second.m_begin, invalidSamples.data() + regionStorage.second.m_is_begin, regionStorage.second.m_is_end - regionStorage.second.m_is_begin);
 #endif                    
                     regionStorage.first.valid = regionStorage.first.isValid();
 #ifdef OPENPGL_DEBUG_MODE

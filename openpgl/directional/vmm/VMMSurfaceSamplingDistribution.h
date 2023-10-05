@@ -52,7 +52,7 @@ struct __aligned(TVMMDistribution::VectorSize*4) VMMSurfaceSamplingDistribution:
     inline void applyCosineProduct(const Vector3& normal) override
     {
         const float cosine_kappa = 2.18853f;
-        const float cosine_normalization = 2.18853f/(2.0f*M_PI*(1.0f-std::exp(-2.0f * 2.18853f)));
+        const float cosine_normalization = 2.18853f/(2.0f*M_PI_F*(1.0f-std::exp(-2.0f * 2.18853f)));
         if(this->m_numDistributions > 0)
         {
             this->m_productIntegral = this->m_distributions[0].product(1.0f, normal, cosine_kappa, cosine_normalization);
@@ -96,20 +96,20 @@ struct __aligned(TVMMDistribution::VectorSize*4) VMMSurfaceSamplingDistribution:
         return pdf;
     }
 
+#ifdef OPENPGL_RADIANCE_CACHES
     inline Vector3 incomingRadiance(const Vector3 dir) const override
     {
         return m_liDistribution.incomingRadiance(dir);
     }
 
-    inline Vector3 irradiance(const Vector3 normal) const override
-    {
-        return m_liDistribution.irradiance(normal);
-    }
-
-#ifdef OPENPGL_EF_RADIANCE_CACHES
     inline Vector3 outgoingRadiance(const Vector3 dir) const override
     {
         return m_region->getOutgoingRadiance(dir);
+    }
+
+    inline Vector3 irradiance(const Vector3 normal) const override
+    {
+        return m_liDistribution.irradiance(normal);
     }
 #endif
 

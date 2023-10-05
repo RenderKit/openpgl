@@ -223,10 +223,11 @@ public:
                 // using the direction directly is numerically more stable than recalcuating
                 // it using position of the next segment when the distance is small. 
                 openpgl::Vector3 dir = openpgl::Vector3(currentPathSegment.directionIn.x, currentPathSegment.directionIn.y, currentPathSegment.directionIn.z);
-#ifdef OPENPGL_EF_RADIANCE_CACHES
+#ifdef OPENPGL_RADIANCE_CACHES
                 openpgl::Vector3 dirOut = openpgl::Vector3(currentPathSegment.directionOut.x, currentPathSegment.directionOut.y, currentPathSegment.directionOut.z);
                 openpgl::Vector3 scatteringWeight = openpgl::Vector3(currentPathSegment.scatteringWeight.x, currentPathSegment.scatteringWeight.y,currentPathSegment.scatteringWeight.z);
                 openpgl::Vector3 scatteredContribution = openpgl::Vector3(currentPathSegment.scatteredContribution.x, currentPathSegment.scatteredContribution.y,currentPathSegment.scatteredContribution.z);
+                openpgl::Vector3 directContribution = openpgl::Vector3(currentPathSegment.directContribution.x, currentPathSegment.directContribution.y,currentPathSegment.directContribution.z);
 #endif
                 float pdf = std::max(minPDF,currentPathSegment.pdfDirectionIn);
                 uint32_t flags{0};
@@ -310,13 +311,13 @@ public:
                         dsd.direction.y = dir[1];
                         dsd.direction.z = dir[2];
                         dsd.weight = weight;
-#ifdef OPENPGL_EF_RADIANCE_CACHES
+#ifdef OPENPGL_RADIANCE_CACHES
                         dsd.directionOut.x = dirOut[0];
                         dsd.directionOut.y = dirOut[1];
                         dsd.directionOut.z = dirOut[2];
-                        dsd.radianceOut.x = scatteredContribution.x + scatteringWeight.x * contribution[0];
-                        dsd.radianceOut.y = scatteredContribution.y + scatteringWeight.y * contribution[1];
-                        dsd.radianceOut.z = scatteredContribution.z + scatteringWeight.z * contribution[2];
+                        dsd.radianceOut.x = /*directContribution.x*/ + scatteredContribution.x + scatteringWeight.x * contribution[0];
+                        dsd.radianceOut.y = /*directContribution.y*/ + scatteredContribution.y + scatteringWeight.y * contribution[1];
+                        dsd.radianceOut.z = /*directContribution.z*/ + scatteredContribution.z + scatteringWeight.z * contribution[2];
 
                         dsd.weightRGB.x = contribution[0]/pdf;
                         dsd.weightRGB.y = contribution[1]/pdf;
@@ -349,6 +350,11 @@ public:
                     isd.position.x = pos[0];
                     isd.position.y = pos[1];
                     isd.position.z = pos[2];
+#ifdef OPENPGL_RADIANCE_CACHES
+                    isd.directionOut.x = dirOut[0];
+                    isd.directionOut.y = dirOut[1];
+                    isd.directionOut.z = dirOut[2];
+#endif
                     isd.volume = insideVolume;
                     if(m_invalid_sample_idx+1 <= m_max_invalid_sample_size)
                     {
