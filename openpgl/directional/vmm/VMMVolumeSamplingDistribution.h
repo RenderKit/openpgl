@@ -138,9 +138,17 @@ struct __aligned(TVMMDistribution::VectorSize*4) VMMVolumeSamplingDistribution: 
         return m_region->getOutgoingRadiance(dir);
     }
 
-    inline Vector3 inScatteredRadiance(const Vector3 dir, const float g) const
+    inline Vector3 inScatteredRadiance(const Vector3 dir, const float meanCosine) const
     {
-        return Vector3(0.f, 0.f, 0.f);
+        const VMMPhaseFunctionRepresentation pfRep =VMMSingleLobeHenyeyGreensteinOracle::getPhaseFunctionRepresentation(meanCosine);
+
+        Vector3 inscatteredRad(0.f);
+        for (int i=0; i < pfRep.K; i++)
+        {
+            const Vector3 outDir = meanCosine * pfRep.meanCosines[i] > 0.f ? dir: -dir;
+            inscatteredRad += pfRep.weights[i] * m_liDistribution.inscatteredRadiance(outDir, pfRep.meanCosines[i]);
+        }
+        return inscatteredRad;
     }
 
     inline Vector3 fluence() const override

@@ -110,6 +110,8 @@ public:
 
     Vector3 irradiance( const Vector3 &normal ) const;
 
+    Vector3 inscatteredRadiance( const Vector3 &dir, const float meanCosine ) const;
+
     Vector3 fluence() const;
 
     // Product and convolution functions
@@ -1144,6 +1146,31 @@ Vector3 ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents,UseParallaxCom
         irradiance += _fluenceRGBWeights[k] * eval;
     }
     return Vector3(reduce_add(irradiance.x), reduce_add(irradiance.y), reduce_add(irradiance.z));
+#else
+    return Vector3(0.f, 0.f, 0.f);
+#endif
+}
+
+
+template<int VecSize, int maxComponents, bool UseParallaxCompensation>
+Vector3 ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents,UseParallaxCompensation>::inscatteredRadiance( const Vector3 &dir, const float meanCosine ) const{
+#ifdef OPENPGL_RADIANCE_CACHES
+    const embree::vfloat<VecSize> meanCosineVec(meanCosine);
+
+    const int cnt = (_numComponents+VecSize-1) / VecSize;
+
+    embree::Vec3< embree::vfloat<VecSize> > inscatteredRadiance = {0.0f, 0.0f, 0.0f};
+    embree::Vec3< embree::vfloat<VecSize> > vec3Dir(-dir[0], -dir[1], -dir[2]);
+
+    const embree::vfloat<VecSize> ones(1.0f);
+    const embree::vfloat<VecSize> zeros(0.0f);
+
+    for(int k = 0; k < cnt;k++)
+    {
+        const embree::vfloat<VecSize> eval = _convolvePDF(k, vec3Dir, meanCosineVec);
+        inscatteredRadiance += _fluenceRGBWeights[k] * eval;
+    }
+    return Vector3(reduce_add(inscatteredRadiance.x), reduce_add(inscatteredRadiance.y), reduce_add(inscatteredRadiance.z));
 #else
     return Vector3(0.f, 0.f, 0.f);
 #endif
