@@ -396,10 +396,9 @@ void ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents,UseParallaxCompen
 #ifdef OPENPGL_RADIANCE_CACHES
         const Vector3 fluenceRGBWeights0(_fluenceRGBWeights[tmpIdx0.quot].x[tmpIdx0.rem], _fluenceRGBWeights[tmpIdx0.quot].y[tmpIdx0.rem], _fluenceRGBWeights[tmpIdx0.quot].z[tmpIdx0.rem]);
         const Vector3 fluenceRGBWeights1(_fluenceRGBWeights[tmpIdx1.quot].x[tmpIdx1.rem], _fluenceRGBWeights[tmpIdx1.quot].y[tmpIdx1.rem], _fluenceRGBWeights[tmpIdx1.quot].z[tmpIdx1.rem]);  
-
-        _fluenceRGBWeights[tmpIdx0.quot].x[tmpIdx0.rem] = (weight0 * fluenceRGBWeights0.x + weight1 * fluenceRGBWeights1.x) * invNewWeight;
-        _fluenceRGBWeights[tmpIdx0.quot].y[tmpIdx0.rem] = (weight0 * fluenceRGBWeights0.y + weight1 * fluenceRGBWeights1.y) * invNewWeight;
-        _fluenceRGBWeights[tmpIdx0.quot].z[tmpIdx0.rem] = (weight0 * fluenceRGBWeights0.z + weight1 * fluenceRGBWeights1.z) * invNewWeight;
+        _fluenceRGBWeights[tmpIdx0.quot].x[tmpIdx0.rem] = fluenceRGBWeights0.x + fluenceRGBWeights1.x;
+        _fluenceRGBWeights[tmpIdx0.quot].y[tmpIdx0.rem] = fluenceRGBWeights0.y + fluenceRGBWeights1.y;
+        _fluenceRGBWeights[tmpIdx0.quot].z[tmpIdx0.rem] = fluenceRGBWeights0.z + fluenceRGBWeights1.z;
 #endif
         //std::cout << "mergeComponents: weight: " << weight << "\tkappa: " << kappa << "\tmeanDirection: " << meanDirectionX << "\t" << meanDirectionY << "\t" << meanDirectionZ << std::endl;
         swapComponents( idx1, _numComponents -1 );

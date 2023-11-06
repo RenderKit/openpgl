@@ -15,6 +15,7 @@
 
 #define USE_HARMONIC_MEAN
 
+#define MC_ESTIMATE_INCOMING_RADIANCE
 //using namespace embree;
 
 namespace openpgl
@@ -1327,6 +1328,7 @@ void ParallaxAwareVonMisesFisherWeightedEMFactory< TVMMDistribution>::updateComp
 template<class TVMMDistribution>
 void ParallaxAwareVonMisesFisherWeightedEMFactory<TVMMDistribution>::updateFluenceEstimate(VMM &vmm, const SampleData* samples, const size_t numSamples, const size_t numInvalidSamples, const SampleStatistics &sampleStatistics) const
 {
+#ifdef MC_ESTIMATE_INCOMING_RADIANCE
     if(numSamples == 0)
     {
         return;
@@ -1373,7 +1375,7 @@ void ParallaxAwareVonMisesFisherWeightedEMFactory<TVMMDistribution>::updateFluen
     }
 
     const float oldNumFluenceSamples = vmm._numFluenceSamples;
-    const float newNumFluenceSamples = (oldNumFluenceSamples + float(numSamples/*+numInvalidSamples*/));
+    const float newNumFluenceSamples = (oldNumFluenceSamples + float(numSamples + numInvalidSamples));
 
 #ifdef OPENPGL_RADIANCE_CACHES
     if ( rem > 0 )
@@ -1398,7 +1400,97 @@ void ParallaxAwareVonMisesFisherWeightedEMFactory<TVMMDistribution>::updateFluen
 #endif
     vmm._fluence = ((vmm._fluence * oldNumFluenceSamples) + sumFluence) / newNumFluenceSamples;
     vmm._numFluenceSamples = newNumFluenceSamples;
+#else 
+    const embree::vfloat<VMM::VectorSize> zeros(0.0f);
+    const embree::vfloat<VMM::VectorSize> ones(1.0f);
+    const int cnt = (vmm._numComponents+VMM::VectorSize-1) / VMM::VectorSize;
+    
+    if(numSamples == 0)
+    {
+        return;
+    }
 
+    //embree::vfloat<VMM::VectorSize> sumAssigns[VMM::NumVectors];
+    embree::vfloat<VMM::VectorSize> sumPdfs[VMM::NumVectors];
+    embree::vfloat<VMM::VectorSize> pdfs(1.0f);
+    embree::Vec3<embree::vfloat<VMM::VectorSize> > sumFluenceRGBWeights[VMM::NumVectors];
+    float sumFluence {0.f};
+    Vector3 sumFluenceRGB {0.f, 0.f, 0.f};
+    Vector3 sumFluenceRGBMC {0.f, 0.f, 0.f};
+    typename VMM::SoftAssignment softAssign;
+
+    for (int k = 0; k < cnt; k++)
+    {
+        //sumAssigns[k] = zeros;
+        sumPdfs[k] = zeros;
+        sumFluenceRGBWeights[k].x = zeros;
+        sumFluenceRGBWeights[k].y = zeros;
+        sumFluenceRGBWeights[k].z = zeros;
+    }
+
+    for (size_t n = 0; n < numSamples; n++)
+    {
+        const Vector3 sampleDirection(samples[n].direction.x, samples[n].direction.y, samples[n].direction.z);
+        embree::Vec3< embree::vfloat<VMM::VectorSize> > sampleDirectionVec(sampleDirection[0], sampleDirection[1], sampleDirection[2]);
+
+        Vector3 weightRGB(samples[n].weightRGB.x, samples[n].weightRGB.y, samples[n].weightRGB.z);
+        sumFluence += samples[n].weight;
+        sumFluenceRGBMC += weightRGB / samples[n].pdf;
+        //weightRGB *= samples[n].pdf;
+
+        if (vmm.softAssignment(sampleDirection, softAssign))
+        {
+            for (size_t k = 0; k < cnt; k++)
+            {
+                
+                const embree::vfloat<VMM::VectorSize> cosTheta = embree::dot(sampleDirectionVec, vmm._meanDirections[k]);
+                const embree::vfloat<VMM::VectorSize> cosThetaMinusOne = embree::min(cosTheta - ones, zeros);
+                //pdfs = vmm._normalizations[k] * embree::fastapprox::exp< embree::vfloat<VMM::VectorSize> >( vmm._kappas[k] * cosThetaMinusOne );
+                OPENPGL_ASSERT(embree::isvalid(pdfs));
+                sumFluenceRGBWeights[k].x += weightRGB.x * softAssign.assignments[k] * pdfs;
+                OPENPGL_ASSERT(embree::isvalid(sumFluenceRGBWeights[k].x));
+                sumFluenceRGBWeights[k].y += weightRGB.y * softAssign.assignments[k] * pdfs;
+                OPENPGL_ASSERT(embree::isvalid(sumFluenceRGBWeights[k].y));
+                sumFluenceRGBWeights[k].z += weightRGB.z * softAssign.assignments[k] * pdfs;
+                OPENPGL_ASSERT(embree::isvalid(sumFluenceRGBWeights[k].z));
+                //sumAssigns[k] += softAssign.assignments[k]; // * samples[n].pdf;
+                sumPdfs[k] += pdfs;
+                OPENPGL_ASSERT(embree::isvalid(sumPdfs[k]));
+            }
+        }
+    }
+
+    for (int k = 0; k < cnt; k++)
+    {
+        sumFluenceRGBWeights[k].x = select( sumPdfs[k] > 0.0f, sumFluenceRGBWeights[k].x / sumPdfs[k], zeros) * (4.0f * M_PI_F);
+        OPENPGL_ASSERT(embree::isvalid(sumFluenceRGBWeights[k].x));
+        sumFluenceRGBWeights[k].y = select( sumPdfs[k] > 0.0f, sumFluenceRGBWeights[k].y / sumPdfs[k], zeros) * (4.0f * M_PI_F);
+        OPENPGL_ASSERT(embree::isvalid(sumFluenceRGBWeights[k].y));
+        sumFluenceRGBWeights[k].z = select( sumPdfs[k] > 0.0f, sumFluenceRGBWeights[k].z / sumPdfs[k], zeros) * (4.0f * M_PI_F);
+        OPENPGL_ASSERT(embree::isvalid(sumFluenceRGBWeights[k].z));
+        sumFluenceRGB.x += embree::reduce_add(sumFluenceRGBWeights[k].x);
+        sumFluenceRGB.y += embree::reduce_add(sumFluenceRGBWeights[k].y);
+        sumFluenceRGB.z += embree::reduce_add(sumFluenceRGBWeights[k].z);
+    }
+
+    const float oldNumFluenceSamples = vmm._numFluenceSamples;
+    const float newNumFluenceSamples = (oldNumFluenceSamples + float(numSamples));
+
+    float alpha = float(numSamples) / (vmm._numFluenceSamples + numSamples);
+    for (size_t k = 0; k < cnt; k++)
+    {
+        vmm._fluenceRGBWeights[k].x = (vmm._fluenceRGBWeights[k].x * (1.f - alpha)) + alpha * sumFluenceRGBWeights[k].x;
+        vmm._fluenceRGBWeights[k].y = (vmm._fluenceRGBWeights[k].y * (1.f - alpha)) + alpha * sumFluenceRGBWeights[k].y;
+        vmm._fluenceRGBWeights[k].z = (vmm._fluenceRGBWeights[k].z * (1.f - alpha)) + alpha * sumFluenceRGBWeights[k].z;
+    }    
+
+    vmm._fluenceRGB = (1.f - alpha) * vmm._fluenceRGB + alpha * sumFluenceRGB;
+    vmm._fluence = (1.f - alpha) * vmm._fluence + alpha * sumFluence;
+    vmm._numFluenceSamples = newNumFluenceSamples;
+
+    //std::cout << "fluenceRGB = " << vmm._fluenceRGB << "\t sumFluenceRGBMC = "<< sumFluenceRGBMC/float(newNumFluenceSamples)<<std::endl;
+
+#endif
 }
 
 template<class TVMMDistribution>

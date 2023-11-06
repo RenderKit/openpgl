@@ -13,7 +13,8 @@ namespace openpgl
 
 inline float OPENPGL_SPECTRUM_TO_FLOAT(Vector3 spectrum)
 {
-    return (spectrum[0] + spectrum[1] + spectrum[2] ) / 3.0f;
+    //return (spectrum[0] + spectrum[1] + spectrum[2] ) / 3.0f;
+    return std::max(spectrum[0], std::max(spectrum[1], spectrum[2]));
 }
 
 using PathSegmentData = PGLPathSegmentData;
