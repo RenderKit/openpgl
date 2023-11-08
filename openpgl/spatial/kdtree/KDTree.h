@@ -250,7 +250,7 @@ struct KDTree
         return m_bounds;
     }
 
-    void rearrangeNode(const KDNode& node, int idx, std::vector<KDNode>& newNodes, std::vector< uint32_t > &dataStorageIndices) {
+    void rearrangeNodeForCompare(const KDNode& node, int idx, std::vector<KDNode>& newNodes, std::vector< uint32_t > &dataStorageIndices) const {
         if (!node.isLeaf())
         {
             uint32_t leftIdx = node.getLeftChildIdx();
@@ -260,8 +260,8 @@ struct KDTree
             newNodes[idx].setLeftChildIdx(newIdx);
             newNodes.push_back(nodeLeft);
             newNodes.push_back(nodeRight);
-            rearrangeNode(nodeLeft, newIdx, newNodes, dataStorageIndices);
-            rearrangeNode(nodeRight, newIdx+1, newNodes, dataStorageIndices);
+            rearrangeNodeForCompare(nodeLeft, newIdx, newNodes, dataStorageIndices);
+            rearrangeNodeForCompare(nodeRight, newIdx+1, newNodes, dataStorageIndices);
         } else {
             uint32_t dataIdx = node.getDataIdx();
             uint32_t newDataIdx = dataStorageIndices.size();
@@ -270,18 +270,12 @@ struct KDTree
         }
     }
 
-    void rearrangeNodes(std::vector< uint32_t > &dataStorageIndices)
+    void rearrangeNodesForCompare(std::vector<KDNode> &newNodes, std::vector< uint32_t > &dataStorageIndices) const
     {
         if (m_nodes.size() > 0) {
-            std::vector<KDNode> newNodes;
             KDNode root = m_nodes[0];
             newNodes.push_back(root);
-            rearrangeNode(root, 0, newNodes, dataStorageIndices);
-
-            for (int n = 0; n < m_nodes.size(); n++){
-                m_nodes[n] = newNodes[n];
-            }
-            finalize();
+            rearrangeNodeForCompare(root, 0, newNodes, dataStorageIndices);
         }
     }
 
@@ -356,7 +350,7 @@ struct KDTree
                     OPENPGL_ASSERT(node.getSplitPivot() == treeLets[treeLetIdx].nodes[nodeIdx].getSplitPivot());
                     OPENPGL_ASSERT(newChildIdx == treeLets[treeLetIdx].nodes[nodeIdx].getLeftChildIdx());
                 } else {
-                    std::cout << "ERROR" << std::endl;
+                    OPENPGL_ASSERT(false);
                 }
             } else if (treeLetLevel == 2) {
                     OPENPGL_ASSERT(node.getSplitDim() == treeLets[treeLetIdx].nodes[nodeIdx].getSplitDim());
@@ -377,7 +371,7 @@ struct KDTree
                     OPENPGL_ASSERT(leftTreeLetIdx == treeLets[treeLetIdx].nodes[nodeIdx].getLeftChildIdx());
 
             } else {
-                std::cout << "ERROR" << std::endl;
+                OPENPGL_ASSERT(false);
             }
         }
         return globalNodeId;
@@ -639,7 +633,7 @@ struct KDTree
         {
             equal = false;
         }
-        std::cout << "Tree: nodes.size = " << m_nodes.size() << "\t b.nodes.size = " << b.m_nodes.size() << std::endl;
+
         if (m_nodes.size() == b.m_nodes.size())
         {
             for (int n = 0; n < m_nodes.size(); n++) {

@@ -7,6 +7,7 @@
 #include "../data/SampleContainerInternal.h"
 #include "../spatial/Region.h"
 #include "../spatial/KNN.h"
+#include "../spatial/kdtree/KDTree.h"
 
 #define TASKING_TBB
 #include <embreeSrc/common/algorithms/parallel_for.h>
@@ -15,7 +16,6 @@
 #include <tbb/parallel_sort.h>
 
 #define USE_PRECOMPUTED_NN 1
-//#define USE_PRESORT
 
 namespace openpgl
 {
@@ -155,15 +155,7 @@ public:
                 for (size_t i=r.begin(); i<r.end(); i++) 
                     samples_[i] = samples[i];
             });
-#ifdef USE_PRESORT
-            if (m_deterministic)
-            {
-                tbb::parallel_sort(samples_.begin(), samples_.end(), SampleDataLess);
-                //std::sort(samples.begin(), samples.end(), SampleDataLess);
-            }
-#endif
-            //std::cout << "BufferSize: " << sizeof(SampleData) * m_spatialSubdivBuilderSettings.maxSamples * 1e-6 <<  " MB" << std::endl;
-            //std::cout << "buildField: samplesSurface = " << samplesSurface.size() << "\t samplesVolume = " << samplesVolume.size() << std::endl;
+
             if(!m_isSceneBoundsSet)
             {
                 estimateSceneBounds(samples_);
@@ -188,14 +180,7 @@ public:
                 for (size_t i=r.begin(); i<r.end(); i++) 
                     samples_[i] = samples[i];
             });
-            //std::cout << "updateField: samplesSurface = " << samplesSurface.size() << "\t samplesVolume = " << samplesVolume.size() << std::endl;
-#ifdef USE_PRESORT
-            if (m_deterministic)
-            {
-                tbb::parallel_sort(samples_.begin(), samples_.end(), SampleDataLess);
-                //std::sort(samples.begin(), samples.end(), SampleDataLess);
-            }
-#endif
+
             updateSpatialStructure(samples_);
             updateRegions(samples_);
         }
@@ -286,6 +271,7 @@ public:
         for (int n = 0; n < nGuidingRegions; n++)
         {
             valid = valid && m_regionStorageContainer[n].first.isValid() && m_regionStorageContainer[n].first.valid;
+            valid = valid && m_regionStorageContainer[n].second.isValid();
         }
         return valid;
     }
@@ -293,20 +279,6 @@ public:
     bool isInitialized() const
     {
         return m_initialized;
-    }
-
-    void prepareCompare(){
-        std::vector< uint32_t > dataStorageIndices;
-        m_spatialSubdiv.rearrangeNodes(dataStorageIndices);
-        /* */
-        RegionStorageContainerType oldRegionStorageContainer = m_regionStorageContainer;
-        if(oldRegionStorageContainer.size() != dataStorageIndices.size())
-        {
-            std::cout << "ARGHHHH: oldRegionStorageContainer.size = " << oldRegionStorageContainer.size() << "\t dataStorageIndices.size = " << dataStorageIndices.size() << std::endl;
-        }
-        for (int n = 0; n < dataStorageIndices.size(); n++){
-            m_regionStorageContainer[n] = oldRegionStorageContainer[dataStorageIndices[n]];
-        }
     }
 
 private:
@@ -394,14 +366,12 @@ private:
             openpgl::Point3 sampleMean = regionStorage.first.sampleStatistics.mean;
             if(regionStorage.second.size() > 0)
             {
-
-#ifndef USE_PRESORT
-                if (m_deterministic)
+				if (m_deterministic)
                 {
                     std::sort(samples.begin() + regionStorage.second.m_begin, samples.begin() + regionStorage.second.m_end, SampleDataLess);
                 }
-#endif
-				if(m_fitRegions) {
+
+                if(m_fitRegions) {
                 	typename DirectionalDistributionFactory::FittingStatistics fittingStats;
                 	m_distributionFactory.prepareSamples(samples.data() + regionStorage.second.m_begin, regionStorage.second.m_end - regionStorage.second.m_begin, regionStorage.first.sampleStatistics, m_distributionFactorySettings);
                 	m_distributionFactory.fit(regionStorage.first.distribution, regionStorage.first.trainingStatistics, samples.data() + regionStorage.second.m_begin, regionStorage.second.m_end - regionStorage.second.m_begin, m_distributionFactorySettings, fittingStats);
@@ -421,9 +391,11 @@ private:
                 regionStorage.first.splitFlag = false;
             }
 			regionStorage.second.reset();
+            OPENPGL_ASSERT(regionStorage.first.isValid());
         }
         });
         m_initialized = true;
+        OPENPGL_ASSERT(this->isValid());
     }
 
     void updateRegions(SampleContainerInternal& samples)
@@ -453,13 +425,12 @@ private:
             {
 #ifdef OPENPGL_DEBUG_MODE
                 RegionType oldRegion = regionStorage.first;
-#endif
-#ifndef USE_PRESORT
+#endif            
 				if (m_deterministic)
                 {
                     std::sort(samples.begin() + regionStorage.second.m_begin, samples.begin() + regionStorage.second.m_end, SampleDataLess);
                 }
-#endif             
+
 				if (m_fitRegions) {
 	                // TODO: we should move applying the paralax comp to the Distribution to the factory
 	                if(DirectionalDistribution::ParallaxCompensation == 1)
@@ -493,8 +464,10 @@ private:
                 }
             }
             regionStorage.second.reset();
+            OPENPGL_ASSERT(regionStorage.first.isValid());
         }
         });
+        OPENPGL_ASSERT(this->isValid());
     }
 
     static void storeInvalidRegionData(const std::string &fileName, const RegionType &regionBeforeUpdate, const std::vector<SampleData> &samples, const DirectionalDistributionFactorySettings &factorySettings)
@@ -538,25 +511,49 @@ public:
 
     bool operator==(const Field& b) const {
         bool equal = true;
+        if(!m_initialized && !b.m_initialized)
+            return true;
         if(m_isSurface != b.m_isSurface || m_decayOnSpatialSplit != b.m_decayOnSpatialSplit ||
             m_iteration != b.m_iteration || m_totalSPP != b.m_totalSPP ||
-            m_numThreads != b.m_numThreads || m_deterministic != b.m_deterministic || m_fitRegions != b.m_fitRegions ||
+            /*m_numThreads != b.m_numThreads ||*/ m_deterministic != b.m_deterministic || m_fitRegions != b.m_fitRegions ||
             m_isSceneBoundsSet != b.m_isSceneBoundsSet || m_sceneBounds.lower.x != b.m_sceneBounds.lower.x ||
             m_sceneBounds.lower.y != b.m_sceneBounds.lower.y || m_sceneBounds.lower.z != b.m_sceneBounds.lower.z ||
             m_sceneBounds.upper.x != b.m_sceneBounds.upper.x || m_sceneBounds.upper.y != b.m_sceneBounds.upper.y || 
             m_sceneBounds.upper.z != b.m_sceneBounds.upper.z || m_initialized != b.m_initialized ||
             !m_distributionFactorySettings.operator==(b.m_distributionFactorySettings) ||
             !m_spatialSubdivBuilderSettings.operator==(b.m_spatialSubdivBuilderSettings) ||
-            !m_spatialSubdiv.operator==(b.m_spatialSubdiv) ||
+            //!m_spatialSubdiv.operator==(b.m_spatialSubdiv) ||
             m_useStochasticNNLookUp != b.m_useStochasticNNLookUp)
         {
             equal = false;
         }
 
-        uint32_t bRegionStorageSize = b.m_regionStorageContainer.size();
-        for (int n = 0; n < m_regionStorageContainer.size(); n++) {
-            if (n < bRegionStorageSize  && (!m_regionStorageContainer[n].second.operator==(b.m_regionStorageContainer[n].second) || 
-                !m_regionStorageContainer[n].first.operator==(b.m_regionStorageContainer[n].first))){
+        std::vector< uint32_t > dataStorageIndicesA;
+        std::vector<KDNode> treeNodesA;
+        m_spatialSubdiv.rearrangeNodesForCompare(treeNodesA, dataStorageIndicesA);
+
+        std::vector< uint32_t > dataStorageIndicesB;
+        std::vector<KDNode> treeNodesB;
+        b.m_spatialSubdiv.rearrangeNodesForCompare(treeNodesB, dataStorageIndicesB);
+
+        if(dataStorageIndicesA.size() != dataStorageIndicesB.size() ||
+            treeNodesA.size() != treeNodesB.size() ||
+            m_regionStorageContainer.size() != b.m_regionStorageContainer.size()) {
+            equal = false;
+            return equal;
+        }
+
+        for (int n = 0; n < treeNodesA.size(); n++) {
+            if(!treeNodesA[n].operator==(treeNodesB[n])){
+                equal = false;
+            }
+        }
+
+        for (int n = 0; n < dataStorageIndicesA.size(); n++) {
+            size_t idxA = dataStorageIndicesA[n];
+            size_t idxB = dataStorageIndicesB[n];
+            if(!m_regionStorageContainer[idxA].second.operator==(b.m_regionStorageContainer[idxB].second) ||
+                !m_regionStorageContainer[idxA].first.operator==(b.m_regionStorageContainer[idxB].first)){
                 equal = false;
             }
         }
@@ -574,7 +571,9 @@ private:
 
     size_t m_numThreads {0};
 
+    // flag to deactivate the training of the directional distributions (i.e., for benchmarking the spatial structure build)
     bool m_fitRegions {true};
+    // if the fitting process should be deterministic (i.e, samples are sorted before training)
     bool m_deterministic {false};
 
     bool m_isSceneBoundsSet{false};

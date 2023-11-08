@@ -220,10 +220,6 @@ public:
         return equal;
     }
 
-    virtual void prepareCompare() override {
-        m_surfaceField.prepareCompare();
-        m_volumeField.prepareCompare();
-    }
 private:
     size_t m_iteration {0};
     size_t m_totalSPP  {0};

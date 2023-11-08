@@ -52,7 +52,5 @@ struct ISurfaceVolumeField
     virtual void storeToFile(const std::string fieldFileName) const = 0;
 
     virtual bool operator==(const ISurfaceVolumeField* b) const = 0;
-
-    virtual void prepareCompare() = 0;
 };
 }

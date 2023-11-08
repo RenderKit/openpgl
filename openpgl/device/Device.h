@@ -70,8 +70,6 @@ public:
         g_tbb_threads.initialize(int(m_numThreads));
 #endif
 #endif
-        std::cout << "Device: numThreads = " << m_numThreads << std::endl;
-
         VMMSingleLobeHenyeyGreensteinOracle::init();
     }
 
@@ -145,7 +143,7 @@ public:
             typename GuidingField::Settings gFieldSettings;
             gFieldSettings.settings.decayOnSpatialSplit   = 0.25f;
             gFieldSettings.settings.deterministic         = args.deterministic;
-            gFieldSettings.debugSettings.fitRegions       = args.debugArguments.fitRegions;\
+            gFieldSettings.debugSettings.fitRegions       = args.debugArguments.fitRegions;
 
             PGLKDTreeArguments *spatialSturctureArguments = (PGLKDTreeArguments*)args.spatialSturctureArguments;
             gFieldSettings.settings.useStochasticNNLookUp = spatialSturctureArguments->knnLookup;

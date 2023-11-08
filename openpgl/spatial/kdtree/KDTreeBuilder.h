@@ -70,7 +70,6 @@ struct KDTreePartitionBuilder
         dataStorage.resize(1);
         dataStorage[0].first.regionBounds = bounds;
 
-        //KDNode &root kdTree.getRoot();
         updateTree(kdTree, samples, dataStorage, buildSettings, numThreads);
     }
 
@@ -344,34 +343,10 @@ private:
         sampleRangeLeftRight[0] = Range(sampleRange.m_begin, std::distance(samples.begin(), rPivotItr));
         sampleRangeLeftRight[1] = Range(std::distance(samples.begin(), rPivotItr), sampleRange.m_end);
 #endif
-		/* This assert is a sanity check which is only valid with the assumption that the number of samples grows at same pace
-		   as the number of spatial nodes: in practice this is not the case (e.g., after many 1spp iterations) 
-		*/
-
-//#ifndef USE_EMBREE_PARALLEL
-    tbb::parallel_invoke(
-        [&]{updateTreeNode(kdTree, kdTree->getNode(nodeIdsLeftRight[0]), depth + 1, bondsLeftRight[0], samples, sampleRangeLeftRight[0], sampleStatsLeftRight[0], dataStorage, buildSettings, true);},
-        [&]{updateTreeNode(kdTree, kdTree->getNode(nodeIdsLeftRight[1]), depth + 1, bondsLeftRight[1], samples, sampleRangeLeftRight[1], sampleStatsLeftRight[1], dataStorage, buildSettings, true);}
-    );
-/*
-#else
-    //if (pow(2,depth) < 128*2)
-    //if (false)
-    if (true)
-    {
-    tbb::parallel_for( tbb::blocked_range<int>(0,2), [&](tbb::blocked_range<int> r)
-    {
-        for (int i = r.begin(); i<r.end(); ++i){
-            updateTreeNode(kdTree, kdTree->getNode(nodeIdsLeftRight[i]), depth + 1, bondsLeftRight[i], samples, sampleRangeLeftRight[i], sampleStatsLeftRight[i], dataStorage, buildSettings, true);
-        }
-    });
-    }
-    else{
-      updateTreeNode(kdTree, kdTree->getNode(nodeIdsLeftRight[0]), depth + 1, bondsLeftRight[0], samples, sampleRangeLeftRight[0], sampleStatsLeftRight[0], dataStorage, buildSettings, false);
-      updateTreeNode(kdTree, kdTree->getNode(nodeIdsLeftRight[1]), depth + 1, bondsLeftRight[1], samples, sampleRangeLeftRight[1], sampleStatsLeftRight[1], dataStorage, buildSettings, false);  
-    }
-#endif
-*/
+        tbb::parallel_invoke(
+            [&]{updateTreeNode(kdTree, kdTree->getNode(nodeIdsLeftRight[0]), depth + 1, bondsLeftRight[0], samples, sampleRangeLeftRight[0], sampleStatsLeftRight[0], dataStorage, buildSettings, true);},
+            [&]{updateTreeNode(kdTree, kdTree->getNode(nodeIdsLeftRight[1]), depth + 1, bondsLeftRight[1], samples, sampleRangeLeftRight[1], sampleStatsLeftRight[1], dataStorage, buildSettings, true);}
+        );
     }
 
 };

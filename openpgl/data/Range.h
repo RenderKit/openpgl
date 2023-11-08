@@ -17,8 +17,6 @@ namespace openpgl
 
         inline size_t size() const
         {
-            if(int(m_end) - int(m_begin) < 0)
-                std::cout << "WTF" << std::endl;
             return m_end - m_begin;
         }
 
@@ -46,6 +44,12 @@ namespace openpgl
                 equal = false;
             }
             return equal;
+        }
+
+        bool isValid() const {
+            bool valid = true;
+            valid = valid && m_end >= m_begin;
+            return valid;
         }
     };
 }

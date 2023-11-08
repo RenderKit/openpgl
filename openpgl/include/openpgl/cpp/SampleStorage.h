@@ -100,6 +100,10 @@ struct SampleStorage
      */
     SampleData GetSampleVolume(const int idx) const;
 
+    /// Checks if the samples (SampleData) stored in the SampleStorage are valid (i.e., all attributes are in valid ranges). 
+    bool Validate() const;
+
+    /// Checks if the samples contained in another SampleStorage are the same as in the SampleStorage.
     bool operator==(const SampleStorage& b) const;
     
     friend struct Field;
@@ -196,6 +200,12 @@ OPENPGL_INLINE SampleData SampleStorage::GetSampleVolume(const int idx) const
 {
     OPENPGL_ASSERT(m_sampleStorageHandle);
     return pglSampleStorageGetSampleVolume(m_sampleStorageHandle, idx);
+}
+
+OPENPGL_INLINE bool SampleStorage::Validate() const
+{
+    OPENPGL_ASSERT(m_sampleStorageHandle);
+    return pglSampleStorageValidate(m_sampleStorageHandle);
 }
 
 OPENPGL_INLINE bool SampleStorage::operator==(const SampleStorage& b) const

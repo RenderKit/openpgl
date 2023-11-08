@@ -215,7 +215,19 @@ struct SampleDataStorage
         }
     }
 
-bool operator==(const SampleDataStorage& b) const {
+    bool validate() const {
+        bool valid = true;
+        for (int i = 0; i < m_surfaceContainer.size(); i++){
+            valid = valid && isValid(m_surfaceContainer[i]);
+        }
+
+        for (int i = 0; i < m_volumeContainer.size(); i++){
+            valid = valid && isValid(m_volumeContainer[i]);
+        }
+        return valid;
+    }
+
+    bool operator==(const SampleDataStorage& b) const {
         std::vector<SampleData> surfaceSampleDataA;
         std::vector<SampleData> volumeSampleDataA;
 
@@ -253,7 +265,6 @@ bool operator==(const SampleDataStorage& b) const {
         for (int i = 0; i < surfaceSampleDataA.size(); i++) {
             if( i< sizeB && !SampleDataEqual(surfaceSampleDataA[i], surfaceSampleDataB[i])){
                 equal = false;
-                //std::cout << "Non-equal surfaceSample[" << i << "]: " << std::endl << " left = " << toString(surfaceSampleDataA[i]) << std::endl << " right = " << toString(surfaceSampleDataB[i]) << std::endl;
             }
         }
 
@@ -261,7 +272,6 @@ bool operator==(const SampleDataStorage& b) const {
         for (int i = 0; i < volumeSampleDataA.size(); i++) {
             if( i< sizeB && !SampleDataEqual(volumeSampleDataA[i], volumeSampleDataB[i])){
                 equal = false;
-                //std::cout << "Non-equal volumeSample[" << i << "]: " << std::endl << " left = " << toString(volumeSampleDataA[i]) << std::endl << " right = " << toString(volumeSampleDataB[i]) << std::endl;
             }
         }
 
