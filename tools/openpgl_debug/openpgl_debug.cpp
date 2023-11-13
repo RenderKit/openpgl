@@ -35,6 +35,8 @@ struct DebugParams {
     std::string samples_file_name_comp {""};
     std::string obj_out_file_name {""};
 
+    PGL_DEVICE_TYPE device_type {PGL_DEVICE_TYPE_NONE};
+
     bool validate() {
         bool valid = true;
         switch(type) {
@@ -52,6 +54,10 @@ struct DebugParams {
                         std::cout << "ERROR: Samples file not set or does not exists: " << samples_file_name << std::endl;
                     valid = false;
                 }
+                if(device_type == PGL_DEVICE_TYPE_NONE){
+                    std::cout << "ERROR: Device type not set." << std::endl;
+                    valid = false;            
+                }
                 break;
 
             case VALIDATE_FIELD:
@@ -59,6 +65,10 @@ struct DebugParams {
                     !file_exists(field_file_name)) {
                     std::cout << "ERROR: Field file not set or does not exists: " << field_file_name << std::endl;
                     valid = false;
+                }
+                if(device_type == PGL_DEVICE_TYPE_NONE){
+                    std::cout << "ERROR: Device type not set." << std::endl;
+                    valid = false;            
                 }
                 break;
 
@@ -103,6 +113,10 @@ struct DebugParams {
                         std::cout << "ERROR: Field file not set or does not exists: " << field_file_name_comp << std::endl;
                     valid = false;
                 }
+                if(device_type == PGL_DEVICE_TYPE_NONE){
+                    std::cout << "ERROR: Device type not set." << std::endl;
+                    valid = false;            
+                }
                 break;
             case UPDATE_COMPARE_FIELDS:
                 if(field_file_name == "" || 
@@ -119,6 +133,10 @@ struct DebugParams {
                     !file_exists(field_file_name_comp)) {
                         std::cout << "ERROR: Field file not set or does not exists: " << field_file_name_comp << std::endl;
                     valid = false;
+                }
+                if(device_type == PGL_DEVICE_TYPE_NONE){
+                    std::cout << "ERROR: Device type not set." << std::endl;
+                    valid = false;            
                 }
                 break;
             case NONE:
@@ -168,7 +186,24 @@ bool parseCommandLine(std::list<std::string> &args,
             } else {
                 return false;
             }
-        }else if (arg == "-field") {
+        } else if (arg == "-device") {
+            ++it;
+            if(it != args.end())
+            {
+                const std::string str_type = *it;
+                if(str_type == "CPU_4") {
+                    debugParams.device_type = PGL_DEVICE_TYPE_CPU_4; 
+                } else if(str_type == "CPU_8") {
+                    debugParams.device_type = PGL_DEVICE_TYPE_CPU_8; 
+                } else {
+                    std::cout << "ERROR: Unknown device type: " << str_type << std::endl;
+                    std::cout << "       Valid types are: [CPU_4 CPU_8] "<< std::endl;
+                    return false;
+                }
+            } else {
+                return false;
+            }
+        } else if (arg == "-field") {
             ++it;
             if(it != args.end())
             {
@@ -219,91 +254,144 @@ bool parseCommandLine(std::list<std::string> &args,
 }
 
 void print_help(){
-
+    std::cout << "usage openpgl_debug -type <types> [<options>]" << std::endl;
+    std::cout << std::endl;
+    std::cout << "types:" << std::endl;
+    std::cout << "  " << "validateSamples " << "\t" << "Checks if the samples stored in a SampleStorage object are valid" << std::endl;
+    std::cout << "  " << "                " << "\t" << "(i.e., all values are in valid ranges)." << std::endl;
+    std::cout << "  " << "                " << "\t" << "example:" << std::endl;
+    std::cout << "  " << "                " << "\t" << "\"openpgl_debug -type validateSamples -samples ss0.st\"" << std::endl;
+    std::cout << std::endl;
+    std::cout << "  " << "compareSamples  " << "\t" << "Checks if the samples stored in two different SampleStorage objects" << std::endl;
+    std::cout << "  " << "                " << "\t" << "are the same." << std::endl;
+    std::cout << "  " << "                " << "\t" << "example:" << std::endl;
+    std::cout << "  " << "                " << "\t" << "\"openpgl_debug -type compareSamples -samples ss0.st -samplesComp ss1.st\"" << std::endl;
+    std::cout << std::endl;
+    std::cout << "  " << "validateField   " << "\t" << "Checks if a Field object is valid (e.g., if the spatial and directional structures are valid)." << std::endl;
+    std::cout << "  " << "                " << "\t" << "example:" << std::endl;
+    std::cout << "  " << "                " << "\t" << "\"openpgl_debug -type validateField -field field0.gf -device CPU_4\"" << std::endl;
+    std::cout << std::endl;
+    std::cout << "  " << "compareFields   " << "\t" << "Checks if the guiding structures stored in two different Field objects" << std::endl;
+    std::cout << "  " << "                " << "\t" << "are the same." << std::endl;
+    std::cout << "  " << "                " << "\t" << "example:" << std::endl;
+    std::cout << "  " << "                " << "\t" << "\"openpgl_debug -type compareFields -field field0.gf -fieldComp field1.gf -device CPU_4\"" << std::endl;
+    std::cout << std::endl;
+    std::cout << "  " << "updateField     " << "\t" << "Loads a pre-trained guiding structure (Field) and updates it using a set of samples"<< std::endl;
+    std::cout << "  " << "                " << "\t" << "loaded from a SampleStorage object." << std::endl;
+    std::cout << "  " << "                " << "\t" << "example:" << std::endl;
+    std::cout << "  " << "                " << "\t" << "\"openpgl_debug -type updateField -field field.gf -samples ss0.st -device CPU_4\"" << std::endl;
+    std::cout << std::endl;
+    std::cout << "  " << "updateCompareFields " << "\t" << "Loads a pre-trained guiding structure (Field) and updates it using a set of samples loaded from a"<< std::endl;
+    std::cout << "  " << "                    " << "\t" << "SampleStorage object and compares the resulting guiding structure to another pre-trained Field." << std::endl;
+    std::cout << "  " << "                    " << "\t" << "example:" << std::endl;
+    std::cout << "  " << "                    " << "\t" << "\"openpgl_debug -type updateCompareFields -field field0.gf -samples ss0.st -fieldComp field1.gf -device CPU_4\"" << std::endl;
+    std::cout << std::endl;
+    std::cout << "  " << "exportSamplesToOBJ  " << "\t" << "Loads samples from a SampleStorage object and stores them as \".obj\" file."<< std::endl;
+    std::cout << "  " << "                    " << "\t" << "example:" << std::endl;
+    std::cout << "  " << "                    " << "\t" << "\"openpgl_debug -type exportSamplesToOBJ -samples ss0.st  -out ss0.obj\"" << std::endl;
+    std::cout << std::endl;
 }
 
 void update_field(DebugParams &debugParams){
-    openpgl::cpp::Device device(PGL_DEVICE_TYPE_CPU_4);
+    openpgl::cpp::Device device(debugParams.device_type);
     openpgl::cpp::Field field(&device, debugParams.field_file_name);
     openpgl::cpp::SampleStorage sampleStorage(debugParams.samples_file_name);
 
-    std::cout << "sampleStorage: numSurfaceSamples = " << sampleStorage.GetSizeSurface() << "\tnumVolumeSamples = " << sampleStorage.GetSizeVolume() << std::endl;
+    std::cout << "Validate Field:" << std::endl;
+    bool fieldValid = field.Validate();
+    std::cout << "  -field: "<< debugParams.field_file_name << " is " << (fieldValid ? "valid": "NOT valid") << std::endl;
 
-    field.Validate();
+    std::cout << "Validate Samples:" << std::endl;
+    bool samplesValidate = sampleStorage.Validate();
+    std::cout << "  -samples: "<< debugParams.samples_file_name << " is " << (samplesValidate ? "valid" : "NOT valid") << std::endl;
+
     field.Update(sampleStorage);
+    std::cout << "Validate Updated Field:" << std::endl;
+    bool fieldUpdatedValid = field.Validate();
+    std::cout << "  updated field: is " << (fieldUpdatedValid ? "valid" : "NOT valid") << std::endl;
 }
 
 void validate_field(DebugParams &debugParams){
-    openpgl::cpp::Device device(PGL_DEVICE_TYPE_CPU_8);
+    openpgl::cpp::Device device(debugParams.device_type);
     openpgl::cpp::Field field(&device, debugParams.field_file_name);
-    bool valid = field.Validate();
+    std::cout << "Validate Field:" << std::endl;
+    bool fieldValid = field.Validate();
+    std::cout << "  -field: "<< debugParams.field_file_name << " is "<< (fieldValid ? "valid": "NOT valid") << std::endl;
 }
 
 void validate_samples(DebugParams &debugParams){
-
+    openpgl::cpp::SampleStorage sampleStorage(debugParams.samples_file_name);
+    std::cout << "Validate Samples:" << std::endl;
+    bool samplesValid = sampleStorage.Validate();
+    std::cout << "  -samples: "<< debugParams.samples_file_name << " is "<< (samplesValid ? "valid" : "NOT valid") << std::endl;
 }
 
 void compare_samples(DebugParams &debugParams){
     openpgl::cpp::SampleStorage sampleStorage(debugParams.samples_file_name);
     openpgl::cpp::SampleStorage sampleStorageComp(debugParams.samples_file_name_comp);
 
+    std::cout << "Validate Samples:" << std::endl;
+    bool samplesValid = sampleStorage.Validate();
+    std::cout << "  -samples: "<< debugParams.samples_file_name << " is " << (samplesValid ? "valid" : "NOT valid") << std::endl;
+
+    bool samplesCompValid = sampleStorageComp.Validate();
+    std::cout << "  -samplesComp: "<< debugParams.samples_file_name_comp << " is " << (samplesCompValid ? "valid" : "NOT valid")<< std::endl;
+
+    std::cout << "Compare Samples:" << std::endl;
     bool equal = (sampleStorage.operator==(sampleStorageComp));
-    if(equal){
-        std::cout << "Compare Samples: EQUAL" << std::endl;
-        std::cout << "samplesA = "<< debugParams.samples_file_name << std::endl;
-        std::cout << "samplesB = "<< debugParams.samples_file_name_comp << std::endl;
-    } else {
-        std::cout << "Compare Samples: NOT-EQUAL" << std::endl;
-        std::cout << "samplesA = "<< debugParams.samples_file_name << std::endl;
-        std::cout << "samplesB = "<< debugParams.samples_file_name_comp << std::endl;
-    }
+    std::cout << "  Samples are: "<< (equal ? "EQUAL" : "NOT-EQUAL") << std::endl;
 }
 
 void compare_fields(DebugParams &debugParams){
-    openpgl::cpp::Device device(PGL_DEVICE_TYPE_CPU_4);
+    openpgl::cpp::Device device(debugParams.device_type);
     openpgl::cpp::Field field(&device, debugParams.field_file_name);
     openpgl::cpp::Field fieldComp(&device, debugParams.field_file_name_comp);
 
-    field.PrepareCompare();
-    fieldComp.PrepareCompare();
-/* */
+    std::cout << "Validate Fields:" << std::endl;
+    bool fieldValid = field.Validate();
+    std::cout << "  -field: "<< debugParams.field_file_name << " is "<< (fieldValid ? "valid" : "NOT valid") << std::endl;
+
+    bool fieldCompValid = fieldComp.Validate();
+    std::cout << "  -fieldComp: "<< debugParams.field_file_name_comp << " is "<< (fieldCompValid ? "valid": "NOT valid") << std::endl;
+
+    std::cout << "Compare Fields:" << std::endl;
     bool equal = (field.operator==(fieldComp));
-    if(equal){
-        std::cout << "Compare Fields: EQUAL" << std::endl;
-        std::cout << "fieldsA = "<< debugParams.field_file_name << std::endl;
-        std::cout << "fieldsB = "<< debugParams.field_file_name_comp << std::endl;
-    } else {
-        std::cout << "Compare Fields: NOT-EQUAL" << std::endl;
-        std::cout << "fieldsA = "<< debugParams.field_file_name << std::endl;
-        std::cout << "fieldsB = "<< debugParams.field_file_name_comp << std::endl;
-    }
-/**/
+    std::cout << "  Fields are: "<< (equal ? "EQUAL": "NOT-EQUAL") << std::endl;
 }
 
 void update_compare_fields(DebugParams &debugParams){
-    openpgl::cpp::Device device(PGL_DEVICE_TYPE_CPU_4);
+    openpgl::cpp::Device device(debugParams.device_type);
     openpgl::cpp::Field field(&device, debugParams.field_file_name);
     openpgl::cpp::SampleStorage sampleStorage(debugParams.samples_file_name);
-    field.Update(sampleStorage);
     openpgl::cpp::Field fieldComp(&device, debugParams.field_file_name_comp);
 
-    field.PrepareCompare();
-    fieldComp.PrepareCompare();
-/* */
+    std::cout << "Validate Fields:" << std::endl;
+    bool fieldValid = field.Validate();
+    std::cout << "  -field: "<< debugParams.field_file_name << " is " << (fieldValid ? "valid": "NOT valid") << std::endl;
+
+    bool fieldCompValid = fieldComp.Validate();
+    std::cout << "  -fieldComp: "<< debugParams.field_file_name_comp << " is " << (fieldCompValid ? "valid": "NOT valid") << std::endl;
+
+    std::cout << "Validate Samples:" << std::endl;
+    bool samplesValidate = sampleStorage.Validate();
+    std::cout << "  -samples: "<< debugParams.samples_file_name << " is " << (samplesValidate ? "valid" : "NOT valid") << std::endl;
+
+
+    field.Update(sampleStorage);
+    std::cout << "Validate Updated Field:" << std::endl;
+    bool fieldUpdatedValid = field.Validate();
+    std::cout << "  updated field: is " << (fieldUpdatedValid ? "valid" : "NOT valid") << std::endl;
+
+    std::cout << "Compare Fields:" << std::endl;
     bool equal = (field.operator==(fieldComp));
-    if(equal){
-        std::cout << "Compare Fields: EQUAL" << std::endl;
-        std::cout << "fieldsA = "<< debugParams.field_file_name << std::endl;
-        std::cout << "fieldsB = "<< debugParams.field_file_name_comp << std::endl;
-    } else {
-        std::cout << "Compare Fields: NOT-EQUAL" << std::endl;
-        std::cout << "fieldsA = "<< debugParams.field_file_name << std::endl;
-        std::cout << "fieldsB = "<< debugParams.field_file_name_comp << std::endl;
-    }
-/**/
+    std::cout << "  Fields are: " << (equal ? "EQUAL" : "NOT-EQUAL") << std::endl;
 }
 
 void export_samples(DebugParams &debugParams){
+
+    std::cout << "Export Samples as OBJ:" << std::endl;
+    std::cout << "  -samples " << debugParams.samples_file_name << std::endl;
+    std::cout << "  -out     " << debugParams.obj_out_file_name << std::endl;
     std::ofstream objFile;
     objFile.open(debugParams.obj_out_file_name.c_str());
     
@@ -355,7 +443,6 @@ void export_samples(DebugParams &debugParams){
             objFile << "f " << i*3+1 << "\t" << i*3+2 << "\t"<< i*3+3 << std::endl;
         }
     }
-
     objFile.close();
 }
 
@@ -402,7 +489,6 @@ int main (int argc, char *argv[]) {
             print_help();
             break;
         }
-
     } else {
 
     } 
