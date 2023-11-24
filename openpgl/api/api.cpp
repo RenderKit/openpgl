@@ -752,7 +752,7 @@ extern "C" OPENPGL_DLLEXPORT bool pglVolumeSamplingDistributionSupportsApplySing
     return gVolumeSamplingDistribution->supportsApplySingleLobeHenyeyGreensteinProduct();
 }
 
-extern "C" OPENPGL_DLLEXPORT void pglFieldArgumentsSetDefaults(PGLFieldArguments &fieldArguments, const PGL_SPATIAL_STRUCTURE_TYPE spatialType, const PGL_DIRECTIONAL_DISTRIBUTION_TYPE directionalType)
+extern "C" OPENPGL_DLLEXPORT void pglFieldArgumentsSetDefaults(PGLFieldArguments &fieldArguments, const PGL_SPATIAL_STRUCTURE_TYPE spatialType, const PGL_DIRECTIONAL_DISTRIBUTION_TYPE directionalType, const bool deterministic, const size_t maxSamplesPerLeaf)
 {
     switch (spatialType)
     {
@@ -760,10 +760,11 @@ extern "C" OPENPGL_DLLEXPORT void pglFieldArgumentsSetDefaults(PGLFieldArguments
     case PGL_SPATIAL_STRUCTURE_TYPE::PGL_SPATIAL_STRUCTURE_KDTREE:
         fieldArguments.spatialStructureType = PGL_SPATIAL_STRUCTURE_KDTREE;
         fieldArguments.spatialSturctureArguments = new PGLKDTreeArguments();
+        reinterpret_cast<PGLKDTreeArguments *>(fieldArguments.spatialSturctureArguments)->maxSamples = maxSamplesPerLeaf;
         break;
     }
 
-    fieldArguments.deterministic = false;
+    fieldArguments.deterministic = deterministic;
     fieldArguments.debugArguments.fitRegions = true;
     
     switch (directionalType)
@@ -771,7 +772,7 @@ extern "C" OPENPGL_DLLEXPORT void pglFieldArgumentsSetDefaults(PGLFieldArguments
     default:
     case PGL_DIRECTIONAL_DISTRIBUTION_TYPE::PGL_DIRECTIONAL_DISTRIBUTION_PARALLAX_AWARE_VMM:
         fieldArguments.directionalDistributionType = PGL_DIRECTIONAL_DISTRIBUTION_PARALLAX_AWARE_VMM;
-        fieldArguments.directionalDistributionArguments = new PGLVMMFactoryArguments();
+        fieldArguments.directionalDistributionArguments = new PGLVMMFactoryArguments(maxSamplesPerLeaf);
         break;
     case PGL_DIRECTIONAL_DISTRIBUTION_TYPE::PGL_DIRECTIONAL_DISTRIBUTION_QUADTREE:
         fieldArguments.directionalDistributionType = PGL_DIRECTIONAL_DISTRIBUTION_QUADTREE;
@@ -779,7 +780,7 @@ extern "C" OPENPGL_DLLEXPORT void pglFieldArgumentsSetDefaults(PGLFieldArguments
         break;
     case PGL_DIRECTIONAL_DISTRIBUTION_TYPE::PGL_DIRECTIONAL_DISTRIBUTION_VMM:
         fieldArguments.directionalDistributionType = PGL_DIRECTIONAL_DISTRIBUTION_VMM;
-        fieldArguments.directionalDistributionArguments = new PGLVMMFactoryArguments();
+        fieldArguments.directionalDistributionArguments = new PGLVMMFactoryArguments(maxSamplesPerLeaf);
         break;
     }
 

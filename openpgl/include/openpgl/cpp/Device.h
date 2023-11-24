@@ -58,5 +58,5 @@ OPENPGL_INLINE Device::~Device()
     m_deviceHandle = nullptr;
 }
 
-} // api
+} // cpp
 } // openpgl

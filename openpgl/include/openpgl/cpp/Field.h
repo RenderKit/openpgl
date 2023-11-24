@@ -8,6 +8,7 @@
 #include "Region.h"
 #include "Device.h"
 #include "SampleStorage.h"
+#include "FieldConfig.h"
 #include "FieldStatistics.h"
 
 #include <string>
@@ -18,17 +19,11 @@ namespace cpp
 {
 
 /**
- * @brief
- *
- */
-using FieldArguments = PGLFieldArguments;
-
-/**
  * @brief Key component of the guiding libary which holds the spatio-directional guiding information
  * (e.g., approximation of the incoming radiance field) for a scene.
  *
  * This class is responsible for storing, learning and accessing the guiding information for a scene.
- * This information can be the incidence radiance field accross the whole scene learned from several training
+ * This information can be the incidence radiance field across the whole scene learned from several training
  * iterations during rendering or from a preprocessing step. The field usually holds separate approximations
  * for the surface and volumetric radiance field which can be accessed individually.
  * Based on the used representation the Field separates the positional and directional components of the 5D
@@ -43,7 +38,7 @@ struct Field
      * @param device The Device defining the compute architecture and optimization of the Field implementation.
      * @param args The configuration of the Field (e.g., spatial or directional representation).
      */
-    Field(Device *device, PGLFieldArguments args);
+    Field(Device *device, const FieldConfig &args);
 
     /**
      * @brief Creates/Loads a guiding field from a file. 
@@ -143,11 +138,11 @@ struct Field
 /// Implementation
 ////////////////////////////////////////////////////////////
 
-OPENPGL_INLINE Field::Field(Device *device, PGLFieldArguments args)
+OPENPGL_INLINE Field::Field(Device *device, const FieldConfig& cfg)
 {
     OPENPGL_ASSERT(device);
     OPENPGL_ASSERT(device->m_deviceHandle);
-    m_fieldHandle = pglDeviceNewField(device->m_deviceHandle, args);
+    m_fieldHandle = pglDeviceNewField(device->m_deviceHandle, cfg.m_args);
 }
 
 OPENPGL_INLINE Field::Field(Device *device, const std::string& fieldFileName)
@@ -239,5 +234,5 @@ OPENPGL_INLINE FieldStatistics Field::GetVolumeStatistics() const{
     return FieldStatistics(fieldStats);
 }
 
-} // api
+} // cpp
 } // openpgl

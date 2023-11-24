@@ -45,7 +45,7 @@ struct KDTreePartitionBuilder
     struct Settings
     {
         size_t minSamples {100};
-        size_t maxSamples {32000};
+        size_t maxSamples {PGL_TREE_MAX_SAMPLE_PER_LEAF};
         size_t maxDepth {32};
 
         void serialize(std::ostream& stream) const;

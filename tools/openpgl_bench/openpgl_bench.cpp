@@ -255,10 +255,10 @@ void init_field(BenchParams &benchParams){
     std::cout << "init_field: threads = " << num_threads << std::endl;
     openpgl::cpp::Device device(benchParams.device_type, num_threads);
     
-    PGLFieldArguments fieldSettings;
-    pglFieldArgumentsSetDefaults(fieldSettings,PGL_SPATIAL_STRUCTURE_KDTREE, PGL_DIRECTIONAL_DISTRIBUTION_PARALLAX_AWARE_VMM);
-    fieldSettings.deterministic = true;
-    fieldSettings.debugArguments.fitRegions = true;
+    openpgl::cpp::FieldConfig fieldSettings;
+    fieldSettings.Init(PGL_SPATIAL_STRUCTURE_KDTREE, PGL_DIRECTIONAL_DISTRIBUTION_PARALLAX_AWARE_VMM, true, 32000);
+    
+    fieldSettings.SetDebugArgFitRegions(true);
     openpgl::cpp::Field* field = new openpgl::cpp::Field(&device, fieldSettings);
     
     std::vector<openpgl::cpp::SampleStorage*> sampleStorages;

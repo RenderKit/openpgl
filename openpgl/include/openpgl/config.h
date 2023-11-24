@@ -20,6 +20,8 @@ extern "C" {
 
 #include "types.h"
 
+#define PGL_TREE_MAX_SAMPLE_PER_LEAF 32000
+
 enum PGL_DEVICE_TYPE
 {
     PGL_DEVICE_TYPE_CPU_4,
@@ -32,14 +34,17 @@ struct PGLKDTreeArguments
 {
     bool knnLookup {true};
     size_t minSamples {100};
-    size_t maxSamples {32000};
+    size_t maxSamples {PGL_TREE_MAX_SAMPLE_PER_LEAF};
     size_t maxDepth{32};
 };
 
 struct PGLVMMFactoryArguments
 {
-    PGLVMMFactoryArguments()
+    PGLVMMFactoryArguments(const size_t maxSamplesPerLeaf = PGL_TREE_MAX_SAMPLE_PER_LEAF)
     {
+        minSamplesForSplitting = maxSamplesPerLeaf/8;
+        minSamplesForPartialRefitting = maxSamplesPerLeaf/8;
+        minSamplesForMerging = maxSamplesPerLeaf/4;
     }
     
     // weighted EM arguments
@@ -70,9 +75,9 @@ struct PGLVMMFactoryArguments
     bool partialReFit { true };
     int maxSplitItr { 1 };
 
-    int minSamplesForSplitting { 32000/8 };
-    int minSamplesForPartialRefitting { 32000/8 };
-    int minSamplesForMerging { 32000/4 };
+    int minSamplesForSplitting { PGL_TREE_MAX_SAMPLE_PER_LEAF/8 };
+    int minSamplesForPartialRefitting { PGL_TREE_MAX_SAMPLE_PER_LEAF/8 };
+    int minSamplesForMerging { PGL_TREE_MAX_SAMPLE_PER_LEAF/4 };
 };
 
 enum PGLDQTLeafEstimator
@@ -112,9 +117,7 @@ struct PGLFieldArguments
     PGLDebugArguments debugArguments;
 };
 
-
-
-OPENPGL_CORE_INTERFACE void pglFieldArgumentsSetDefaults(PGLFieldArguments &fieldArguments, const PGL_SPATIAL_STRUCTURE_TYPE spatialType, const PGL_DIRECTIONAL_DISTRIBUTION_TYPE directionalType);
+OPENPGL_CORE_INTERFACE void pglFieldArgumentsSetDefaults(PGLFieldArguments &fieldArguments, const PGL_SPATIAL_STRUCTURE_TYPE spatialType, const PGL_DIRECTIONAL_DISTRIBUTION_TYPE directionalType, const bool deterministic, const size_t maxSamplesPerLeaf);
 
 
 #ifdef __cplusplus
