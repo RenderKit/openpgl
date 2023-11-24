@@ -154,14 +154,21 @@ jobs:
           export CXXFLAGS="-static-intel -fPIC"
           gitlab/build_mac.sh
 
-  build-macOS-arm:
+  build-macOS-arm-old:
     secrets: inherit
     uses: intel-innersource/libraries.devops.renderkit.workflows/.github/workflows/macos.yml@main
     with:
-      runs-on: '[ "macOS", "build", "arm" ]'
+      runs-on: '[ "macOS", "build", "arm", "vis-mac-mini-m1-2" ]'
       cmd: |
           gitlab/build_mac.sh -DBUILD_TBB_FROM_SOURCE=ON
 
+  build-macOS-arm-new:
+    secrets: inherit
+    uses: intel-innersource/libraries.devops.renderkit.workflows/.github/workflows/macos.yml@main
+    with:
+      runs-on: '[ "macOS", "build", "arm", "vis-mac-mini-m1-1" ]'
+      cmd: |
+          gitlab/build_mac.sh -DBUILD_TBB_FROM_SOURCE=ON
 
   ### KW Jobs ###
 
