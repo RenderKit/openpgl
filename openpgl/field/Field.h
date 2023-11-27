@@ -150,6 +150,9 @@ public:
         m_totalSPP  = 0;
         if(samples.size() > 0)
         {
+            Timer updateAll;
+            Timer updateStep;
+            
             if(samples_.capacity() < samples.size()) {
                 samples_.reserve(2 * samples.size());
             }
@@ -159,14 +162,21 @@ public:
                 for (size_t i=r.begin(); i<r.end(); i++) 
                     samples_[i] = samples[i];
             });
+            m_timeLastUpdateCopySamples = updateStep.elapsed() * 1e-3f;
+            
 
             if(!m_isSceneBoundsSet)
             {
                 estimateSceneBounds(samples_);
             }
-
+            updateStep.reset();
             buildSpatialStructure(m_sceneBounds, samples_);
+            m_timeLastUpdateSpatialStructureUpdate = updateStep.elapsed() * 1e-3f;
+            
+            updateStep.reset();
             fitRegions(samples_);
+            m_timeLastUpdateDirectionalDistriubtionUpdate = updateStep.elapsed() * 1e-3f;
+            m_timeLastUpdate = updateAll.elapsed() * 1e-3f;
         }
         m_iteration++;
     }
@@ -175,6 +185,9 @@ public:
     {
         if(samples.size() > 0)
         {
+            Timer updateAll;
+            Timer updateStep;
+
             if(samples_.capacity() < samples.size()) {
                 samples_.reserve(2 * samples.size());
             }
@@ -184,9 +197,18 @@ public:
                 for (size_t i=r.begin(); i<r.end(); i++) 
                     samples_[i] = samples[i];
             });
-
+            m_timeLastUpdateCopySamples = updateStep.elapsed() * 1e-3f;
+            
+            updateStep.reset();
             updateSpatialStructure(samples_);
+            m_timeLastUpdateSpatialStructureUpdate = updateStep.elapsed() * 1e-3f;
+            
+            updateStep.reset();
             updateRegions(samples_);
+            
+            m_timeLastUpdateDirectionalDistriubtionUpdate = updateStep.elapsed() * 1e-3f;
+            m_timeLastUpdate = updateAll.elapsed() * 1e-3f;
+
         }
         m_iteration++;
     }
@@ -221,6 +243,11 @@ public:
         os.write(reinterpret_cast<const char*>(&m_sceneBounds), sizeof(m_sceneBounds));
         os.write(reinterpret_cast<const char*>(&m_initialized), sizeof(m_initialized));
 
+        os.write(reinterpret_cast<const char*>(&m_timeLastUpdate), sizeof(m_timeLastUpdate));
+        os.write(reinterpret_cast<const char*>(&m_timeLastUpdateCopySamples), sizeof(m_timeLastUpdateCopySamples));
+        os.write(reinterpret_cast<const char*>(&m_timeLastUpdateSpatialStructureUpdate), sizeof(m_timeLastUpdateSpatialStructureUpdate));
+        os.write(reinterpret_cast<const char*>(&m_timeLastUpdateDirectionalDistriubtionUpdate), sizeof(m_timeLastUpdateDirectionalDistriubtionUpdate));
+
         m_distributionFactorySettings.serialize(os);
         m_spatialSubdivBuilderSettings.serialize(os);
         m_spatialSubdiv.serialize(os);
@@ -246,6 +273,11 @@ public:
         is.read(reinterpret_cast<char*>(&m_isSceneBoundsSet), sizeof(m_isSceneBoundsSet));
         is.read(reinterpret_cast<char*>(&m_sceneBounds), sizeof(m_sceneBounds));
         is.read(reinterpret_cast<char*>(&m_initialized), sizeof(m_initialized));
+
+        is.read(reinterpret_cast<char*>(&m_timeLastUpdate), sizeof(m_timeLastUpdate));
+        is.read(reinterpret_cast<char*>(&m_timeLastUpdateCopySamples), sizeof(m_timeLastUpdateCopySamples));
+        is.read(reinterpret_cast<char*>(&m_timeLastUpdateSpatialStructureUpdate), sizeof(m_timeLastUpdateSpatialStructureUpdate));
+        is.read(reinterpret_cast<char*>(&m_timeLastUpdateDirectionalDistriubtionUpdate), sizeof(m_timeLastUpdateDirectionalDistriubtionUpdate));
 
         m_distributionFactorySettings.deserialize(is);
         m_spatialSubdivBuilderSettings.deserialize(is);
@@ -573,8 +605,12 @@ public:
         stats->sizePerCacheRegions = sizeof(RegionStorageType);
         stats->sizeAllCacheRegionsUsed = sizeof(RegionStorageType) * m_regionStorageContainer.size();
         stats->sizeAllCacheRegionsReserved = sizeof(RegionStorageType) * m_regionStorageContainer.capacity();
+        stats->timeLastUpdate = m_timeLastUpdate;
+        stats->timeLastUpdateCopySamples = m_timeLastUpdateCopySamples;
+        stats->timeLastUpdateSpatialStructureUpdate = m_timeLastUpdateSpatialStructureUpdate;
+        stats->timeLastUpdateDirectionalDistriubtionUpdate = m_timeLastUpdateDirectionalDistriubtionUpdate;
+        
         stats->spatialStructureStatistics = m_spatialSubdiv.getStatistics();
-
 
         stats->directionalDistributionStatistics.sizePerDistribution = sizeof(DirectionalDistribution);
         stats->directionalDistributionStatistics.minNumberOfComponents = 1e10f;
@@ -634,6 +670,11 @@ private:
     KNearestRegionsSearchTree<Vecsize> m_regionKNNSearchTree;
 
     SampleContainerInternal samples_;
+
+    float m_timeLastUpdate {0.f};
+    float m_timeLastUpdateCopySamples {0.f};
+    float m_timeLastUpdateSpatialStructureUpdate {0.f};
+    float m_timeLastUpdateDirectionalDistriubtionUpdate {0.f};
 };
 
 }
