@@ -34,11 +34,12 @@ __forceinline __m128 _mm_broadcast_ss (float const * mem_addr)
 #define _MM_SET_EXCEPTION_MASK(x)
 // #define _MM_SET_FLUSH_ZERO_MODE(x)
 
+/*
 __forceinline int _mm_getcsr()
 {
   return 0;
 }
-
+*/
 __forceinline void _mm_mfence()
 {
   __sync_synchronize();
