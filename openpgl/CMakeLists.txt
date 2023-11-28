@@ -24,6 +24,7 @@ set(OPENPGL_SRC
     ../third-party/embreeSrc/common/sys/barrier.cpp
     ../third-party/embreeSrc/common/sys/condition.cpp
     ../third-party/embreeSrc/common/sys/mutex.cpp
+    ../third-party/embreeSrc/common/sys/estring.cpp
     ../third-party/embreeSrc/common/sys/sysinfo.cpp
     ../third-party/embreeSrc/common/sys/thread.cpp
 )

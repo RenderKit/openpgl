@@ -8,6 +8,10 @@
 #include "constants.h"
 #include <cmath>
 
+#if defined(EMBREE_SYCL_SUPPORT) && defined(__SYCL_DEVICE_ONLY__)
+#  include "math_sycl.h"
+#else
+
 #if defined(__ARM_NEON)
 #include "../simd/arm/emulation.h"
 #else
@@ -354,7 +358,11 @@ __forceinline float nmsub ( const float a, const float b, const float c) { retur
   __forceinline int   select(bool s, int   t,   int f) { return s ? t : f; }
   __forceinline float select(bool s, float t, float f) { return s ? t : f; }
 
-  __forceinline bool all(bool s) { return s; }
+  __forceinline bool none(bool s) { return !s; }
+  __forceinline bool all (bool s) { return s; }
+  __forceinline bool any (bool s) { return s; }
+
+  __forceinline unsigned movemask (bool s) { return (unsigned)s; }
 
   __forceinline float lerp(const float v0, const float v1, const float t) {
     return madd(1.0f-t,v0,t*v1);
@@ -456,3 +464,5 @@ __forceinline float nmsub ( const float a, const float b, const float c) { retur
     return x | (y << 1) | (z << 2);
   }
 }
+
+#endif

@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "math.h"
+#include "emath.h"
 
 namespace embree
 {
@@ -232,4 +232,5 @@ namespace embree
 #if defined(__AVX512F__)
   template<> __forceinline Vec2<vfloat16>::Vec2(const Vec2fa& a) : x(a.x), y(a.y) {}
 #endif
+
 }

@@ -9,7 +9,7 @@
 #define ONE_OVER_FOUR_PI 0.07957747154594767
 
 #include <embreeSrc/common/math/constants.h>
-#include <embreeSrc/common/math/math.h>
+#include <embreeSrc/common/math/emath.h>
 #include <embreeSrc/common/math/vec2.h>
 #include <embreeSrc/common/math/vec3.h>
 #include <embreeSrc/common/math/bbox.h>
