@@ -39,11 +39,12 @@ __forceinline int _mm_getcsr()
 {
   return 0;
 }
-*/
+
 __forceinline void _mm_mfence()
 {
   __sync_synchronize();
 }
+*/
 
 __forceinline __m128i _mm_load4epu8_epi32(__m128i *ptr)
 {
