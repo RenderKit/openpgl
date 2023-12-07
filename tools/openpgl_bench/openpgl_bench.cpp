@@ -15,7 +15,6 @@
 #include <cmath>
 #include <random>
 
-#include <tbb/info.h>
 #include <tbb/global_control.h>
 #include <tbb/parallel_for.h>
 
@@ -191,7 +190,7 @@ bool parseCommandLine(std::list<std::string> &args,
             const std::string str_samples = *it;
             benchParams.samples_file_names.push_back(str_samples); 
         } else if (arg == "-threads") {
-            collectSamples = false; 
+                        collectSamples = false; 
             ++it;
             if(it != args.end())
             {
@@ -260,7 +259,7 @@ void init_field(BenchParams &benchParams){
     
     fieldSettings.SetDebugArgFitRegions(true);
     openpgl::cpp::Field* field = new openpgl::cpp::Field(&device, fieldSettings);
-    
+  
     std::vector<openpgl::cpp::SampleStorage*> sampleStorages;
     for (int i = 0; i < benchParams.samples_file_names.size(); i++){
 

@@ -13,7 +13,7 @@ namespace openpgl
 
     struct SampleContainerInternal
     {
-
+        using value_type = SampleData;
         struct Iterator 
         {
             using iterator_category = std::forward_iterator_tag;

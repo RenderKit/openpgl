@@ -28,9 +28,9 @@ namespace openpgl {
 
 #ifdef OPENPGL_TASK_CONTROL
 #if TBB_INTERFACE_VERSION >= 11005
-  static tbb::global_control* g_tbb_thread_control = nullptr;
+  static tbb::global_control* g_opgl_tbb_thread_control = nullptr;
 #else
-  static tbb::task_scheduler_init g_tbb_threads(tbb::task_scheduler_init::deferred);
+  static tbb::task_scheduler_init g_opgl_tbb_threads(tbb::task_scheduler_init::deferred);
 #endif
 #endif
 
@@ -44,10 +44,13 @@ template<int VecSize>
 struct Device: public IDevice {
 
 private:
+#ifdef OPENPGL_TASK_CONTROL
     size_t m_numThreads {0};
+#endif
 public:
     Device(size_t numThreads = 0)
     {
+#ifdef OPENPGL_TASK_CONTROL
         if (numThreads == 0) 
         {
 #if TBB_INTERFACE_VERSION >= 9100
@@ -63,11 +66,10 @@ public:
 #endif
             
         }
-#ifdef OPENPGL_TASK_CONTROL
 #if TBB_INTERFACE_VERSION >= 11005
-        g_tbb_thread_control = new tbb::global_control(tbb::global_control::max_allowed_parallelism,m_numThreads);
+        g_opgl_tbb_thread_control = new tbb::global_control(tbb::global_control::max_allowed_parallelism, m_numThreads);
 #else
-        g_tbb_threads.initialize(int(m_numThreads));
+        g_opgl_tbb_threads.initialize(int(m_numThreads));
 #endif
 #endif
         VMMSingleLobeHenyeyGreensteinOracle::init();
@@ -77,10 +79,10 @@ public:
     {
 #ifdef OPENPGL_TASK_CONTROL
 #if TBB_INTERFACE_VERSION >= 11005
-        delete g_tbb_thread_control;
-        g_tbb_thread_control = nullptr;
+        delete g_opgl_tbb_thread_control;
+        g_opgl_tbb_thread_control = nullptr;
 #else
-        g_tbb_threads.terminate();
+        g_opgl_tbb_threads.terminate();
 #endif
 #endif
     }
@@ -133,7 +135,7 @@ public:
             gFieldSettings.distributionFactorySettings.minSamplesForMerging = directionalDistributionArguments->minSamplesForMerging;
             delete directionalDistributionArguments;
 
-            gField = new GuidingField(gFieldSettings, m_numThreads);
+            gField = new GuidingField(gFieldSettings);
         } else if (args.spatialStructureType == PGL_SPATIAL_STRUCTURE_KDTREE &&
             args.directionalDistributionType ==  PGL_DIRECTIONAL_DISTRIBUTION_VMM )
         {
@@ -179,7 +181,7 @@ public:
             gFieldSettings.distributionFactorySettings.minSamplesForMerging = directionalDistributionArguments->minSamplesForMerging;
             delete directionalDistributionArguments;
 
-            gField = new GuidingField(gFieldSettings, m_numThreads);
+            gField = new GuidingField(gFieldSettings);
         } else if (args.spatialStructureType == PGL_SPATIAL_STRUCTURE_KDTREE &&
                    args.directionalDistributionType ==  PGL_DIRECTIONAL_DISTRIBUTION_QUADTREE )
         {
@@ -204,7 +206,7 @@ public:
             gFieldSettings.distributionFactorySettings.footprintFactor = directionalDistributionArguments->footprintFactor;
             gFieldSettings.distributionFactorySettings.maxLevels = directionalDistributionArguments->maxLevels;
 
-            gField = new GuidingField(gFieldSettings, m_numThreads);
+            gField = new GuidingField(gFieldSettings);
         }else {
             throw std::runtime_error("error: unrecognized field type");
         }

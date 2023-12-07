@@ -11,9 +11,10 @@
 
 #include "FieldStatistics.h"
 
+#ifdef USE_EMBREE_PARALLEL
 #define TASKING_TBB
 #include <embreeSrc/common/algorithms/parallel_for.h>
-
+#endif
 #include <tbb/parallel_for.h>
 #include <tbb/parallel_sort.h>
 
@@ -72,8 +73,7 @@ public:
 
     Field(const Field&) = delete;
 
-    Field(const Settings &settings, size_t numThreads = 0):
-        m_numThreads(numThreads)
+    Field(const Settings &settings)
     {
         m_decayOnSpatialSplit = settings.settings.decayOnSpatialSplit;
         m_deterministic = settings.settings.deterministic;
@@ -157,8 +157,11 @@ public:
                 samples_.reserve(2 * samples.size());
             }
             samples_.resize(samples.size());
-
+#ifdef USE_EMBREE_PARALLEL
             embree::parallel_for( size_t(0), samples.size(), size_t(4*4096), [&](const embree::range<size_t>& r) {
+#else
+            tbb::parallel_for( tbb::blocked_range<int>(0,samples.size()), [&](tbb::blocked_range<int> r) {
+#endif
                 for (size_t i=r.begin(); i<r.end(); i++) 
                     samples_[i] = samples[i];
             });
@@ -192,8 +195,11 @@ public:
                 samples_.reserve(2 * samples.size());
             }
             samples_.resize(samples.size());
-
+#ifdef USE_EMBREE_PARALLEL
             embree::parallel_for( size_t(0), samples.size(), size_t(4*4096), [&](const embree::range<size_t>& r) {
+#else
+        tbb::parallel_for( tbb::blocked_range<int>(0,samples.size()), [&](tbb::blocked_range<int> r) {
+#endif
                 for (size_t i=r.begin(); i<r.end(); i++) 
                     samples_[i] = samples[i];
             });
@@ -236,7 +242,6 @@ public:
         os.write(reinterpret_cast<const char*>(&m_decayOnSpatialSplit), sizeof(m_decayOnSpatialSplit));
         os.write(reinterpret_cast<const char*>(&m_iteration), sizeof(m_iteration));
         os.write(reinterpret_cast<const char*>(&m_totalSPP), sizeof(m_totalSPP));
-        os.write(reinterpret_cast<const char*>(&m_numThreads), sizeof(m_numThreads));
         os.write(reinterpret_cast<const char*>(&m_deterministic), sizeof(m_deterministic));
         os.write(reinterpret_cast<const char*>(&m_fitRegions), sizeof(m_fitRegions));
         os.write(reinterpret_cast<const char*>(&m_isSceneBoundsSet), sizeof(m_isSceneBoundsSet));
@@ -267,7 +272,6 @@ public:
         is.read(reinterpret_cast<char*>(&m_decayOnSpatialSplit), sizeof(m_decayOnSpatialSplit));
         is.read(reinterpret_cast<char*>(&m_iteration), sizeof(m_iteration));
         is.read(reinterpret_cast<char*>(&m_totalSPP), sizeof(m_totalSPP));
-        is.read(reinterpret_cast<char*>(&m_numThreads), sizeof(m_numThreads));
         is.read(reinterpret_cast<char*>(&m_deterministic), sizeof(m_deterministic));
         is.read(reinterpret_cast<char*>(&m_fitRegions), sizeof(m_fitRegions));
         is.read(reinterpret_cast<char*>(&m_isSceneBoundsSet), sizeof(m_isSceneBoundsSet));
@@ -357,7 +361,7 @@ private:
 
     inline void buildSpatialStructure(const BBox &bounds, SampleContainerInternal& samples)
     {
-        m_spatialSubdivBuilder.build(m_spatialSubdiv, bounds, samples, m_regionStorageContainer, m_spatialSubdivBuilderSettings, m_numThreads);
+        m_spatialSubdivBuilder.build(m_spatialSubdiv, bounds, samples, m_regionStorageContainer, m_spatialSubdivBuilderSettings);
         if (m_useStochasticNNLookUp)
         {
             m_regionKNNSearchTree.buildRegionSearchTree(m_regionStorageContainer);
@@ -370,7 +374,7 @@ private:
 
     inline void updateSpatialStructure(SampleContainerInternal& samples)
     {
-        m_spatialSubdivBuilder.updateTree(m_spatialSubdiv, samples, m_regionStorageContainer, m_spatialSubdivBuilderSettings, m_numThreads);
+        m_spatialSubdivBuilder.updateTree(m_spatialSubdiv, samples, m_regionStorageContainer, m_spatialSubdivBuilderSettings);
         if (m_useStochasticNNLookUp)
         {
             m_regionKNNSearchTree.reset();
@@ -389,13 +393,13 @@ private:
         std::cout << "fitRegion: "<< (m_isSurface? "surface":"volume") << "\tnGuidingRegions = " << nGuidingRegions << std::endl;
 #endif
 
-#ifndef USE_EMBREE_PARALLEL
+#ifdef USE_EMBREE_PARALLEL
+        embree::parallel_for(0,(int)nGuidingRegions, 1, [&] ( const embree::range<unsigned>& r ) {
+        for (size_t n=r.begin(); n<r.end(); n++)
+#else
         tbb::parallel_for( tbb::blocked_range<int>(0,nGuidingRegions), [&](tbb::blocked_range<int> r)
         {
         for (int n = r.begin(); n<r.end(); ++n)
-#else
-        embree::parallel_for(0,(int)nGuidingRegions, 1, [&] ( const embree::range<unsigned>& r ) {
-        for (size_t n=r.begin(); n<r.end(); n++)
 #endif
         {
             RegionStorageType &regionStorage = m_regionStorageContainer[n];
@@ -440,13 +444,13 @@ private:
 #if defined( OPENPGL_SHOW_PRINT_OUTS)
         std::cout << "updateRegion: " << (m_isSurface? "surface":"volume") << "\tnGuidingRegions = " << nGuidingRegions << std::endl;
 #endif
-#ifndef USE_EMBREE_PARALLEL
+#ifdef USE_EMBREE_PARALLEL
+        embree::parallel_for(0,(int)nGuidingRegions, 1, [&] ( const embree::range<unsigned>& r ) {
+        for (size_t n=r.begin(); n<r.end(); n++)
+#else
         tbb::parallel_for( tbb::blocked_range<int>(0,nGuidingRegions), [&](tbb::blocked_range<int> r)
         {
         for (int n = r.begin(); n<r.end(); ++n)
-#else
-        embree::parallel_for(0,(int)nGuidingRegions, 1, [&] ( const embree::range<unsigned>& r ) {
-        for (size_t n=r.begin(); n<r.end(); n++)
 #endif
         {
             RegionStorageType &regionStorage = m_regionStorageContainer[n];
@@ -641,8 +645,6 @@ private:
 
     size_t m_iteration {0};
     size_t m_totalSPP  {0};
-
-    size_t m_numThreads {0};
 
     // flag to deactivate the training of the directional distributions (i.e., for benchmarking the spatial structure build)
     bool m_fitRegions {true};

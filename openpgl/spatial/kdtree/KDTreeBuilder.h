@@ -63,17 +63,17 @@ struct KDTreePartitionBuilder
         }
     };
 
-    void build(KDTree &kdTree, const BBox &bounds, TContainer &samples, tbb::concurrent_vector< std::pair<TRegion, Range> > &dataStorage, const Settings &buildSettings, const size_t &numThreads) const
+    void build(KDTree &kdTree, const BBox &bounds, TContainer &samples, tbb::concurrent_vector< std::pair<TRegion, Range> > &dataStorage, const Settings &buildSettings) const
     {
 
         kdTree.init(bounds, 4096);
         dataStorage.resize(1);
         dataStorage[0].first.regionBounds = bounds;
 
-        updateTree(kdTree, samples, dataStorage, buildSettings, numThreads);
+        updateTree(kdTree, samples, dataStorage, buildSettings);
     }
 
-    void updateTree(KDTree &kdTree, TContainer &samples, tbb::concurrent_vector< std::pair<TRegion, Range> > &dataStorage, const Settings &buildSettings, const uint32_t &numThreads) const
+    void updateTree(KDTree &kdTree, TContainer &samples, tbb::concurrent_vector< std::pair<TRegion, Range> > &dataStorage, const Settings &buildSettings) const
     {
         int numEstLeafs = dataStorage.size() + (samples.size()*2)/buildSettings.maxSamples+32;
         kdTree.m_nodes.reserve(4*numEstLeafs);
@@ -93,14 +93,7 @@ struct KDTreePartitionBuilder
 
         if (root.isLeaf())
         {
-#ifndef USE_EMBREE_PARALLEL
-            IntegerSampleStatistics iSampleStats(bounds);
-            for (const auto& sample : samples)
-            {
-                const Point3 samplePosition(sample.position.x, sample.position.y, sample.position.z);
-                iSampleStats.addSample(samplePosition);
-            }
-#else
+#ifdef USE_EMBREE_PARALLEL
             IntegerSampleStatistics iSampleStats = embree::parallel_reduce(size_t(0), samples.size(), IntegerSampleStatistics(bounds), [&] (const embree::range<size_t>& r) -> IntegerSampleStatistics {  
               IntegerSampleStatistics stats(bounds);
               for (size_t i=r.begin(); i<r.end(); i++) {
@@ -110,6 +103,13 @@ struct KDTreePartitionBuilder
               }
               return stats;
             }, [] (const IntegerSampleStatistics& a, const IntegerSampleStatistics& b) { return IntegerSampleStatistics::merge(a,b); });
+#else
+            IntegerSampleStatistics iSampleStats(bounds);
+            for (const auto& sample : samples)
+            {
+                const Point3 samplePosition(sample.position.x, sample.position.y, sample.position.z);
+                iSampleStats.addSample(samplePosition);
+            }
 #endif
             sampleStats = iSampleStats.getSampleStatistics();
         }
@@ -221,7 +221,7 @@ private:
         const Point3 sampleMean = sampleStats.getMean();
 
         auto maxDimension = [](const Vector3& v) -> uint8_t
-        {
+                {
             return v[v[1] > v[0]] > v[2] ? v[1] > v[0] : 2;
         };
 
@@ -310,7 +310,7 @@ private:
 #ifdef USE_EMBREE_PARALLEL 
         size_t rPivotItr = 0;
 #else
-        typename TContainer::iterator rPivotItr;
+        typename TContainer::iterator rPivotItr(nullptr);
         auto begin = samples.begin() + sampleRange.m_begin, end = samples.begin() + sampleRange.m_end;
 #endif
         if(kdTree->getNode(nodeIdsLeftRight[0]).isLeaf() || kdTree->getNode(nodeIdsLeftRight[1]).isLeaf() )
