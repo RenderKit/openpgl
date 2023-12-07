@@ -101,6 +101,11 @@ public:
 
     void updateField(SampleContainer& samplesSurface, SampleContainer& samplesVolume) override
     {
+    #if TBB_INTERFACE_VERSION < 12010
+        // we need to initialize the task_scheduler in the context to avoid
+        // asyncronous deconsrution of the implicit initialized tbb::arenas and tbb::streams
+        tbb::task_scheduler_init anonymous;
+    #endif
         if(samplesSurface.size() > 0) {
             if(!m_surfaceField.isInitialized()) {
                 m_surfaceField.buildField(samplesSurface);
