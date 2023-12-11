@@ -1,5 +1,8 @@
-add_subdirectory(openpgl_check)
+if(OPENPGL_BUILD_CHECK_TOOL)
+    add_subdirectory(openpgl_check)
+endif()
 
-add_subdirectory(openpgl_debug)
-
-add_subdirectory(openpgl_bench)
+if(OPENPGL_BUILD_TOOLS)
+    add_subdirectory(openpgl_debug)
+    add_subdirectory(openpgl_bench)
+endif()

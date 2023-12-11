@@ -47,6 +47,7 @@ ENDIF()
 option(OPENPGL_BUILD_STATIC "Build OpenPGL as static library." OFF)
 
 option(OPENPGL_BUILD_TOOLS "Build tool applications." OFF)
+option(OPENPGL_BUILD_CHECK_TOOL "Build check tool application." OFF)
 
 try_compile(COMPILER_SUPPORTS_ARM_NEON "${CMAKE_BINARY_DIR}" "${PROJECT_SOURCE_DIR}/cmake/check_arm_neon.cpp")
 
@@ -83,9 +84,8 @@ FIND_PACKAGE(TBB REQUIRED ${OPENPGL_TBB_COMPONENT})
 ## Build library and  ##
 add_subdirectory(openpgl)
 
-if (OPENPGL_BUILD_TOOLS)
-  add_subdirectory(tools)
-endif()
+add_subdirectory(tools)
+
 ## Configure CMake find_package() config files ##
 
 include(CMakePackageConfigHelpers)
