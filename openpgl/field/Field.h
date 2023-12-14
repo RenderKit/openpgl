@@ -110,7 +110,7 @@ public:
     {
         if (m_iteration >0 && embree::inside(m_spatialSubdiv.getBounds(), p))
         {
-            if(m_useStochasticNNLookUp)
+            if(m_useStochasticNNLookUp && *sample1D >= 0.f)
             {
                 if (USE_PRECOMPUTED_NN)
                 {
