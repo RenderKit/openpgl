@@ -84,7 +84,7 @@ OPENPGL_INLINE void SetDirectContribution(PathSegment* pathSegment, const pgl_ve
 OPENPGL_INLINE void AddDirectContribution(PathSegment* pathSegment, const pgl_vec3f& directContribution)
 {
     OPENPGL_ASSERT(pathSegment);
-    pglVec3fAdd(pathSegment->scatteredContribution, directContribution);
+    pglVec3fAdd(pathSegment->directContribution, directContribution);
 }
 
 OPENPGL_INLINE void SetScatteredContribution(PathSegment* pathSegment, const pgl_vec3f& scatteredContribution)
