@@ -721,7 +721,7 @@ extern "C" OPENPGL_DLLEXPORT float pglVolumeSamplingDistributionIncomingRadiance
     return gVolumeSamplingDistribution->pdfLi(openpgl::Vector3(direction.x, direction.y, direction.z));
 }
 
-extern "C" OPENPGL_DLLEXPORT int pglVolumeSamplingDistributionGetId(PGLVolumeSamplingDistribution volumeSamplingDistribution)
+extern "C" OPENPGL_DLLEXPORT uint32_t pglVolumeSamplingDistributionGetId(PGLVolumeSamplingDistribution volumeSamplingDistribution)
 {
     IVolumeSamplingDistribution* gVolumeSamplingDistribution =  (IVolumeSamplingDistribution*)volumeSamplingDistribution;
     return gVolumeSamplingDistribution->getId();

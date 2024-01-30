@@ -249,7 +249,7 @@ OPENPGL_INLINE Region VolumeSamplingDistribution::GetRegion() const
 OPENPGL_INLINE uint32_t VolumeSamplingDistribution::GetId() const
 {
     OPENPGL_ASSERT(m_volumeSamplingDistributionHandle);
-    return pglVolumeSamplingGetId(m_volumeSamplingDistributionHandle);
+    return pglVolumeSamplingDistributionGetId(m_volumeSamplingDistributionHandle);
 }
 
 }
