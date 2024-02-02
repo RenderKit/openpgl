@@ -163,6 +163,8 @@ public:
 
         bool isValid() const;
 
+        bool operator==(const SufficientStatisitcs& b) const;
+
     };
 
     struct UnassignedSamplesStatistics
@@ -588,6 +590,32 @@ typename ParallaxAwareVonMisesFisherWeightedEMFactory< TVMMDistribution>::Suffic
     }
 
     return *this;
+}
+
+template<class TVMMDistribution>
+bool ParallaxAwareVonMisesFisherWeightedEMFactory< TVMMDistribution>::SufficientStatisitcs::operator==(const SufficientStatisitcs& b) const
+{
+    bool equal = true;
+    if(sumWeights != b.sumWeights || numSamples != b.numSamples || normalized != b.normalized ||
+        overallNumSamples != b.overallNumSamples || numComponents != b.numComponents) 
+    {
+        equal = false;
+    }
+ 
+    for(int k = 0; k < VMM::NumVectors;k++)
+    {
+        
+        if( embree::any(sumOfWeightedDirections[k].x != b.sumOfWeightedDirections[k].x) || 
+            embree::any(sumOfWeightedDirections[k].y != b.sumOfWeightedDirections[k].y) || 
+            embree::any(sumOfWeightedDirections[k].z != b.sumOfWeightedDirections[k].z) || 
+            embree::any(sumOfWeightedStats[k] != b.sumOfWeightedStats[k]) || 
+            embree::any(sumOfDistanceWeightes[k] != b.sumOfDistanceWeightes[k]))
+        {
+            equal = false;
+        }
+        
+    }
+    return equal;
 }
 
 ////////////////////////////////////////////////////////////

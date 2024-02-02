@@ -129,6 +129,11 @@ public:
             nodes = std::vector<StatsNode>(size);
             is.read(reinterpret_cast<char*>(nodes.data()), size * sizeof(nodes[0]));
         };
+
+        // TODO: Needs to be implmented
+        bool operator==(const Statistics& b) const {
+            return true;
+        }
     };
 
     struct FittingStatistics {

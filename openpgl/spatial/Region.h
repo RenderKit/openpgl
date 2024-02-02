@@ -110,6 +110,21 @@ namespace openpgl
                 equal = false;
             }
 
+            if (!distribution.operator==(b.distribution))
+            {
+                equal = false;
+            }
+
+            if (!trainingStatistics.operator==(b.trainingStatistics))
+            {
+                equal = false;
+            }
+
+            if (!(regionBounds == b.regionBounds))
+            {
+                equal = false;
+            }
+
             return equal;
         }
 

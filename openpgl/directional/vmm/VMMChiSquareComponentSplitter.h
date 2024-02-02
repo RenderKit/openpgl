@@ -113,6 +113,8 @@ struct ComponentSplitStatistics
     }
 
     std::string toString() const;
+
+    bool operator==(const ComponentSplitStatistics& b) const;
 };
 
 
@@ -164,6 +166,7 @@ inline Vec2Type Map3DTo2D(const Vec3Type &vec3D)
     //OPENPGL_ASSERT((vec3D.z <= 1.0f &&  vec3D.z >= -1.0f));
     ScalarType alpha = embree::fastapprox::acos(vec3D.z);
     ScalarType inv_sinc = alpha / embree::fastapprox::sin(alpha);
+    // TODO: Needs to be implmented
 
     vec2D.x = embree::select(alpha > 0.0f, vec3D.x * inv_sinc, vec2D.x);
     vec2D.y = embree::select(alpha > 0.0f, vec3D.y * inv_sinc, vec2D.y);
@@ -939,6 +942,36 @@ bool VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::ComponentSplitStatis
     OPENPGL_ASSERT(valid);
 
     return valid;
+}
+
+template<class TVMMFactory>
+bool VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::ComponentSplitStatistics::operator==(const ComponentSplitStatistics& b) const
+{
+    bool equal = true;
+    if(numComponents != b.numComponents)
+    {
+       equal = false; 
+    }
+
+    for(int k = 0; k < VMM::NumVectors;k++)
+    {
+        
+        if( embree::any(chiSquareMCEstimates[k] != b.chiSquareMCEstimates[k]) || 
+            embree::any(splitMeans[k].x != b.splitMeans[k].x) || 
+            embree::any(splitMeans[k].y != b.splitMeans[k].y) || 
+            embree::any(splitWeightedSampleCovariances[k].x != b.splitWeightedSampleCovariances[k].x) || 
+            embree::any(splitWeightedSampleCovariances[k].y != b.splitWeightedSampleCovariances[k].y) || 
+            embree::any(splitWeightedSampleCovariances[k].z != b.splitWeightedSampleCovariances[k].z) || 
+            embree::any(numSamples[k] != b.numSamples[k]) || 
+            embree::any(sumWeights[k] != b.sumWeights[k]) ||
+            embree::any(sumAssignedSamples[k] != b.sumAssignedSamples[k]))
+        {
+            equal = false;
+        }
+        
+    }
+
+    return equal;
 }
 
 template<class TVMMFactory>

@@ -101,6 +101,8 @@ public:
 
         std::string toString() const;
 
+        bool operator==(const Statistics& b) const;
+
     };
 
     struct FittingStatistics
@@ -222,6 +224,22 @@ template<class TVMMDistribution>
 void AdaptiveSplitAndMergeFactory<TVMMDistribution>::Statistics::clearAll()
 {
     clear(VMM::MaxComponents);
+}
+
+template<class TVMMDistribution>
+bool AdaptiveSplitAndMergeFactory<TVMMDistribution>::Statistics::operator==(const Statistics& b) const {
+    bool equal = true;
+    if(numSamplesAfterLastSplit != b.numSamplesAfterLastSplit || numSamplesAfterLastMerge != b.numSamplesAfterLastMerge)
+    {
+        equal = false;
+    }
+
+    if(!sufficientStatistics.operator==(b.sufficientStatistics) || 
+        !splittingStatistics.operator==(b.splittingStatistics))
+    {
+        equal = false;
+    }
+    return equal;
 }
 
 template<class TVMMDistribution>

@@ -132,6 +132,8 @@ public:
 
     void _normalizeWeights();
 
+    bool operator==(const ParallaxAwareVonMisesFisherMixture& b) const;
+
 };
 
 template<int VecSize, int maxComponents, bool UseParallaxCompensation>
@@ -872,6 +874,36 @@ void ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents,UseParallaxCompen
         //std::cout << "meanCosine: " << meanCosine << std::endl;
         _meanCosines[k] = select(_kappas[k] > 0.f, meanCosine, zeros);
     }
+}
+
+template<int VecSize, int maxComponents, bool UseParallaxCompensation>
+bool ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents,UseParallaxCompensation>::operator==(const ParallaxAwareVonMisesFisherMixture& b) const
+{
+    bool equal = true;
+    if(_numComponents != b._numComponents || _pivotPosition != b._pivotPosition) 
+    {
+        equal = false;
+    }
+ 
+    for(int k = 0; k < NumVectors; k++)
+    {
+        
+        if( embree::any(_weights[k] != b._weights[k]) || 
+            embree::any(_kappas[k] != b._kappas[k]) ||
+            embree::any(_meanDirections[k].x != b._meanDirections[k].x) || 
+            embree::any(_meanDirections[k].y != b._meanDirections[k].y) || 
+            embree::any(_meanDirections[k].z != b._meanDirections[k].z) ||
+            embree::any(_normalizations[k] != b._normalizations[k]) ||
+            embree::any(_eMinus2Kappa[k] != b._eMinus2Kappa[k]) ||
+            embree::any(_meanCosines[k] != b._meanCosines[k]) ||
+            embree::any(_distances[k] != b._distances[k]))
+        {
+            equal = false;
+        }
+        
+    }
+
+    return equal;
 }
 
 

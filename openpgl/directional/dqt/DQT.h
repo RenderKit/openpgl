@@ -104,6 +104,11 @@ namespace openpgl {
             return nodes.size();
         }
 
+        // TODO: Needs to be implmented
+        bool operator==(const DirectionalQuadtree& b) const {
+            return true;
+        }
+
     private:
         // Internal Sampling Routines
         // TODO prepare weights so that no rescaling needed? (i.e. three thresholds per cell)
