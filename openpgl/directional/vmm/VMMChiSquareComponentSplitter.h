@@ -44,7 +44,7 @@ public:
     typedef typename TVMMFactory::Distribution VMM;
     typedef TVMMFactory VMMFactory;
 
-    typedef typename VMMFactory::SufficientStatisitcs SufficientStatisitcs;
+    typedef typename VMMFactory::SufficientStatistics SufficientStatistics;
     typedef typename VMMFactory::PartialFittingMask PartialFittingMask;
 
 struct SplitCandidate
@@ -120,7 +120,7 @@ struct ComponentSplitStatistics
 
 void PerformSplitting(VMM &vmm, const float &splitThreshold, const float &mcEstimate, const SampleData *data, const size_t &numData, const typename VMMFactory::Configuration factoryCfg, const bool &doPartialRefit, const int &maxSplittingItr = -1) const;
 
-void PerformRecursiveSplitting(VMM &vmm, typename VMMFactory::SufficientStatisitcs &suffStats, const float &splitThreshold, const float &mcEstimate, const SampleData *data, const size_t &numData, const typename VMMFactory::Configuration factoryCfg) const;
+void PerformRecursiveSplitting(VMM &vmm, typename VMMFactory::SufficientStatistics &suffStats, const float &splitThreshold, const float &mcEstimate, const SampleData *data, const size_t &numData, const typename VMMFactory::Configuration factoryCfg) const;
 
 void PerformSplittingIteration(VMM &vmm, const float &splitThreshold) const;
 
@@ -128,9 +128,9 @@ void CalculateSplitStatistics(const VMM &vmm, ComponentSplitStatistics &splitSta
 
 void UpdateSplitStatistics(const VMM &vmm, ComponentSplitStatistics &splitStats, const float &mcEstimate, const SampleData *data, const size_t &numData) const;
 
-bool SplitComponent(VMM &vmm, ComponentSplitStatistics &splitStats, SufficientStatisitcs &suffStats, const size_t idx) const;
+bool SplitComponent(VMM &vmm, ComponentSplitStatistics &splitStats, SufficientStatistics &suffStats, const size_t idx) const;
 
-bool SplitComponentIntoThree(VMM &vmm, ComponentSplitStatistics &splitStats, SufficientStatisitcs &suffStats, const size_t idx) const;
+bool SplitComponentIntoThree(VMM &vmm, ComponentSplitStatistics &splitStats, SufficientStatistics &suffStats, const size_t idx) const;
 
 ComponentSplitinfo GetProjectedLocalDirections(const VMM &vmm, const size_t &idx, const SampleData *data, const size_t &numData, Vector3 *local2D) const;
 
@@ -218,7 +218,7 @@ void VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::PerformSplitting(VMM
 {
     PartialFittingMask mask;
     ComponentSplitStatistics splitStatistics;
-    SufficientStatisitcs suffStatistics;
+    SufficientStatistics suffStatistics;
 
     bool stopSplitting = false;
 
@@ -290,11 +290,11 @@ void VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::PerformSplitting(VMM
 }
 
 template<class TVMMFactory>
-void VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::PerformRecursiveSplitting(VMM &vmm, typename VMMFactory::SufficientStatisitcs &suffStatistics, const float &splitThreshold, const float &mcEstimate, const SampleData *data, const size_t &numData, const typename VMMFactory::Configuration factoryCfg) const
+void VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::PerformRecursiveSplitting(VMM &vmm, typename VMMFactory::SufficientStatistics &suffStatistics, const float &splitThreshold, const float &mcEstimate, const SampleData *data, const size_t &numData, const typename VMMFactory::Configuration factoryCfg) const
 {
     PartialFittingMask mask;
     ComponentSplitStatistics splitStatistics;
-    SufficientStatisitcs tempSuffStatistics = suffStatistics;
+    SufficientStatistics tempSuffStatistics = suffStatistics;
 
     //bool stopSplitting = false;
     //size_t splitItr = 0;
@@ -524,7 +524,7 @@ void VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::UpdateSplitStatistic
 
 
 template<class TVMMFactory>
-bool VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::SplitComponent(VMM &vmm, ComponentSplitStatistics &splitStats, SufficientStatisitcs &suffStats, const size_t idx) const
+bool VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::SplitComponent(VMM &vmm, ComponentSplitStatistics &splitStats, SufficientStatistics &suffStats, const size_t idx) const
 {
     ComponentSplitinfo splitInfo;
     const div_t tmpK = div(idx, static_cast<int>(VMM::VectorSize));
@@ -665,7 +665,7 @@ bool VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::SplitComponent(VMM &
 }
 
 template<class TVMMFactory>
-bool VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::SplitComponentIntoThree(VMM &vmm, ComponentSplitStatistics &splitStats, SufficientStatisitcs &suffStats, const size_t idx) const
+bool VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::SplitComponentIntoThree(VMM &vmm, ComponentSplitStatistics &splitStats, SufficientStatistics &suffStats, const size_t idx) const
 {
     ComponentSplitinfo splitInfo;
     const div_t tmpK = div(idx, static_cast<int>(VMM::VectorSize));

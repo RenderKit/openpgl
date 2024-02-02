@@ -90,7 +90,7 @@ public:
         std::string toString() const;
     };
 
-    struct SufficientStatisitcs//: public WEMVMMFactory::SufficientStatisitcs
+    struct SufficientStatistics//: public WEMVMMFactory::SufficientStatistics
     {
 
         //FittingStatistics
@@ -106,9 +106,9 @@ public:
 
         embree::vfloat<VMM::VectorSize> sumOfDistanceWeightes[VMM::NumVectors];
 
-        SufficientStatisitcs() = default;
+        SufficientStatistics() = default;
 
-        SufficientStatisitcs& operator+=(const SufficientStatisitcs &stats);
+        SufficientStatistics& operator+=(const SufficientStatistics &stats);
 
         void serialize(std::ostream& stream) const;
 
@@ -133,7 +133,7 @@ public:
 
         void swapComponentStats(const size_t &idx0, const size_t &idx1);
 
-        void maskedReplace(const PartialFittingMask &mask, const SufficientStatisitcs &stats);
+        void maskedReplace(const PartialFittingMask &mask, const SufficientStatistics &stats);
 
         void decay(const float &alpha);
 
@@ -163,7 +163,7 @@ public:
 
         bool isValid() const;
 
-        bool operator==(const SufficientStatisitcs& b) const;
+        bool operator==(const SufficientStatistics& b) const;
 
     };
 
@@ -183,45 +183,45 @@ public:
 
     void prepareSamples(SampleData* samples, const size_t numSamples, const SampleStatistics &sampleStatistics, const Configuration &cfg) const;
     
-    void fitMixture(VMM &vmm, SufficientStatisitcs &stats, const SampleData* samples, const size_t numSamples, const Configuration &cfg, FittingStatistics &fitStats) const;
+    void fitMixture(VMM &vmm, SufficientStatistics &stats, const SampleData* samples, const size_t numSamples, const Configuration &cfg, FittingStatistics &fitStats) const;
 
-    void updateMixture(VMM &vmm, SufficientStatisitcs &previousStats, const SampleData* samples, const size_t numSamples, const Configuration &cfg, FittingStatistics &fitStats) const;
+    void updateMixture(VMM &vmm, SufficientStatistics &previousStats, const SampleData* samples, const size_t numSamples, const Configuration &cfg, FittingStatistics &fitStats) const;
 
-    void partialUpdateMixture(VMM &vmm, PartialFittingMask &mask, SufficientStatisitcs &previousStats, const SampleData* samples, const size_t numSamples, const Configuration &cfg, FittingStatistics &fitStats) const;
+    void partialUpdateMixture(VMM &vmm, PartialFittingMask &mask, SufficientStatistics &previousStats, const SampleData* samples, const size_t numSamples, const Configuration &cfg, FittingStatistics &fitStats) const;
 
-    VMM VMMfromSufficientStatisitcs(const SufficientStatisitcs &suffStats, const Configuration &cfg) const;
+    VMM VMMfromSufficientStatistics(const SufficientStatistics &suffStats, const Configuration &cfg) const;
 
     std::string toString() const
     {
         return "ParallaxAwareVonMisesFisherWeightedEMFactory";
     };
 
-    void initComponentDistances (VMM &vmm, SufficientStatisitcs &sufficientStats, const SampleData* samples, const size_t numSamples) const;
+    void initComponentDistances (VMM &vmm, SufficientStatistics &sufficientStats, const SampleData* samples, const size_t numSamples) const;
 
-    void updateComponentDistances (VMM &vmm, SufficientStatisitcs &sufficientStats, const SampleData* samples, const size_t numSamples) const;
+    void updateComponentDistances (VMM &vmm, SufficientStatistics &sufficientStats, const SampleData* samples, const size_t numSamples) const;
 
 private:
     void _initUniformDirections();
 
-    float weightedExpectationStep(VMM &vmm, SufficientStatisitcs &stats, UnassignedSamplesStatistics &unassignedStats, const SampleData* samples, const size_t numSamples) const;
+    float weightedExpectationStep(VMM &vmm, SufficientStatistics &stats, UnassignedSamplesStatistics &unassignedStats, const SampleData* samples, const size_t numSamples) const;
 
-    void weightedMaximumAPosteriorStep(VMM &vmm, const SufficientStatisitcs &previousStats,
-        const SufficientStatisitcs &currentStats,
+    void weightedMaximumAPosteriorStep(VMM &vmm, const SufficientStatistics &previousStats,
+        const SufficientStatistics &currentStats,
         const Configuration &cfg) const;
 
-    void estimateMAPWeights( VMM &vmm, const SufficientStatisitcs &currentStats, const SufficientStatisitcs &previousStats, const float &_weightPrior ) const;
+    void estimateMAPWeights( VMM &vmm, const SufficientStatistics &currentStats, const SufficientStatistics &previousStats, const float &_weightPrior ) const;
 
-    void estimateMAPMeanDirectionAndConcentration( VMM &vmm, const SufficientStatisitcs &currentStats, const SufficientStatisitcs &previousStats, const Configuration &cfg) const;
+    void estimateMAPMeanDirectionAndConcentration( VMM &vmm, const SufficientStatistics &currentStats, const SufficientStatistics &previousStats, const Configuration &cfg) const;
 
-    void partialWeightedMaximumAPosteriorStep(VMM &vmm, const PartialFittingMask &mask, SufficientStatisitcs &previousStats,
-        SufficientStatisitcs &currentStats,
+    void partialWeightedMaximumAPosteriorStep(VMM &vmm, const PartialFittingMask &mask, SufficientStatistics &previousStats,
+        SufficientStatistics &currentStats,
         const Configuration &cfg) const;
 
-    void estimatePartialMAPWeights( VMM &vmm, const PartialFittingMask &mask, SufficientStatisitcs &currentStats, SufficientStatisitcs &previousStats, const float &_weightPrior ) const;
+    void estimatePartialMAPWeights( VMM &vmm, const PartialFittingMask &mask, SufficientStatistics &currentStats, SufficientStatistics &previousStats, const float &_weightPrior ) const;
 
-    void estimatePartialMAPMeanDirectionAndConcentration( VMM &vmm, const PartialFittingMask &mask, SufficientStatisitcs &currentStats, SufficientStatisitcs &previousStats, const Configuration &cfg) const;
+    void estimatePartialMAPMeanDirectionAndConcentration( VMM &vmm, const PartialFittingMask &mask, SufficientStatistics &currentStats, SufficientStatistics &previousStats, const Configuration &cfg) const;
 
-    void handleUnassignedSampleStats(UnassignedSamplesStatistics &unassignedStats, VMM &vmm, SufficientStatisitcs &currentStats, SufficientStatisitcs &previousStats) const;
+    void handleUnassignedSampleStats(UnassignedSamplesStatistics &unassignedStats, VMM &vmm, SufficientStatistics &currentStats, SufficientStatistics &previousStats) const;
 
 
     void reprojectSample(openpgl::SampleData &sample, const openpgl::Point3 &pivotPoint, const float minDistance) const;
@@ -258,11 +258,11 @@ bool ParallaxAwareVonMisesFisherWeightedEMFactory< TVMMDistribution>::Unassigned
 }
 
 ////////////////////////////////////////////////////////////
-/////////            SufficientStatisitcs
+/////////            SufficientStatistics
 ////////////////////////////////////////////////////////////
 
 template<class TVMMDistribution>
-void ParallaxAwareVonMisesFisherWeightedEMFactory< TVMMDistribution>::SufficientStatisitcs::applyParallaxShift(const VMM &vmm, const Vector3 shift)
+void ParallaxAwareVonMisesFisherWeightedEMFactory< TVMMDistribution>::SufficientStatistics::applyParallaxShift(const VMM &vmm, const Vector3 shift)
 {
     const int cnt = (vmm._numComponents+VMM::VectorSize-1) / VMM::VectorSize;
     //const int rem = vmm._numComponents % VMM::VectorSize;
@@ -283,7 +283,7 @@ void ParallaxAwareVonMisesFisherWeightedEMFactory< TVMMDistribution>::Sufficient
 }
 
 template<class TVMMDistribution>
-bool ParallaxAwareVonMisesFisherWeightedEMFactory< TVMMDistribution>::SufficientStatisitcs::isValid() const
+bool ParallaxAwareVonMisesFisherWeightedEMFactory< TVMMDistribution>::SufficientStatistics::isValid() const
 {
     bool valid = true;
 
@@ -343,7 +343,7 @@ bool ParallaxAwareVonMisesFisherWeightedEMFactory< TVMMDistribution>::Sufficient
 }
 
 template<class TVMMDistribution>
-void ParallaxAwareVonMisesFisherWeightedEMFactory< TVMMDistribution>::SufficientStatisitcs::serialize(std::ostream& stream) const
+void ParallaxAwareVonMisesFisherWeightedEMFactory< TVMMDistribution>::SufficientStatistics::serialize(std::ostream& stream) const
 {
     for(uint32_t k=0;k<VMM::NumVectors;k++)
     {
@@ -359,7 +359,7 @@ void ParallaxAwareVonMisesFisherWeightedEMFactory< TVMMDistribution>::Sufficient
 }
 
 template<class TVMMDistribution>
-void ParallaxAwareVonMisesFisherWeightedEMFactory< TVMMDistribution>::SufficientStatisitcs::deserialize(std::istream& stream)
+void ParallaxAwareVonMisesFisherWeightedEMFactory< TVMMDistribution>::SufficientStatistics::deserialize(std::istream& stream)
 {
     for(uint32_t k=0;k<VMM::NumVectors;k++)
     {
@@ -375,7 +375,7 @@ void ParallaxAwareVonMisesFisherWeightedEMFactory< TVMMDistribution>::Sufficient
 }
 
 template<class TVMMDistribution>
-void ParallaxAwareVonMisesFisherWeightedEMFactory< TVMMDistribution>::SufficientStatisitcs::clear(size_t _numComponents)
+void ParallaxAwareVonMisesFisherWeightedEMFactory< TVMMDistribution>::SufficientStatistics::clear(size_t _numComponents)
 {
     const embree::Vec3< embree::vfloat<VMM::VectorSize> > vecZeros(0.0f);
     const embree::vfloat<VMM::VectorSize> zeros(0.0f);
@@ -397,13 +397,13 @@ void ParallaxAwareVonMisesFisherWeightedEMFactory< TVMMDistribution>::Sufficient
 }
 
 template<class TVMMDistribution>
-void ParallaxAwareVonMisesFisherWeightedEMFactory< TVMMDistribution>::SufficientStatisitcs::clearAll()
+void ParallaxAwareVonMisesFisherWeightedEMFactory< TVMMDistribution>::SufficientStatistics::clearAll()
 {
     clear(VMM::MaxComponents);
 }
 
 template<class TVMMDistribution>
-void ParallaxAwareVonMisesFisherWeightedEMFactory< TVMMDistribution>::SufficientStatisitcs::decay(const float &alpha)
+void ParallaxAwareVonMisesFisherWeightedEMFactory< TVMMDistribution>::SufficientStatistics::decay(const float &alpha)
 {
     for(int k = 0; k < VMM::NumVectors; k++)
     {
@@ -420,10 +420,10 @@ void ParallaxAwareVonMisesFisherWeightedEMFactory< TVMMDistribution>::Sufficient
 }
 
 template<class TVMMDistribution>
-std::string ParallaxAwareVonMisesFisherWeightedEMFactory< TVMMDistribution>::SufficientStatisitcs::toString() const
+std::string ParallaxAwareVonMisesFisherWeightedEMFactory< TVMMDistribution>::SufficientStatistics::toString() const
 {
     std::stringstream ss;
-    ss << "SufficientStatisitcs:" << std::endl;
+    ss << "SufficientStatistics:" << std::endl;
     ss << "\tsumWeights = " << sumWeights << std::endl;
     ss << "\tnumSamples = " << numSamples << std::endl;
     ss << "\toverallNumSamples = " << overallNumSamples << std::endl;
@@ -445,7 +445,7 @@ std::string ParallaxAwareVonMisesFisherWeightedEMFactory< TVMMDistribution>::Suf
 
 
 template<class TVMMDistribution>
-void ParallaxAwareVonMisesFisherWeightedEMFactory< TVMMDistribution>::SufficientStatisitcs::maskedReplace(const PartialFittingMask &mask, const SufficientStatisitcs &stats)
+void ParallaxAwareVonMisesFisherWeightedEMFactory< TVMMDistribution>::SufficientStatistics::maskedReplace(const PartialFittingMask &mask, const SufficientStatistics &stats)
 {
     embree::vfloat<VMM::VectorSize> newSumWeights {0.0f};
 
@@ -468,7 +468,7 @@ void ParallaxAwareVonMisesFisherWeightedEMFactory< TVMMDistribution>::Sufficient
 }
 
 template<class TVMMDistribution>
-void ParallaxAwareVonMisesFisherWeightedEMFactory< TVMMDistribution>::SufficientStatisitcs::swapComponentStats(const size_t &idx0, const size_t &idx1)
+void ParallaxAwareVonMisesFisherWeightedEMFactory< TVMMDistribution>::SufficientStatistics::swapComponentStats(const size_t &idx0, const size_t &idx1)
 {
     const div_t tmpIdx0 = div( idx0, VMM::VectorSize);
     const div_t tmpIdx1 = div( idx1, VMM::VectorSize);
@@ -482,7 +482,7 @@ void ParallaxAwareVonMisesFisherWeightedEMFactory< TVMMDistribution>::Sufficient
 }
 
 template<class TVMMDistribution>
-void ParallaxAwareVonMisesFisherWeightedEMFactory< TVMMDistribution>::SufficientStatisitcs::mergeComponentStats(const size_t &idx0, const size_t &idx1)
+void ParallaxAwareVonMisesFisherWeightedEMFactory< TVMMDistribution>::SufficientStatistics::mergeComponentStats(const size_t &idx0, const size_t &idx1)
 {
     const div_t tmpIdx0 = div( idx0, VMM::VectorSize);
     const div_t tmpIdx1 = div( idx1, VMM::VectorSize);
@@ -513,7 +513,7 @@ void ParallaxAwareVonMisesFisherWeightedEMFactory< TVMMDistribution>::Sufficient
 }
 
 template<class TVMMDistribution>
-void ParallaxAwareVonMisesFisherWeightedEMFactory< TVMMDistribution>::SufficientStatisitcs::splitComponentsStats(const size_t &idx0, const size_t &idx1,
+void ParallaxAwareVonMisesFisherWeightedEMFactory< TVMMDistribution>::SufficientStatistics::splitComponentsStats(const size_t &idx0, const size_t &idx1,
                 const Vector3 &meanDirection0, const Vector3 &meanDirection1,
                 const float &meanCosine0, const float &meanCosine1)
 {
@@ -550,7 +550,7 @@ void ParallaxAwareVonMisesFisherWeightedEMFactory< TVMMDistribution>::Sufficient
 }
 
 template<class TVMMDistribution>
-void ParallaxAwareVonMisesFisherWeightedEMFactory< TVMMDistribution>::SufficientStatisitcs::normalize( const float &_numSamples )
+void ParallaxAwareVonMisesFisherWeightedEMFactory< TVMMDistribution>::SufficientStatistics::normalize( const float &_numSamples )
 {
     const int cnt = (numComponents+VMM::VectorSize-1) / VMM::VectorSize;
     numSamples = _numSamples;
@@ -572,7 +572,7 @@ void ParallaxAwareVonMisesFisherWeightedEMFactory< TVMMDistribution>::Sufficient
 }
 
 template<class TVMMDistribution>
-typename ParallaxAwareVonMisesFisherWeightedEMFactory< TVMMDistribution>::SufficientStatisitcs& ParallaxAwareVonMisesFisherWeightedEMFactory< TVMMDistribution>::SufficientStatisitcs::operator+=(const typename ParallaxAwareVonMisesFisherWeightedEMFactory< TVMMDistribution>::SufficientStatisitcs &stats)
+typename ParallaxAwareVonMisesFisherWeightedEMFactory< TVMMDistribution>::SufficientStatistics& ParallaxAwareVonMisesFisherWeightedEMFactory< TVMMDistribution>::SufficientStatistics::operator+=(const typename ParallaxAwareVonMisesFisherWeightedEMFactory< TVMMDistribution>::SufficientStatistics &stats)
 {
 
     // TODO: check for normalization
@@ -593,7 +593,7 @@ typename ParallaxAwareVonMisesFisherWeightedEMFactory< TVMMDistribution>::Suffic
 }
 
 template<class TVMMDistribution>
-bool ParallaxAwareVonMisesFisherWeightedEMFactory< TVMMDistribution>::SufficientStatisitcs::operator==(const SufficientStatisitcs& b) const
+bool ParallaxAwareVonMisesFisherWeightedEMFactory< TVMMDistribution>::SufficientStatistics::operator==(const SufficientStatistics& b) const
 {
     bool equal = true;
     if(sumWeights != b.sumWeights || numSamples != b.numSamples || normalized != b.normalized ||
@@ -700,10 +700,10 @@ void ParallaxAwareVonMisesFisherWeightedEMFactory<TVMMDistribution>::_initUnifor
 }
 
 template<class TVMMDistribution>
-typename ParallaxAwareVonMisesFisherWeightedEMFactory< TVMMDistribution>::VMM ParallaxAwareVonMisesFisherWeightedEMFactory< TVMMDistribution>::VMMfromSufficientStatisitcs(const SufficientStatisitcs &suffStats, const Configuration &cfg) const
+typename ParallaxAwareVonMisesFisherWeightedEMFactory< TVMMDistribution>::VMM ParallaxAwareVonMisesFisherWeightedEMFactory< TVMMDistribution>::VMMfromSufficientStatistics(const SufficientStatistics &suffStats, const Configuration &cfg) const
 {
 
-    SufficientStatisitcs previousStats;
+    SufficientStatistics previousStats;
     previousStats.clear(suffStats.numComponents);
     VMM vmm;
     vmm._numComponents = suffStats.numComponents;
@@ -714,13 +714,13 @@ typename ParallaxAwareVonMisesFisherWeightedEMFactory< TVMMDistribution>::VMM Pa
 
 
 template<class TVMMDistribution>
-void ParallaxAwareVonMisesFisherWeightedEMFactory< TVMMDistribution>::fitMixture(VMM &vmm, SufficientStatisitcs &stats, const SampleData* samples, const size_t numSamples, const Configuration &cfg, FittingStatistics &fitStats) const
+void ParallaxAwareVonMisesFisherWeightedEMFactory< TVMMDistribution>::fitMixture(VMM &vmm, SufficientStatistics &stats, const SampleData* samples, const size_t numSamples, const Configuration &cfg, FittingStatistics &fitStats) const
 {
     const size_t numComponents = cfg.initK;
     //VonMisesFisherFactory< TVMMDistribution>::InitUniformVMM( vmm, numComponents, 5.0f);
     this->InitUniformVMM( vmm, numComponents, cfg.initKappa);
     //OPENPGL_ASSERT(vmm.isValid());
-    //SufficientStatisitcs stats;
+    //SufficientStatistics stats;
     stats.clear(numComponents);
     stats.normalized = true;
     //stats.clearAll();
@@ -729,7 +729,7 @@ void ParallaxAwareVonMisesFisherWeightedEMFactory< TVMMDistribution>::fitMixture
 }
 
 template<class TVMMDistribution>
-void ParallaxAwareVonMisesFisherWeightedEMFactory< TVMMDistribution>::handleUnassignedSampleStats(UnassignedSamplesStatistics &unassignedStats, VMM &vmm, SufficientStatisitcs &currentStats, SufficientStatisitcs &previousStats) const
+void ParallaxAwareVonMisesFisherWeightedEMFactory< TVMMDistribution>::handleUnassignedSampleStats(UnassignedSamplesStatistics &unassignedStats, VMM &vmm, SufficientStatistics &currentStats, SufficientStatistics &previousStats) const
 {
     const div_t tmpK = div(currentStats.numComponents, TVMMDistribution::VectorSize);
     currentStats.numComponents++;
@@ -748,9 +748,9 @@ void ParallaxAwareVonMisesFisherWeightedEMFactory< TVMMDistribution>::handleUnas
 }
 
 template<class TVMMDistribution>
-void ParallaxAwareVonMisesFisherWeightedEMFactory< TVMMDistribution>::updateMixture(VMM &vmm, SufficientStatisitcs &previousStats, const SampleData* samples, const size_t numSamples, const Configuration &cfg, FittingStatistics &fitStats) const
+void ParallaxAwareVonMisesFisherWeightedEMFactory< TVMMDistribution>::updateMixture(VMM &vmm, SufficientStatistics &previousStats, const SampleData* samples, const size_t numSamples, const Configuration &cfg, FittingStatistics &fitStats) const
 {
-    SufficientStatisitcs currentStats;
+    SufficientStatistics currentStats;
     // initially clear all stats
     currentStats.clearAll();
 
@@ -795,9 +795,9 @@ void ParallaxAwareVonMisesFisherWeightedEMFactory< TVMMDistribution>::updateMixt
 }
 
 template<class TVMMDistribution>
-void ParallaxAwareVonMisesFisherWeightedEMFactory< TVMMDistribution>::partialUpdateMixture(VMM &vmm, PartialFittingMask &mask, SufficientStatisitcs &previousStats, const SampleData* samples, const size_t numSamples, const Configuration &cfg, FittingStatistics &fitStats) const
+void ParallaxAwareVonMisesFisherWeightedEMFactory< TVMMDistribution>::partialUpdateMixture(VMM &vmm, PartialFittingMask &mask, SufficientStatistics &previousStats, const SampleData* samples, const size_t numSamples, const Configuration &cfg, FittingStatistics &fitStats) const
 {
-    SufficientStatisitcs currentStats;
+    SufficientStatistics currentStats;
     // initially clear all stats
     currentStats.clearAll();
 
@@ -845,7 +845,7 @@ void ParallaxAwareVonMisesFisherWeightedEMFactory< TVMMDistribution>::partialUpd
 
 template<class TVMMDistribution>
 float ParallaxAwareVonMisesFisherWeightedEMFactory< TVMMDistribution>::weightedExpectationStep(VMM &vmm,
-        SufficientStatisitcs &stats,
+        SufficientStatistics &stats,
         UnassignedSamplesStatistics &unassignedStats,
         const SampleData* samples,
         const size_t numSamples) const
@@ -893,8 +893,8 @@ float ParallaxAwareVonMisesFisherWeightedEMFactory< TVMMDistribution>::weightedE
 
 template<class TVMMDistribution>
 void ParallaxAwareVonMisesFisherWeightedEMFactory< TVMMDistribution>::estimateMAPWeights( VMM &vmm,
-        const SufficientStatisitcs &currentStats,
-        const SufficientStatisitcs &previousStats,
+        const SufficientStatistics &currentStats,
+        const SufficientStatistics &previousStats,
         const float &_weightPrior ) const
 {
     const int cnt = (vmm._numComponents+VMM::VectorSize-1) / VMM::VectorSize;
@@ -928,8 +928,8 @@ void ParallaxAwareVonMisesFisherWeightedEMFactory< TVMMDistribution>::estimateMA
 
 template<class TVMMDistribution>
 void ParallaxAwareVonMisesFisherWeightedEMFactory< TVMMDistribution>::estimateMAPMeanDirectionAndConcentration( VMM &vmm,
-        const SufficientStatisitcs &currentStats,
-        const SufficientStatisitcs &previousStats ,
+        const SufficientStatistics &currentStats,
+        const SufficientStatistics &previousStats ,
         const Configuration &cfg) const
 {
     const embree::vfloat<VMM::VectorSize> currentNumSamples = currentStats.numSamples;
@@ -1000,8 +1000,8 @@ void ParallaxAwareVonMisesFisherWeightedEMFactory< TVMMDistribution>::estimateMA
 
 template<class TVMMDistribution>
 void ParallaxAwareVonMisesFisherWeightedEMFactory< TVMMDistribution>::weightedMaximumAPosteriorStep(VMM &vmm,
-        const SufficientStatisitcs &currentStats,
-        const SufficientStatisitcs &previousStats,
+        const SufficientStatistics &currentStats,
+        const SufficientStatistics &previousStats,
         const Configuration &cfg) const
 {
     // Estimating components weights
@@ -1014,8 +1014,8 @@ void ParallaxAwareVonMisesFisherWeightedEMFactory< TVMMDistribution>::weightedMa
 template<class TVMMDistribution>
 void ParallaxAwareVonMisesFisherWeightedEMFactory< TVMMDistribution>::partialWeightedMaximumAPosteriorStep(VMM &vmm,
         const PartialFittingMask &mask,
-        SufficientStatisitcs &currentStats,
-        SufficientStatisitcs &previousStats,
+        SufficientStatistics &currentStats,
+        SufficientStatistics &previousStats,
         const Configuration &cfg) const
 {
     // Estimating components weights
@@ -1029,8 +1029,8 @@ void ParallaxAwareVonMisesFisherWeightedEMFactory< TVMMDistribution>::partialWei
 template<class TVMMDistribution>
 void ParallaxAwareVonMisesFisherWeightedEMFactory< TVMMDistribution>::estimatePartialMAPWeights( VMM &vmm,
         const PartialFittingMask &mask,
-        SufficientStatisitcs &currentStats,
-        SufficientStatisitcs &previousStats,
+        SufficientStatistics &currentStats,
+        SufficientStatistics &previousStats,
         const float &_weightPrior ) const
 {
     const embree::vfloat<VMM::VectorSize> zeros(0.0f);
@@ -1080,8 +1080,8 @@ void ParallaxAwareVonMisesFisherWeightedEMFactory< TVMMDistribution>::estimatePa
 template<class TVMMDistribution>
 void ParallaxAwareVonMisesFisherWeightedEMFactory< TVMMDistribution>::estimatePartialMAPMeanDirectionAndConcentration( VMM &vmm,
         const PartialFittingMask &mask,
-        SufficientStatisitcs &currentStats,
-        SufficientStatisitcs &previousStats ,
+        SufficientStatistics &currentStats,
+        SufficientStatistics &previousStats ,
         const Configuration &cfg) const
 {
     const embree::vfloat<VMM::VectorSize> currentNumSamples = currentStats.numSamples;
@@ -1196,7 +1196,7 @@ void ParallaxAwareVonMisesFisherWeightedEMFactory< TVMMDistribution>::prepareSam
 }
 
 template<class TVMMDistribution>
-void ParallaxAwareVonMisesFisherWeightedEMFactory< TVMMDistribution>::initComponentDistances (VMM &vmm, SufficientStatisitcs &sufficientStats, const SampleData* samples, const size_t numSamples) const
+void ParallaxAwareVonMisesFisherWeightedEMFactory< TVMMDistribution>::initComponentDistances (VMM &vmm, SufficientStatistics &sufficientStats, const SampleData* samples, const size_t numSamples) const
 {
     OPENPGL_ASSERT(vmm.getNumComponents() == sufficientStats.getNumComponents());
 
@@ -1258,7 +1258,7 @@ void ParallaxAwareVonMisesFisherWeightedEMFactory< TVMMDistribution>::initCompon
 }
 
 template<class TVMMDistribution>
-void ParallaxAwareVonMisesFisherWeightedEMFactory< TVMMDistribution>::updateComponentDistances (VMM &vmm, SufficientStatisitcs &sufficientStats, const SampleData* samples, const size_t numSamples) const
+void ParallaxAwareVonMisesFisherWeightedEMFactory< TVMMDistribution>::updateComponentDistances (VMM &vmm, SufficientStatistics &sufficientStats, const SampleData* samples, const size_t numSamples) const
 {
     OPENPGL_ASSERT(vmm.getNumComponents() == sufficientStats.getNumComponents());
 

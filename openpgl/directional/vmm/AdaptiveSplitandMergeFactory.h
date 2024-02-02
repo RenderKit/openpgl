@@ -72,7 +72,7 @@ public:
 
     struct Statistics
     {
-        typename WeightedEMFactory::SufficientStatisitcs sufficientStatistics;
+        typename WeightedEMFactory::SufficientStatistics sufficientStatistics;
         typename Splitter::ComponentSplitStatistics splittingStatistics;
 
         //size_t numComponents {0};
@@ -413,7 +413,7 @@ void AdaptiveSplitAndMergeFactory<TVMMDistribution>::update(VMM &vmm, Statistics
 
             if (totalSplitCount > 0 &&  cfg.partialReFit && numSamples >= cfg.minSamplesForPartialRefitting)
             {
-                typename WeightedEMFactory::SufficientStatisitcs tempSuffStatistics = stats.sufficientStatistics;
+                typename WeightedEMFactory::SufficientStatistics tempSuffStatistics = stats.sufficientStatistics;
                 tempSuffStatistics.clear(vmm._numComponents);
                 factory.partialUpdateMixture(vmm, mask, tempSuffStatistics, samples, numSamples, cfg.weightedEMCfg, wemFitStats);
                 stats.sufficientStatistics.setNumComponents(vmm._numComponents);

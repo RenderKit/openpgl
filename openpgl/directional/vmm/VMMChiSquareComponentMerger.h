@@ -14,7 +14,7 @@ struct VonMisesFisherChiSquareComponentMerger
 {
 public:
     typedef typename TVMMFactory::Distribution VMM;
-    typedef typename TVMMFactory::SufficientStatisitcs SufficientStatisitcs;
+    typedef typename TVMMFactory::SufficientStatistics SufficientStatistics;
     typedef typename VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::ComponentSplitStatistics ComponentSplitStatistics;
     //typedef std::integral_constant<size_t, (maxComponents + (VecSize -1)) / VecSize> NumVectors;
 
@@ -22,13 +22,13 @@ public:
 
     bool ThresholdedMergeNext (VMM &vmm, const float &mergeThreshold, float &mergeCost) const;
 
-    bool ThresholdedMergeNext (VMM &vmm, const float &mergeThreshold, float &mergeCost, SufficientStatisitcs &suffStats, ComponentSplitStatistics &splitStats) const;
+    bool ThresholdedMergeNext (VMM &vmm, const float &mergeThreshold, float &mergeCost, SufficientStatistics &suffStats, ComponentSplitStatistics &splitStats) const;
 
     float CalculateMergeCost (const VMM &vmm, const size_t &idx0, const size_t &idx1) const;
 
     size_t PerformMerging(VMM &vmm, const float &mergeThreshold) const;
 
-    size_t PerformMerging(VMM &vmm, const float &mergeThreshold, SufficientStatisitcs &suffStats, ComponentSplitStatistics &splitStats) const;
+    size_t PerformMerging(VMM &vmm, const float &mergeThreshold, SufficientStatistics &suffStats, ComponentSplitStatistics &splitStats) const;
 
 private:
     inline float _IntegratedProduct(const Vector3 &meanDirection0, const float &kappa0, const float &normalization0, const Vector3 &meanDirection1, const float &kappa1, const float &normalization1) const;
@@ -64,7 +64,7 @@ size_t VonMisesFisherChiSquareComponentMerger<TVMMFactory>::PerformMerging(VMM &
 }
 
 template<class TVMMFactory>
-size_t VonMisesFisherChiSquareComponentMerger<TVMMFactory>::PerformMerging(VMM &vmm, const float &mergeThreshold, SufficientStatisitcs &suffStats, ComponentSplitStatistics &splitStats) const
+size_t VonMisesFisherChiSquareComponentMerger<TVMMFactory>::PerformMerging(VMM &vmm, const float &mergeThreshold, SufficientStatistics &suffStats, ComponentSplitStatistics &splitStats) const
 {
     bool stopMerging = false;
     size_t totalMergeCount = 0;
@@ -215,7 +215,7 @@ bool VonMisesFisherChiSquareComponentMerger<TVMMFactory>::ThresholdedMergeNext (
 
 
 template<class TVMMFactory>
-bool VonMisesFisherChiSquareComponentMerger<TVMMFactory>::ThresholdedMergeNext (VMM &vmm, const float &mergeThreshold, float &mergeCost, SufficientStatisitcs &suffStats, ComponentSplitStatistics &splitStats) const
+bool VonMisesFisherChiSquareComponentMerger<TVMMFactory>::ThresholdedMergeNext (VMM &vmm, const float &mergeThreshold, float &mergeCost, SufficientStatistics &suffStats, ComponentSplitStatistics &splitStats) const
 {
     OPENPGL_ASSERT(splitStats.isValid());
     int K = vmm._numComponents;
