@@ -197,9 +197,9 @@ struct KNearestRegionsSearchTree
 
         for (size_t i = 0; i < num_points; i++)
         {
-            const auto region = regionStorage[i].first;
-            openpgl::SampleStatistics combinedStats = region.sampleStatistics;
-            openpgl::Point3 distributionPivot = combinedStats.mean;
+            const auto& region = regionStorage[i].first;
+            const openpgl::SampleStatistics& combinedStats = region.sampleStatistics;
+            const openpgl::Point3 distributionPivot = combinedStats.mean;
             points[i].p = embree::Vec3f(distributionPivot[0], distributionPivot[1], distributionPivot[2]);
         }
 
