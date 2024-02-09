@@ -55,8 +55,8 @@ specification is still in flux and might change with upcoming releases.
         constructor to set the number of threads used by `Open PGL`
         during training. The default value of `0` uses all threads
         provided by `TBB`. If the renderer uses `TBB` as well and
-        regulates the thread count this count is also used by \`Open
-        PGL\`\`.
+        regulates the thread count this count is also used by
+        `Open PGL`.
     -   `SurfaceSamplingDistribution` and `VolumeSamplingDistribution`:
         -   Added `GetId` function to return the unique id of the
             spatial structure used to query the sampling distriubtion.
@@ -67,7 +67,7 @@ specification is still in flux and might change with upcoming releases.
     -   `Field`:
         -   The constructor of the `Field` class now takes a
             `FieldConfig` instead of a `PGLFieldArguments` object.
-            (BREAKING API CHANGE)
+            **(BREAKING API CHANGE)**
         -   `GetSurfaceStatistics` and `GetVolumeStatistics` functions
             are added to query statistics about the surface and volume
             guiding field. The functions return a `FieldStatistics`
@@ -97,7 +97,8 @@ specification is still in flux and might change with upcoming releases.
             called after `Init` to the the maximum tree depth of the
             spatial structure.
     -   `pglFieldArgumentsSetDefaults`: Adding two additional parameters
-        `deterministic` and `maxSamplesPerLeaf`. (BREAKING API CHANGE)
+        `deterministic` and `maxSamplesPerLeaf`. **(BREAKING API
+        CHANGE)**
 -   Tools:
     -   Added a set of command line tools which are build when enabling
         the `OPENPGL_BUILD_TOOLS` Cmake flag.
