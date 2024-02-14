@@ -20,6 +20,9 @@
 #include <fstream>
 #include <iostream>
 
+#define USE_SIMD_CDF_SAMPLING
+//#define VALIDATE_SELECT_COMPONENT_SIMD
+
 namespace openpgl
 {
 
@@ -82,6 +85,11 @@ public:
     float pdf( Vector3 direction ) const;
 
     Vector3 sample( const Vector2 sample ) const;
+
+#ifdef USE_SIMD_CDF_SAMPLING
+    void selectComponentSIMD(uint32_t &selectedVector,  uint32_t &selectedComponent, Vector2 &_sample) const;
+#endif
+    void selectComponent(uint32_t &selectedVector,  uint32_t &selectedComponent, Vector2 &_sample) const;
 
     void mergeComponents(const size_t &idx0, const size_t &idx1);
 
@@ -726,13 +734,7 @@ bool ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents,UseParallaxCompen
 
 
 template<int VecSize, int maxComponents, bool UseParallaxCompensation>
-Vector3 ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents,UseParallaxCompensation>::sample( const Vector2 sample ) const{
-
-    uint32_t selectedVector {0};
-    uint32_t selectedComponent {0};
-    // First, identify component we want to sample
-
-    Vector2 _sample = sample;
+void ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents,UseParallaxCompensation>::selectComponent(uint32_t &selectedVector,  uint32_t &selectedComponent, Vector2 &_sample) const {
     float searched = _sample[1];
     float sumWeights = 0.0f;
     float cdf = 0.0f;
@@ -765,6 +767,120 @@ Vector3 ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents,UseParallaxCom
     }
 
     _sample[1] = std::min(1 - FLT_EPSILON, (searched - sumWeights) / cdf);
+}
+
+#ifdef USE_SIMD_CDF_SAMPLING
+template<int VecSize, int maxComponents, bool UseParallaxCompensation>
+inline void ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents,UseParallaxCompensation>::selectComponentSIMD(uint32_t &selectedVector,  uint32_t &selectedComponent, Vector2 &_sample) const{
+
+    embree::vfloat<VectorSize> cdfs[NumVectors]; 
+
+    const float searched = _sample[1];
+#ifdef VALIDATE_SELECT_COMPONENT_SIMD
+    const float searchedScalar = _sample[1];
+#endif
+    float sumWeights = 0.0f;
+    float cdf = 0.0f;
+
+    const div_t tmp = div( _numComponents-1, VectorSize);
+    
+    selectedVector = 0;
+    selectedComponent = 0;
+#if(1)
+    for( selectedVector = 0; selectedVector < NumVectors; selectedVector++) {
+        cdfs[selectedVector] = vinclusive_prefix_sum(_weights[selectedVector]);
+        cdf = cdfs[selectedVector][VectorSize-1];
+        if(sumWeights+cdf >= searched || selectedVector >= tmp.quot){
+            break;
+        } else {
+            sumWeights+=cdf;
+        }
+    }
+#else
+    while(true){
+        cdfs[selectedVector] = vinclusive_prefix_sum(_weights[selectedVector]);
+        cdf = cdfs[selectedVector][VectorSize-1];
+        if(sumWeights+cdf >= searched || selectedVector+1 >= (tmp.quot+1)){
+            break;
+        }else{
+            sumWeights+=cdf;
+            selectedVector++;
+        }
+    }
+#endif
+#ifdef VALIDATE_SELECT_COMPONENT_SIMD
+    float sumWeightsCheckPoint = sumWeights;
+#endif
+
+    const uint32_t maxSelectedComponent = selectedVector == tmp.quot ? tmp.rem +1 : VectorSize;
+    
+    cdfs[selectedVector] += sumWeights;
+    selectedComponent = embree::select_min(cdfs[selectedVector] >= searched, cdfs[selectedVector]);
+    
+    selectedComponent = std::min(selectedComponent, maxSelectedComponent-1);
+    sumWeights = selectedComponent > 0 ? cdfs[selectedVector][selectedComponent-1] : sumWeights;
+    
+    cdf = _weights[selectedVector][selectedComponent];
+
+    _sample[1] = std::min(1 - FLT_EPSILON, (searched - sumWeights) / cdf);
+
+#ifdef VALIDATE_SELECT_COMPONENT_SIMD
+    Vector2 _sampleScalar = _sample;
+    uint32_t selectedVectorScalar = 0;
+    uint32_t selectedComponentScalar = 0;
+
+    float sumWeightsScalar = 0.0f;
+    float cdfScalar = 0.0f;
+    const div_t tmpScalar = div( _numComponents-1, VectorSize);
+
+    while(true){
+        cdfScalar = reduce_add(_weights[selectedVectorScalar]);
+        if(sumWeightsScalar+cdfScalar >= searchedScalar || selectedVectorScalar+1 >= (tmpScalar.quot+1)){
+            break;
+        }else{
+            sumWeightsScalar+=cdfScalar;
+            selectedVectorScalar++;
+        }
+    }
+
+    OPENPGL_ASSERT(searched == searchedScalar);
+    OPENPGL_ASSERT(sumWeightsCheckPoint == sumWeightsScalar);
+    OPENPGL_ASSERT(selectedVector == selectedVectorScalar);
+
+    int maxSelectedComponentScalar = selectedVectorScalar == tmpScalar.quot ? tmpScalar.rem +1 : VectorSize;
+
+    while(true){
+        cdfScalar = _weights[selectedVectorScalar][selectedComponentScalar];
+        if(sumWeightsScalar+cdfScalar >= searchedScalar || selectedComponentScalar+1 >= maxSelectedComponentScalar){
+            break;
+        }else{
+            sumWeightsScalar+=cdfScalar;
+            selectedComponentScalar++;
+        }
+    }
+
+    //OPENPGL_ASSERT(selectedComponent == selectedComponentScalar);
+    //OPENPGL_ASSERT(cdf == cdfScalar);
+    //OPENPGL_ASSERT(sumWeights == sumWeightsScalar);
+    _sampleScalar[1] = std::min(1 - FLT_EPSILON, (searchedScalar - sumWeightsScalar) / cdfScalar);
+    //OPENPGL_ASSERT(_sample[1] == _sampleScalar[1]);
+#endif
+}
+#endif
+
+template<int VecSize, int maxComponents, bool UseParallaxCompensation>
+Vector3 ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents,UseParallaxCompensation>::sample( const Vector2 sample ) const{
+
+    uint32_t selectedVector {0};
+    uint32_t selectedComponent {0};
+    // First, identify component we want to sample
+
+    Vector2 _sample = sample;
+#ifdef USE_SIMD_CDF_SAMPLING
+    selectComponentSIMD(selectedVector, selectedComponent, _sample);
+#else
+    selectComponent(selectedVector, selectedComponent, _sample);
+#endif
 
      embree::Vec3<float> sampledDirection(0.f, 0.f, 1.f);
 
