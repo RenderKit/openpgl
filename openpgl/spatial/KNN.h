@@ -31,39 +31,6 @@ inline uint32_t draw(float* sample, uint32_t size) {
     return std::min(selected, size - 1);
 }
 
-template<int imm>
-__forceinline embree::vfloat4 vshift_left(const embree::vfloat4& v)
-{
-    return embree::asFloat(_mm_slli_si128(asInt(v), imm));
-}
-
-__forceinline embree::vfloat4 vinclusive_prefix_sum(const embree::vfloat4& v)
-{
-    embree::vfloat4 x = v;
-    x += vshift_left<4>(x);
-    x += vshift_left<8>(x);
-    return x;
-}
-
-//__forceinline vint8   asInt  (const vfloat8& a) { return _mm256_castps_si256(a); }
-#if defined(__AVX__)
-template<int imm>
-__forceinline embree::vfloat8 vshift_left(const embree::vfloat8& v)
-{
-    return embree::asFloat(_mm256_slli_si256(asInt(v), imm));
-
-}
-
-__forceinline embree::vfloat8 vinclusive_prefix_sum(const embree::vfloat8& v)
-{
-    embree::vfloat8 x = v;
-    x += vshift_left<4>(x);
-    x += vshift_left<8>(x);
-    x += embree::vfloat8(0.0f, 0.0f, 0.0f, 0.0f, x[3], x[3], x[3], x[3]);
-    return x;
-}
-#endif
-
 template<typename RegionNeighbours>
 uint32_t sampleApproximateClosestRegionIdxRef(const RegionNeighbours &nh, const openpgl::Point3 &p, float sample) {
     uint32_t selected = draw(&sample, nh.size);

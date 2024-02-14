@@ -152,6 +152,66 @@ namespace openpgl
 
 namespace openpgl
 {
+    template<int imm>
+__forceinline embree::vfloat4 vshift_left(const embree::vfloat4& v)
+{
+    return embree::asFloat(_mm_slli_si128(asInt(v), imm));
+}
+
+__forceinline embree::vfloat4 vinclusive_prefix_sum(const embree::vfloat4& v)
+{
+    embree::vfloat4 x = v;
+    x += vshift_left<4>(x);
+    x += vshift_left<8>(x);
+    return x;
+}
+
+//__forceinline vint8   asInt  (const vfloat8& a) { return _mm256_castps_si256(a); }
+#if defined(__AVX__)
+template<int imm>
+__forceinline embree::vfloat8 vshift_left(const embree::vfloat8& v)
+{
+    return embree::asFloat(_mm256_slli_si256(asInt(v), imm));
+}
+
+__forceinline embree::vfloat8 vinclusive_prefix_sum(const embree::vfloat8& v)
+{
+    embree::vfloat8 x = v;
+    x += vshift_left<4>(x);
+    x += vshift_left<8>(x);
+    x += embree::vfloat8(0.0f, 0.0f, 0.0f, 0.0f, x[3], x[3], x[3], x[3]);
+    return x;
+}
+#endif
+
+#if defined(__AVX512F__)
+template <int k>
+__m512i _mm512_slli_si512 ( __m512i x) {
+    const __m512i ZERO = _mm512_setzero_si512 ();
+    return _mm512_alignr_epi32 (x , ZERO , 16 - k );
+}
+
+template<int imm>
+__forceinline embree::vfloat16 vshift_left(const embree::vfloat16& v)
+{
+    return embree::asFloat(_mm512_slli_si512<imm>(asInt(v)));
+}
+
+// From the arxiv paper: Parallel Prefix Sum with SIMD
+__forceinline embree::vfloat16 vinclusive_prefix_sum(const embree::vfloat16& v)
+{
+    embree::vfloat16 x = v;
+    x += vshift_left<1>(x);
+    x += vshift_left<2>(x);
+    x += vshift_left<4>(x);
+    x += vshift_left<8>(x);
+    return x;
+}
+#endif
+}
+
+namespace openpgl
+{
 
   inline void* alignedMalloc(size_t size, size_t align)
   {
