@@ -1,0 +1,6 @@
+// Copyright 2024 Intel Corporation
+// SPDX-License-Identifier: Apache-2.0
+
+#pragma once
+
+#cmakedefine OPENPGL_SUPPORT_DEVICE_TYPE_CPU_16

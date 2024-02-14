@@ -158,9 +158,17 @@ bool parseCommandLine(std::list<std::string> &args,
                     benchParams.device_type = PGL_DEVICE_TYPE_CPU_4; 
                 } else if(str_type == "CPU_8") {
                     benchParams.device_type = PGL_DEVICE_TYPE_CPU_8; 
+#ifdef OPENPGL_SUPPORT_DEVICE_TYPE_CPU_16
+                } else if(str_type == "CPU_16") {
+                    benchParams.device_type = PGL_DEVICE_TYPE_CPU_16;
+#endif 
                 } else {
                     std::cout << "ERROR: Unknown device type: " << str_type << std::endl;
-                    std::cout << "       Valid types are: [CPU_4 CPU_8] "<< std::endl;
+                    std::cout << "       Valid types are: [CPU_4 CPU_8";
+#ifdef OPENPGL_SUPPORT_DEVICE_TYPE_CPU_16
+                    std::cout << " CPU_16";
+#endif
+                    std::cout <<"] "<< std::endl;
                     return false;
                 }
             } else {
@@ -289,7 +297,7 @@ void init_field(BenchParams &benchParams){
 }
 
 void validate_field(BenchParams &benchParams){
-    openpgl::cpp::Device device(PGL_DEVICE_TYPE_CPU_8);
+    openpgl::cpp::Device device(benchParams.device_type);
     openpgl::cpp::Field field(&device, benchParams.field_file_name);
     bool valid = field.Validate();
 }
@@ -305,7 +313,7 @@ void bench_lookup_sample(BenchParams &benchParams, bool applyCosine, bool sample
     tbb::global_control global_limit(tbb::global_control::max_allowed_parallelism, num_threads);
     std::cout << "num_threads = " << num_threads << std::endl;
     
-    openpgl::cpp::Device device(PGL_DEVICE_TYPE_CPU_4);
+    openpgl::cpp::Device device(benchParams.device_type);
     openpgl::cpp::Field field(&device, benchParams.field_file_name);
     openpgl::cpp::SampleStorage sampleStorage(benchParams.samples_file_names[0]);
 

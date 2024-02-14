@@ -13,6 +13,13 @@
 #endif
 
 #include "common.h"
+#ifdef OPENPGL_BUILD
+    #ifdef OPENPGL_DEVICE_TYPE_CPU_16
+        #define OPENPGL_SUPPORT_DEVICE_TYPE_CPU_16
+    #endif
+#else
+    #include "defines.h"
+#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -26,7 +33,9 @@ enum PGL_DEVICE_TYPE
 {
     PGL_DEVICE_TYPE_CPU_4,
     PGL_DEVICE_TYPE_CPU_8,
+#ifdef OPENPGL_SUPPORT_DEVICE_TYPE_CPU_16
     PGL_DEVICE_TYPE_CPU_16,
+#endif
     PGL_DEVICE_TYPE_NONE,
 };
 
