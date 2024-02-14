@@ -385,17 +385,13 @@ void ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents,UseParallaxCompen
 template<int VecSize, int maxComponents, bool UseParallaxCompensation>
 void ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents,UseParallaxCompensation>::serialize(std::ostream& stream) const
 {
-
-    for(uint32_t k=0;k<NumVectors;k++){
-        stream.write(reinterpret_cast<const char*>(&_weights[k]), sizeof(embree::vfloat<VecSize>));
-        stream.write(reinterpret_cast<const char*>(&_kappas[k]), sizeof(embree::vfloat<VecSize>));
-        stream.write(reinterpret_cast<const char*>(&_meanDirections[k]), sizeof(embree::Vec3<embree::vfloat<VecSize> >));
-
-        stream.write(reinterpret_cast<const char*>(&_normalizations[k]), sizeof(embree::vfloat<VecSize>));
-        stream.write(reinterpret_cast<const char*>(&_eMinus2Kappa[k]), sizeof(embree::vfloat<VecSize>));
-        stream.write(reinterpret_cast<const char*>(&_meanCosines[k]), sizeof(embree::vfloat<VecSize>));
-        stream.write(reinterpret_cast<const char*>(&_distances[k]), sizeof(embree::vfloat<VecSize>));
-    }
+    serializeFloatVectors<NumVectors, VectorSize>(stream, _weights);
+    serializeFloatVectors<NumVectors, VectorSize>(stream, _kappas);
+    serializeVec3Vectors<NumVectors, VectorSize>(stream, _meanDirections);
+    serializeFloatVectors<NumVectors, VectorSize>(stream, _normalizations);
+    serializeFloatVectors<NumVectors, VectorSize>(stream, _eMinus2Kappa);
+    serializeFloatVectors<NumVectors, VectorSize>(stream, _meanCosines);
+    serializeFloatVectors<NumVectors, VectorSize>(stream, _distances);
     stream.write(reinterpret_cast<const char*>(&_numComponents), sizeof(_numComponents));
     stream.write(reinterpret_cast<const char*>(&_pivotPosition), sizeof(Point3));
 }
@@ -403,17 +399,13 @@ void ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents,UseParallaxCompen
 template<int VecSize, int maxComponents, bool UseParallaxCompensation>
 void ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents,UseParallaxCompensation>::deserialize(std::istream& stream)
 {
-
-    for(uint32_t k=0;k<NumVectors;k++){
-        stream.read(reinterpret_cast<char*>(&_weights[k]), sizeof(embree::vfloat<VecSize>));
-        stream.read(reinterpret_cast<char*>(&_kappas[k]), sizeof(embree::vfloat<VecSize>));
-        stream.read(reinterpret_cast<char*>(&_meanDirections[k]), sizeof(embree::Vec3<embree::vfloat<VecSize> >));
-
-        stream.read(reinterpret_cast<char*>(&_normalizations[k]), sizeof(embree::vfloat<VecSize>));
-        stream.read(reinterpret_cast<char*>(&_eMinus2Kappa[k]), sizeof(embree::vfloat<VecSize>));
-        stream.read(reinterpret_cast<char*>(&_meanCosines[k]), sizeof(embree::vfloat<VecSize>));
-        stream.read(reinterpret_cast<char*>(&_distances[k]), sizeof(embree::vfloat<VecSize>));
-    }
+    deserializeFloatVectors<NumVectors, VectorSize>(stream, _weights);
+    deserializeFloatVectors<NumVectors, VectorSize>(stream, _kappas);
+    deserializeVec3Vectors<NumVectors, VectorSize>(stream, _meanDirections);
+    deserializeFloatVectors<NumVectors, VectorSize>(stream, _normalizations);
+    deserializeFloatVectors<NumVectors, VectorSize>(stream, _eMinus2Kappa);
+    deserializeFloatVectors<NumVectors, VectorSize>(stream, _meanCosines);
+    deserializeFloatVectors<NumVectors, VectorSize>(stream, _distances);
     stream.read(reinterpret_cast<char*>(&_numComponents), sizeof(_numComponents));
     stream.read(reinterpret_cast<char*>(&_pivotPosition), sizeof(Point3));
 }
@@ -812,7 +804,7 @@ void ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents,UseParallaxCompen
     const embree::vfloat<VecSize> zeros(0.0f);
 
     const int cnt = (this->_numComponents+VectorSize-1) / VectorSize;
-    //const int rem = this->_numComponents % VMM::VectorSize;
+    //const int rem = this->_numComponents % VectorSize;
 
     const embree::Vec3<embree::vfloat<VecSize> > shiftDirectionVec(shiftDirection);
     embree::Vec3<embree::vfloat<VecSize> > parallaxCorrectedMeanDirections;

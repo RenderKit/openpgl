@@ -345,12 +345,9 @@ bool ParallaxAwareVonMisesFisherWeightedEMFactory< TVMMDistribution>::Sufficient
 template<class TVMMDistribution>
 void ParallaxAwareVonMisesFisherWeightedEMFactory< TVMMDistribution>::SufficientStatistics::serialize(std::ostream& stream) const
 {
-    for(uint32_t k=0;k<VMM::NumVectors;k++)
-    {
-        stream.write(reinterpret_cast<const char*>(&sumOfWeightedDirections[k]), sizeof(embree::Vec3< embree::vfloat<VMM::VectorSize> >));
-        stream.write(reinterpret_cast<const char*>(&sumOfWeightedStats[k]), sizeof(embree::vfloat<VMM::VectorSize>));
-        stream.write(reinterpret_cast<const char*>(&sumOfDistanceWeightes[k]), sizeof(embree::vfloat<VMM::VectorSize>));
-    }
+    serializeVec3Vectors<VMM::NumVectors, VMM::VectorSize>(stream, sumOfWeightedDirections);
+    serializeFloatVectors<VMM::NumVectors, VMM::VectorSize>(stream, sumOfWeightedStats);
+    serializeFloatVectors<VMM::NumVectors, VMM::VectorSize>(stream, sumOfDistanceWeightes);
     stream.write(reinterpret_cast<const char*>(&sumWeights), sizeof(float));
     stream.write(reinterpret_cast<const char*>(&numSamples), sizeof(float));
     stream.write(reinterpret_cast<const char*>(&overallNumSamples), sizeof(float));
@@ -361,12 +358,9 @@ void ParallaxAwareVonMisesFisherWeightedEMFactory< TVMMDistribution>::Sufficient
 template<class TVMMDistribution>
 void ParallaxAwareVonMisesFisherWeightedEMFactory< TVMMDistribution>::SufficientStatistics::deserialize(std::istream& stream)
 {
-    for(uint32_t k=0;k<VMM::NumVectors;k++)
-    {
-        stream.read(reinterpret_cast<char*>(&sumOfWeightedDirections[k]), sizeof(embree::Vec3< embree::vfloat<VMM::VectorSize> >));
-        stream.read(reinterpret_cast<char*>(&sumOfWeightedStats[k]), sizeof(embree::vfloat<VMM::VectorSize>));
-        stream.read(reinterpret_cast<char*>(&sumOfDistanceWeightes[k]), sizeof(embree::vfloat<VMM::VectorSize>));
-    }
+    deserializeVec3Vectors<VMM::NumVectors, VMM::VectorSize>(stream, sumOfWeightedDirections);
+    deserializeFloatVectors<VMM::NumVectors, VMM::VectorSize>(stream, sumOfWeightedStats);
+    deserializeFloatVectors<VMM::NumVectors, VMM::VectorSize>(stream, sumOfDistanceWeightes);
     stream.read(reinterpret_cast<char*>(&sumWeights), sizeof(float));
     stream.read(reinterpret_cast<char*>(&numSamples), sizeof(float));
     stream.read(reinterpret_cast<char*>(&overallNumSamples), sizeof(float));

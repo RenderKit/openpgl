@@ -35,6 +35,123 @@ inline void sincosf(const float theta, float* sin, float* cos)
 
 namespace openpgl
 {
+    template<int NumVectors, int VectorSize>
+    void serializeFloatVectors(std::ostream& stream, const embree::vfloat<VectorSize> *vectors) 
+    {
+        for(int i = 0; i < NumVectors; i++)
+        {
+            for(int j = 0; j < VectorSize; j++)
+            {
+                stream.write(reinterpret_cast<const char*>(&vectors[i][j]), sizeof(float));
+            }
+        }
+    }
+
+    template<int NumVectors, int VectorSize>
+    void deserializeFloatVectors(std::istream& stream, embree::vfloat<VectorSize> *vectors) 
+    {
+        for(int i = 0; i < NumVectors; i++)
+        {
+            for(int j = 0; j < VectorSize; j++)
+            {
+                stream.read(reinterpret_cast<char*>(&vectors[i][j]), sizeof(float));
+            }
+        }
+    }
+
+    template<int NumVectors, int VectorSize>
+    void serializeVec2Vectors(std::ostream& stream, const embree::Vec2<embree::vfloat<VectorSize> > *vectors) 
+    {
+        for(int i = 0; i < NumVectors; i++)
+        {
+            for(int j = 0; j < VectorSize; j++)
+            {
+                stream.write(reinterpret_cast<const char*>(&vectors[i].x[j]), sizeof(float));
+            }
+        }
+        for(int i = 0; i < NumVectors; i++)
+        {
+            for(int j = 0; j < VectorSize; j++)
+            {
+                stream.write(reinterpret_cast<const char*>(&vectors[i].y[j]), sizeof(float));
+            }
+        }
+    }
+
+    template<int NumVectors, int VectorSize>
+    void deserializeVec2Vectors(std::istream& stream, embree::Vec2<embree::vfloat<VectorSize> > *vectors) 
+    {
+        for(int i = 0; i < NumVectors; i++)
+        {
+            for(int j = 0; j < VectorSize; j++)
+            {
+                stream.read(reinterpret_cast<char*>(&vectors[i].x[j]), sizeof(float));
+            }
+        }
+        for(int i = 0; i < NumVectors; i++)
+        {
+            for(int j = 0; j < VectorSize; j++)
+            {
+                stream.read(reinterpret_cast<char*>(&vectors[i].y[j]), sizeof(float));
+            }
+        }
+    }
+
+    template<int NumVectors, int VectorSize>
+    void serializeVec3Vectors(std::ostream& stream, const embree::Vec3<embree::vfloat<VectorSize> > *vectors) 
+    {
+        for(int i = 0; i < NumVectors; i++)
+        {
+            for(int j = 0; j < VectorSize; j++)
+            {
+                stream.write(reinterpret_cast<const char*>(&vectors[i].x[j]), sizeof(float));
+            }
+        }
+        for(int i = 0; i < NumVectors; i++)
+        {
+            for(int j = 0; j < VectorSize; j++)
+            {
+                stream.write(reinterpret_cast<const char*>(&vectors[i].y[j]), sizeof(float));
+            }
+        }
+        for(int i = 0; i < NumVectors; i++)
+        {
+            for(int j = 0; j < VectorSize; j++)
+            {
+                stream.write(reinterpret_cast<const char*>(&vectors[i].z[j]), sizeof(float));
+            }
+        }
+    }
+
+    template<int NumVectors, int VectorSize>
+    void deserializeVec3Vectors(std::istream& stream, embree::Vec3<embree::vfloat<VectorSize> > *vectors) 
+    {
+        for(int i = 0; i < NumVectors; i++)
+        {
+            for(int j = 0; j < VectorSize; j++)
+            {
+                stream.read(reinterpret_cast<char*>(&vectors[i].x[j]), sizeof(float));
+            }
+        }
+        for(int i = 0; i < NumVectors; i++)
+        {
+            for(int j = 0; j < VectorSize; j++)
+            {
+                stream.read(reinterpret_cast<char*>(&vectors[i].y[j]), sizeof(float));
+            }
+        }
+        for(int i = 0; i < NumVectors; i++)
+        {
+            for(int j = 0; j < VectorSize; j++)
+            {
+                stream.read(reinterpret_cast<char*>(&vectors[i].z[j]), sizeof(float));
+            }
+        }
+    }
+}
+
+namespace openpgl
+{
 
   inline void* alignedMalloc(size_t size, size_t align)
   {

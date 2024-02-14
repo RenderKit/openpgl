@@ -870,32 +870,24 @@ bool VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::SplitComponentIntoTh
 template<class TVMMFactory>
 void VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::ComponentSplitStatistics::serialize(std::ostream& stream) const
 {
-    for(uint32_t k=0;k<VMM::NumVectors;k++){
-        stream.write(reinterpret_cast<const char*>(&chiSquareMCEstimates[k]), sizeof(embree::vfloat<VMM::VectorSize>));
-        stream.write(reinterpret_cast<const char*>(&splitMeans[k]), sizeof(embree::Vec2<embree::vfloat<VMM::VectorSize> >));
-        stream.write(reinterpret_cast<const char*>(&splitWeightedSampleCovariances[k]), sizeof(embree::Vec3<embree::vfloat<VMM::VectorSize> >));
-
-        stream.write(reinterpret_cast<const char*>(&numSamples[k]), sizeof(embree::vfloat<VMM::VectorSize>));
-        stream.write(reinterpret_cast<const char*>(&sumWeights[k]), sizeof(embree::vfloat<VMM::VectorSize>));
-
-        stream.write(reinterpret_cast<const char*>(&sumAssignedSamples[k]), sizeof(embree::vfloat<VMM::VectorSize>));
-    }
+    serializeFloatVectors<VMM::NumVectors, VMM::VectorSize>(stream, chiSquareMCEstimates);
+    serializeVec2Vectors<VMM::NumVectors, VMM::VectorSize>(stream, splitMeans);
+    serializeVec3Vectors<VMM::NumVectors, VMM::VectorSize>(stream, splitWeightedSampleCovariances);
+    serializeFloatVectors<VMM::NumVectors, VMM::VectorSize>(stream, numSamples);
+    serializeFloatVectors<VMM::NumVectors, VMM::VectorSize>(stream, sumWeights);
+    serializeFloatVectors<VMM::NumVectors, VMM::VectorSize>(stream, sumAssignedSamples);
     stream.write(reinterpret_cast<const char*>(&numComponents), sizeof(size_t));
 }
 
 template<class TVMMFactory>
 void VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::ComponentSplitStatistics::deserialize(std::istream& stream)
 {
-    for(uint32_t k=0;k<VMM::NumVectors;k++){
-        stream.read(reinterpret_cast<char*>(&chiSquareMCEstimates[k]), sizeof(embree::vfloat<VMM::VectorSize>));
-        stream.read(reinterpret_cast<char*>(&splitMeans[k]), sizeof(embree::Vec2<embree::vfloat<VMM::VectorSize> >));
-        stream.read(reinterpret_cast<char*>(&splitWeightedSampleCovariances[k]), sizeof(embree::Vec3<embree::vfloat<VMM::VectorSize> >));
-
-        stream.read(reinterpret_cast<char*>(&numSamples[k]), sizeof(embree::vfloat<VMM::VectorSize>));
-        stream.read(reinterpret_cast<char*>(&sumWeights[k]), sizeof(embree::vfloat<VMM::VectorSize>));
-
-        stream.read(reinterpret_cast<char*>(&sumAssignedSamples[k]), sizeof(embree::vfloat<VMM::VectorSize>));
-    }
+    deserializeFloatVectors<VMM::NumVectors, VMM::VectorSize>(stream, chiSquareMCEstimates);
+    deserializeVec2Vectors<VMM::NumVectors, VMM::VectorSize>(stream, splitMeans);
+    deserializeVec3Vectors<VMM::NumVectors, VMM::VectorSize>(stream, splitWeightedSampleCovariances);
+    deserializeFloatVectors<VMM::NumVectors, VMM::VectorSize>(stream, numSamples);
+    deserializeFloatVectors<VMM::NumVectors, VMM::VectorSize>(stream, sumWeights);
+    deserializeFloatVectors<VMM::NumVectors, VMM::VectorSize>(stream, sumAssignedSamples);
     stream.read(reinterpret_cast<char*>(&numComponents), sizeof(size_t));
 }
 
