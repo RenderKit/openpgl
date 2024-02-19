@@ -5,6 +5,7 @@
 
 #include "../../openpgl_common.h"
 #include "VMMChiSquareComponentSplitter.h"
+#include "ParallaxAwareVonMisesFisherMixture.h"
 
 namespace openpgl
 {

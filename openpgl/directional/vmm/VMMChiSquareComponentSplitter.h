@@ -5,6 +5,7 @@
 
 #include "../../openpgl_common.h"
 #include "../../data/SampleData.h"
+#include "ParallaxAwareVonMisesFisherMixture.h"
 
 #include <embreeSrc/common/math/vec2.h>
 #include <embreeSrc/common/math/vec3.h>

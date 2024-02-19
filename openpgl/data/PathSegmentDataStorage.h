@@ -7,6 +7,7 @@
 #include "PathSegmentData.h"
 #include "SampleData.h"
 #include "../spatial/Region.h"
+#include "SampleDataStorage.h"
 
 #define OPENPGL_PATHSEGMENT_STORAGE_USE_ARRAY 
 

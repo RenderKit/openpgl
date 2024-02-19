@@ -6,6 +6,8 @@
 #include "../openpgl_common.h"
 #include "../include/openpgl/data.h"
 
+#include <sstream>
+
 namespace openpgl
 {
 

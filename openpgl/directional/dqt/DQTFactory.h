@@ -2,6 +2,7 @@
 
 #include "../../openpgl_common.h"
 #include "../../data/SampleData.h"
+#include "../../data/SampleStatistics.h"
 #include "../../include/openpgl/types.h"
 #include <vector>
 #include <cinttypes>

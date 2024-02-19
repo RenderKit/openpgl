@@ -5,6 +5,7 @@
 
 #include "../../openpgl_common.h"
 #include "../../data/SampleData.h"
+#include "ParallaxAwareVonMisesFisherMixture.h"
 
 #include <fstream>
 #include <iostream>
