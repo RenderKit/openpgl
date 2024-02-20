@@ -108,23 +108,22 @@ inline bool isValid(const PathSegmentData& psd)
     std::string toString(const PGLPathSegmentData& psd)
     {
         std::stringstream ss;
-
-        ss << "PathSegmentData: " 
-            << "pos = " << psd.position.x << "\t " << psd.position.y << "\t " << psd.position.z << "\t " 
-            << "\t dirIn = " << psd.directionIn.x << "\t " << psd.directionIn.y << "\t " << psd.directionIn.z << "\t "  
-            << "\t dirOut = " << psd.directionOut.x << "\t " << psd.directionOut.y << "\t " << psd.directionOut.z << "\t " 
-            << "\t normal = " << psd.normal.x << "\t " << psd.normal.y << "\t " << psd.normal.z << "\t " 
-            << "\t volume = " << psd.volumeScatter
-            << "\t pdf = " << psd.pdfDirectionIn
-            << "\t delta = " << psd.isDelta 
-            << "\t scatteringWeight = " << psd.scatteringWeight.x << "\t " << psd.scatteringWeight.y << "\t " << psd.scatteringWeight.z << "\t " 
-            << "\t transmittanceWeight = " << psd.transmittanceWeight.x << "\t " << psd.transmittanceWeight.y << "\t " << psd.transmittanceWeight.z << "\t " 
-            << "\t directContribution = " << psd.directContribution.x << "\t " << psd.directContribution.y << "\t " << psd.directContribution.z << "\t " 
-            << "\t miWeight = " << psd.miWeight
-            << "\t scatteredContribution = " << psd.scatteredContribution.x << "\t " << psd.scatteredContribution.y << "\t " << psd.scatteredContribution.z << "\t " 
-            << "\t russianRouletteProbability = " << psd.russianRouletteProbability
-            << "\t eta = " << psd.eta 
-            << "\t rough = " << psd.roughness;
+        ss << "PathSegmentData: "; 
+        ss << "pos = " << psd.position.x << "\t " << psd.position.y << "\t " << psd.position.z << "\t "; 
+        ss << "\t dirIn = " << psd.directionIn.x << "\t " << psd.directionIn.y << "\t " << psd.directionIn.z << "\t ";  
+        ss << "\t dirOut = " << psd.directionOut.x << "\t " << psd.directionOut.y << "\t " << psd.directionOut.z << "\t "; 
+        ss << "\t normal = " << psd.normal.x << "\t " << psd.normal.y << "\t " << psd.normal.z << "\t "; 
+        ss << "\t volume = " << psd.volumeScatter;
+        ss << "\t pdf = " << psd.pdfDirectionIn;
+        ss << "\t delta = " << psd.isDelta; 
+        ss << "\t scatteringWeight = " << psd.scatteringWeight.x << "\t " << psd.scatteringWeight.y << "\t " << psd.scatteringWeight.z << "\t "; 
+        ss << "\t transmittanceWeight = " << psd.transmittanceWeight.x << "\t " << psd.transmittanceWeight.y << "\t " << psd.transmittanceWeight.z << "\t "; 
+        ss << "\t directContribution = " << psd.directContribution.x << "\t " << psd.directContribution.y << "\t " << psd.directContribution.z << "\t "; 
+        ss << "\t miWeight = " << psd.miWeight;
+        ss << "\t scatteredContribution = " << psd.scatteredContribution.x << "\t " << psd.scatteredContribution.y << "\t " << psd.scatteredContribution.z << "\t "; 
+        ss << "\t russianRouletteProbability = " << psd.russianRouletteProbability;
+        ss << "\t eta = " << psd.eta; 
+        ss << "\t rough = " << psd.roughness;;
         ss << std::endl;
         
         return ss.str();   

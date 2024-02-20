@@ -31,18 +31,19 @@ struct FieldStatistics{
     DirectionalDistributionStatistics directionalDistributionStatistics;
 
     std::string headerCSVString() const{
+        const std::string separator = separator;
         std::stringstream ss;
-        ss << "FieldStatistics:" << " , ";
-        ss << "numCacheRegions" << " , ";
-        ss << "numCacheRegionsReserved" << " , ";
-        ss << "sizePerCacheRegions(bs)" << " , ";
-        ss << "sizeAllCacheRegionsUsed(Mbs)" << " , ";
-        ss << "sizeAllCacheRegionsReserved(Mbs)" << " , ";
+        ss << "FieldStatistics:" << separator;
+        ss << "numCacheRegions" << separator;
+        ss << "numCacheRegionsReserved" << separator;
+        ss << "sizePerCacheRegions(bs)" << separator;
+        ss << "sizeAllCacheRegionsUsed(Mbs)" << separator;
+        ss << "sizeAllCacheRegionsReserved(Mbs)" << separator;
 
-        ss << "timeUpdate(ms)" << " , ";
-        ss << "timeCopySamples(ms)" << " , ";
-        ss << "timeSpatialStructureUpdate(ms)" << " , ";
-        ss << "timeDirectionalDistriubtionUpdate(ms)" << " , ";
+        ss << "timeUpdate(ms)" << separator;
+        ss << "timeCopySamples(ms)" << separator;
+        ss << "timeSpatialStructureUpdate(ms)" << separator;
+        ss << "timeDirectionalDistriubtionUpdate(ms)" << separator;
 
         ss << spatialStructureStatistics.headerCSVString();
         ss << directionalDistributionStatistics.headerCSVString();
@@ -51,18 +52,19 @@ struct FieldStatistics{
     }
 
     std::string toCSVString() const{
+        const std::string separator = separator;
         std::stringstream ss;
-        ss << " " << " , ";
-        ss << numCacheRegions << " , ";
-        ss << numCacheRegionsReserved << " , ";
-        ss << sizePerCacheRegions << " , ";
-        ss << float(sizeAllCacheRegionsUsed) / 1024  / 1024 << " , ";
-        ss << float(sizeAllCacheRegionsReserved) / 1024  / 1024 << " , ";
+        ss << " " << separator;
+        ss << numCacheRegions << separator;
+        ss << numCacheRegionsReserved << separator;
+        ss << sizePerCacheRegions << separator;
+        ss << float(sizeAllCacheRegionsUsed) / 1024  / 1024 << separator;
+        ss << float(sizeAllCacheRegionsReserved) / 1024  / 1024 << separator;
 
-        ss << timeLastUpdate << " , ";
-        ss << timeLastUpdateCopySamples << " , ";
-        ss << timeLastUpdateSpatialStructureUpdate << " , ";
-        ss << timeLastUpdateDirectionalDistriubtionUpdate << " , ";
+        ss << timeLastUpdate << separator;
+        ss << timeLastUpdateCopySamples << separator;
+        ss << timeLastUpdateSpatialStructureUpdate << separator;
+        ss << timeLastUpdateDirectionalDistriubtionUpdate << separator;
 
         ss << spatialStructureStatistics.toCSVString();
         ss << directionalDistributionStatistics.toCSVString();
@@ -71,18 +73,19 @@ struct FieldStatistics{
     }
 
     std::string toString() const{
+        const std::string tab = tab;
         std::stringstream ss;
         ss << "FieldStatistics:" << std::endl;
-        ss << "\t" << "numCacheRegions = " << numCacheRegions << std::endl;
-        ss << "\t" << "numCacheRegionsReserved = " << numCacheRegionsReserved << std::endl;
-        ss << "\t" << "sizePerCacheRegions = " << sizePerCacheRegions << " bs" << std::endl;
-        ss << "\t" << "sizeAllCacheRegionsUsed = " << float(sizeAllCacheRegionsUsed) / 1024  / 1024 << " Mbs" << std::endl;
-        ss << "\t" << "sizeAllCacheRegionsReserved = " << float(sizeAllCacheRegionsReserved) / 1024 / 1024 << " Mbs" << std::endl;
+        ss << tab << "numCacheRegions = " << numCacheRegions << std::endl;
+        ss << tab << "numCacheRegionsReserved = " << numCacheRegionsReserved << std::endl;
+        ss << tab << "sizePerCacheRegions = " << sizePerCacheRegions << " bs" << std::endl;
+        ss << tab << "sizeAllCacheRegionsUsed = " << float(sizeAllCacheRegionsUsed) / 1024  / 1024 << " Mbs" << std::endl;
+        ss << tab << "sizeAllCacheRegionsReserved = " << float(sizeAllCacheRegionsReserved) / 1024 / 1024 << " Mbs" << std::endl;
         
-        ss << "\t" << "timeUpdate = " << timeLastUpdate << " ms" << std::endl;
-        ss << "\t" << "timeCopySamples = " << timeLastUpdateCopySamples << " ms" << std::endl;
-        ss << "\t" << "timeSpatialStructureUpdate = " << timeLastUpdateSpatialStructureUpdate << " ms" << std::endl;
-        ss << "\t" << "timeDirectionalDistriubtionUpdate= " << timeLastUpdateDirectionalDistriubtionUpdate << " ms" << std::endl;
+        ss << tab << "timeUpdate = " << timeLastUpdate << " ms" << std::endl;
+        ss << tab << "timeCopySamples = " << timeLastUpdateCopySamples << " ms" << std::endl;
+        ss << tab << "timeSpatialStructureUpdate = " << timeLastUpdateSpatialStructureUpdate << " ms" << std::endl;
+        ss << tab << "timeDirectionalDistriubtionUpdate= " << timeLastUpdateDirectionalDistriubtionUpdate << " ms" << std::endl;
 
         ss << spatialStructureStatistics.toString();
         ss << directionalDistributionStatistics.toString();

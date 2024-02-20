@@ -20,38 +20,41 @@ struct KDTreeStatistics{
     size_t sizeAllNodesUsed{0};
 
     std::string headerCSVString() const {
+        const std::string separator = " , ";
         std::stringstream ss;
-        ss << "KDTreeStatistics:" << " , ";
-        ss << "numberOfNodes" << " , ";
-        ss << "numberOfReservedNodes" << " , ";
-        ss << "maxDepth" << " , ";
-        ss << "sizePerNode" << " , ";
-        ss << "sizeAllNodesUsed" << " , ";
-        ss << "sizeAllNodesReserved" << " , ";
+        ss << "KDTreeStatistics:" << separator;
+        ss << "numberOfNodes" << separator;
+        ss << "numberOfReservedNodes" << separator;
+        ss << "maxDepth" << separator;
+        ss << "sizePerNode" << separator;
+        ss << "sizeAllNodesUsed" << separator;
+        ss << "sizeAllNodesReserved" << separator;
         return ss.str();
     }
 
     std::string toCSVString() const {
+        const std::string separator = " , ";
         std::stringstream ss;
-        ss << " " << " , ";
-        ss << numberOfNodes << " , ";
-        ss << numberOfReservedNodes << " , ";
-        ss << maxDepth << " , ";
-        ss << sizePerNode << " , ";
-        ss << sizeAllNodesUsed << " , ";
-        ss << sizeAllNodesReserved << " , ";
+        ss << " " << separator;
+        ss << numberOfNodes << separator;
+        ss << numberOfReservedNodes << separator;
+        ss << maxDepth << separator;
+        ss << sizePerNode << separator;
+        ss << sizeAllNodesUsed << separator;
+        ss << sizeAllNodesReserved << separator;
         return ss.str();
     }
 
     std::string toString() const {
+        const std::string tab = "\t";
         std::stringstream ss;
         ss << "KDTreeStatistics: " << std::endl;
-        ss << "\t" << "numberOfNodes            = " << numberOfNodes << std::endl;
-        ss << "\t" << "numberOfReservedNodes    = " << numberOfReservedNodes << std::endl;
-        ss << "\t" << "maxDepth                 = " << maxDepth << std::endl;
-        ss << "\t" << "sizePerNode              = " << sizePerNode << " bs"<<std::endl;
-        ss << "\t" << "sizeAllNodesUsed         = " << float(sizeAllNodesUsed) / 1024 << " kbs"<< std::endl;
-        ss << "\t" << "sizeAllNodesReserved     = " << float(sizeAllNodesReserved) / 1024 << " kbs"<< std::endl;
+        ss << tab << "numberOfNodes            = " << numberOfNodes << std::endl;
+        ss << tab << "numberOfReservedNodes    = " << numberOfReservedNodes << std::endl;
+        ss << tab << "maxDepth                 = " << maxDepth << std::endl;
+        ss << tab << "sizePerNode              = " << sizePerNode << " bs"<<std::endl;
+        ss << tab << "sizeAllNodesUsed         = " << float(sizeAllNodesUsed) / 1024 << " kbs"<< std::endl;
+        ss << tab << "sizeAllNodesReserved     = " << float(sizeAllNodesReserved) / 1024 << " kbs"<< std::endl;
         return ss.str();
     }
 };

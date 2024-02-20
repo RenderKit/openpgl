@@ -214,40 +214,42 @@ bool parseCommandLine(std::list<std::string> &args,
 }
 
 void print_help(){
+    const std::string tab = "\t";
+    const std::string space = "  ";
     std::cout << "usage openpgl_bench -type <initField | benchLookUp | benchLookUpSample> [<options>]" << std::endl;
     std::cout << std::endl;
     std::cout << "type options:" << std::endl;
-    std::cout << "  " << "initField        " << "\t" << "Measures the time to build a guiding Field from set of samples "<< std::endl;
-    std::cout << "  " << "                 " << "\t" << "(i.e., saved SampleStorage objects)." << std::endl;
-    std::cout << "  " << "                 " << "\t" << "example:" << std::endl;
-    std::cout << "  " << "                 " << "\t" << "\"openpgl_bench -type initField -samples ss0.st ss1.st -field field.gf -device CPU_4\"" << std::endl;
+    std::cout << space << "initField        " << tab << "Measures the time to build a guiding Field from set of samples "<< std::endl;
+    std::cout << space << "                 " << tab << "(i.e., saved SampleStorage objects)." << std::endl;
+    std::cout << space << "                 " << tab << "example:" << std::endl;
+    std::cout << space << "                 " << tab << "\"openpgl_bench -type initField -samples ss0.st ss1.st -field field.gf -device CPU_4\"" << std::endl;
     std::cout << std::endl;
-    std::cout << "  " << "benchLookUp      " << "\t" << "Measures the average time of an initialization of a SurfaceSamplingDistribution" << std::endl;
-    std::cout << "  " << "                 " << "\t" << "from a guiding Field. The positions form samples from a SampleStorage are used" << std::endl;
-    std::cout << "  " << "                 " << "\t" << "during the initialization." << std::endl;
-    std::cout << "  " << "                 " << "\t" << "example:" << std::endl;
-    std::cout << "  " << "                 " << "\t" << "\"openpgl_bench -type benchLookUp -samples ss0.st -field field.gf -device CPU_4\"" << std::endl;
+    std::cout << space << "benchLookUp      " << tab << "Measures the average time of an initialization of a SurfaceSamplingDistribution" << std::endl;
+    std::cout << space << "                 " << tab << "from a guiding Field. The positions form samples from a SampleStorage are used" << std::endl;
+    std::cout << space << "                 " << tab << "during the initialization." << std::endl;
+    std::cout << space << "                 " << tab << "example:" << std::endl;
+    std::cout << space << "                 " << tab << "\"openpgl_bench -type benchLookUp -samples ss0.st -field field.gf -device CPU_4\"" << std::endl;
     std::cout << std::endl;
-    std::cout << "  " << "benchLookUpSample" << "\t" << "Measures the average time of an initialization of a SurfaceSamplingDistribution" << std::endl;
-    std::cout << "  " << "                 " << "\t" << "from a guiding Field combined with applying the cosine product and generating" << std::endl;
-    std::cout << "  " << "                 " << "\t" << "a directional samples. The positions form samples from a SampleStorage are used" << std::endl;
-    std::cout << "  " << "                 " << "\t" << "during the initialization." << std::endl;
-    std::cout << "  " << "                 " << "\t" << "example:" << std::endl;
-    std::cout << "  " << "                 " << "\t" << "\"openpgl_bench -type benchLookUpSample -samples ss0.st -field field.gf -device CPU_4\"" << std::endl;
+    std::cout << space << "benchLookUpSample" << tab << "Measures the average time of an initialization of a SurfaceSamplingDistribution" << std::endl;
+    std::cout << space << "                 " << tab << "from a guiding Field combined with applying the cosine product and generating" << std::endl;
+    std::cout << space << "                 " << tab << "a directional samples. The positions form samples from a SampleStorage are used" << std::endl;
+    std::cout << space << "                 " << tab << "during the initialization." << std::endl;
+    std::cout << space << "                 " << tab << "example:" << std::endl;
+    std::cout << space << "                 " << tab << "\"openpgl_bench -type benchLookUpSample -samples ss0.st -field field.gf -device CPU_4\"" << std::endl;
     std::cout << std::endl;
     std::cout << "general options:" << std::endl;
-    std::cout << "  -device <CPU_4 | CPU_8>" << "\t SIMD width of the loaded Field or the Field that should be initialized." << std::endl;
-    std::cout << "  -threads n             " << "\t Number of n threads that should be used during the measurements." << std::endl;
+    std::cout << "  -device <CPU_4 | CPU_8>" << tab << "SIMD width of the loaded Field or the Field that should be initialized." << std::endl;
+    std::cout << "  -threads n             " << tab << "Number of n threads that should be used during the measurements." << std::endl;
     std::cout << std::endl;
     std::cout << "initField options:" << std::endl;
-    std::cout << "  -samples <s0 s1 .. sn> " << "\t A list of stored samples used to initialize update the Field. "<< std::endl;
-    std::cout << "                         " << "\t Each sample set represents one training/update step/iteration. "<< std::endl;
-    std::cout << "  -field f0              " << "\t The file where the initialized Field is stored." << std::endl;
+    std::cout << "  -samples <s0 s1 .. sn> " << tab << "A list of stored samples used to initialize update the Field. "<< std::endl;
+    std::cout << "                         " << tab << "Each sample set represents one training/update step/iteration. "<< std::endl;
+    std::cout << "  -field f0              " << tab << "The file where the initialized Field is stored." << std::endl;
     std::cout << std::endl;
     std::cout << "benchLookUp | benchLookUpSample options:" << std::endl;
-    std::cout << "  -field f0              " << "\t The stored Field object that is loaded for the test." << std::endl; 
-    std::cout << "  -samples s0            " << "\t The stored samples which positions are used for query/initialize" << std::endl;
-    std::cout << "                         " << "\t the SurfaceSamplingDistributions."<< std::endl;
+    std::cout << "  -field f0              " << tab << "The stored Field object that is loaded for the test." << std::endl; 
+    std::cout << "  -samples s0            " << tab << "The stored samples which positions are used for query/initialize" << std::endl;
+    std::cout << "                         " << tab << "the SurfaceSamplingDistributions."<< std::endl;
     std::cout << std::endl;
 }
 

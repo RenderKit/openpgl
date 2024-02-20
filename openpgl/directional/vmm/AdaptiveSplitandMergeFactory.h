@@ -128,9 +128,9 @@ public:
     std::string toString() const{
         std::ostringstream oss;
         WeightedEMFactory vmmFactory;
-        oss << "AdaptiveSplitAndMergeFactory[\n"
-            << "  VMMFactory: " << vmmFactory.toString() << '\n'
-            << ']';
+        oss << "AdaptiveSplitAndMergeFactory[\n";
+        oss << "  VMMFactory: " << vmmFactory.toString() << '\n';
+        oss << ']';
 
         return oss.str();
     }

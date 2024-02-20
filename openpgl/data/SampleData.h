@@ -53,14 +53,13 @@ namespace openpgl
     inline std::string toString(const SampleData& sd)
     {
         std::stringstream ss;
-
-        ss << "SampleData: " 
-            << "position = " << sd.position.x << "\t " << sd.position.y << "\t " << sd.position.z << "\t " 
-            << "\t direction = " << sd.direction.x << "\t " << sd.direction.y << "\t " << sd.direction.z << "\t "  
-            << "\t weight = " << sd.weight << "\t " 
-            << "\t pdf = " << sd.pdf << "\t " 
-            << "\t distance = " << sd.distance << "\t " 
-            << "\t flags = " << sd.flags;
+        ss << "SampleData: "; 
+        ss << "position = " << sd.position.x << "\t " << sd.position.y << "\t " << sd.position.z << "\t ";
+        ss << "\t direction = " << sd.direction.x << "\t " << sd.direction.y << "\t " << sd.direction.z << "\t ";
+        ss << "\t weight = " << sd.weight << "\t ";
+        ss << "\t pdf = " << sd.pdf << "\t ";
+        ss << "\t distance = " << sd.distance << "\t ";
+        ss << "\t flags = " << sd.flags;
         ss << std::endl;
         
         return ss.str();   
