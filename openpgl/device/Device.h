@@ -186,6 +186,7 @@ struct Device : public IDevice
             delete directionalDistributionArguments;
 
             gField = new GuidingField(gFieldSettings);
+		#if 0
         }
         else if (args.spatialStructureType == PGL_SPATIAL_STRUCTURE_KDTREE && args.directionalDistributionType == PGL_DIRECTIONAL_DISTRIBUTION_QUADTREE)
         {
@@ -214,6 +215,7 @@ struct Device : public IDevice
             gFieldSettings.distributionFactorySettings.maxLevels = directionalDistributionArguments->maxLevels;
 
             gField = new GuidingField(gFieldSettings);
+		#endif
         }
         else
         {
@@ -269,6 +271,7 @@ struct Device : public IDevice
 
             gField = (ISurfaceVolumeField *)new GuidingField();
         }
+		#if 0
         else if (spatialStructureType == PGL_SPATIAL_STRUCTURE_KDTREE && directionalDistributionType == PGL_DIRECTIONAL_DISTRIBUTION_QUADTREE)
         {
             using DirectionalDistributionFactory = DirectionalQuadtreeFactory<DirectionalQuadtree<SphereToSquareCylindrical>>;
@@ -278,6 +281,7 @@ struct Device : public IDevice
 
             gField = (ISurfaceVolumeField *)new GuidingField();
         }
+       	#endif
         else
         {
             fb.close();

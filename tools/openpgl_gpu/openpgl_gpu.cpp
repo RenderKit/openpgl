@@ -295,33 +295,31 @@ void bench_lookup_id(BenchParams &benchParams){
     openpgl_gpu::KDTreeLet *device_nodes = sycl::malloc_device<openpgl_gpu::KDTreeLet>(field.GetNumKDNodes(), q);
     q.memcpy(device_nodes, field.GetKdNodes(), field.GetNumKDNodes() * sizeof(openpgl_gpu::KDTreeLet));
 
-    size_t num = 0;
-    float *weights = sycl::malloc_device<float>(num, q);
-    float *kappas = sycl::malloc_device<float>(num, q);
-    openpgl_gpu::Vector3 *meanDirections = sycl::malloc_device<openpgl_gpu::Vector3>(num, q);
-    //q.memcpy(weights, field.GetKdNodes(), num * sizeof(float));
-    //q.memcpy(kappas, field.GetKdNodes(), num * sizeof(float));
-    //q.memcpy(meanDirections, field.GetKdNodes(), num * sizeof(openpgl_gpu::Vector3));
+    openpgl_gpu::ParallaxAwareVonMisesFisherMixture<32> *distributions = sycl::malloc_shared<openpgl_gpu::ParallaxAwareVonMisesFisherMixture<32>>(field.GetNumDistributions(), q);
+    field.CopyDistributions(distributions);
 
     q.wait();
     int num_nodes = field.GetNumKDNodes();
     std::cout << "Executing on GPU\n";
     openpgl_gpu::FieldGPU device_field(device_nodes);
-    openpgl_gpu::ParallaxAwareVonMisesFisherMixture<32> mixture(weights, kappas, meanDirections);
     q.submit([&](sycl::handler &h) {
         h.parallel_for(sycl::range<1>(nSurfaceSamples), [=] (sycl::id<1> i) {
                 int idx = i.get(0);
                     float pos[3] = {positionsSurface[idx].x, positionsSurface[idx].y, positionsSurface[idx].z};
                     device_ids[idx] = device_field.getDataIdxAtPos(pos);
+                   // auto foo = distributions[device_ids[idx]]._meanDirections[0];//.sample(random_samples[idx]);
+                    //device_random_directions[idx] = {foo[0], foo[1], foo[2]};
+                    device_random_directions[idx] = distributions[device_ids[idx]].sample(random_samples[idx]);
         });
     });
     q.wait();
     sycl:free(device_nodes, q);
 
-    std::cout << "Executing on CPU\n";
-    int step = nSurfaceSamples / num_threads;
     Timer timer;
     timer.reset();
+    #if 1
+    std::cout << "Executing on CPU\n";
+    int step = nSurfaceSamples / num_threads;
     tbb::parallel_for( tbb::blocked_range<int>(0,num_threads), [&](tbb::blocked_range<int> r)
     {
         for (int n = r.begin(); n<r.end(); ++n)
@@ -341,17 +339,24 @@ void bench_lookup_id(BenchParams &benchParams){
             }
         }
     });
+    #endif
     std::cout << "done\n";
 
     float* out = new float[nSurfaceSamples*4];
     for (int i = 0 ; i < nSurfaceSamples; i++){
-        int id = device_ids[i];
+        int id = device_ids[i] - ids[i];
 
         std::mt19937_64 gen(id);
-#if 0
-        out[i*4+0] = random_directions[i].x;//distU(gen);
-        out[i*4+1] = random_directions[i].y;//distU(gen);
-        out[i*4+2] = random_directions[i].z ;//distU(gen);
+#if 1
+        out[i*4+0] = fabsf(random_directions[i].x - device_random_directions[i].x);
+        out[i*4+1] = fabsf(random_directions[i].y - device_random_directions[i].y);
+        out[i*4+2] = fabsf(random_directions[i].z - device_random_directions[i].z);
+        // out[i*4+0] = fabsf(random_directions[i].x);
+        // out[i*4+1] = fabsf(random_directions[i].y);
+        // out[i*4+2] = fabsf(random_directions[i].z);
+        // out[i*4+0] = fabsf(device_random_directions[i].x);
+        // out[i*4+1] = fabsf(device_random_directions[i].y);
+        // out[i*4+2] = fabsf(device_random_directions[i].z);
 #else
         out[i*4+0] = distU(gen);
         out[i*4+1] = distU(gen);
@@ -366,9 +371,7 @@ void bench_lookup_id(BenchParams &benchParams){
     std::cout << " time: "<< (timer.elapsed()/float(nSurfaceSamples*nRepetitions)) << "µs" << "\t nThreads = " << num_threads << std::endl;
     delete[] ids;
 
-    sycl::free(kappas, q);
-    sycl::free(weights, q);
-    sycl::free(meanDirections, q);
+    sycl::free(distributions, q);
     sycl::free(device_ids, q);
     sycl::free(random_samples, q);
     sycl::free(positionsSurface, q);

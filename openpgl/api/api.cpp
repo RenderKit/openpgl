@@ -270,6 +270,17 @@ extern "C" OPENPGL_DLLEXPORT  void* pglFieldGetNodes(PGLField field)
     return gField->GetNodes();
 }
 
+extern "C" OPENPGL_DLLEXPORT  int pglFieldGetNumDistributions(PGLField field)
+{
+    const auto *gField = (const IGuidingField *)field;
+    return gField->GetNumDistributions();
+}
+extern "C" OPENPGL_DLLEXPORT  void pglFieldCopyDistributions(PGLField field, void *p)
+{
+    const auto *gField = (const IGuidingField *)field;
+    return gField->CopyDistributionsTo(p);
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // SampleStorage //////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////

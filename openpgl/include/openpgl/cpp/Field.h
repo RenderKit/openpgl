@@ -134,6 +134,8 @@ struct Field
     // Stefan - SYCL
     void *GetKdNodes() const;
     int GetNumKDNodes() const;
+    int GetNumDistributions() const;
+    void CopyDistributions(void *out) const;
     //
 
    private:
@@ -254,6 +256,17 @@ OPENPGL_INLINE void* Field::GetKdNodes() const
 {
     OPENPGL_ASSERT(m_fieldHandle);
     return pglFieldGetNodes(m_fieldHandle);
+}
+OPENPGL_INLINE int Field::GetNumDistributions() const
+{
+    OPENPGL_ASSERT(m_fieldHandle);
+    return pglFieldGetNumDistributions(m_fieldHandle);
+}
+
+OPENPGL_INLINE void Field::CopyDistributions(void *out) const
+{
+    OPENPGL_ASSERT(m_fieldHandle);
+    pglFieldCopyDistributions(m_fieldHandle, out);
 }
 #if 0
 OPENPGL_INLINE float* Field::GetWeights() const

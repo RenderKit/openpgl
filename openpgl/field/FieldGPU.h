@@ -2,10 +2,22 @@
 
 namespace openpgl_gpu
 {
+    void pgl_sincosf(float x, float *sin, float *cos)
+    {
+        #ifdef SYCL_LANGUAGE_VERSION
+        *sin = sycl::sincos(x, cos);
+        #else
+        sincosf(x, sin, cos);
+        #endif
+    }
     typedef sycl::float2 Vector2;
     typedef sycl::float3 Vector3;
     typedef sycl::float2 Point2;
     typedef sycl::float3 Point3;
+
+    template<int maxComponents> struct FlatVMM {
+    };
+
     inline Vector3 sphericalDirection(const float &cosTheta, const float &sinTheta, const float &cosPhi, const float &sinPhi)
     {
         return Vector3(sinTheta * cosPhi,
@@ -23,36 +35,35 @@ namespace openpgl_gpu
         return sphericalDirection(cosTheta, sinTheta, cosPhi, sinPhi);
     };
 
-    inline Vector3 squareToUniformSphere(const Vector2 sample)
+    inline Vector3 squareToUniformSphere(const pgl_vec2f sample)
     {
-        float z = 1.0f - 2.0f * sample[1];
+        float z = 1.0f - 2.0f * sample.y;
         float r = std::sqrt(std::max(0.f, (1.0f - z * z)));
         float sinPhi, cosPhi;
-        sincosf(2.0f * M_PI * sample[0], &sinPhi, &cosPhi);
+        pgl_sincosf(2.0f * float(M_PI)* sample.x, &sinPhi, &cosPhi);
         return Vector3(r * cosPhi, r * sinPhi, z);
     }
 
     template <int maxComponents>
-    struct ParallaxAwareVonMisesFisherMixture
+    struct ParallaxAwareVonMisesFisherMixture : public FlatVMM<maxComponents>
     {
     public:
-        ParallaxAwareVonMisesFisherMixture(float *weights, float *kappas, Vector3 *meanDirections) : _weights(weights), _kappas(kappas), _meanDirections(meanDirections)
+        float _weights[maxComponents];
+        float _kappas[maxComponents];
+        float _meanDirections[maxComponents][3];
+        int _numComponents{maxComponents};
+        ParallaxAwareVonMisesFisherMixture()
         {
         }
 
-        float *_weights;
-        float *_kappas;
-        Vector3 *_meanDirections;
-        size_t _numComponents{maxComponents};
-
-        Vector3 sample(const Vector2 sample) const
+        pgl_vec3f sample(const pgl_vec2f sample) const
         {
 
             uint32_t selectedComponent{0};
             // First, identify component we want to sample
 
-            Vector2 _sample = sample;
-            float searched = _sample[1];
+            pgl_vec2f _sample = sample;
+            float searched = _sample.y;
             float sumWeights = 0.0f;
             float cdf = 0.0f;
 
@@ -70,14 +81,13 @@ namespace openpgl_gpu
                 }
             }
 
-            _sample[1] = std::min(1.0f - std::numeric_limits<float>::epsilon(), (searched - sumWeights) / cdf);
+            _sample.y = std::min(1.0f - std::numeric_limits<float>::epsilon(), (searched - sumWeights) / cdf);
 
             Vector3 sampledDirection(0.f, 0.f, 1.f);
-
             // Second, sample selected component
             const float sKappa = _kappas[selectedComponent];
             const float sEMinus2Kappa = expf(-2.0f * sKappa);
-            Vector3 meanDirection(_meanDirections[selectedComponent]);
+            Vector3 meanDirection(_meanDirections[selectedComponent][0], _meanDirections[selectedComponent][1], _meanDirections[selectedComponent][2]);
 
             if (sKappa == 0.0f)
             {
@@ -85,17 +95,17 @@ namespace openpgl_gpu
             }
             else
             {
-                float cosTheta = 1.f + logf(1.0f + ((sEMinus2Kappa - 1.f) * _sample[0])) / sKappa;
+                float cosTheta = 1.f + logf(1.0f + ((sEMinus2Kappa - 1.f) * _sample.x)) / sKappa;
 
                 // safeguard for numerical imprecisions (if sample[0] is 0.999999999)
                 cosTheta = std::min(1.0f, std::max(cosTheta, -1.f));
 
                 const float sinTheta = std::sqrt(1.f - cosTheta * cosTheta);
 
-                const float phi = 2.f * M_PI * _sample[1];
+                const float phi = 2.f * float(M_PI) * _sample.y;
 
                 float sinPhi, cosPhi;
-                sincosf(phi, &sinPhi, &cosPhi);
+                pgl_sincosf(phi, &sinPhi, &cosPhi);
                 sampledDirection = sphericalDirection(cosTheta, sinTheta, cosPhi, sinPhi);
             }
 
@@ -104,7 +114,8 @@ namespace openpgl_gpu
             const Vector3 dx = normalize(dot(dx0, dx0) > dot(dx1, dx1) ? dx0 : dx1);
             const Vector3 dy = normalize(cross(meanDirection, dx));
 
-            return dx * sampledDirection[0], dy * sampledDirection[1], meanDirection * sampledDirection[2];
+            Vector3 out = dx * sampledDirection[0] + dy * sampledDirection[1] + meanDirection * sampledDirection[2];
+            return {out[0], out[1], out[2]};
         }
     };
 

@@ -261,6 +261,29 @@ struct SurfaceVolumeField : public ISurfaceVolumeField
         return m_surfaceField.m_spatialSubdiv.m_treeLets;
     }
 
+    virtual int GetNumDistributions() const override
+    {
+        return m_surfaceField.m_regionStorageContainer.size();
+    }
+
+    virtual void CopyDistributionsTo(void *o_distrib) const override
+    {
+        FlatVMM<32> *out = reinterpret_cast<FlatVMM<32>*>(o_distrib);
+        for (int i = 0; i < m_surfaceField.m_regionStorageContainer.size(); i++)
+        {
+            auto & dist = m_surfaceField.m_regionStorageContainer[i].first.distribution;
+            for (int k = 0; k < dist._numComponents; k++) {
+                const div_t tmp = div(k, static_cast<int>(Vecsize));
+                out[i]._weights[k] = dist._weights[tmp.quot][tmp.rem];
+                out[i]._kappas[k] = dist._kappas[tmp.quot][tmp.rem];
+                out[i]._meanDirections[k][0] = dist._meanDirections[tmp.quot].x[tmp.rem];
+                out[i]._meanDirections[k][1] = dist._meanDirections[tmp.quot].y[tmp.rem];
+                out[i]._meanDirections[k][2] = dist._meanDirections[tmp.quot].z[tmp.rem];
+            }
+            out[i]._numComponents = dist._numComponents;
+        }
+    }
+
    private:
     size_t m_iteration{0};
     size_t m_totalSPP{0};
