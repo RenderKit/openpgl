@@ -257,6 +257,19 @@ extern "C" OPENPGL_DLLEXPORT PGLFieldStatistics pglFieldGetVolumeStatistics(PGLF
     return (PGLFieldStatistics)gField->getVolumeStatistics();
 }
 
+// Stefan SYCL
+
+extern "C" OPENPGL_DLLEXPORT  int pglFieldGetNumNodes(PGLField field)
+{
+    const auto *gField = (const IGuidingField *)field;
+    return gField->GetNumNodes();
+}
+extern "C" OPENPGL_DLLEXPORT  void* pglFieldGetNodes(PGLField field)
+{
+    const auto *gField = (const IGuidingField *)field;
+    return gField->GetNodes();
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // SampleStorage //////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////

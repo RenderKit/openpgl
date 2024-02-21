@@ -68,6 +68,10 @@ typedef ManagedObject Field;
 
     OPENPGL_CORE_INTERFACE PGLFieldStatistics pglFieldGetVolumeStatistics(PGLField field);
 
+
+OPENPGL_CORE_INTERFACE int pglFieldGetNumNodes(PGLField field);
+OPENPGL_CORE_INTERFACE void *pglFieldGetNodes(PGLField field);
+
 #ifdef __cplusplus
 }  // extern "C"
 #endif

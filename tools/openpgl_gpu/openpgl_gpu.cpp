@@ -21,6 +21,10 @@
 
 #include <openpgl/cpp/OpenPGL.h>
 
+#include <sycl/sycl.hpp>
+#include </home/stefanwe/intel/libraries.graphics.renderkit.openpgl/openpgl/field/FieldGPU.h>
+//#include </home/stefanwe/intel/libraries.graphics.renderkit.openpgl/openpgl/field/FieldGPU.h>
+
 #include "timer.h"
 
 //Please include your own zlib-compatible API header before
@@ -223,6 +227,7 @@ void print_help(){
 }
 
 void bench_lookup_id(BenchParams &benchParams){
+    std::uniform_real_distribution<float> distU(0.f, 1.f);
     int nThreads = benchParams.num_threads;
     int nRepetitions = 10;
 
@@ -255,11 +260,12 @@ void bench_lookup_id(BenchParams &benchParams){
     std::cout << "Field::Validate: " << field.Validate() << std::endl;
 
     int nSurfaceSamples = width*height;
+    sycl::queue q;
     int* ids = new int[nSurfaceSamples];
+    int* device_ids = sycl::malloc_shared<int>(nSurfaceSamples, q);
 
     std::cout << "Prepare Data: START" << std::endl;
-    pgl_vec3f* positionsSurface = new pgl_vec3f[nSurfaceSamples];
-
+    pgl_vec3f* positionsSurface = sycl::malloc_shared<pgl_vec3f>(nSurfaceSamples, q);
     for (int i = 0; i < nSurfaceSamples; i++)
     {
         int idx = i;
@@ -267,50 +273,105 @@ void bench_lookup_id(BenchParams &benchParams){
         pos.x = img[i*4+0];
         pos.y = img[i*4+1];
         pos.z = img[i*4+2];
-        //std::cout << out[i*4+3] << std::endl;
         positionsSurface[idx] = pos;
+    }
+    std::mt19937_64 rng(0);
+    pgl_vec2f *random_samples = sycl::malloc_shared<pgl_vec2f>(nSurfaceSamples, q);
+    pgl_vec3f *random_directions = new pgl_vec3f[nSurfaceSamples];
+    pgl_vec3f *device_random_directions = sycl::malloc_shared<pgl_vec3f>(nSurfaceSamples, q);
+    for (int i = 0; i < nSurfaceSamples; i++)
+    {
+        random_samples[i].x = distU(rng);
+        random_samples[i].y = distU(rng);
     }
 
     std::cout << "Prepare Data: END" << std::endl;
 
+
+    std::string foo;
+    std::getline( std::cin, foo );
+
+    std::cout << "Copying data to GPU\n";
+    openpgl_gpu::KDTreeLet *device_nodes = sycl::malloc_device<openpgl_gpu::KDTreeLet>(field.GetNumKDNodes(), q);
+    q.memcpy(device_nodes, field.GetKdNodes(), field.GetNumKDNodes() * sizeof(openpgl_gpu::KDTreeLet));
+
+    size_t num = 0;
+    float *weights = sycl::malloc_device<float>(num, q);
+    float *kappas = sycl::malloc_device<float>(num, q);
+    openpgl_gpu::Vector3 *meanDirections = sycl::malloc_device<openpgl_gpu::Vector3>(num, q);
+    //q.memcpy(weights, field.GetKdNodes(), num * sizeof(float));
+    //q.memcpy(kappas, field.GetKdNodes(), num * sizeof(float));
+    //q.memcpy(meanDirections, field.GetKdNodes(), num * sizeof(openpgl_gpu::Vector3));
+
+    q.wait();
+    int num_nodes = field.GetNumKDNodes();
+    std::cout << "Executing on GPU\n";
+    openpgl_gpu::FieldGPU device_field(device_nodes);
+    openpgl_gpu::ParallaxAwareVonMisesFisherMixture<32> mixture(weights, kappas, meanDirections);
+    q.submit([&](sycl::handler &h) {
+        h.parallel_for(sycl::range<1>(nSurfaceSamples), [=] (sycl::id<1> i) {
+                int idx = i.get(0);
+                    float pos[3] = {positionsSurface[idx].x, positionsSurface[idx].y, positionsSurface[idx].z};
+                    device_ids[idx] = device_field.getDataIdxAtPos(pos);
+        });
+    });
+    q.wait();
+    sycl:free(device_nodes, q);
+
+    std::cout << "Executing on CPU\n";
+    int step = nSurfaceSamples / num_threads;
     Timer timer;
     timer.reset();
-    int step = nSurfaceSamples / num_threads;
     tbb::parallel_for( tbb::blocked_range<int>(0,num_threads), [&](tbb::blocked_range<int> r)
     {
         for (int n = r.begin(); n<r.end(); ++n)
         {
-            openpgl::cpp::SurfaceSamplingDistribution ssd(&field);        
+            openpgl::cpp::SurfaceSamplingDistribution ssd(&field);
             for(int m = 0; m < nRepetitions; m++)
-            {                
+            {
                 int tStep = n*step;
                 for (int i = 0; i < nSurfaceSamples; i++)
                 {
                     int idx = (i+tStep) % nSurfaceSamples;
-                    float sample = 0.5f;
+                    float sample = 0.0f;
                     ssd.Init(&field, positionsSurface[idx], sample);
                     ids[idx] = ssd.GetId();
+                    random_directions[idx] = ssd.Sample(random_samples[idx]);
                 }
             }
         }
     });
+    std::cout << "done\n";
 
-    std::uniform_real_distribution<float> distU(0.f, 1.f);
     float* out = new float[nSurfaceSamples*4];
     for (int i = 0 ; i < nSurfaceSamples; i++){
-        int id = ids[i];
+        int id = device_ids[i];
 
-        std::mt19937_64 gen(id); 
+        std::mt19937_64 gen(id);
+#if 0
+        out[i*4+0] = random_directions[i].x;//distU(gen);
+        out[i*4+1] = random_directions[i].y;//distU(gen);
+        out[i*4+2] = random_directions[i].z ;//distU(gen);
+#else
         out[i*4+0] = distU(gen);
         out[i*4+1] = distU(gen);
         out[i*4+2] = distU(gen);
+#endif
         out[i*4+3] = 1.0f;
     }
-
     SaveEXR(out, width, height, 4, 0, benchParams.id_exr_file_name.c_str(), &err);
+    delete[] out;
 
     std::cout << "SurfaceSamplingDistribution::Init";
     std::cout << " time: "<< (timer.elapsed()/float(nSurfaceSamples*nRepetitions)) << "µs" << "\t nThreads = " << num_threads << std::endl;
+    delete[] ids;
+
+    sycl::free(kappas, q);
+    sycl::free(weights, q);
+    sycl::free(meanDirections, q);
+    sycl::free(device_ids, q);
+    sycl::free(random_samples, q);
+    sycl::free(positionsSurface, q);
 }
 
 

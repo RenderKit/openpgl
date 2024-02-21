@@ -251,6 +251,16 @@ struct SurfaceVolumeField : public ISurfaceVolumeField
         return stats;
     }
 
+    virtual int GetNumNodes() const override
+    {
+        return m_surfaceField.m_spatialSubdiv.m_numTreeLets;
+    }
+
+    virtual void *GetNodes() const override
+    {
+        return m_surfaceField.m_spatialSubdiv.m_treeLets;
+    }
+
    private:
     size_t m_iteration{0};
     size_t m_totalSPP{0};

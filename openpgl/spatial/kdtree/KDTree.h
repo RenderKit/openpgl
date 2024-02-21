@@ -302,6 +302,7 @@ struct KDTree
         size_t nNodes = m_nodes.size();
         if (nNodes > 0)
         {
+            m_numNodes = nNodes;
             m_nodesPtr = new KDNode[nNodes];
             for (int n = 0; n < nNodes; n++)
             {
@@ -632,6 +633,7 @@ struct KDTree
         size_t num_nodes = 0;
         stream.read(reinterpret_cast<char *>(&num_nodes), sizeof(size_t));
         m_nodes.reserve(num_nodes);
+        m_numNodes = num_nodes;
         m_nodesPtr = new KDNode[num_nodes];
         for (size_t n = 0; n < num_nodes; n++)
         {
@@ -710,7 +712,8 @@ struct KDTree
     tbb::concurrent_vector<KDNode> m_nodes;
 
     // node storage used during querying
-    KDNode *m_nodesPtr{nullptr};
+    KDNode* m_nodesPtr{nullptr};
+    size_t m_numNodes{0};
 
     KDTreeLet *m_treeLets{nullptr};
     int m_numTreeLets{0};

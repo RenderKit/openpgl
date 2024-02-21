@@ -139,6 +139,7 @@ else()
   endif()
 
   if (CMAKE_CXX_COMPILER_ID STREQUAL "IntelLLVM" OR CMAKE_CXX_COMPILER_ID STREQUAL "dpcpp")
+    list(APPEND OPENPGL_COMMON_OPTIONS -fsycl -fdebug-info-for-profiling -gline-tables-only)                   # GPU support
     list(APPEND OPENPGL_COMMON_OPTIONS  -ffp-model=precise)
   endif()
 

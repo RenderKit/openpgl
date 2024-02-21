@@ -747,8 +747,6 @@ struct Field
     SpatialStructureBuilder m_spatialSubdivBuilder;
     SpatialBuilderSettings m_spatialSubdivBuilderSettings;
 
-    SpatialStructure m_spatialSubdiv;
-    RegionStorageContainerType m_regionStorageContainer;
 
     bool m_useStochasticNNLookUp{false};
     bool m_useISNNLookUp{false};
@@ -761,6 +759,9 @@ struct Field
     float m_timeLastUpdateCopySamples{0.f};
     float m_timeLastUpdateSpatialStructureUpdate{0.f};
     float m_timeLastUpdateDirectionalDistriubtionUpdate{0.f};
+public:
+    SpatialStructure m_spatialSubdiv;
+    RegionStorageContainerType m_regionStorageContainer;
 };
 
 }  // namespace openpgl

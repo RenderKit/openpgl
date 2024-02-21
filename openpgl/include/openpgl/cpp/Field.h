@@ -130,6 +130,12 @@ struct Field
     friend struct openpgl::cpp::SurfaceSamplingDistribution;
     friend struct openpgl::cpp::VolumeSamplingDistribution;
 
+
+    // Stefan - SYCL
+    void *GetKdNodes() const;
+    int GetNumKDNodes() const;
+    //
+
    private:
     PGLField m_fieldHandle{nullptr};
 };
@@ -236,5 +242,37 @@ OPENPGL_INLINE FieldStatistics Field::GetVolumeStatistics() const
     return FieldStatistics(fieldStats);
 }
 
+// Stefan SYCL
+
+OPENPGL_INLINE int Field::GetNumKDNodes() const
+{
+    OPENPGL_ASSERT(m_fieldHandle);
+    return pglFieldGetNumNodes(m_fieldHandle);
+}
+
+OPENPGL_INLINE void* Field::GetKdNodes() const
+{
+    OPENPGL_ASSERT(m_fieldHandle);
+    return pglFieldGetNodes(m_fieldHandle);
+}
+#if 0
+OPENPGL_INLINE float* Field::GetWeights() const
+{
+    OPENPGL_ASSERT(m_fieldHandle);
+    return pglFieldGetWeights(m_fieldHandle);
+}
+
+OPENPGL_INLINE float* Field::GetKappas() const
+{
+    OPENPGL_ASSERT(m_fieldHandle);
+    return pglFieldGetKappas(m_fieldHandle);
+}
+
+OPENPGL_INLINE void* Field::GetMeanDirections() const
+{
+    OPENPGL_ASSERT(m_fieldHandle);
+    return pglFieldGetMeanDirections(m_fieldHandle);
+}
+#endif
 }  // namespace cpp
 }  // namespace openpgl
