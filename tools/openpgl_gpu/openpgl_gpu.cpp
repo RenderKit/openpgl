@@ -15,6 +15,8 @@
 #include <cmath>
 #include <random>
 
+#include <regex>
+
 #include <tbb/info.h>
 #include <tbb/global_control.h>
 #include <tbb/parallel_for.h>
@@ -22,8 +24,7 @@
 #include <openpgl/cpp/OpenPGL.h>
 
 #include <sycl/sycl.hpp>
-#include </home/stefanwe/intel/libraries.graphics.renderkit.openpgl/openpgl/field/FieldGPU.h>
-//#include </home/stefanwe/intel/libraries.graphics.renderkit.openpgl/openpgl/field/FieldGPU.h>
+#include "../../openpgl/field/FieldGPU.h"
 
 #include "timer.h"
 
@@ -331,7 +332,7 @@ void bench_lookup_id(BenchParams &benchParams){
                 for (int i = 0; i < nSurfaceSamples; i++)
                 {
                     int idx = (i+tStep) % nSurfaceSamples;
-                    float sample = 0.0f;
+                    float sample = -1.0f;
                     ssd.Init(&field, positionsSurface[idx], sample);
                     ids[idx] = ssd.GetId();
                     random_directions[idx] = ssd.Sample(random_samples[idx]);
@@ -342,30 +343,51 @@ void bench_lookup_id(BenchParams &benchParams){
     #endif
     std::cout << "done\n";
 
-    float* out = new float[nSurfaceSamples*4];
+    float* outDiff = new float[nSurfaceSamples*4];
+    float* outCPU = new float[nSurfaceSamples*4];
+    float* outGPU = new float[nSurfaceSamples*4];
     for (int i = 0 ; i < nSurfaceSamples; i++){
-        int id = device_ids[i] - ids[i];
 
-        std::mt19937_64 gen(id);
 #if 1
-        out[i*4+0] = fabsf(random_directions[i].x - device_random_directions[i].x);
-        out[i*4+1] = fabsf(random_directions[i].y - device_random_directions[i].y);
-        out[i*4+2] = fabsf(random_directions[i].z - device_random_directions[i].z);
-        // out[i*4+0] = fabsf(random_directions[i].x);
-        // out[i*4+1] = fabsf(random_directions[i].y);
-        // out[i*4+2] = fabsf(random_directions[i].z);
-        // out[i*4+0] = fabsf(device_random_directions[i].x);
-        // out[i*4+1] = fabsf(device_random_directions[i].y);
-        // out[i*4+2] = fabsf(device_random_directions[i].z);
+        outDiff[i*4+0] = fabsf(random_directions[i].x - device_random_directions[i].x);
+        outDiff[i*4+1] = fabsf(random_directions[i].y - device_random_directions[i].y);
+        outDiff[i*4+2] = fabsf(random_directions[i].z - device_random_directions[i].z);
+        outCPU[i*4+0] = fabsf(random_directions[i].x);
+        outCPU[i*4+1] = fabsf(random_directions[i].y);
+        outCPU[i*4+2] = fabsf(random_directions[i].z);
+        outGPU[i*4+0] = fabsf(device_random_directions[i].x);
+        outGPU[i*4+1] = fabsf(device_random_directions[i].y);
+        outGPU[i*4+2] = fabsf(device_random_directions[i].z);
 #else
-        out[i*4+0] = distU(gen);
-        out[i*4+1] = distU(gen);
-        out[i*4+2] = distU(gen);
+        //int id = device_ids[i] - ids[i];
+        int id = device_ids[i] - ids[i];
+        std::mt19937_64 genDiff(id);
+        std::mt19937_64 genCPU(ids[i]);
+        std::mt19937_64 genGPU(device_ids[i]);
+
+        outDiff[i*4+0] = distU(genDiff);
+        outDiff[i*4+1] = distU(genDiff);
+        outDiff[i*4+2] = distU(genDiff);
+
+        outCPU[i*4+0] = distU(genCPU);
+        outCPU[i*4+1] = distU(genCPU);
+        outCPU[i*4+2] = distU(genCPU);
+
+        outGPU[i*4+0] = distU(genGPU);
+        outGPU[i*4+1] = distU(genGPU);
+        outGPU[i*4+2] = distU(genGPU);
+
 #endif
-        out[i*4+3] = 1.0f;
+        outDiff[i*4+3] = 1.0f;
+        outCPU[i*4+3] = 1.0f;
+        outGPU[i*4+3] = 1.0f;
     }
-    SaveEXR(out, width, height, 4, 0, benchParams.id_exr_file_name.c_str(), &err);
-    delete[] out;
+    SaveEXR(outDiff, width, height, 4, 0, std::regex_replace(benchParams.id_exr_file_name, std::regex("\\.exr"), "_diff.exr").c_str(), &err);
+    SaveEXR(outCPU, width, height, 4, 0, std::regex_replace(benchParams.id_exr_file_name, std::regex("\\.exr"), "_cpu.exr").c_str(), &err);
+    SaveEXR(outGPU, width, height, 4, 0, std::regex_replace(benchParams.id_exr_file_name, std::regex("\\.exr"), "_gpu.exr").c_str(), &err);
+    delete[] outDiff;
+    delete[] outCPU;
+    delete[] outGPU;
 
     std::cout << "SurfaceSamplingDistribution::Init";
     std::cout << " time: "<< (timer.elapsed()/float(nSurfaceSamples*nRepetitions)) << "µs" << "\t nThreads = " << num_threads << std::endl;
