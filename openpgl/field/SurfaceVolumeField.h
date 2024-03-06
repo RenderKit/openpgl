@@ -11,6 +11,14 @@
 
 namespace openpgl
 {
+    template<int maxComponents> struct FlatVMM {
+        float _weights[maxComponents];
+        float _kappas[maxComponents];
+        float _meanDirections[maxComponents][3];
+        float _distances[maxComponents];
+        float _pivotPosition[3];
+        int _numComponents{maxComponents};
+    };
 
 template <int Vecsize, class TDirectionalDistributionFactory, template <typename, typename, typename> class TSpatialStructureBuilder, typename TSurfaceSamplingDistribution,
           typename TVolumeSamplingDistribution>
@@ -279,7 +287,11 @@ struct SurfaceVolumeField : public ISurfaceVolumeField
                 out[i]._meanDirections[k][0] = dist._meanDirections[tmp.quot].x[tmp.rem];
                 out[i]._meanDirections[k][1] = dist._meanDirections[tmp.quot].y[tmp.rem];
                 out[i]._meanDirections[k][2] = dist._meanDirections[tmp.quot].z[tmp.rem];
+                out[i]._distances[k] = dist._distances[tmp.quot][tmp.rem];
             }
+            out[i]._pivotPosition[0] = {dist._pivotPosition.x};
+            out[i]._pivotPosition[1] = {dist._pivotPosition.y};
+            out[i]._pivotPosition[2] = {dist._pivotPosition.z};
             out[i]._numComponents = dist._numComponents;
         }
     }

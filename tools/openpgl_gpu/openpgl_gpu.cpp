@@ -280,6 +280,9 @@ void bench_lookup_id(BenchParams &benchParams){
     pgl_vec2f *random_samples = sycl::malloc_shared<pgl_vec2f>(nSurfaceSamples, q);
     pgl_vec3f *random_directions = new pgl_vec3f[nSurfaceSamples];
     pgl_vec3f *device_random_directions = sycl::malloc_shared<pgl_vec3f>(nSurfaceSamples, q);
+    float *pdfs = new float[nSurfaceSamples];
+    float *device_pdfs = sycl::malloc_shared<float>(nSurfaceSamples, q);
+
     for (int i = 0; i < nSurfaceSamples; i++)
     {
         random_samples[i].x = distU(rng);
@@ -306,11 +309,12 @@ void bench_lookup_id(BenchParams &benchParams){
     q.submit([&](sycl::handler &h) {
         h.parallel_for(sycl::range<1>(nSurfaceSamples), [=] (sycl::id<1> i) {
                 int idx = i.get(0);
-                    float pos[3] = {positionsSurface[idx].x, positionsSurface[idx].y, positionsSurface[idx].z};
-                    device_ids[idx] = device_field.getDataIdxAtPos(pos);
-                   // auto foo = distributions[device_ids[idx]]._meanDirections[0];//.sample(random_samples[idx]);
-                    //device_random_directions[idx] = {foo[0], foo[1], foo[2]};
-                    device_random_directions[idx] = distributions[device_ids[idx]].sample(random_samples[idx]);
+                float pos[3] = {positionsSurface[idx].x, positionsSurface[idx].y, positionsSurface[idx].z};
+                device_ids[idx] = device_field.getDataIdxAtPos(pos);
+                //device_random_directions[idx] = distributions[device_ids[idx]].sample(random_samples[idx]);
+                //device_pdfs[idx] = distributions[device_ids[idx]].pdf(device_random_directions[idx]);
+                device_random_directions[idx] = distributions[device_ids[idx]].samplePos(positionsSurface[idx], random_samples[idx]);
+                device_pdfs[idx] = distributions[device_ids[idx]].pdfPos(positionsSurface[idx], device_random_directions[idx]);
         });
     });
     q.wait();
@@ -336,6 +340,7 @@ void bench_lookup_id(BenchParams &benchParams){
                     ssd.Init(&field, positionsSurface[idx], sample);
                     ids[idx] = ssd.GetId();
                     random_directions[idx] = ssd.Sample(random_samples[idx]);
+                    pdfs[idx] = ssd.PDF(random_directions[idx]);
                 }
             }
         }
@@ -358,6 +363,16 @@ void bench_lookup_id(BenchParams &benchParams){
         outGPU[i*4+0] = fabsf(device_random_directions[i].x);
         outGPU[i*4+1] = fabsf(device_random_directions[i].y);
         outGPU[i*4+2] = fabsf(device_random_directions[i].z);
+#elif 0
+        outDiff[i*4+0] = fabsf(pdfs[i] - device_pdfs[i]);
+        outDiff[i*4+1] = fabsf(pdfs[i] - device_pdfs[i]);
+        outDiff[i*4+2] = fabsf(pdfs[i] - device_pdfs[i]);
+        outCPU[i*4+0] = fabsf(pdfs[i]);
+        outCPU[i*4+1] = fabsf(pdfs[i]);
+        outCPU[i*4+2] = fabsf(pdfs[i]);
+        outGPU[i*4+0] = fabsf(device_pdfs[i]);
+        outGPU[i*4+1] = fabsf(device_pdfs[i]);
+        outGPU[i*4+2] = fabsf(device_pdfs[i]);
 #else
         //int id = device_ids[i] - ids[i];
         int id = device_ids[i] - ids[i];
@@ -395,6 +410,8 @@ void bench_lookup_id(BenchParams &benchParams){
 
     sycl::free(distributions, q);
     sycl::free(device_ids, q);
+    sycl::free(device_pdfs, q);
+    sycl::free(device_random_directions, q);
     sycl::free(random_samples, q);
     sycl::free(positionsSurface, q);
 }

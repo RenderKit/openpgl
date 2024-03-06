@@ -1,4 +1,5 @@
 #define USE_TREELETS
+#define ONE_OVER_FOUR_PI 0.07957747154594767
 
 namespace openpgl_gpu
 {
@@ -51,26 +52,25 @@ namespace openpgl_gpu
         float _weights[maxComponents];
         float _kappas[maxComponents];
         float _meanDirections[maxComponents][3];
+        float _distances[maxComponents];
+        float _pivotPosition[3];
         int _numComponents{maxComponents};
         ParallaxAwareVonMisesFisherMixture()
         {
         }
 
-        pgl_vec3f sample(const pgl_vec2f sample) const
+    private:
+        inline uint32_t selectComponent(float &sample) const
         {
-
-            uint32_t selectedComponent{0};
-            // First, identify component we want to sample
-
-            pgl_vec2f _sample = sample;
-            float searched = _sample.y;
+            uint32_t selectedComponent{0};            
+            float searched = sample;
             float sumWeights = 0.0f;
             float cdf = 0.0f;
 
             while (true)
             {
                 cdf = _weights[selectedComponent];
-                if (sumWeights + cdf >= searched || selectedComponent > _numComponents)
+                if (sumWeights + cdf >= searched || selectedComponent+1 >= _numComponents)
                 {
                     break;
                 }
@@ -81,7 +81,20 @@ namespace openpgl_gpu
                 }
             }
 
-            _sample.y = std::min(1.0f - std::numeric_limits<float>::epsilon(), (searched - sumWeights) / cdf);
+            sample = std::min(1.0f - std::numeric_limits<float>::epsilon(), (searched - sumWeights) / cdf);
+            return selectedComponent;
+        }
+
+    public:
+
+        pgl_vec3f sample(const pgl_vec2f sample) const
+        {
+
+            uint32_t selectedComponent{0};
+            // First, identify component we want to sample
+
+            pgl_vec2f _sample = sample;
+            selectedComponent = selectComponent(_sample.y);
 
             Vector3 sampledDirection(0.f, 0.f, 1.f);
             // Second, sample selected component
@@ -116,6 +129,96 @@ namespace openpgl_gpu
 
             Vector3 out = dx * sampledDirection[0] + dy * sampledDirection[1] + meanDirection * sampledDirection[2];
             return {out[0], out[1], out[2]};
+        }
+
+        pgl_vec3f samplePos(const pgl_vec3f pos, const pgl_vec2f sample) const
+        {
+
+            uint32_t selectedComponent{0};
+            // First, identify component we want to sample
+            pgl_vec2f _sample = sample;
+            selectedComponent = selectComponent(_sample.y);
+
+            Vector3 sampledDirection(0.f, 0.f, 1.f);
+            // Second, sample selected component
+            const float sKappa = _kappas[selectedComponent];
+            const float sEMinus2Kappa = expf(-2.0f * sKappa);
+            Vector3 meanDirection(_meanDirections[selectedComponent][0], _meanDirections[selectedComponent][1], _meanDirections[selectedComponent][2]);
+            // parallax shift
+            Vector3 _pos = {pos.x, pos.y, pos.z};
+            const Vector3 relativePivotShift = {_pivotPosition[0] - _pos[0], _pivotPosition[1] - _pos[1], _pivotPosition[2] - _pos[2]};
+            meanDirection *= _distances[selectedComponent];
+            meanDirection += relativePivotShift;
+            float length = sycl::length(meanDirection);
+            meanDirection /= length;
+
+            if (sKappa == 0.0f)
+            {
+                sampledDirection = squareToUniformSphere(_sample);
+            }
+            else
+            {
+                float cosTheta = 1.f + logf(1.0f + ((sEMinus2Kappa - 1.f) * _sample.x)) / sKappa;
+
+                // safeguard for numerical imprecisions (if sample[0] is 0.999999999)
+                cosTheta = std::min(1.0f, std::max(cosTheta, -1.f));
+
+                const float sinTheta = std::sqrt(1.f - cosTheta * cosTheta);
+
+                const float phi = 2.f * float(M_PI) * _sample.y;
+
+                float sinPhi, cosPhi;
+                pgl_sincosf(phi, &sinPhi, &cosPhi);
+                sampledDirection = sphericalDirection(cosTheta, sinTheta, cosPhi, sinPhi);
+            }
+
+            const Vector3 dx0(0.0f, meanDirection[2], -meanDirection[1]);
+            const Vector3 dx1(-meanDirection[2], 0.0f, meanDirection[0]);
+            const Vector3 dx = normalize(dot(dx0, dx0) > dot(dx1, dx1) ? dx0 : dx1);
+            const Vector3 dy = normalize(cross(meanDirection, dx));
+
+            Vector3 out = dx * sampledDirection[0] + dy * sampledDirection[1] + meanDirection * sampledDirection[2];
+            return {out[0], out[1], out[2]};
+        }
+
+        float pdf(const pgl_vec3f dir) const
+        {
+            const Vector3 _dir = {dir.x, dir.y, dir.z};
+            float pdf {0.f};
+            for (int k =0; k < _numComponents; k++)
+            {
+                const Vector3 meanDirection = {_meanDirections[k][0], _meanDirections[k][1], _meanDirections[k][2]};
+                const float kappaK = _kappas[k];
+                float norm = kappaK > 0.f ? kappaK / (2.f * M_PI * (1.f - expf(-2.f * kappaK))) : ONE_OVER_FOUR_PI;
+                const float cosThetaK =  _dir[0] * meanDirection[0] + _dir[1] * meanDirection[1] + _dir[2] * meanDirection[2];
+                const float costThetaMinusOneK = std::min(cosThetaK - 1.f, 0.f);
+                pdf += _weights[k] * norm * expf(kappaK * costThetaMinusOneK);
+            }
+            return pdf;
+        }
+
+        float pdfPos(const pgl_vec3f pos, const pgl_vec3f dir) const
+        {
+            const Vector3 _dir = {dir.x, dir.y, dir.z};
+            const Vector3 _pos = {pos.x, pos.y, pos.z};
+            const Vector3 relativePivotShift = {_pivotPosition[0] - _pos[0], _pivotPosition[1] - _pos[1], _pivotPosition[2] - _pos[2]};
+            
+            float pdf {0.f};
+            for (int k =0; k < _numComponents; k++)
+            {
+                Vector3 meanDirection = {_meanDirections[k][0], _meanDirections[k][1], _meanDirections[k][2]};
+                meanDirection *= _distances[k];
+                meanDirection += relativePivotShift;
+                float length = sycl::length(meanDirection);
+                meanDirection /= length;
+                
+                const float kappaK = _kappas[k];
+                float norm = kappaK > 0.f ? kappaK / (2.f * M_PI * (1.f - expf(-2.f * kappaK))) : ONE_OVER_FOUR_PI;
+                const float cosThetaK =  _dir[0] * meanDirection[0] + _dir[1] * meanDirection[1] + _dir[2] * meanDirection[2];
+                const float costThetaMinusOneK = std::min(cosThetaK - 1.f, 0.f);
+                pdf += _weights[k] * norm * expf(kappaK * costThetaMinusOneK);
+            }
+            return pdf;
         }
     };
 
