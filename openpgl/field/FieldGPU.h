@@ -1,6 +1,11 @@
 #define USE_TREELETS
 #define ONE_OVER_FOUR_PI 0.07957747154594767
 
+#if defined(OPENPGL_GPU_CPU)
+    #include "../../third-party/embreeSrc/common/math/vec2.h"
+    #include "../../third-party/embreeSrc/common/math/vec3.h"
+#endif
+
 namespace openpgl_gpu
 {
     void pgl_sincosf(float x, float *sin, float *cos)
@@ -11,11 +16,20 @@ namespace openpgl_gpu
         sincosf(x, sin, cos);
         #endif
     }
+
+#if defined(OPENPGL_GPU_SYCL)
     typedef sycl::float2 Vector2;
     typedef sycl::float3 Vector3;
     typedef sycl::float2 Point2;
     typedef sycl::float3 Point3;
-
+    #define GPUNS sycl
+#else
+    typedef embree::Vec2<float> Vector2;
+    typedef embree::Vec3<float> Vector3;
+    typedef embree::Vec2<float> Point2;
+    typedef embree::Vec3<float> Point3;
+    #define GPUNS embree
+#endif
     template<int maxComponents> struct FlatVMM {
     };
 
@@ -149,7 +163,7 @@ namespace openpgl_gpu
             const Vector3 relativePivotShift = {_pivotPosition[0] - _pos[0], _pivotPosition[1] - _pos[1], _pivotPosition[2] - _pos[2]};
             meanDirection *= _distances[selectedComponent];
             meanDirection += relativePivotShift;
-            float length = sycl::length(meanDirection);
+            float length = GPUNS::length(meanDirection);
             meanDirection /= length;
 
             if (sKappa == 0.0f)
@@ -209,7 +223,7 @@ namespace openpgl_gpu
                 Vector3 meanDirection = {_meanDirections[k][0], _meanDirections[k][1], _meanDirections[k][2]};
                 meanDirection *= _distances[k];
                 meanDirection += relativePivotShift;
-                float length = sycl::length(meanDirection);
+                float length = GPUNS::length(meanDirection);
                 meanDirection /= length;
                 
                 const float kappaK = _kappas[k];
@@ -445,5 +459,67 @@ namespace openpgl_gpu
 #else
         KDNode *m_nodesPtr{nullptr};
 #endif
+    };
+
+    struct Device
+    {
+
+#if defined(OPENPG_GPU_SYCL)
+        sycl::queue q;
+#endif
+        Device() {}
+
+        ~Device() {}
+        
+
+
+        template<class T>
+        T* mallocArray(size_t numElements)
+        {
+#if defined(OPENPG_GPU_SYCL)
+            return sycl::malloc_shared<T>(numElements, q);
+#else
+            return new T[numElements];
+#endif
+        }
+        
+        template<class T>
+        void freeArray(T* ptr)
+        {
+#if defined(OPENPG_GPU_SYCL)
+            sycl:free(ptr, q);
+#else
+            delete[] ptr;
+#endif
+        }
+
+        template<class T>
+        void memcpyArrayToGPU(T* devicePtr, T* hostPtr, size_t numElements)
+        {
+#if defined(OPENPG_GPU_SYCL)
+            q.memcpy(devicePtr, hostPtr, numElements * sizeof(T));
+#else
+            std::memcpy(devicePtr, hostPtr, numElements * sizeof(T));      
+#endif
+        }
+
+        template<class T>
+        void memcpyArrayFromGPU()
+        {
+#if defined(OPENPG_GPU_SYCL)
+
+#else
+
+#endif
+        }
+
+        void wait()
+        {
+#if defined(OPENPG_GPU_SYCL)
+            q.wait();
+#else
+
+#endif
+        }
     };
 }
