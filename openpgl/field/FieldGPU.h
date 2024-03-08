@@ -6,9 +6,18 @@
     #include "../../third-party/embreeSrc/common/math/vec3.h"
 #endif
 
+
+#if defined(OPENPGL_GPU_SYCL)
+    #define OPENPGL_GPU_CALLABLE
+#elif defined(OPENPGL_GPU_CUDA) && defined(__CUDACC__)
+    #define OPENPGL_GPU_CALLABLE __host__ __device__
+#else
+    #define OPENPGL_GPU_CALLABLE
+#endif
+
 namespace openpgl_gpu
 {
-    void pgl_sincosf(float x, float *sin, float *cos)
+    OPENPGL_GPU_CALLABLE void pgl_sincosf(float x, float *sin, float *cos)
     {
         #ifdef SYCL_LANGUAGE_VERSION
         *sin = sycl::sincos(x, cos);
@@ -22,7 +31,189 @@ namespace openpgl_gpu
     typedef sycl::float3 Vector3;
     typedef sycl::float2 Point2;
     typedef sycl::float3 Point3;
-    #define GPUNS sycl
+    using namespace sycl;
+
+#elif defined(OPENPGL_GPU_CUDA)
+
+    union Vector2
+    {
+        float2 vec;
+        float data[2];
+        OPENPGL_GPU_CALLABLE Vector2(float x, float y)
+        {
+            vec = {x, y};
+        }
+        
+        OPENPGL_GPU_CALLABLE float& operator[](std::size_t idx)       { return data[idx]; }
+        OPENPGL_GPU_CALLABLE const float& operator[](std::size_t idx) const { return data[idx]; }
+
+        OPENPGL_GPU_CALLABLE const Vector2& operator*=(const Vector2& b){
+            this->vec.x *= b.vec.x;
+            this->vec.y *= b.vec.y;
+            return *this;
+        }
+
+        OPENPGL_GPU_CALLABLE const Vector2& operator*=(const float b){
+            this->vec.x *= b;
+            this->vec.y *= b;
+            return *this;
+        }
+
+        OPENPGL_GPU_CALLABLE const Vector2& operator/=(const Vector2& b){
+            this->vec.x /= b.vec.x;
+            this->vec.y /= b.vec.y;
+            return *this;
+        }
+
+        OPENPGL_GPU_CALLABLE const Vector2& operator/=(const float b){
+            this->vec.x /= b;
+            this->vec.y /= b;
+            return *this;
+        }
+    };
+
+    OPENPGL_GPU_CALLABLE const Vector2 operator*(Vector2 lhs, const Vector2& rhs)
+    {
+        return lhs *= rhs;
+    }
+
+    OPENPGL_GPU_CALLABLE const Vector2 operator*(Vector2 lhs, const float f)
+    {
+        return lhs *= f;
+    }
+
+    OPENPGL_GPU_CALLABLE const Vector2 operator/(Vector2 lhs, const Vector2& rhs)
+    {
+        return lhs /= rhs;
+    }
+
+    OPENPGL_GPU_CALLABLE const Vector2 operator/(Vector2 lhs, const float f)
+    {
+        return lhs /= f;
+    }
+
+    OPENPGL_GPU_CALLABLE float dot(const Vector2 a, const Vector2 b)
+    {
+        return a[0]*b[0] + a[1]*b[1];
+    }
+
+
+    OPENPGL_GPU_CALLABLE float length(const Vector2 &a)
+    {
+        return sqrtf(dot(a,a));
+    }
+
+
+    OPENPGL_GPU_CALLABLE Vector2 normalize(const Vector2 &a)
+    {
+        return a*rsqrt(dot(a,a));
+    }
+
+    union Vector3
+    {
+        float3 vec;
+        float data[3];
+        OPENPGL_GPU_CALLABLE Vector3(float x, float y, float z)
+        {
+            vec = {x, y, z};
+        }
+        
+        OPENPGL_GPU_CALLABLE float& operator[](std::size_t idx)       { return data[idx]; }
+        OPENPGL_GPU_CALLABLE const float& operator[](std::size_t idx) const { return data[idx]; }
+
+        OPENPGL_GPU_CALLABLE const Vector3& operator*=(const Vector3& b){
+            this->vec.x *= b.vec.x;
+            this->vec.y *= b.vec.y;
+            this->vec.z *= b.vec.z;
+            return *this;
+        }
+        OPENPGL_GPU_CALLABLE const Vector3& operator*=(const float b){
+            this->vec.x *= b;
+            this->vec.y *= b;
+            this->vec.z *= b;
+            return *this;
+        }
+
+        OPENPGL_GPU_CALLABLE const Vector3& operator/=(const Vector3& b){
+            this->vec.x /= b.vec.x;
+            this->vec.y /= b.vec.y;
+            this->vec.z /= b.vec.z;
+            return *this;
+        }
+        OPENPGL_GPU_CALLABLE const Vector3& operator/=(const float b){
+            this->vec.x /= b;
+            this->vec.y /= b;
+            this->vec.z /= b;
+            return *this;
+        }
+
+        OPENPGL_GPU_CALLABLE const Vector3& operator+=(const Vector3& b){
+            this->vec.x += b.vec.x;
+            this->vec.y += b.vec.y;
+            this->vec.z += b.vec.z;
+            return *this;
+        }
+        OPENPGL_GPU_CALLABLE const Vector3& operator+=(const float b){
+            this->vec.x += b;
+            this->vec.y += b;
+            this->vec.z += b;
+            return *this;
+        }
+    };
+
+    OPENPGL_GPU_CALLABLE const Vector3 operator*(Vector3 lhs, const Vector3& rhs)
+    {
+        return lhs *= rhs;
+    }
+
+    OPENPGL_GPU_CALLABLE const Vector3 operator*(Vector3 lhs, const float f)
+    {
+        return lhs *= f;
+    }
+
+    OPENPGL_GPU_CALLABLE const Vector3 operator/(Vector3 lhs, const Vector3& rhs)
+    {
+        return lhs /= rhs;
+    }
+
+    OPENPGL_GPU_CALLABLE const Vector3 operator/(Vector3 lhs, const float f)
+    {
+        return lhs /= f;
+    }
+
+    OPENPGL_GPU_CALLABLE const Vector3 operator+(Vector3 lhs, const Vector3& rhs)
+    {
+        return lhs += rhs;
+    }
+
+    OPENPGL_GPU_CALLABLE const Vector3 operator+(Vector3 lhs, const float f)
+    {
+        return lhs += f;
+    }
+
+    OPENPGL_GPU_CALLABLE float dot(const Vector3 &a, const Vector3 &b)
+    {
+        return a[0]*b[0] + a[1]*b[1] + a[2]*b[2];
+    }
+
+    OPENPGL_GPU_CALLABLE float length(const Vector3 &a)
+    {
+        return sqrtf(dot(a,a));
+    }
+
+    OPENPGL_GPU_CALLABLE Vector3 normalize(const Vector3 &a)
+    {
+        return a*rsqrt(dot(a,a));
+    }
+
+    OPENPGL_GPU_CALLABLE Vector3 cross(const Vector3 &a, const Vector3 &b)
+    {
+        return Vector3( a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0] );
+    }
+
+    typedef Vector2 Point2;
+    typedef Vector3 Point3;
+
 #else
     typedef embree::Vec2<float> Vector2;
     typedef embree::Vec3<float> Vector3;
@@ -33,14 +224,14 @@ namespace openpgl_gpu
     template<int maxComponents> struct FlatVMM {
     };
 
-    inline Vector3 sphericalDirection(const float &cosTheta, const float &sinTheta, const float &cosPhi, const float &sinPhi)
+    OPENPGL_GPU_CALLABLE inline Vector3 sphericalDirection(const float &cosTheta, const float &sinTheta, const float &cosPhi, const float &sinPhi)
     {
         return Vector3(sinTheta * cosPhi,
                        sinTheta * sinPhi,
                        cosTheta);
     };
 
-    inline Vector3 sphericalDirection(const float &theta, const float &phi)
+    OPENPGL_GPU_CALLABLE inline Vector3 sphericalDirection(const float &theta, const float &phi)
     {
         const float cosTheta = std::cos(theta);
         const float sinTheta = std::sin(theta);
@@ -50,10 +241,15 @@ namespace openpgl_gpu
         return sphericalDirection(cosTheta, sinTheta, cosPhi, sinPhi);
     };
 
-    inline Vector3 squareToUniformSphere(const pgl_vec2f sample)
+    OPENPGL_GPU_CALLABLE inline Vector3 squareToUniformSphere(const pgl_vec2f sample)
     {
         float z = 1.0f - 2.0f * sample.y;
+// TODO: Fix
+#if !defined(OPENPGL_GPU_CUDA)
         float r = std::sqrt(std::max(0.f, (1.0f - z * z)));
+#else
+        float r = std::sqrt((1.0f - z * z));
+#endif
         float sinPhi, cosPhi;
         pgl_sincosf(2.0f * float(M_PI)* sample.x, &sinPhi, &cosPhi);
         return Vector3(r * cosPhi, r * sinPhi, z);
@@ -74,7 +270,7 @@ namespace openpgl_gpu
         }
 
     private:
-        inline uint32_t selectComponent(float &sample) const
+        OPENPGL_GPU_CALLABLE inline uint32_t selectComponent(float &sample) const
         {
             uint32_t selectedComponent{0};            
             float searched = sample;
@@ -94,14 +290,18 @@ namespace openpgl_gpu
                     selectedComponent++;
                 }
             }
-
+// TODO: Fix
+#if !defined(OPENPGL_GPU_CUDA)
             sample = std::min(1.0f - std::numeric_limits<float>::epsilon(), (searched - sumWeights) / cdf);
+#else
+            sample = (searched - sumWeights) / cdf;
+#endif
             return selectedComponent;
         }
 
     public:
 
-        pgl_vec3f sample(const pgl_vec2f sample) const
+        OPENPGL_GPU_CALLABLE pgl_vec3f sample(const pgl_vec2f sample) const
         {
 
             uint32_t selectedComponent{0};
@@ -110,11 +310,11 @@ namespace openpgl_gpu
             pgl_vec2f _sample = sample;
             selectedComponent = selectComponent(_sample.y);
 
-            Vector3 sampledDirection(0.f, 0.f, 1.f);
+            Vector3 sampledDirection = Vector3(0.f, 0.f, 1.f);
             // Second, sample selected component
             const float sKappa = _kappas[selectedComponent];
             const float sEMinus2Kappa = expf(-2.0f * sKappa);
-            Vector3 meanDirection(_meanDirections[selectedComponent][0], _meanDirections[selectedComponent][1], _meanDirections[selectedComponent][2]);
+            Vector3 meanDirection = Vector3(_meanDirections[selectedComponent][0], _meanDirections[selectedComponent][1], _meanDirections[selectedComponent][2]);
 
             if (sKappa == 0.0f)
             {
@@ -123,10 +323,11 @@ namespace openpgl_gpu
             else
             {
                 float cosTheta = 1.f + logf(1.0f + ((sEMinus2Kappa - 1.f) * _sample.x)) / sKappa;
-
+// TODO: Fix
+#if !defined(OPENPGL_GPU_CUDA)
                 // safeguard for numerical imprecisions (if sample[0] is 0.999999999)
                 cosTheta = std::min(1.0f, std::max(cosTheta, -1.f));
-
+#endif
                 const float sinTheta = std::sqrt(1.f - cosTheta * cosTheta);
 
                 const float phi = 2.f * float(M_PI) * _sample.y;
@@ -136,8 +337,8 @@ namespace openpgl_gpu
                 sampledDirection = sphericalDirection(cosTheta, sinTheta, cosPhi, sinPhi);
             }
 
-            const Vector3 dx0(0.0f, meanDirection[2], -meanDirection[1]);
-            const Vector3 dx1(-meanDirection[2], 0.0f, meanDirection[0]);
+            const Vector3 dx0 = Vector3(0.0f, meanDirection[2], -meanDirection[1]);
+            const Vector3 dx1 = Vector3(-meanDirection[2], 0.0f, meanDirection[0]);
             const Vector3 dx = normalize(dot(dx0, dx0) > dot(dx1, dx1) ? dx0 : dx1);
             const Vector3 dy = normalize(cross(meanDirection, dx));
 
@@ -145,9 +346,8 @@ namespace openpgl_gpu
             return {out[0], out[1], out[2]};
         }
 
-        pgl_vec3f samplePos(const pgl_vec3f pos, const pgl_vec2f sample) const
+        OPENPGL_GPU_CALLABLE pgl_vec3f samplePos(const pgl_vec3f pos, const pgl_vec2f sample) const
         {
-
             uint32_t selectedComponent{0};
             // First, identify component we want to sample
             pgl_vec2f _sample = sample;
@@ -163,8 +363,8 @@ namespace openpgl_gpu
             const Vector3 relativePivotShift = {_pivotPosition[0] - _pos[0], _pivotPosition[1] - _pos[1], _pivotPosition[2] - _pos[2]};
             meanDirection *= _distances[selectedComponent];
             meanDirection += relativePivotShift;
-            float length = GPUNS::length(meanDirection);
-            meanDirection /= length;
+            float flength = length(meanDirection);
+            meanDirection /= flength;
 
             if (sKappa == 0.0f)
             {
@@ -174,9 +374,11 @@ namespace openpgl_gpu
             {
                 float cosTheta = 1.f + logf(1.0f + ((sEMinus2Kappa - 1.f) * _sample.x)) / sKappa;
 
+// TODO: Fix
+#if !defined(OPENPGL_GPU_CUDA)
                 // safeguard for numerical imprecisions (if sample[0] is 0.999999999)
                 cosTheta = std::min(1.0f, std::max(cosTheta, -1.f));
-
+#endif
                 const float sinTheta = std::sqrt(1.f - cosTheta * cosTheta);
 
                 const float phi = 2.f * float(M_PI) * _sample.y;
@@ -195,7 +397,7 @@ namespace openpgl_gpu
             return {out[0], out[1], out[2]};
         }
 
-        float pdf(const pgl_vec3f dir) const
+        OPENPGL_GPU_CALLABLE float pdf(const pgl_vec3f dir) const
         {
             const Vector3 _dir = {dir.x, dir.y, dir.z};
             float pdf {0.f};
@@ -205,13 +407,18 @@ namespace openpgl_gpu
                 const float kappaK = _kappas[k];
                 float norm = kappaK > 0.f ? kappaK / (2.f * M_PI * (1.f - expf(-2.f * kappaK))) : ONE_OVER_FOUR_PI;
                 const float cosThetaK =  _dir[0] * meanDirection[0] + _dir[1] * meanDirection[1] + _dir[2] * meanDirection[2];
+// TODO: Fix
+#if !defined(OPENPGL_GPU_CUDA)
                 const float costThetaMinusOneK = std::min(cosThetaK - 1.f, 0.f);
+#else
+                const float costThetaMinusOneK = cosThetaK - 1.f;
+#endif
                 pdf += _weights[k] * norm * expf(kappaK * costThetaMinusOneK);
             }
             return pdf;
         }
 
-        float pdfPos(const pgl_vec3f pos, const pgl_vec3f dir) const
+        OPENPGL_GPU_CALLABLE float pdfPos(const pgl_vec3f pos, const pgl_vec3f dir) const
         {
             const Vector3 _dir = {dir.x, dir.y, dir.z};
             const Vector3 _pos = {pos.x, pos.y, pos.z};
@@ -223,13 +430,18 @@ namespace openpgl_gpu
                 Vector3 meanDirection = {_meanDirections[k][0], _meanDirections[k][1], _meanDirections[k][2]};
                 meanDirection *= _distances[k];
                 meanDirection += relativePivotShift;
-                float length = GPUNS::length(meanDirection);
-                meanDirection /= length;
+                float flength = length(meanDirection);
+                meanDirection /= flength;
                 
                 const float kappaK = _kappas[k];
                 float norm = kappaK > 0.f ? kappaK / (2.f * M_PI * (1.f - expf(-2.f * kappaK))) : ONE_OVER_FOUR_PI;
                 const float cosThetaK =  _dir[0] * meanDirection[0] + _dir[1] * meanDirection[1] + _dir[2] * meanDirection[2];
+// TODO: Fix
+#if !defined(OPENPGL_GPU_CUDA)
                 const float costThetaMinusOneK = std::min(cosThetaK - 1.f, 0.f);
+#else
+                const float costThetaMinusOneK = cosThetaK - 1.f;
+#endif
                 pdf += _weights[k] * norm * expf(kappaK * costThetaMinusOneK);
             }
             return pdf;
@@ -273,7 +485,7 @@ namespace openpgl_gpu
             OPENPGL_ASSERT(idx == getLeftChildIdx());
         }
 
-        uint32_t getLeftChildIdx() const
+        OPENPGL_GPU_CALLABLE uint32_t getLeftChildIdx() const
         {
             OPENPGL_ASSERT((splitDimAndNodeIdx & (3U << 30)) != (3U << 30));
             OPENPGL_ASSERT((splitDimAndNodeIdx >> 30) != 3);
@@ -307,7 +519,7 @@ namespace openpgl_gpu
             OPENPGL_ASSERT(isLeaf());
         }
 
-        bool isLeaf() const
+        OPENPGL_GPU_CALLABLE bool isLeaf() const
         {
             return (splitDimAndNodeIdx >> 30) == 3;
         }
@@ -332,7 +544,7 @@ namespace openpgl_gpu
             OPENPGL_ASSERT(getDataIdx() == idx);
         }
 
-        uint32_t getDataIdx() const
+        OPENPGL_GPU_CALLABLE uint32_t getDataIdx() const
         {
             OPENPGL_ASSERT(isLeaf());
             return (splitDimAndNodeIdx << 2) >> 2;
@@ -342,7 +554,7 @@ namespace openpgl_gpu
         // Split dimension functions
         /////////////////////////////
 
-        uint8_t getSplitDim() const
+        OPENPGL_GPU_CALLABLE uint8_t getSplitDim() const
         {
             return (splitDimAndNodeIdx >> 30);
         }
@@ -354,7 +566,7 @@ namespace openpgl_gpu
             OPENPGL_ASSERT(splitAxis == getSplitDim());
         }
 
-        float getSplitPivot() const
+        OPENPGL_GPU_CALLABLE float getSplitPivot() const
         {
             return splitPosition;
         }
@@ -409,9 +621,9 @@ namespace openpgl_gpu
 
     struct FieldGPU
     {
-        FieldGPU(const KDTreeLet *treelet) : m_treeLets(treelet) {}
+        OPENPGL_GPU_CALLABLE FieldGPU(const KDTreeLet *treelet) : m_treeLets(treelet) {}
 
-        uint32_t getDataIdxAtPos(const float *pos) const
+        OPENPGL_GPU_CALLABLE uint32_t getDataIdxAtPos(const float *pos) const
         {
 #ifdef USE_TREELETS
             uint32_t treeIdx = 0;
@@ -464,20 +676,22 @@ namespace openpgl_gpu
     struct Device
     {
 
-#if defined(OPENPG_GPU_SYCL)
+#if defined(OPENPGL_GPU_SYCL)
         sycl::queue q;
 #endif
         Device() {}
 
         ~Device() {}
         
-
-
         template<class T>
         T* mallocArray(size_t numElements)
         {
-#if defined(OPENPG_GPU_SYCL)
+#if defined(OPENPGL_GPU_SYCL)
             return sycl::malloc_shared<T>(numElements, q);
+#elif defined(OPENPGL_GPU_CUDA)
+            void *devPtr;
+            cudaMalloc(&devPtr, numElements * sizeof(T));
+            return (T*)devPtr;
 #else
             return new T[numElements];
 #endif
@@ -486,8 +700,10 @@ namespace openpgl_gpu
         template<class T>
         void freeArray(T* ptr)
         {
-#if defined(OPENPG_GPU_SYCL)
+#if defined(OPENPGL_GPU_SYCL)
             sycl:free(ptr, q);
+#elif defined(OPENPGL_GPU_CUDA)
+            cudaFree(ptr);
 #else
             delete[] ptr;
 #endif
@@ -496,27 +712,35 @@ namespace openpgl_gpu
         template<class T>
         void memcpyArrayToGPU(T* devicePtr, T* hostPtr, size_t numElements)
         {
-#if defined(OPENPG_GPU_SYCL)
+#if defined(OPENPGL_GPU_SYCL)
             q.memcpy(devicePtr, hostPtr, numElements * sizeof(T));
+#elif defined(OPENPGL_GPU_CUDA)
+            cudaMemcpy(devicePtr, hostPtr, numElements * sizeof(T), cudaMemcpyHostToDevice);
+            //cudaMemcpyAsync(devicePtr, hostPtr, numElements * sizeof(T), cudaMemcpyHostToDevice);
 #else
             std::memcpy(devicePtr, hostPtr, numElements * sizeof(T));      
 #endif
         }
 
         template<class T>
-        void memcpyArrayFromGPU()
+        void memcpyArrayFromGPU(T* devicePtr, T* hostPtr, size_t numElements)
         {
-#if defined(OPENPG_GPU_SYCL)
-
+#if defined(OPENPGL_GPU_SYCL)
+            q.memcpy(hostPtr, devicePtr, numElements * sizeof(T));
+#elif defined(OPENPGL_GPU_CUDA)
+            cudaMemcpy(hostPtr, devicePtr, numElements * sizeof(T), cudaMemcpyDeviceToHost);
+            //cudaMemcpyAsync(hostPtr, devicePtr, numElements * sizeof(T), cudaMemcpyDeviceToHost);
 #else
-
+            std::memcpy(hostPtr, devicePtr, numElements * sizeof(T));
 #endif
         }
 
         void wait()
         {
-#if defined(OPENPG_GPU_SYCL)
+#if defined(OPENPGL_GPU_SYCL)
             q.wait();
+#elif defined(OPENPGL_GPU_CUDA)
+            cudaDeviceSynchronize();
 #else
 
 #endif

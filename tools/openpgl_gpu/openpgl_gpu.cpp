@@ -40,6 +40,23 @@
 #define TINYEXR_IMPLEMENTATION
 #include "tinyexr.h"
 
+#if defined(OPENPGL_GPU_CUDA) && defined(__CUDACC__)
+__global__ void test(openpgl_gpu::KDTreeLet* device_nodes, openpgl_gpu::ParallaxAwareVonMisesFisherMixture<32>* device_distributions, pgl_vec3f* device_positionsSurface, int* device_ids, pgl_vec2f *device_random_samples, pgl_vec3f *device_random_directions, float *device_pdfs, int nSurfaceSamples)
+{
+    openpgl_gpu::FieldGPU field(device_nodes);
+    int idx = threadIdx.x + blockIdx.x*blockDim.x;
+    if(idx < nSurfaceSamples)
+    {
+        float pos[3] = {device_positionsSurface[idx].x, device_positionsSurface[idx].y, device_positionsSurface[idx].z};
+        device_ids[idx] = field.getDataIdxAtPos(pos);
+        //device_random_directions[idx] = distributions[device_ids[idx]].sample(device_random_samples[idx]);
+        //device_pdfs[idx] = distributions[device_ids[idx]].pdf(device_random_directions[idx]);
+        device_random_directions[idx] = device_distributions[device_ids[idx]].samplePos(device_positionsSurface[idx], device_random_samples[idx]);
+        device_pdfs[idx] = device_distributions[device_ids[idx]].pdfPos(device_positionsSurface[idx], device_random_directions[idx]);
+    }    
+}
+#endif
+
 enum BenchType{
     HELP=0,
     BENCH_LOOKUP_ID,
@@ -264,10 +281,13 @@ void bench_lookup_id(BenchParams &benchParams){
     int nSurfaceSamples = width*height;
     openpgl_gpu::Device deviceGPU;
     int* ids = new int[nSurfaceSamples];
+    int* host_ids = new int[nSurfaceSamples];
     int* device_ids = deviceGPU.mallocArray<int>(nSurfaceSamples);
 
     std::cout << "Prepare Data: START" << std::endl;
-    pgl_vec3f* positionsSurface =  deviceGPU.mallocArray<pgl_vec3f>(nSurfaceSamples);
+    pgl_vec3f* positionsSurface =  new pgl_vec3f [nSurfaceSamples];
+    //pgl_vec3f* host_positionsSurface =  new pgl_vec3f [nSurfaceSamples];
+    pgl_vec3f* device_positionsSurface =  deviceGPU.mallocArray<pgl_vec3f>(nSurfaceSamples);
     for (int i = 0; i < nSurfaceSamples; i++)
     {
         int idx = i;
@@ -277,11 +297,17 @@ void bench_lookup_id(BenchParams &benchParams){
         pos.z = img[i*4+2];
         positionsSurface[idx] = pos;
     }
+    deviceGPU.memcpyArrayToGPU(device_positionsSurface, positionsSurface, nSurfaceSamples);
+    deviceGPU.wait();
+
     std::mt19937_64 rng(0);
-    pgl_vec2f *random_samples = deviceGPU.mallocArray<pgl_vec2f>(nSurfaceSamples);
+    pgl_vec2f *random_samples = new pgl_vec2f[nSurfaceSamples];
+    pgl_vec2f *device_random_samples = deviceGPU.mallocArray<pgl_vec2f>(nSurfaceSamples);
     pgl_vec3f *random_directions = new pgl_vec3f[nSurfaceSamples];
+    pgl_vec3f *host_random_directions = new pgl_vec3f[nSurfaceSamples];
     pgl_vec3f *device_random_directions = deviceGPU.mallocArray<pgl_vec3f>(nSurfaceSamples);
     float *pdfs = new float[nSurfaceSamples];
+    float *host_pdfs = new float[nSurfaceSamples];
     float *device_pdfs = deviceGPU.mallocArray<float>(nSurfaceSamples);
 
     for (int i = 0; i < nSurfaceSamples; i++)
@@ -289,9 +315,9 @@ void bench_lookup_id(BenchParams &benchParams){
         random_samples[i].x = distU(rng);
         random_samples[i].y = distU(rng);
     }
+    deviceGPU.memcpyArrayToGPU(device_random_samples, random_samples, nSurfaceSamples);
 
     std::cout << "Prepare Data: END" << std::endl;
-
 
     std::string foo;
     std::getline( std::cin, foo );
@@ -300,16 +326,19 @@ void bench_lookup_id(BenchParams &benchParams){
     openpgl_gpu::KDTreeLet *device_nodes = deviceGPU.mallocArray<openpgl_gpu::KDTreeLet>(field.GetNumKDNodes());
     deviceGPU.memcpyArrayToGPU(device_nodes, (openpgl_gpu::KDTreeLet*)field.GetKdNodes(), field.GetNumKDNodes());
 
-    openpgl_gpu::ParallaxAwareVonMisesFisherMixture<32> *distributions = deviceGPU.mallocArray<openpgl_gpu::ParallaxAwareVonMisesFisherMixture<32>>(field.GetNumDistributions());
+    openpgl_gpu::ParallaxAwareVonMisesFisherMixture<32> *distributions = new openpgl_gpu::ParallaxAwareVonMisesFisherMixture<32>[field.GetNumDistributions()];
+    openpgl_gpu::ParallaxAwareVonMisesFisherMixture<32> *device_distributions = deviceGPU.mallocArray<openpgl_gpu::ParallaxAwareVonMisesFisherMixture<32>>(field.GetNumDistributions());
     field.CopyDistributions(distributions);
-
+    deviceGPU.memcpyArrayToGPU(device_distributions, distributions, field.GetNumDistributions());
+    // wait until all CPU -> GPU copies are done
     deviceGPU.wait();
 
     int num_nodes = field.GetNumKDNodes();
     std::cout << "Executing on GPU\n";
     openpgl_gpu::FieldGPU device_field(device_nodes);
-#if defined(OPENPG_GPU_SYCL)
-    q.submit([&](sycl::handler &h) {
+#if defined(OPENPGL_GPU_SYCL) || defined(OPENPGL_GPU_CPU)
+#if defined(OPENPGL_GPU_SYCL)
+    deviceGPU.q.submit([&](sycl::handler &h) {
         h.parallel_for(sycl::range<1>(nSurfaceSamples), [=] (sycl::id<1> i) {
             int idx = i.get(0);
 #else
@@ -319,24 +348,41 @@ void bench_lookup_id(BenchParams &benchParams){
         {
             int idx = n;
 #endif                
-            float pos[3] = {positionsSurface[idx].x, positionsSurface[idx].y, positionsSurface[idx].z};
-            device_ids[idx] = device_field.getDataIdxAtPos(pos);
-            //device_random_directions[idx] = distributions[device_ids[idx]].sample(random_samples[idx]);
-            //device_pdfs[idx] = distributions[device_ids[idx]].pdf(device_random_directions[idx]);
-            device_random_directions[idx] = distributions[device_ids[idx]].samplePos(positionsSurface[idx], random_samples[idx]);
-            device_pdfs[idx] = distributions[device_ids[idx]].pdfPos(positionsSurface[idx], device_random_directions[idx]);
-#if defined(OPENPG_GPU_SYCL)
+            //for (int j = 0; j< 1000000; j++) 
+            {
+#if defined(OPENPGL_GPU_SYCL)
+                idx = (i.get(0)+512) % nSurfaceSamples;
+#else
+                idx = (n+512) % nSurfaceSamples;
+#endif
+                float pos[3] = {device_positionsSurface[idx].x, device_positionsSurface[idx].y, device_positionsSurface[idx].z};
+                device_ids[idx] = device_field.getDataIdxAtPos(pos);
+                //device_random_directions[idx] = device_distributions[device_ids[idx]].sample(random_samples[idx]);
+                //device_pdfs[idx] = device_distributions[device_ids[idx]].pdf(device_random_directions[idx]);
+                device_random_directions[idx] = device_distributions[device_ids[idx]].samplePos(device_positionsSurface[idx], device_random_samples[idx]);
+                device_pdfs[idx] = device_distributions[device_ids[idx]].pdfPos(device_positionsSurface[idx], device_random_directions[idx]);
+            }
+#if defined(OPENPGL_GPU_SYCL)
         });
     });
 #else
         }
     });
 #endif
+#elif defined(OPENPGL_GPU_CUDA) && defined(__CUDACC__)
+    test<<< 1 +  nSurfaceSamples/256, 256>>>(device_nodes, device_distributions, device_positionsSurface, device_ids, device_random_samples, device_random_directions, device_pdfs, nSurfaceSamples);
+#endif
     deviceGPU.wait();
-    deviceGPU.freeArray(device_nodes);
+    //deviceGPU.freeArray(device_nodes);
+    
+    std::cout << "Download data from GPU\n";
+    deviceGPU.memcpyArrayFromGPU(device_ids, host_ids, nSurfaceSamples);
+    deviceGPU.memcpyArrayFromGPU(device_random_directions, host_random_directions, nSurfaceSamples);
+    deviceGPU.memcpyArrayFromGPU(device_pdfs, host_pdfs, nSurfaceSamples);
 
     Timer timer;
     timer.reset();
+
     #if 1
     std::cout << "Executing on CPU\n";
     int step = nSurfaceSamples / num_threads;
@@ -365,32 +411,42 @@ void bench_lookup_id(BenchParams &benchParams){
     float* outGPU = new float[nSurfaceSamples*4];
     for (int i = 0 ; i < nSurfaceSamples; i++){
 
-#if 1
-        outDiff[i*4+0] = fabsf(random_directions[i].x - device_random_directions[i].x);
-        outDiff[i*4+1] = fabsf(random_directions[i].y - device_random_directions[i].y);
-        outDiff[i*4+2] = fabsf(random_directions[i].z - device_random_directions[i].z);
-        outCPU[i*4+0] = fabsf(random_directions[i].x);
-        outCPU[i*4+1] = fabsf(random_directions[i].y);
-        outCPU[i*4+2] = fabsf(random_directions[i].z);
-        outGPU[i*4+0] = fabsf(device_random_directions[i].x);
-        outGPU[i*4+1] = fabsf(device_random_directions[i].y);
-        outGPU[i*4+2] = fabsf(device_random_directions[i].z);
+#if 0
+        outDiff[i*4+0] = fabsf(random_directions[i].x - host_random_directions[i].x);
+        outDiff[i*4+1] = fabsf(random_directions[i].y - host_random_directions[i].y);
+        outDiff[i*4+2] = fabsf(random_directions[i].z - host_random_directions[i].z);
+        outCPU[i*4+0] = (1.0f + random_directions[i].x) / 2.f;
+        outCPU[i*4+1] = (1.0f + random_directions[i].y) / 2.f;
+        outCPU[i*4+2] = (1.0f + random_directions[i].z) / 2.f;
+        outGPU[i*4+0] = (1.0f + host_random_directions[i].x) / 2.f;
+        outGPU[i*4+1] = (1.0f + host_random_directions[i].y) / 2.f;
+        outGPU[i*4+2] = (1.0f + host_random_directions[i].z) / 2.f;
+#elif 1
+        outDiff[i*4+0] = fabsf(pdfs[i] - host_pdfs[i]);
+        outDiff[i*4+1] = fabsf(pdfs[i] - host_pdfs[i]);
+        outDiff[i*4+2] = fabsf(pdfs[i] - host_pdfs[i]);
+        outCPU[i*4+0] = (pdfs[i]);
+        outCPU[i*4+1] = (pdfs[i]);
+        outCPU[i*4+2] = (pdfs[i]);
+        outGPU[i*4+0] = (host_pdfs[i]);
+        outGPU[i*4+1] = (host_pdfs[i]);
+        outGPU[i*4+2] = (host_pdfs[i]);
 #elif 0
-        outDiff[i*4+0] = fabsf(pdfs[i] - device_pdfs[i]);
-        outDiff[i*4+1] = fabsf(pdfs[i] - device_pdfs[i]);
-        outDiff[i*4+2] = fabsf(pdfs[i] - device_pdfs[i]);
-        outCPU[i*4+0] = fabsf(pdfs[i]);
-        outCPU[i*4+1] = fabsf(pdfs[i]);
-        outCPU[i*4+2] = fabsf(pdfs[i]);
-        outGPU[i*4+0] = fabsf(device_pdfs[i]);
-        outGPU[i*4+1] = fabsf(device_pdfs[i]);
-        outGPU[i*4+2] = fabsf(device_pdfs[i]);
+        outDiff[i*4+0] = (positionsSurface[i].x - host_random_directions[i].x);
+        outDiff[i*4+1] = (positionsSurface[i].y - host_random_directions[i].y);
+        outDiff[i*4+2] = (positionsSurface[i].z - host_random_directions[i].z);
+        outCPU[i*4+0] = (positionsSurface[i].x);
+        outCPU[i*4+1] = (positionsSurface[i].y);
+        outCPU[i*4+2] = (positionsSurface[i].z);
+        outGPU[i*4+0] = (host_random_directions[i].x);
+        outGPU[i*4+1] = (host_random_directions[i].y);
+        outGPU[i*4+2] = (host_random_directions[i].z);
 #else
         //int id = device_ids[i] - ids[i];
-        int id = device_ids[i] - ids[i];
+        int id = host_ids[i] - ids[i];
         std::mt19937_64 genDiff(id);
         std::mt19937_64 genCPU(ids[i]);
-        std::mt19937_64 genGPU(device_ids[i]);
+        std::mt19937_64 genGPU(host_ids[i]);
 
         outDiff[i*4+0] = distU(genDiff);
         outDiff[i*4+1] = distU(genDiff);
@@ -418,14 +474,24 @@ void bench_lookup_id(BenchParams &benchParams){
 
     std::cout << "SurfaceSamplingDistribution::Init";
     std::cout << " time: "<< (timer.elapsed()/float(nSurfaceSamples)) << "µs" << "\t nThreads = " << num_threads << std::endl;
-    delete[] ids;
 
-    deviceGPU.freeArray(distributions);
+    delete[] distributions;
+    delete[] ids;
+    delete[] host_ids;
+    delete[] pdfs;
+    delete[] host_pdfs;
+    delete[] random_directions;
+    delete[] host_random_directions;
+    delete[] random_samples;
+    delete[] positionsSurface;
+
+    deviceGPU.freeArray(device_distributions);
     deviceGPU.freeArray(device_ids);
     deviceGPU.freeArray(device_pdfs);
     deviceGPU.freeArray(device_random_directions);
-    deviceGPU.freeArray(random_samples);
-    deviceGPU.freeArray(positionsSurface);
+    deviceGPU.freeArray(device_random_samples);
+    deviceGPU.freeArray(device_positionsSurface);
+
 }
 
 
