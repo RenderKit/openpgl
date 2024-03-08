@@ -19,11 +19,11 @@ namespace openpgl_gpu
 {
     OPENPGL_GPU_CALLABLE void pgl_sincosf(float x, float *sin, float *cos)
     {
-        #ifdef SYCL_LANGUAGE_VERSION
+#ifdef SYCL_LANGUAGE_VERSION
         *sin = sycl::sincos(x, cos);
-        #else
+#else
         sincosf(x, sin, cos);
-        #endif
+#endif
     }
 
 #if defined(OPENPGL_GPU_SYCL)
@@ -248,7 +248,7 @@ namespace openpgl_gpu
 #if !defined(OPENPGL_GPU_CUDA)
         float r = std::sqrt(std::max(0.f, (1.0f - z * z)));
 #else
-        float r = std::sqrt((1.0f - z * z));
+        float r = std::sqrt(std::fmaxf(0.f, (1.0f - z * z)));
 #endif
         float sinPhi, cosPhi;
         pgl_sincosf(2.0f * float(M_PI)* sample.x, &sinPhi, &cosPhi);
@@ -294,7 +294,7 @@ namespace openpgl_gpu
 #if !defined(OPENPGL_GPU_CUDA)
             sample = std::min(1.0f - std::numeric_limits<float>::epsilon(), (searched - sumWeights) / cdf);
 #else
-            sample = (searched - sumWeights) / cdf;
+            sample = std::fminf(1.0f - std::numeric_limits<float>::epsilon(), (searched - sumWeights) / cdf);
 #endif
             return selectedComponent;
         }
@@ -327,6 +327,8 @@ namespace openpgl_gpu
 #if !defined(OPENPGL_GPU_CUDA)
                 // safeguard for numerical imprecisions (if sample[0] is 0.999999999)
                 cosTheta = std::min(1.0f, std::max(cosTheta, -1.f));
+#else
+                cosTheta = std::fminf(1.0f, std::fmaxf(cosTheta, -1.f));
 #endif
                 const float sinTheta = std::sqrt(1.f - cosTheta * cosTheta);
 
@@ -378,6 +380,8 @@ namespace openpgl_gpu
 #if !defined(OPENPGL_GPU_CUDA)
                 // safeguard for numerical imprecisions (if sample[0] is 0.999999999)
                 cosTheta = std::min(1.0f, std::max(cosTheta, -1.f));
+#else
+                cosTheta = std::fminf(1.0f, std::fmaxf(cosTheta, -1.f));
 #endif
                 const float sinTheta = std::sqrt(1.f - cosTheta * cosTheta);
 
@@ -411,7 +415,7 @@ namespace openpgl_gpu
 #if !defined(OPENPGL_GPU_CUDA)
                 const float costThetaMinusOneK = std::min(cosThetaK - 1.f, 0.f);
 #else
-                const float costThetaMinusOneK = cosThetaK - 1.f;
+                const float costThetaMinusOneK = std::fminf(cosThetaK - 1.f, 0.f);
 #endif
                 pdf += _weights[k] * norm * expf(kappaK * costThetaMinusOneK);
             }
@@ -440,7 +444,7 @@ namespace openpgl_gpu
 #if !defined(OPENPGL_GPU_CUDA)
                 const float costThetaMinusOneK = std::min(cosThetaK - 1.f, 0.f);
 #else
-                const float costThetaMinusOneK = cosThetaK - 1.f;
+                const float costThetaMinusOneK = std::fminf(cosThetaK - 1.f, 0.f);
 #endif
                 pdf += _weights[k] * norm * expf(kappaK * costThetaMinusOneK);
             }
@@ -621,7 +625,9 @@ namespace openpgl_gpu
 
     struct FieldGPU
     {
-        OPENPGL_GPU_CALLABLE FieldGPU(const KDTreeLet *treelet) : m_treeLets(treelet) {}
+        using Distribution = openpgl_gpu::ParallaxAwareVonMisesFisherMixture<32>; 
+        
+        OPENPGL_GPU_CALLABLE FieldGPU(const KDTreeLet *treelet, const Distribution *distributions) : m_treeLets(treelet), m_distributions(distributions) {}
 
         OPENPGL_GPU_CALLABLE uint32_t getDataIdxAtPos(const float *pos) const
         {
@@ -671,7 +677,65 @@ namespace openpgl_gpu
 #else
         KDNode *m_nodesPtr{nullptr};
 #endif
+        const Distribution *m_distributions {nullptr};
+
     };
+
+    struct SurfaceSamplingDistribution
+    {
+        const FieldGPU* m_field {nullptr};
+        pgl_point3f m_pos {0.f, 0.f, 0.f};
+        int m_idx {-1};
+
+        OPENPGL_GPU_CALLABLE bool Init(const FieldGPU* field, const pgl_point3f& pos, float& sample1D)
+        {
+            m_pos = pos;
+            m_field = field;
+            float _pos[3] = {pos.x, pos.y, pos.z};
+            m_idx = m_field->getDataIdxAtPos(_pos);
+
+            return m_idx >= 0;
+        }
+
+        OPENPGL_GPU_CALLABLE void Clear()
+        {
+            m_field = nullptr;
+            m_pos = {0.f, 0.f, 0.f};
+            m_idx = -1;
+        }
+
+        OPENPGL_GPU_CALLABLE pgl_vec3f Sample(const pgl_point2f& sample2D)const
+        {
+            return m_field->m_distributions[m_idx].samplePos(m_pos, sample2D);
+        }
+
+        OPENPGL_GPU_CALLABLE float PDF(const pgl_vec3f& direction) const
+        {
+            return m_field->m_distributions[m_idx].pdfPos(m_pos, direction);
+        }
+
+        OPENPGL_GPU_CALLABLE float SamplePDF(const pgl_point2f& sample2D, pgl_vec3f& direction) const
+        {
+            direction = m_field->m_distributions[m_idx].samplePos(m_pos, sample2D);
+            return m_field->m_distributions[m_idx].pdfPos(m_pos, direction);
+        }
+
+        OPENPGL_GPU_CALLABLE float IncomingRadiancePDF(const pgl_vec3f& direction) const
+        {
+            return m_field->m_distributions[m_idx].pdfPos(m_pos, direction);
+        }
+
+        OPENPGL_GPU_CALLABLE bool SupportsApplyCosineProduct() const
+        {
+            return false;
+        }
+
+        OPENPGL_GPU_CALLABLE uint32_t GetId() const
+        {
+            return m_idx;
+        }
+    };
+
 
     struct Device
     {
