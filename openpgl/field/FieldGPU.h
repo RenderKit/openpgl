@@ -8,8 +8,10 @@
 
 
 #if defined(OPENPGL_GPU_SYCL)
+    #define FLT_EPSILON 1.19209290E-07F
     #define OPENPGL_GPU_CALLABLE
 #elif defined(OPENPGL_GPU_CUDA) && defined(__CUDACC__)
+    #define FLT_EPSILON 1.19209290E-07F
     #define OPENPGL_GPU_CALLABLE __host__ __device__
 #else
     #define OPENPGL_GPU_CALLABLE
@@ -292,9 +294,9 @@ namespace openpgl_gpu
             }
 // TODO: Fix
 #if !defined(OPENPGL_GPU_CUDA)
-            sample = std::min(1.0f - std::numeric_limits<float>::epsilon(), (searched - sumWeights) / cdf);
+            sample = std::min(1.0f - FLT_EPSILON, (searched - sumWeights) / cdf);
 #else
-            sample = std::fminf(1.0f - std::numeric_limits<float>::epsilon(), (searched - sumWeights) / cdf);
+            sample = std::fminf(1.0f - FLT_EPSILON, (searched - sumWeights) / cdf);
 #endif
             return selectedComponent;
         }
@@ -627,6 +629,8 @@ namespace openpgl_gpu
     {
         using Distribution = openpgl_gpu::ParallaxAwareVonMisesFisherMixture<32>; 
         
+        OPENPGL_GPU_CALLABLE FieldGPU() = default;
+
         OPENPGL_GPU_CALLABLE FieldGPU(const KDTreeLet *treelet, const Distribution *distributions) : m_treeLets(treelet), m_distributions(distributions) {}
 
         OPENPGL_GPU_CALLABLE uint32_t getDataIdxAtPos(const float *pos) const
@@ -673,11 +677,14 @@ namespace openpgl_gpu
         }
 
 #ifdef USE_TREELETS
-        const KDTreeLet *m_treeLets{nullptr};
+/* Need to disable these direct initializations to pass through the std::is_trivially_default_constructible_v test. If not the following error is throughen:
+*  error: static assertion failed due to requirement 'std::is_trivially_default_constructible_v<const openpgl_gpu::FieldGPU>': Type T must be trivially default constructable (until C++20 consteval is supported and enabled.)
+*/
+        const KDTreeLet *m_treeLets;//{nullptr};
 #else
-        KDNode *m_nodesPtr{nullptr};
+        KDNode *m_nodesPtr;//{nullptr};
 #endif
-        const Distribution *m_distributions {nullptr};
+        const Distribution *m_distributions;// {nullptr};
 
     };
 
