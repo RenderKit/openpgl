@@ -2,8 +2,10 @@
 #define ONE_OVER_FOUR_PI 0.07957747154594767
 
 #if defined(OPENPGL_GPU_CPU)
-    #include "../../third-party/embreeSrc/common/math/vec2.h"
-    #include "../../third-party/embreeSrc/common/math/vec3.h"
+    #define FLT_EPSILON 1.19209290E-07F
+    #include <cstring>
+//    #include "../../third-party/embreeSrc/common/math/vec2.h"
+//    #include "../../third-party/embreeSrc/common/math/vec3.h"
 #endif
 
 
@@ -28,6 +30,25 @@ namespace openpgl_gpu
 #endif
     }
 
+#if defined(OPENPGL_GPU_CPU)
+    struct float2 {
+        float x;
+        float y;
+    };
+
+    struct float3 {
+        float x;
+        float y;
+        float z;
+    };
+
+    inline float rsqrt(float v)
+    {
+        return 1.0f/sqrt(v);
+    }
+
+#endif
+
 #if defined(OPENPGL_GPU_SYCL)
     typedef sycl::float2 Vector2;
     typedef sycl::float3 Vector3;
@@ -35,7 +56,7 @@ namespace openpgl_gpu
     typedef sycl::float3 Point3;
     using namespace sycl;
 
-#elif defined(OPENPGL_GPU_CUDA)
+#else //defined(OPENPGL_GPU_CUDA)
 
     union Vector2
     {
@@ -215,14 +236,15 @@ namespace openpgl_gpu
 
     typedef Vector2 Point2;
     typedef Vector3 Point3;
-
+#endif
+/*
 #else
     typedef embree::Vec2<float> Vector2;
     typedef embree::Vec3<float> Vector3;
     typedef embree::Vec2<float> Point2;
     typedef embree::Vec3<float> Point3;
-    #define GPUNS embree
 #endif
+*/
     template<int maxComponents> struct FlatVMM {
     };
 
