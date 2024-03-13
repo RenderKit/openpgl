@@ -26,7 +26,7 @@
 #if defined(OPENPGL_GPU_SYCL)
     #include <sycl/sycl.hpp>
 #endif
-#include <openpgl/gpu/FieldGPU.h>
+#include <openpgl/gpu/OpenPGLGPU.h>
 
 #include <string>
 #include <type_traits>
