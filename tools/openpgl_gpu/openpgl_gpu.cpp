@@ -26,7 +26,7 @@
 #if defined(OPENPGL_GPU_SYCL)
     #include <sycl/sycl.hpp>
 #endif
-#include "../../openpgl/field/FieldGPU.h"
+#include <openpgl/gpu/FieldGPU.h>
 
 #include <string>
 #include <type_traits>
@@ -451,7 +451,7 @@ void bench_lookup_id(BenchParams &benchParams){
     float* outGPU = new float[nSurfaceSamples*4];
     for (int i = 0 ; i < nSurfaceSamples; i++){
 
-#if 0
+#if 1
         outDiff[i*4+0] = fabsf(random_directions[i].x - host_random_directions[i].x);
         outDiff[i*4+1] = fabsf(random_directions[i].y - host_random_directions[i].y);
         outDiff[i*4+2] = fabsf(random_directions[i].z - host_random_directions[i].z);
@@ -461,7 +461,7 @@ void bench_lookup_id(BenchParams &benchParams){
         outGPU[i*4+0] = (1.0f + host_random_directions[i].x) / 2.f;
         outGPU[i*4+1] = (1.0f + host_random_directions[i].y) / 2.f;
         outGPU[i*4+2] = (1.0f + host_random_directions[i].z) / 2.f;
-#elif 1
+#elif 0
         outDiff[i*4+0] = fabsf(pdfs[i] - host_pdfs[i]);
         outDiff[i*4+1] = fabsf(pdfs[i] - host_pdfs[i]);
         outDiff[i*4+2] = fabsf(pdfs[i] - host_pdfs[i]);
