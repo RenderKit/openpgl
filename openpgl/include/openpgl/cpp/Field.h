@@ -132,10 +132,15 @@ struct Field
 
 
     // Stefan - SYCL
-    void *GetKdNodes() const;
-    int GetNumKDNodes() const;
-    int GetNumDistributions() const;
-    void CopyDistributions(void *out) const;
+    void *GetSurfaceKdNodes() const;
+    int GetNumSurfaceKDNodes() const;
+    int GetNumSurfaceDistributions() const;
+    void CopySurfaceDistributions(void *out) const;
+
+    void *GetVolumeKdNodes() const;
+    int GetNumVolumeKDNodes() const;
+    int GetNumVolumeDistributions() const;
+    void CopyVolumeDistributions(void *out) const;
     //
 
    private:
@@ -246,28 +251,52 @@ OPENPGL_INLINE FieldStatistics Field::GetVolumeStatistics() const
 
 // Stefan SYCL
 
-OPENPGL_INLINE int Field::GetNumKDNodes() const
+OPENPGL_INLINE int Field::GetNumSurfaceKDNodes() const
 {
     OPENPGL_ASSERT(m_fieldHandle);
-    return pglFieldGetNumNodes(m_fieldHandle);
+    return pglFieldGetNumSurfaceNodes(m_fieldHandle);
 }
 
-OPENPGL_INLINE void* Field::GetKdNodes() const
+OPENPGL_INLINE void* Field::GetSurfaceKdNodes() const
 {
     OPENPGL_ASSERT(m_fieldHandle);
-    return pglFieldGetNodes(m_fieldHandle);
+    return pglFieldGetSurfaceNodes(m_fieldHandle);
 }
-OPENPGL_INLINE int Field::GetNumDistributions() const
+OPENPGL_INLINE int Field::GetNumSurfaceDistributions() const
 {
     OPENPGL_ASSERT(m_fieldHandle);
-    return pglFieldGetNumDistributions(m_fieldHandle);
+    return pglFieldGetNumSurfaceDistributions(m_fieldHandle);
 }
 
-OPENPGL_INLINE void Field::CopyDistributions(void *out) const
+OPENPGL_INLINE void Field::CopySurfaceDistributions(void *out) const
 {
     OPENPGL_ASSERT(m_fieldHandle);
-    pglFieldCopyDistributions(m_fieldHandle, out);
+    pglFieldCopySurfaceDistributions(m_fieldHandle, out);
 }
+
+OPENPGL_INLINE int Field::GetNumVolumeKDNodes() const
+{
+    OPENPGL_ASSERT(m_fieldHandle);
+    return pglFieldGetNumVolumeNodes(m_fieldHandle);
+}
+
+OPENPGL_INLINE void* Field::GetVolumeKdNodes() const
+{
+    OPENPGL_ASSERT(m_fieldHandle);
+    return pglFieldGetVolumeNodes(m_fieldHandle);
+}
+OPENPGL_INLINE int Field::GetNumVolumeDistributions() const
+{
+    OPENPGL_ASSERT(m_fieldHandle);
+    return pglFieldGetNumVolumeDistributions(m_fieldHandle);
+}
+
+OPENPGL_INLINE void Field::CopyVolumeDistributions(void *out) const
+{
+    OPENPGL_ASSERT(m_fieldHandle);
+    pglFieldCopyVolumeDistributions(m_fieldHandle, out);
+}
+
 #if 0
 OPENPGL_INLINE float* Field::GetWeights() const
 {

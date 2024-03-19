@@ -259,26 +259,48 @@ extern "C" OPENPGL_DLLEXPORT PGLFieldStatistics pglFieldGetVolumeStatistics(PGLF
 
 // Stefan SYCL
 
-extern "C" OPENPGL_DLLEXPORT  int pglFieldGetNumNodes(PGLField field)
+extern "C" OPENPGL_DLLEXPORT  int pglFieldGetNumSurfaceNodes(PGLField field)
 {
     const auto *gField = (const IGuidingField *)field;
-    return gField->GetNumNodes();
+    return gField->GetNumNodes(true);
 }
-extern "C" OPENPGL_DLLEXPORT  void* pglFieldGetNodes(PGLField field)
+extern "C" OPENPGL_DLLEXPORT  void* pglFieldGetSurfaceNodes(PGLField field)
 {
     const auto *gField = (const IGuidingField *)field;
-    return gField->GetNodes();
+    return gField->GetNodes(true);
 }
 
-extern "C" OPENPGL_DLLEXPORT  int pglFieldGetNumDistributions(PGLField field)
+extern "C" OPENPGL_DLLEXPORT  int pglFieldGetNumSurfaceDistributions(PGLField field)
 {
     const auto *gField = (const IGuidingField *)field;
-    return gField->GetNumDistributions();
+    return gField->GetNumDistributions(true);
 }
-extern "C" OPENPGL_DLLEXPORT  void pglFieldCopyDistributions(PGLField field, void *p)
+extern "C" OPENPGL_DLLEXPORT  void pglFieldCopySurfaceDistributions(PGLField field, void *p)
 {
     const auto *gField = (const IGuidingField *)field;
-    return gField->CopyDistributionsTo(p);
+    return gField->CopyDistributionsTo(p, true);
+}
+
+extern "C" OPENPGL_DLLEXPORT  int pglFieldGetNumVolumeNodes(PGLField field)
+{
+    const auto *gField = (const IGuidingField *)field;
+    return gField->GetNumNodes(false);
+}
+extern "C" OPENPGL_DLLEXPORT  void* pglFieldGetVolumeNodes(PGLField field)
+{
+    const auto *gField = (const IGuidingField *)field;
+    return gField->GetNodes(false);
+}
+
+extern "C" OPENPGL_DLLEXPORT  int pglFieldGetNumVolumeDistributions(PGLField field)
+{
+    const auto *gField = (const IGuidingField *)field;
+    return gField->GetNumDistributions(false);
+}
+extern "C" OPENPGL_DLLEXPORT  void pglFieldCopyVolumeDistributions(PGLField field, void *p)
+{
+    const auto *gField = (const IGuidingField *)field;
+    return gField->CopyDistributionsTo(p, false);
 }
 
 ///////////////////////////////////////////////////////////////////////////////

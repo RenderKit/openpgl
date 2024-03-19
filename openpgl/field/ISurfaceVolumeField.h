@@ -59,9 +59,9 @@ struct ISurfaceVolumeField
     virtual FieldStatistics *getVolumeStatistics() const = 0;
 
     // Stefan SYCL
-    virtual int GetNumNodes() const = 0;
-    virtual void* GetNodes() const = 0;
-    virtual int GetNumDistributions() const = 0;
-    virtual void CopyDistributionsTo(void *o_distrib) const = 0;
+    virtual int GetNumNodes(bool isSurface = true) const = 0;
+    virtual void* GetNodes(bool isSurface = true) const = 0;
+    virtual int GetNumDistributions(bool isSurface = true) const = 0;
+    virtual void CopyDistributionsTo(void *o_distrib, bool isSurface = true) const = 0;
 };
 }  // namespace openpgl

@@ -23,11 +23,25 @@
 
 #include <openpgl/cpp/OpenPGL.h>
 
-#if defined(OPENPGL_GPU_SYCL)
-    #include <sycl/sycl.hpp>
-#endif
+//#if defined(OPENPGL_GPU_SYCL)
+//    #include <sycl/sycl.hpp>
+//#endif
+#if defined(OPENPGL_GPU_SYCL_SUPPORT)
+#define OPENPGL_GPU_SYCL
+#include <openpgl/gpu/Device.h>
 #include <openpgl/gpu/OpenPGLGPU.h>
-
+#define OPENPGLGPU openpgl::gpu::sycl
+#elif defined(OPENPGL_GPU_CUDA_SUPPORT)
+#define OPENPGL_GPU_CUDA
+#include <openpgl/gpu/Device.h>
+#include <openpgl/gpu/OpenPGLGPU.h>
+#define OPENPGLGPU openpgl::gpu::cuda
+#else
+#define OPENPGL_GPU_CPU
+#include <openpgl/gpu/Device.h>
+#include <openpgl/gpu/OpenPGLGPU.h>
+#define OPENPGLGPU openpgl::gpu::cpu
+#endif
 #include <string>
 #include <type_traits>
 
@@ -45,12 +59,12 @@
 
 // Setting up a device global variable for the Guiding Field
 #if defined(OPENPGL_GPU_CUDA) && defined(__CUDACC__)
-    __device__ __constant__ openpgl_gpu::FieldGPU global_device_field;
+    __device__ __constant__ OPENPGLGPU::FieldGPU global_device_field;
 #elif defined(OPENPGL_GPU_SYCL)
     #include <sycl/sycl.hpp>
-    sycl::ext::oneapi::experimental::device_global<const openpgl_gpu::FieldGPU> global_device_field;
+    sycl::ext::oneapi::experimental::device_global<const OPENPGLGPU::FieldGPU> global_device_field;
 #else
-    openpgl_gpu::FieldGPU global_device_field;
+    openpgl::gpu::cpu::FieldGPU global_device_field;
 #endif
 
 // The CUDA function for running the test
@@ -70,7 +84,7 @@ __global__ void test(/*openpgl_gpu::FieldGPU field, openpgl_gpu::FieldGPU::Distr
         device_pdfs[idx] = device_distributions[device_ids[idx]].pdfPos(device_positionsSurface[idx], device_random_directions[idx]);
 */
         float sample = -1.f;
-        openpgl_gpu::SurfaceSamplingDistribution ssd;
+        OPENPGLGPU::SurfaceSamplingDistribution ssd;
         ssd.Init(&global_device_field, device_positionsSurface[idx], sample);
         device_ids[idx] = ssd.GetId();
         pgl_vec3f direction {0.f, 0.f, 0.f};
@@ -302,7 +316,13 @@ void bench_lookup_id(BenchParams &benchParams){
     std::cout << "Field::Validate: " << field.Validate() << std::endl;
 
     int nSurfaceSamples = width*height;
-    openpgl_gpu::Device deviceGPU;
+#if defined(OPENPGL_GPU_SYCL)
+    openpgl::gpu::Device deviceGPU(openpgl::gpu::Device::EDeviceType_SYCL);
+#elif defined(OPENPGL_GPU_CUDA)
+    openpgl::gpu::Device deviceGPU(openpgl::gpu::Device::EDeviceType_CUDA);
+#else
+    openpgl::gpu::Device deviceGPU(openpgl::gpu::Device::EDeviceType_CPU);
+#endif
     int* ids = new int[nSurfaceSamples];
     int* host_ids = new int[nSurfaceSamples];
     int* device_ids = deviceGPU.mallocArray<int>(nSurfaceSamples);
@@ -346,19 +366,8 @@ void bench_lookup_id(BenchParams &benchParams){
     std::getline( std::cin, foo );
 
     std::cout << "Copying data to GPU\n";
-    openpgl_gpu::KDTreeLet *device_nodes = deviceGPU.mallocArray<openpgl_gpu::KDTreeLet>(field.GetNumKDNodes());
-    deviceGPU.memcpyArrayToGPU(device_nodes, (openpgl_gpu::KDTreeLet*)field.GetKdNodes(), field.GetNumKDNodes());
-
-    openpgl_gpu::FieldGPU::Distribution *distributions = new openpgl_gpu::FieldGPU::Distribution[field.GetNumDistributions()];
-    openpgl_gpu::FieldGPU::Distribution *device_distributions = deviceGPU.mallocArray<openpgl_gpu::FieldGPU::Distribution>(field.GetNumDistributions());
-    field.CopyDistributions(distributions);
-    deviceGPU.memcpyArrayToGPU(device_distributions, distributions, field.GetNumDistributions());
-    // wait until all CPU -> GPU copies are done
-    deviceGPU.wait();
-
-    int num_nodes = field.GetNumKDNodes();
+    OPENPGLGPU::FieldGPU device_field(&deviceGPU, &field);
     std::cout << "Executing on GPU\n";
-    openpgl_gpu::FieldGPU device_field(device_nodes, device_distributions);
 #if defined(OPENPGL_GPU_SYCL) || defined(OPENPGL_GPU_CPU)
 #if defined(OPENPGL_GPU_SYCL)
     deviceGPU.q.copy(&device_field, global_device_field).wait(); 
@@ -389,7 +398,7 @@ void bench_lookup_id(BenchParams &benchParams){
                 device_pdfs[idx] = device_distributions[device_ids[idx]].pdfPos(device_positionsSurface[idx], device_random_directions[idx]);
                 */
                 float sample = -1.f;
-                openpgl_gpu::SurfaceSamplingDistribution ssd;
+                OPENPGLGPU::SurfaceSamplingDistribution ssd;
 #if defined(OPENPGL_GPU_SYCL)
                 ssd.Init(&global_device_field.get(), device_positionsSurface[idx], sample);
 #else
@@ -408,7 +417,7 @@ void bench_lookup_id(BenchParams &benchParams){
     });
 #endif
 #elif defined(OPENPGL_GPU_CUDA) && defined(__CUDACC__)
-    cudaMemcpyToSymbol(global_device_field, &device_field, sizeof(openpgl_gpu::FieldGPU), 0, cudaMemcpyHostToDevice);
+    cudaMemcpyToSymbol(global_device_field, &device_field, sizeof(OPENPGLGPU::FieldGPU), 0, cudaMemcpyHostToDevice);
     deviceGPU.wait();
     test<<< 1 +  nSurfaceSamples/256, 256>>>(/*device_field, device_distributions, */device_positionsSurface, device_ids, device_random_samples, device_random_directions, device_pdfs, nSurfaceSamples);
 #endif
@@ -420,6 +429,7 @@ void bench_lookup_id(BenchParams &benchParams){
     deviceGPU.memcpyArrayFromGPU(device_random_directions, host_random_directions, nSurfaceSamples);
     deviceGPU.memcpyArrayFromGPU(device_pdfs, host_pdfs, nSurfaceSamples);
 
+    deviceGPU.wait();
     Timer timer;
     timer.reset();
 
@@ -511,11 +521,11 @@ void bench_lookup_id(BenchParams &benchParams){
     delete[] outDiff;
     delete[] outCPU;
     delete[] outGPU;
-
+    
     std::cout << "SurfaceSamplingDistribution::Init";
     std::cout << " time: "<< (timer.elapsed()/float(nSurfaceSamples)) << "µs" << "\t nThreads = " << num_threads << std::endl;
 
-    delete[] distributions;
+    //delete[] distributions;
     delete[] ids;
     delete[] host_ids;
     delete[] pdfs;
@@ -525,11 +535,11 @@ void bench_lookup_id(BenchParams &benchParams){
     delete[] random_samples;
     delete[] positionsSurface;
 
-    deviceGPU.freeArray(device_distributions);
+    //deviceGPU.freeArray(device_distributions);
     deviceGPU.freeArray(device_ids);
     deviceGPU.freeArray(device_pdfs);
     deviceGPU.freeArray(device_random_directions);
-    deviceGPU.freeArray(device_random_samples);
+    deviceGPU.freeArray(device_random_samples); 
     deviceGPU.freeArray(device_positionsSurface);
 }
 

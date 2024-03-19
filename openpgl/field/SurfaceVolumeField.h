@@ -259,40 +259,86 @@ struct SurfaceVolumeField : public ISurfaceVolumeField
         return stats;
     }
 
-    virtual int GetNumNodes() const override
+    virtual int GetNumNodes(bool isSurface = true) const override
     {
-        return m_surfaceField.m_spatialSubdiv.m_numTreeLets;
-    }
-
-    virtual void *GetNodes() const override
-    {
-        return m_surfaceField.m_spatialSubdiv.m_treeLets;
-    }
-
-    virtual int GetNumDistributions() const override
-    {
-        return m_surfaceField.m_regionStorageContainer.size();
-    }
-
-    virtual void CopyDistributionsTo(void *o_distrib) const override
-    {
-        FlatVMM<32> *out = reinterpret_cast<FlatVMM<32>*>(o_distrib);
-        for (int i = 0; i < m_surfaceField.m_regionStorageContainer.size(); i++)
+        if(isSurface)
         {
-            auto & dist = m_surfaceField.m_regionStorageContainer[i].first.distribution;
-            for (int k = 0; k < dist._numComponents; k++) {
-                const div_t tmp = div(k, static_cast<int>(Vecsize));
-                out[i]._weights[k] = dist._weights[tmp.quot][tmp.rem];
-                out[i]._kappas[k] = dist._kappas[tmp.quot][tmp.rem];
-                out[i]._meanDirections[k][0] = dist._meanDirections[tmp.quot].x[tmp.rem];
-                out[i]._meanDirections[k][1] = dist._meanDirections[tmp.quot].y[tmp.rem];
-                out[i]._meanDirections[k][2] = dist._meanDirections[tmp.quot].z[tmp.rem];
-                out[i]._distances[k] = dist._distances[tmp.quot][tmp.rem];
+            return m_surfaceField.m_spatialSubdiv.m_numTreeLets;
+        } 
+        else 
+        {
+            return m_volumeField.m_spatialSubdiv.m_numTreeLets;
+        }
+
+    }
+
+    virtual void *GetNodes(bool isSurface = true) const override
+    {
+        if(isSurface)
+        {
+            return m_surfaceField.m_spatialSubdiv.m_treeLets;
+        } 
+        else 
+        {
+            return m_volumeField.m_spatialSubdiv.m_treeLets;
+        }
+    }
+
+    virtual int GetNumDistributions(bool isSurface = true) const override
+    {
+        if(isSurface)
+        {
+            return m_surfaceField.m_regionStorageContainer.size();
+        } 
+        else 
+        {
+            return m_volumeField.m_regionStorageContainer.size();
+        }
+    }
+
+    virtual void CopyDistributionsTo(void *o_distrib, bool isSurface = true) const override
+    {
+        if(isSurface)
+        {
+            FlatVMM<32> *out = reinterpret_cast<FlatVMM<32>*>(o_distrib);
+            for (int i = 0; i < m_surfaceField.m_regionStorageContainer.size(); i++)
+            {
+                auto & dist = m_surfaceField.m_regionStorageContainer[i].first.distribution;
+                for (int k = 0; k < dist._numComponents; k++) {
+                    const div_t tmp = div(k, static_cast<int>(Vecsize));
+                    out[i]._weights[k] = dist._weights[tmp.quot][tmp.rem];
+                    out[i]._kappas[k] = dist._kappas[tmp.quot][tmp.rem];
+                    out[i]._meanDirections[k][0] = dist._meanDirections[tmp.quot].x[tmp.rem];
+                    out[i]._meanDirections[k][1] = dist._meanDirections[tmp.quot].y[tmp.rem];
+                    out[i]._meanDirections[k][2] = dist._meanDirections[tmp.quot].z[tmp.rem];
+                    out[i]._distances[k] = dist._distances[tmp.quot][tmp.rem];
+                }
+                out[i]._pivotPosition[0] = {dist._pivotPosition.x};
+                out[i]._pivotPosition[1] = {dist._pivotPosition.y};
+                out[i]._pivotPosition[2] = {dist._pivotPosition.z};
+                out[i]._numComponents = dist._numComponents;
             }
-            out[i]._pivotPosition[0] = {dist._pivotPosition.x};
-            out[i]._pivotPosition[1] = {dist._pivotPosition.y};
-            out[i]._pivotPosition[2] = {dist._pivotPosition.z};
-            out[i]._numComponents = dist._numComponents;
+        }
+        else
+        {
+            FlatVMM<32> *out = reinterpret_cast<FlatVMM<32>*>(o_distrib);
+            for (int i = 0; i < m_volumeField.m_regionStorageContainer.size(); i++)
+            {
+                auto & dist = m_volumeField.m_regionStorageContainer[i].first.distribution;
+                for (int k = 0; k < dist._numComponents; k++) {
+                    const div_t tmp = div(k, static_cast<int>(Vecsize));
+                    out[i]._weights[k] = dist._weights[tmp.quot][tmp.rem];
+                    out[i]._kappas[k] = dist._kappas[tmp.quot][tmp.rem];
+                    out[i]._meanDirections[k][0] = dist._meanDirections[tmp.quot].x[tmp.rem];
+                    out[i]._meanDirections[k][1] = dist._meanDirections[tmp.quot].y[tmp.rem];
+                    out[i]._meanDirections[k][2] = dist._meanDirections[tmp.quot].z[tmp.rem];
+                    out[i]._distances[k] = dist._distances[tmp.quot][tmp.rem];
+                }
+                out[i]._pivotPosition[0] = {dist._pivotPosition.x};
+                out[i]._pivotPosition[1] = {dist._pivotPosition.y};
+                out[i]._pivotPosition[2] = {dist._pivotPosition.z};
+                out[i]._numComponents = dist._numComponents;
+            }
         }
     }
 
