@@ -14,6 +14,11 @@
 
 namespace openpgl
 {
+namespace gpu 
+{
+    struct FieldData;
+    struct Device;
+}
 namespace cpp
 {
 
@@ -132,6 +137,9 @@ struct Field
 
 
     // Stefan - SYCL
+    void FillFieldGPU(openpgl::gpu::FieldData* fieldData, openpgl::gpu::Device* deviceGPU) const;
+    void ReleaseFieldGPU(openpgl::gpu::FieldData* fieldData, openpgl::gpu::Device* deviceGPU) const;
+    /*
     void *GetSurfaceKdNodes() const;
     int GetNumSurfaceKDNodes() const;
     int GetNumSurfaceDistributions() const;
@@ -141,6 +149,7 @@ struct Field
     int GetNumVolumeKDNodes() const;
     int GetNumVolumeDistributions() const;
     void CopyVolumeDistributions(void *out) const;
+    */
     //
 
    private:
@@ -250,7 +259,7 @@ OPENPGL_INLINE FieldStatistics Field::GetVolumeStatistics() const
 }
 
 // Stefan SYCL
-
+/*
 OPENPGL_INLINE int Field::GetNumSurfaceKDNodes() const
 {
     OPENPGL_ASSERT(m_fieldHandle);
@@ -295,6 +304,18 @@ OPENPGL_INLINE void Field::CopyVolumeDistributions(void *out) const
 {
     OPENPGL_ASSERT(m_fieldHandle);
     pglFieldCopyVolumeDistributions(m_fieldHandle, out);
+}
+*/
+OPENPGL_INLINE void Field::FillFieldGPU(openpgl::gpu::FieldData* fieldData, openpgl::gpu::Device* deviceGPU) const
+{
+    OPENPGL_ASSERT(m_fieldHandle);
+    pglFieldFillFieldGPU(m_fieldHandle, static_cast<void*>(fieldData), static_cast<void*>(deviceGPU));
+}
+
+OPENPGL_INLINE void Field::ReleaseFieldGPU(openpgl::gpu::FieldData* fieldData, openpgl::gpu::Device* deviceGPU) const
+{
+    OPENPGL_ASSERT(m_fieldHandle);
+    pglFieldReleaseFieldGPU(m_fieldHandle, static_cast<void*>(fieldData), static_cast<void*>(deviceGPU));
 }
 
 #if 0

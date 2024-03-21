@@ -258,7 +258,7 @@ extern "C" OPENPGL_DLLEXPORT PGLFieldStatistics pglFieldGetVolumeStatistics(PGLF
 }
 
 // Stefan SYCL
-
+/*
 extern "C" OPENPGL_DLLEXPORT  int pglFieldGetNumSurfaceNodes(PGLField field)
 {
     const auto *gField = (const IGuidingField *)field;
@@ -301,6 +301,19 @@ extern "C" OPENPGL_DLLEXPORT  void pglFieldCopyVolumeDistributions(PGLField fiel
 {
     const auto *gField = (const IGuidingField *)field;
     return gField->CopyDistributionsTo(p, false);
+}
+
+*/
+extern "C" OPENPGL_DLLEXPORT void pglFieldFillFieldGPU(PGLField field, void* fieldData, void* deviceGPU)
+{
+    const auto *gField = (const IGuidingField *)field;
+    return gField->FillFieldData(static_cast<openpgl::gpu::FieldData*>(fieldData), static_cast<openpgl::gpu::Device*>(deviceGPU));
+}
+
+extern "C" OPENPGL_DLLEXPORT void pglFieldReleaseFieldGPU(PGLField field, void* fieldData, void* deviceGPU)
+{
+    const auto *gField = (const IGuidingField *)field;
+    return gField->ReleaseFieldData(static_cast<openpgl::gpu::FieldData*>(fieldData), static_cast<openpgl::gpu::Device*>(deviceGPU));
 }
 
 ///////////////////////////////////////////////////////////////////////////////

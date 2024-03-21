@@ -6,6 +6,8 @@
 #include "Field.h"
 #include "FieldStatistics.h"
 #include "ISurfaceVolumeField.h"
+#include "../include/openpgl/gpu/Device.h"
+#include "../include/openpgl/gpu/Data.h"
 
 #define FIELD_FILE_HEADER_STRING "OPENPGL_" OPENPGL_VERSION_STRING "_FIELD"
 
@@ -258,7 +260,7 @@ struct SurfaceVolumeField : public ISurfaceVolumeField
         FieldStatistics *stats = m_volumeField.getStatistics();
         return stats;
     }
-
+/*
     virtual int GetNumNodes(bool isSurface = true) const override
     {
         if(isSurface)
@@ -300,7 +302,7 @@ struct SurfaceVolumeField : public ISurfaceVolumeField
     {
         if(isSurface)
         {
-            FlatVMM<32> *out = reinterpret_cast<FlatVMM<32>*>(o_distrib);
+            openpgl::gpu::FlatVMM<32> *out = reinterpret_cast<openpgl::gpu::FlatVMM<32>*>(o_distrib);
             for (int i = 0; i < m_surfaceField.m_regionStorageContainer.size(); i++)
             {
                 auto & dist = m_surfaceField.m_regionStorageContainer[i].first.distribution;
@@ -321,7 +323,7 @@ struct SurfaceVolumeField : public ISurfaceVolumeField
         }
         else
         {
-            FlatVMM<32> *out = reinterpret_cast<FlatVMM<32>*>(o_distrib);
+            openpgl::gpu::FlatVMM<32> *out = reinterpret_cast<openpgl::gpu::FlatVMM<32>*>(o_distrib);
             for (int i = 0; i < m_volumeField.m_regionStorageContainer.size(); i++)
             {
                 auto & dist = m_volumeField.m_regionStorageContainer[i].first.distribution;
@@ -340,6 +342,128 @@ struct SurfaceVolumeField : public ISurfaceVolumeField
                 out[i]._numComponents = dist._numComponents;
             }
         }
+    }
+*/
+
+    void ReleaseFieldData(openpgl::gpu::FieldData* fieldGPU, openpgl::gpu::Device* deviceGPU) const override {
+        KDTree::NodesType* deviceSurfNodes = (KDTree::NodesType*) fieldGPU->m_surfaceTreeLets;
+        delete[] deviceSurfNodes;
+        fieldGPU->m_surfaceTreeLets = nullptr;
+        fieldGPU->m_numSurfaceTreeLets = 0;
+
+        KDTree::NodesType* deviceVolumeNodes = (KDTree::NodesType*) fieldGPU->m_volumeTreeLets;
+        delete[] deviceVolumeNodes;
+        fieldGPU->m_volumeTreeLets = nullptr;
+        fieldGPU->m_numVolumeTreeLets = 0;
+
+        openpgl::gpu::FlatVMM<32>* outSurf = (openpgl::gpu::FlatVMM<32>*) fieldGPU->m_surfaceDistributions;
+        delete[] outSurf;
+        fieldGPU->m_surfaceDistributions = nullptr;
+        fieldGPU->m_numSurfaceDistributions = 0;
+
+        openpgl::gpu::FlatVMM<32>* outVol = (openpgl::gpu::FlatVMM<32>*) fieldGPU->m_volumeDistributions;
+        delete[] outVol;
+        fieldGPU->m_volumeDistributions = nullptr;
+        fieldGPU->m_numVolumeDistributions = 0;
+    }
+
+    void FillFieldData(openpgl::gpu::FieldData* fieldGPU, openpgl::gpu::Device* deviceGPU) const override {
+            
+        int numSurfaceNodes = m_surfaceField.m_spatialSubdiv.m_numTreeLets;
+        fieldGPU->m_numSurfaceTreeLets = numSurfaceNodes;
+        if (numSurfaceNodes > 0) {
+            KDTree::NodesType* deviceSurfNodes = new KDTree::NodesType[numSurfaceNodes];
+            std::memcpy(deviceSurfNodes, m_surfaceField.m_spatialSubdiv.m_treeLets, numSurfaceNodes * sizeof(KDTree::NodesType));
+            //KDTree::NodesType* deviceSurfNodes = deviceGPU->mallocArray<KDTree::NodesType>(numSurfaceNodes);
+            //deviceGPU->memcpyArrayToGPU(deviceSurfNodes, m_surfaceField.m_spatialSubdiv.m_treeLets, numSurfaceNodes);
+            
+            fieldGPU->m_surfaceTreeLets = (void*) deviceSurfNodes;
+        } else {
+            fieldGPU->m_surfaceTreeLets = nullptr;
+        }
+
+        int numSurfaceDistriubtion = m_surfaceField.m_regionStorageContainer.size();
+        fieldGPU->m_numSurfaceDistributions = numSurfaceDistriubtion;
+        if(numSurfaceDistriubtion > 0) {
+            openpgl::gpu::FlatVMM<32>* outSurf = new openpgl::gpu::FlatVMM<32>[numSurfaceDistriubtion];
+
+            for (int i = 0; i < m_surfaceField.m_regionStorageContainer.size(); i++)
+            {
+                auto & dist = m_surfaceField.m_regionStorageContainer[i].first.distribution;
+                for (int k = 0; k < dist._numComponents; k++) {
+                    const div_t tmp = div(k, static_cast<int>(Vecsize));
+                    outSurf[i]._weights[k] = dist._weights[tmp.quot][tmp.rem];
+                    outSurf[i]._kappas[k] = dist._kappas[tmp.quot][tmp.rem];
+                    outSurf[i]._meanDirections[k][0] = dist._meanDirections[tmp.quot].x[tmp.rem];
+                    outSurf[i]._meanDirections[k][1] = dist._meanDirections[tmp.quot].y[tmp.rem];
+                    outSurf[i]._meanDirections[k][2] = dist._meanDirections[tmp.quot].z[tmp.rem];
+                    outSurf[i]._distances[k] = dist._distances[tmp.quot][tmp.rem];
+                }
+                outSurf[i]._pivotPosition[0] = {dist._pivotPosition.x};
+                outSurf[i]._pivotPosition[1] = {dist._pivotPosition.y};
+                outSurf[i]._pivotPosition[2] = {dist._pivotPosition.z};
+                outSurf[i]._numComponents = dist._numComponents;
+            }
+
+            //openpgl::gpu::FlatVMM<32>* deviceSurf = deviceGPU->mallocArray<openpgl::gpu::FlatVMM<32>>(numSurfaceDistriubtion);
+            //deviceGPU->memcpyArrayToGPU(deviceSurf, outSurf, numSurfaceDistriubtion);
+            //deviceGPU->wait();
+            //fieldGPU->m_surfaceDistributions = (void*) deviceSurf;
+            fieldGPU->m_surfaceDistributions = (void*) outSurf;
+            //delete[] outSurf;
+        } else {
+            fieldGPU->m_surfaceDistributions = nullptr;
+        }
+
+        int numVolumeNodes = m_volumeField.m_spatialSubdiv.m_numTreeLets;
+        fieldGPU->m_numVolumeTreeLets = numVolumeNodes;
+        if (numVolumeNodes > 0) {
+            KDTree::NodesType* deviceVolumeNodes = new KDTree::NodesType[numVolumeNodes];
+            std::memcpy(deviceVolumeNodes, m_volumeField.m_spatialSubdiv.m_treeLets, numVolumeNodes * sizeof(KDTree::NodesType));
+            //KDTree::NodesType* deviceVolumeNodes = deviceGPU->mallocArray<KDTree::NodesType>(numVolumeNodes);
+            //deviceGPU->memcpyArrayToGPU(deviceVolumeNodes, m_volumeField.m_spatialSubdiv.m_treeLets, numVolumeNodes);
+            fieldGPU->m_volumeTreeLets = (void*) deviceVolumeNodes;
+        } else {
+            fieldGPU->m_volumeTreeLets = nullptr;
+        }
+
+        int numVolumeDistriubtion = m_volumeField.m_regionStorageContainer.size();
+        fieldGPU->m_numVolumeDistributions = numVolumeDistriubtion;
+        if(numVolumeDistriubtion > 0) {
+            openpgl::gpu::FlatVMM<32>* outVol = new openpgl::gpu::FlatVMM<32>[numVolumeDistriubtion];
+
+            for (int i = 0; i < m_volumeField.m_regionStorageContainer.size(); i++)
+            {
+                auto & dist = m_volumeField.m_regionStorageContainer[i].first.distribution;
+                for (int k = 0; k < dist._numComponents; k++) {
+                    const div_t tmp = div(k, static_cast<int>(Vecsize));
+                    outVol[i]._weights[k] = dist._weights[tmp.quot][tmp.rem];
+                    outVol[i]._kappas[k] = dist._kappas[tmp.quot][tmp.rem];
+                    outVol[i]._meanDirections[k][0] = dist._meanDirections[tmp.quot].x[tmp.rem];
+                    outVol[i]._meanDirections[k][1] = dist._meanDirections[tmp.quot].y[tmp.rem];
+                    outVol[i]._meanDirections[k][2] = dist._meanDirections[tmp.quot].z[tmp.rem];
+                    outVol[i]._distances[k] = dist._distances[tmp.quot][tmp.rem];
+                }
+                outVol[i]._pivotPosition[0] = {dist._pivotPosition.x};
+                outVol[i]._pivotPosition[1] = {dist._pivotPosition.y};
+                outVol[i]._pivotPosition[2] = {dist._pivotPosition.z};
+                outVol[i]._numComponents = dist._numComponents;
+            }
+
+            //openpgl::gpu::FlatVMM<32>* deviceVol = deviceGPU->mallocArray<openpgl::gpu::FlatVMM<32>>(numVolumeDistriubtion);
+            //deviceGPU->memcpyArrayToGPU(deviceVol, outVol, numVolumeDistriubtion);
+            //deviceGPU->wait();
+            //delete[] outVol;
+            fieldGPU->m_volumeDistributions = (void*) outVol;
+        } else {
+            fieldGPU->m_volumeDistributions = nullptr;
+        }
+    }
+
+    openpgl::gpu::FieldData GetFieldGPU(openpgl::gpu::Device* deviceGPU) {
+        openpgl::gpu::FieldData field;
+        FillFieldData(&field, deviceGPU);
+        return field;
     }
 
    private:

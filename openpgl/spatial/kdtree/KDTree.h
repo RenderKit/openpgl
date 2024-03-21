@@ -184,6 +184,11 @@ struct KDTreeLet
 
 struct KDTree
 {
+#ifdef USE_TREELETS
+    using NodesType = KDTreeLet;
+#else
+    using NodesType = KDNode;
+#endif
     KDTree() = default;
 
     KDTree(const KDTree &) = delete;

@@ -165,5 +165,5 @@ namespace gpu{
             }
         }
     };
-}// gpu
-} //openpgl
+} // gpu
+} // openpgl

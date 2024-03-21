@@ -2,7 +2,7 @@
 #define OPENPGL_DISTRIBUTION_GPU_H
 
 #include "Common.h"
-
+#include "Data.h"
 namespace openpgl
 {
 namespace gpu {
@@ -13,9 +13,6 @@ namespace cuda {
 #else
 namespace cpu {
 #endif
-
-    template<int maxComponents> struct FlatVMM {
-    };
 
     OPENPGL_GPU_CALLABLE inline Vector3 sphericalDirection(const float &cosTheta, const float &sinTheta, const float &cosPhi, const float &sinPhi)
     {
@@ -52,12 +49,6 @@ namespace cpu {
     struct ParallaxAwareVonMisesFisherMixture : public FlatVMM<maxComponents>
     {
     public:
-        float _weights[maxComponents];
-        float _kappas[maxComponents];
-        float _meanDirections[maxComponents][3];
-        float _distances[maxComponents];
-        float _pivotPosition[3];
-        int _numComponents{maxComponents};
         ParallaxAwareVonMisesFisherMixture()
         {
         }
@@ -72,8 +63,8 @@ namespace cpu {
 
             while (true)
             {
-                cdf = _weights[selectedComponent];
-                if (sumWeights + cdf >= searched || selectedComponent+1 >= _numComponents)
+                cdf = this->_weights[selectedComponent];
+                if (sumWeights + cdf >= searched || selectedComponent+1 >= this->_numComponents)
                 {
                     break;
                 }
@@ -105,9 +96,9 @@ namespace cpu {
 
             Vector3 sampledDirection = Vector3(0.f, 0.f, 1.f);
             // Second, sample selected component
-            const float sKappa = _kappas[selectedComponent];
+            const float sKappa = this->_kappas[selectedComponent];
             const float sEMinus2Kappa = expf(-2.0f * sKappa);
-            Vector3 meanDirection = Vector3(_meanDirections[selectedComponent][0], _meanDirections[selectedComponent][1], _meanDirections[selectedComponent][2]);
+            Vector3 meanDirection = Vector3(this->_meanDirections[selectedComponent][0], this->_meanDirections[selectedComponent][1], this->_meanDirections[selectedComponent][2]);
 
             if (sKappa == 0.0f)
             {
@@ -150,13 +141,13 @@ namespace cpu {
 
             Vector3 sampledDirection(0.f, 0.f, 1.f);
             // Second, sample selected component
-            const float sKappa = _kappas[selectedComponent];
+            const float sKappa = this->_kappas[selectedComponent];
             const float sEMinus2Kappa = expf(-2.0f * sKappa);
-            Vector3 meanDirection(_meanDirections[selectedComponent][0], _meanDirections[selectedComponent][1], _meanDirections[selectedComponent][2]);
+            Vector3 meanDirection(this->_meanDirections[selectedComponent][0], this->_meanDirections[selectedComponent][1], this->_meanDirections[selectedComponent][2]);
             // parallax shift
             Vector3 _pos = {pos.x, pos.y, pos.z};
-            const Vector3 relativePivotShift = {_pivotPosition[0] - _pos[0], _pivotPosition[1] - _pos[1], _pivotPosition[2] - _pos[2]};
-            meanDirection *= _distances[selectedComponent];
+            const Vector3 relativePivotShift = {this->_pivotPosition[0] - _pos[0], this->_pivotPosition[1] - _pos[1], this->_pivotPosition[2] - _pos[2]};
+            meanDirection *= this->_distances[selectedComponent];
             meanDirection += relativePivotShift;
             float flength = length(meanDirection);
             meanDirection /= flength;
@@ -198,10 +189,10 @@ namespace cpu {
         {
             const Vector3 _dir = {dir.x, dir.y, dir.z};
             float pdf {0.f};
-            for (int k =0; k < _numComponents; k++)
+            for (int k =0; k < this->_numComponents; k++)
             {
-                const Vector3 meanDirection = {_meanDirections[k][0], _meanDirections[k][1], _meanDirections[k][2]};
-                const float kappaK = _kappas[k];
+                const Vector3 meanDirection = {this->_meanDirections[k][0], this->_meanDirections[k][1], this->_meanDirections[k][2]};
+                const float kappaK = this->_kappas[k];
                 float norm = kappaK > 0.f ? kappaK / (2.f * M_PIf * (1.f - expf(-2.f * kappaK))) : ONE_OVER_FOUR_PI;
                 const float cosThetaK =  _dir[0] * meanDirection[0] + _dir[1] * meanDirection[1] + _dir[2] * meanDirection[2];
 // TODO: Fix
@@ -210,7 +201,7 @@ namespace cpu {
 #else
                 const float costThetaMinusOneK = std::fminf(cosThetaK - 1.f, 0.f);
 #endif
-                pdf += _weights[k] * norm * expf(kappaK * costThetaMinusOneK);
+                pdf += this->_weights[k] * norm * expf(kappaK * costThetaMinusOneK);
             }
             return pdf;
         }
@@ -219,18 +210,18 @@ namespace cpu {
         {
             const Vector3 _dir = {dir.x, dir.y, dir.z};
             const Vector3 _pos = {pos.x, pos.y, pos.z};
-            const Vector3 relativePivotShift = {_pivotPosition[0] - _pos[0], _pivotPosition[1] - _pos[1], _pivotPosition[2] - _pos[2]};
+            const Vector3 relativePivotShift = {this->_pivotPosition[0] - _pos[0], this->_pivotPosition[1] - _pos[1], this->_pivotPosition[2] - _pos[2]};
             
             float pdf {0.f};
-            for (int k =0; k < _numComponents; k++)
+            for (int k =0; k < this->_numComponents; k++)
             {
-                Vector3 meanDirection = {_meanDirections[k][0], _meanDirections[k][1], _meanDirections[k][2]};
-                meanDirection *= _distances[k];
+                Vector3 meanDirection = {this->_meanDirections[k][0], this->_meanDirections[k][1], this->_meanDirections[k][2]};
+                meanDirection *= this->_distances[k];
                 meanDirection += relativePivotShift;
                 float flength = length(meanDirection);
                 meanDirection /= flength;
                 
-                const float kappaK = _kappas[k];
+                const float kappaK = this->_kappas[k];
                 float norm = kappaK > 0.f ? kappaK / (2.f * M_PIf * (1.f - expf(-2.f * kappaK))) : ONE_OVER_FOUR_PI;
                 const float cosThetaK =  _dir[0] * meanDirection[0] + _dir[1] * meanDirection[1] + _dir[2] * meanDirection[2];
 // TODO: Fix
@@ -239,7 +230,7 @@ namespace cpu {
 #else
                 const float costThetaMinusOneK = std::fminf(cosThetaK - 1.f, 0.f);
 #endif
-                pdf += _weights[k] * norm * expf(kappaK * costThetaMinusOneK);
+                pdf += this->_weights[k] * norm * expf(kappaK * costThetaMinusOneK);
             }
             return pdf;
         }

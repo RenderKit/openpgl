@@ -9,6 +9,11 @@
 
 namespace openpgl
 {
+namespace gpu
+{
+    struct FieldData;
+    struct Device;
+}
 
 struct FieldStatistics;
 
@@ -59,9 +64,13 @@ struct ISurfaceVolumeField
     virtual FieldStatistics *getVolumeStatistics() const = 0;
 
     // Stefan SYCL
+    virtual void FillFieldData(openpgl::gpu::FieldData* fieldData, openpgl::gpu::Device* deviceGPU) const = 0;
+    virtual void ReleaseFieldData(openpgl::gpu::FieldData* fieldGPU, openpgl::gpu::Device* deviceGPU) const = 0;
+    /*
     virtual int GetNumNodes(bool isSurface = true) const = 0;
     virtual void* GetNodes(bool isSurface = true) const = 0;
     virtual int GetNumDistributions(bool isSurface = true) const = 0;
     virtual void CopyDistributionsTo(void *o_distrib, bool isSurface = true) const = 0;
+    */
 };
 }  // namespace openpgl
