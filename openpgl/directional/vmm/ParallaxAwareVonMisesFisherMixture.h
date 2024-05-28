@@ -384,12 +384,7 @@ void ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents,UseParallaxCompen
         const float distance0 = _distances[tmpIdx0.quot][tmpIdx0.rem];
         const float distance1 = _distances[tmpIdx1.quot][tmpIdx1.rem];
 
-        // using this will change the behavior to previous version	
-        const float invNewWeight = embree::rcp(weight0 + weight1);
-
         float newDistance = weight0 * distance0 + weight1 * distance1;
-		// using this will change the behavior to previous version
-        //newDistance *= invNewWeight;
         newDistance /= (weight0 + weight1);
 
         _distances[tmpIdx0.quot][tmpIdx0.rem] = newDistance;

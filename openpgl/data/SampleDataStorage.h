@@ -27,10 +27,6 @@ struct SampleDataStorage
     SampleContainer m_surfaceContainer;
     SampleContainer m_volumeContainer;
 
-    //
-    //InvalidSampleDataContainer m_invalidSurfaceContainer;
-    //InvalidSampleDataContainer m_volumeContainer.invalidSamples;
-
     static SampleDataStorage* newSampleDataStorage()
     {
         return new openpgl::SampleDataStorage();
@@ -435,7 +431,6 @@ struct SampleDataStorage
         for (int i = 0; i < surfaceInvalidSampleDataA.size(); i++) {
             if( i< sizeB && !InvalidSampleDataEqual(surfaceInvalidSampleDataA[i], surfaceInvalidSampleDataB[i])){
                 equal = false;
-                //std::cout << "Non-equal surfaceSample[" << i << "]: " << std::endl << " left = " << toString(surfaceSampleDataA[i]) << std::endl << " right = " << toString(surfaceSampleDataB[i]) << std::endl;
             }
         }
 
@@ -450,7 +445,6 @@ struct SampleDataStorage
         for (int i = 0; i < volumeInvalidSampleDataA.size(); i++) {
             if( i< sizeB && !InvalidSampleDataEqual(volumeInvalidSampleDataA[i], volumeInvalidSampleDataB[i])){
                 equal = false;
-                //std::cout << "Non-equal volumeSample[" << i << "]: " << std::endl << " left = " << toString(volumeSampleDataA[i]) << std::endl << " right = " << toString(volumeSampleDataB[i]) << std::endl;
             }
         }
 

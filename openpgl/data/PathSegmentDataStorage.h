@@ -231,8 +231,7 @@ public:
 #endif
                 float pdf = std::max(minPDF,currentPathSegment.pdfDirectionIn);
                 uint32_t flags{0};
-                //const IRegion* regionPtr = (const IRegion*)currentPathSegment.regionPtr;
-                //OPENPGL_ASSERT(regionPtr != nullptr);
+
                 bool insideVolume = currentPathSegment.volumeScatter;
                 if(insideVolume)
                 {
@@ -247,7 +246,6 @@ public:
                 {
                     const openpgl::PathSegmentData &nextPathSegment = m_segmentStorage[j];
 
-                    //throughput = throughput * openpgl::Vector3(nextPathSegment.transmittanceWeight.x, nextPathSegment.transmittanceWeight.y, nextPathSegment.transmittanceWeight.z);
                     throughput = throughput * openpgl::Vector3(m_segmentStorage[j-1].transmittanceWeight.x, m_segmentStorage[j-1].transmittanceWeight.y, m_segmentStorage[j-1].transmittanceWeight.z);
                     OPENPGL_ASSERT(embree::isvalid(throughput));
                     OPENPGL_ASSERT(throughput[0] >= 0.f && throughput[1] >= 0.f && throughput[2] >= 0.f)
@@ -319,9 +317,9 @@ public:
                         dsd.radianceOut.y = /*directContribution.y*/ + scatteredContribution.y + scatteringWeight.y * contribution[1];
                         dsd.radianceOut.z = /*directContribution.z*/ + scatteredContribution.z + scatteringWeight.z * contribution[2];
 
-                        dsd.weightRGB.x = contribution[0]/pdf;
-                        dsd.weightRGB.y = contribution[1]/pdf;
-                        dsd.weightRGB.z = contribution[2]/pdf;
+                        dsd.weightRGB.x = contribution[0] / pdf;
+                        dsd.weightRGB.y = contribution[1] / pdf;
+                        dsd.weightRGB.z = contribution[2] / pdf;
 #endif
                         dsd.pdf = pdf;
                         dsd.distance = distance;
@@ -336,12 +334,6 @@ public:
                         m_sampleStorage.emplace_back(dsd);
 #endif
                     }
-/*
-                    else
-                    {
-                        std::cout << "PathSegmentDataStorage::prepareSamples(): !(distance>0)" << std::endl;
-                    }
-*/
                 }
                 else if(m_track_invalid_samples)
                 {
@@ -368,8 +360,7 @@ public:
 
             }
         }
-        //std::cout << std::endl;
-        //std::cout << this->toString() << std::endl;
+
 #if defined(OPENPGL_PATHSEGMENT_STORAGE_USE_ARRAY)
         return m_sample_idx+1;
 #else
@@ -379,8 +370,6 @@ public:
 
     pgl_vec3f calculatePixelEstimate(const bool rrAffectsDirectContribution = true)
     {
-        //const float minPDF {0.1f};
-        const openpgl::Vector3 maxThroughput {10.0f};
 
 #if defined(OPENPGL_PATHSEGMENT_STORAGE_USE_ARRAY)
         size_t numSegments = m_seg_idx+1;
@@ -396,21 +385,18 @@ public:
         if(numSegments==0)
             return finalColor;
         
-        //const openpgl::PathSegmentData &currentPathSegment = m_segmentStorage[0];
-        
         // evalaute the incident radiance the incident
         openpgl::Vector3 throughput {1.0f};
         openpgl::Vector3 contribution {0.0f};
-        float previousRR = 1.0f;
+        float previousRR = m_segmentStorage[0].russianRouletteProbability;
         for (size_t j = 0+1; j < numSegments; ++j)
         {
             const openpgl::PathSegmentData &nextPathSegment = m_segmentStorage[j];
 
-            //throughput = throughput * openpgl::Vector3(nextPathSegment.transmittanceWeight.x, nextPathSegment.transmittanceWeight.y, nextPathSegment.transmittanceWeight.z);
             throughput = throughput * openpgl::Vector3(m_segmentStorage[j-1].transmittanceWeight.x, m_segmentStorage[j-1].transmittanceWeight.y, m_segmentStorage[j-1].transmittanceWeight.z);
             OPENPGL_ASSERT(embree::isvalid(throughput));
             OPENPGL_ASSERT(throughput[0] >= 0.f && throughput[1] >= 0.f && throughput[2] >= 0.f)
-            //openpgl::Vector3 clampedThroughput = embree::min(throughput, maxThroughput);
+
             contribution += throughput * openpgl::Vector3(nextPathSegment.scatteredContribution.x, nextPathSegment.scatteredContribution.y, nextPathSegment.scatteredContribution.z);
             OPENPGL_ASSERT(embree::isvalid(contribution));
             OPENPGL_ASSERT(contribution[0] >= 0.f && contribution[1] >= 0.f && contribution[2] >= 0.f);
@@ -441,10 +427,16 @@ public:
         OPENPGL_ASSERT(embree::isvalid(contribution));
         OPENPGL_ASSERT(contribution[0] >= 0.f && contribution[1] >= 0.f && contribution[2] >= 0.f);
 
-        //std::cout << "contribution = " << contribution[0] << "\t " << contribution[1] << "\t" << contribution[2] << std::endl; 
-        finalColor.x = m_segmentStorage[0].directContribution.x + m_segmentStorage[0].scatteredContribution.x + m_segmentStorage[0].scatteringWeight.x /** m_segmentStorage[0].transmittanceWeight.x*/ * contribution[0];
-        finalColor.y = m_segmentStorage[0].directContribution.y + m_segmentStorage[0].scatteredContribution.y + m_segmentStorage[0].scatteringWeight.y /** m_segmentStorage[0].transmittanceWeight.y*/ * contribution[1];
-        finalColor.z = m_segmentStorage[0].directContribution.z + m_segmentStorage[0].scatteredContribution.z + m_segmentStorage[0].scatteringWeight.z /** m_segmentStorage[0].transmittanceWeight.z*/ * contribution[2];
+        if(m_segmentStorage[0].russianRouletteProbability > 0.f)
+        {
+            finalColor.x = m_segmentStorage[0].directContribution.x + m_segmentStorage[0].scatteredContribution.x + m_segmentStorage[0].scatteringWeight.x /** m_segmentStorage[0].transmittanceWeight.x*/ * contribution[0] / m_segmentStorage[0].russianRouletteProbability;
+            finalColor.y = m_segmentStorage[0].directContribution.y + m_segmentStorage[0].scatteredContribution.y + m_segmentStorage[0].scatteringWeight.y /** m_segmentStorage[0].transmittanceWeight.y*/ * contribution[1] / m_segmentStorage[0].russianRouletteProbability;
+            finalColor.z = m_segmentStorage[0].directContribution.z + m_segmentStorage[0].scatteredContribution.z + m_segmentStorage[0].scatteringWeight.z /** m_segmentStorage[0].transmittanceWeight.z*/ * contribution[2] / m_segmentStorage[0].russianRouletteProbability;
+        } else {
+            finalColor.x = m_segmentStorage[0].directContribution.x + m_segmentStorage[0].scatteredContribution.x + m_segmentStorage[0].scatteringWeight.x /** m_segmentStorage[0].transmittanceWeight.x*/ * contribution[0];
+            finalColor.y = m_segmentStorage[0].directContribution.y + m_segmentStorage[0].scatteredContribution.y + m_segmentStorage[0].scatteringWeight.y /** m_segmentStorage[0].transmittanceWeight.y*/ * contribution[1];
+            finalColor.z = m_segmentStorage[0].directContribution.z + m_segmentStorage[0].scatteredContribution.z + m_segmentStorage[0].scatteringWeight.z /** m_segmentStorage[0].transmittanceWeight.z*/ * contribution[2];
+        }
 
 
         if(numSegments == 1)
@@ -454,16 +446,6 @@ public:
             finalColor.z = m_segmentStorage[0].directContribution.z + m_segmentStorage[0].scatteredContribution.z;// + currentPathSegment.scatteringWeight.z * contribution[2];
         }
 
-        //std::cout << std::endl;
-        //std::cout << this->toString() << std::endl;
-        /*
-        if(finalColor.x > 10.f || finalColor.y > 10.f ||finalColor.z > 10.f )
-        {
-            std::cout << std::endl;
-            std::cout << "Large Color value:"<< std::endl;
-            std::cout << this->toString() << std::endl;
-        }
-        */
         return finalColor;
     }
 

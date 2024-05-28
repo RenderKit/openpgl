@@ -120,13 +120,7 @@ struct KDTreePartitionBuilder
 
 void insertTree(KDTree &kdTree, TInvalidSamplesContainer &samples, tbb::concurrent_vector< std::pair<TRegion, Range> > &dataStorage) const
     {
-        //int numEstLeafs = dataStorage.size() + (samples.size()*2)/buildSettings.maxSamples+32;
-        //kdTree.m_nodes.reserve(4*numEstLeafs);
-        //dataStorage.reserve(2*numEstLeafs);
-
         KDNode &root = kdTree.getRoot();
-        //SampleStatistics sampleStats;
-        //sampleStats.clear();
 
         Range sampleRange;
         sampleRange.m_begin = 0;
@@ -134,16 +128,6 @@ void insertTree(KDTree &kdTree, TInvalidSamplesContainer &samples, tbb::concurre
 
         size_t depth =1;
 
-#ifdef OPENPGL_USE_OMP_THREADING
-    #pragma omp parallel num_threads(nCores)
-    #pragma omp single nowait
-#else
-/*
-#if !defined(__WIN32__) and !defined(__MACOSX__)
-        tbb::task_scheduler_init init(nCores);
-#endif
-*/
-#endif
         insertTreeNode(&kdTree, root, depth, samples, sampleRange, &dataStorage);
     }
 
@@ -434,9 +418,9 @@ private:
         sampleRangeLeftRight[0] = Range(sampleRange.m_begin, std::distance(samples.begin(), rPivotItr));
         sampleRangeLeftRight[1] = Range(std::distance(samples.begin(), rPivotItr), sampleRange.m_end);
 #endif
-		/* This assert is a sanity check which is only valid with the assumption that the number of samples grows at same pace
-		   as the number of spatial nodes: in practice this is not the case (e.g., after many 1spp iterations) 
-		*/
+        /* This assert is a sanity check which is only valid with the assumption that the number of samples grows at same pace
+           as the number of spatial nodes: in practice this is not the case (e.g., after many 1spp iterations) 
+        */
         //OPENPGL_ASSERT(sampleRangeLeftRight[0].size() > 1);
         //OPENPGL_ASSERT(sampleRangeLeftRight[1].size() > 1);
 

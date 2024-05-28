@@ -118,9 +118,7 @@ public:
             {
                 if (USE_PRECOMPUTED_NN)
                 {
-                    //std::cout << "sample1D = " << *sample1D<< std::endl;
                     uint32_t regionIdx = getApproximateClosestRegionIdx(m_regionKNNSearchTree, p, sample1D, id);
-                    //std::cout << "id = " << id << "\t regionIdx = " << regionIdx << std::endl;
                     return &m_regionStorageContainer[regionIdx].first;
                 }
                 else
@@ -412,7 +410,7 @@ private:
     inline void updateSpatialStructure(SampleContainerInternal& samples, InvalidSampleContainerInternal& invalidSamples)
     {
         m_spatialSubdivBuilder.updateTree(m_spatialSubdiv, samples, m_regionStorageContainer, m_spatialSubdivBuilderSettings);
-		m_spatialSubdivBuilder.insertTree(m_spatialSubdiv, invalidSamples, m_regionStorageContainer);
+        m_spatialSubdivBuilder.insertTree(m_spatialSubdiv, invalidSamples, m_regionStorageContainer);
         if (m_useStochasticNNLookUp)
         {
             m_regionKNNSearchTree.reset();
@@ -444,7 +442,7 @@ private:
             openpgl::Point3 sampleMean = regionStorage.first.sampleStatistics.mean;
             if(regionStorage.second.size() > 0)
             {
-				if (m_deterministic)
+                if (m_deterministic)
                 {
                     std::sort(samples.begin() + regionStorage.second.m_begin, samples.begin() + regionStorage.second.m_end, SampleDataLess);
                 }
@@ -453,11 +451,11 @@ private:
                 	typename DirectionalDistributionFactory::FittingStatistics fittingStats;
                 	m_distributionFactory.prepareSamples(samples.data() + regionStorage.second.m_begin, regionStorage.second.m_end - regionStorage.second.m_begin, regionStorage.first.sampleStatistics, m_distributionFactorySettings);
                 	m_distributionFactory.fit(regionStorage.first.distribution, regionStorage.first.trainingStatistics, samples.data() + regionStorage.second.m_begin, regionStorage.second.m_end - regionStorage.second.m_begin, m_distributionFactorySettings, fittingStats);
-					m_distributionFactory.updateFluenceEstimate(regionStorage.first.distribution, samples.data() + regionStorage.second.m_begin, regionStorage.second.m_end - regionStorage.second.m_begin, regionStorage.first.numInvalidSamples, regionStorage.first.sampleStatistics);
+                	m_distributionFactory.updateFluenceEstimate(regionStorage.first.distribution, samples.data() + regionStorage.second.m_begin, regionStorage.second.m_end - regionStorage.second.m_begin, regionStorage.first.numInvalidSamples, regionStorage.first.sampleStatistics);
 #ifdef OPENPGL_RADIANCE_CACHES
-                    regionStorage.first.outRadianceHist.update(samples.data() + regionStorage.second.m_begin, regionStorage.second.m_end - regionStorage.second.m_begin, invalidSamples.data() + regionStorage.second.m_is_begin, regionStorage.second.m_is_end - regionStorage.second.m_is_begin);
+                	regionStorage.first.outRadianceHist.update(samples.data() + regionStorage.second.m_begin, regionStorage.second.m_end - regionStorage.second.m_begin, invalidSamples.data() + regionStorage.second.m_is_begin, regionStorage.second.m_is_end - regionStorage.second.m_is_begin);
 #endif
-					// TODO: we should move setting the pivot to the factory
+                	// TODO: we should move setting the pivot to the factory
                 	regionStorage.first.distribution._pivotPosition = sampleMean;
                 	regionStorage.first.valid = regionStorage.first.distribution.isValid();
 #ifdef OPENPGL_DEBUG_MODE
@@ -465,8 +463,8 @@ private:
                     	std::cout << "!!!! " << (m_isSurface? "Surface":"Volume") << " regionStorage.first.valid !!! " << regionStorage.first.distribution.toString() << std::endl;
 #endif
 	                regionStorage.first.splitFlag = false;
-				}
-			}
+                }
+            }
             else
             {
                 regionStorage.first.valid = false;
@@ -512,12 +510,12 @@ private:
 #ifdef OPENPGL_DEBUG_MODE
                 RegionType oldRegion = regionStorage.first;
 #endif            
-				if (m_deterministic)
+                if (m_deterministic)
                 {
                     std::sort(samples.begin() + regionStorage.second.m_begin, samples.begin() + regionStorage.second.m_end, SampleDataLess);
                 }
 
-				if (m_fitRegions) {
+                if (m_fitRegions) {
 	                // TODO: we should move applying the paralax comp to the Distribution to the factory
 	                if(DirectionalDistribution::ParallaxCompensation == 1)
 	                {
@@ -530,11 +528,11 @@ private:
 	                m_distributionFactory.prepareSamples(samples.data() + regionStorage.second.m_begin, regionStorage.second.m_end - regionStorage.second.m_begin, regionStorage.first.sampleStatistics, m_distributionFactorySettings);
 	                m_distributionFactory.update(regionStorage.first.distribution, regionStorage.first.trainingStatistics, samples.data() + regionStorage.second.m_begin, regionStorage.second.m_end - regionStorage.second.m_begin, m_distributionFactorySettings, fittingStats);
 	                m_distributionFactory.updateFluenceEstimate(regionStorage.first.distribution, samples.data() + regionStorage.second.m_begin, regionStorage.second.m_end - regionStorage.second.m_begin, regionStorage.first.numInvalidSamples, regionStorage.first.sampleStatistics);
-					//regionStorage.first.valid = regionStorage.first.distribution.isValid();
+	                //regionStorage.first.valid = regionStorage.first.distribution.isValid();
 #ifdef OPENPGL_RADIANCE_CACHES
 	                regionStorage.first.outRadianceHist.update(samples.data() + regionStorage.second.m_begin, regionStorage.second.m_end - regionStorage.second.m_begin, invalidSamples.data() + regionStorage.second.m_is_begin, regionStorage.second.m_is_end - regionStorage.second.m_is_begin);
-#endif                    
-                    regionStorage.first.valid = regionStorage.first.isValid();
+#endif
+	                regionStorage.first.valid = regionStorage.first.isValid();
 #ifdef OPENPGL_DEBUG_MODE
 	                if(!regionStorage.first.valid)
 	                {
@@ -542,7 +540,7 @@ private:
 	                    storeInvalidRegionData("regionBeforeUpdate_"+ std::string((m_isSurface? "surf":"vol")) + "_itr" + std::to_string(this->m_iteration) + "_region" + std::to_string(n)+".dump", oldRegion, dataPoints, m_distributionFactorySettings);
 	                }
 #endif
-				}
+                }
             }
             else
             {
