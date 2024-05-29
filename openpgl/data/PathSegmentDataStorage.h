@@ -183,8 +183,11 @@ public:
 
     size_t prepareSamples(const bool useNEEMiWeights = false, const bool guideDirectLight = false, const bool rrAffectsDirectContribution = true)
     {
-        const float minPDF {0.1f};
+        // clamping thresholds to avoid generating extremly strong fireflies that 
+        // could mess-up the fitting of the distributions 
+        const float minPDF {0.01f};
         const openpgl::Vector3 maxThroughput {10.0f};
+
 #if defined(OPENPGL_PATHSEGMENT_STORAGE_USE_ARRAY)
         size_t numSegments = m_seg_idx+1;
 #else
