@@ -19,20 +19,20 @@ jobs:
 
   ## Build Jobs ##
   ### Build Linux Jobs ###
-  build-centos7:
+  build-rocky87:
     secrets: inherit
     uses: intel-innersource/libraries.devops.renderkit.workflows/.github/workflows/docker.yml@main
     with:
-      image: centos:7
+      image: rockylinux:8.7
       cmd: |
         gitlab/build.sh
 
-  build-centos7-icx:
+  build-rocky87-icx:
     secrets: inherit
     uses: intel-innersource/libraries.devops.renderkit.workflows/.github/workflows/docker.yml@main
     with:
       submodules: true
-      image: centos:7
+      image: rockylinux:8.7
       #artifact-out: build-centos7-icx
       #artifact-path: ./build/install ./build/openvkl/build
       cmd: |
@@ -45,13 +45,13 @@ jobs:
         gitlab/build.sh
 
 
-  build-centos7-icc:
+  build-rocky87-icc:
     secrets: inherit
     uses: intel-innersource/libraries.devops.renderkit.workflows/.github/workflows/docker.yml@main
     with:
       force-delete: true    # guarantees .gitattributes are respected in working dir
       submodules: true
-      image: centos:7
+      image: rockylinux:8.7
       #artifact-out: build-centos7-icc
       #artifact-path: ./build/install ./build/openvkl/build
       cmd: |
@@ -80,13 +80,6 @@ jobs:
   #    cmd: |
   #      gitlab/build.sh
 
-  build-ubuntu18-04:
-    secrets: inherit
-    uses: intel-innersource/libraries.devops.renderkit.workflows/.github/workflows/docker.yml@main
-    with:
-      image: ubuntu:18.04
-      cmd: |
-        gitlab/build.sh
 
   build-ubuntu20-04:
     secrets: inherit
@@ -196,9 +189,9 @@ jobs:
     secrets: inherit
     uses: intel-innersource/libraries.devops.renderkit.workflows/.github/workflows/docker.yml@main
     with:
-      image: centos:7
+      image: rockylinux:8.7
       cmd: |
-        export OPENPGL_RELEASE_PACKAGE_VERSION=0.5.0
+        export OPENPGL_RELEASE_PACKAGE_VERSION=0.6.0
         gitlab/release/linux.sh
       artifact-out: release-linux
       artifact-path: ./openpgl*.gz
@@ -212,8 +205,8 @@ jobs:
       artifact-out: release-windows
       artifact-path: ./openpgl*.zip
       cmd: |
-        $env:OPENPGL_RELEASE_PACKAGE_VERSION="0.5.0"
-        $OPENPGL_RELEASE_PACKAGE_VERSION="0.5.0"
+        $env:OPENPGL_RELEASE_PACKAGE_VERSION="0.6.0"
+        $OPENPGL_RELEASE_PACKAGE_VERSION="0.6.0"
         gitlab/release/windows.ps1 "Visual Studio 15 2017 Win64" "v141"
 
   release-macos:
@@ -225,7 +218,7 @@ jobs:
       artifact-out: release-macos
       artifact-path: ./*.zip
       cmd: |
-        export OPENPGL_RELEASE_PACKAGE_VERSION="0.5.0"
+        export OPENPGL_RELEASE_PACKAGE_VERSION="0.6.0"
         gitlab/release/macos.sh
 
   #release-macos-arm:
@@ -237,7 +230,7 @@ jobs:
   #    artifact-out: release-macos-arm
   #    artifact-path: ./*.zip
   #    cmd: |
-  #      export OPENPGL_RELEASE_PACKAGE_VERSION="0.5.0"
+  #      export OPENPGL_RELEASE_PACKAGE_VERSION="0.6.0"
   #      gitlab/release/macos.sh -DBUILD_TBB_FROM_SOURCE=ON
 
   ## Binary Scan Jobs ##
