@@ -39,20 +39,23 @@ struct PGLSampleData
     float weight;
 
 #ifdef OPENPGL_EF_RADIANCE_CACHES
+    /// a scalar representation of the incident radiance in RGB divide by @ref pdf
     pgl_vec3f weightRGB; 
 #endif
 
     /// the PDF used for sampling @ref direction at @ref position   
     float pdf;
 
-    /// the distance to the source of the incoming radiance  
+    /// the distance to the source of the incident radiance  
     float distance; 
 
     ///
     uint32_t flags;
 
 #ifdef OPENPGL_EF_RADIANCE_CACHES
+    /// a vector pointing into the outgoing direction the energy is reflected to(e.g., towards the camera)
     pgl_vec3f directionOut;
+    /// the outgoing, reflected/scattered radiance (i.e., incident radiance time BSDF/phase divided by pdf)
     pgl_vec3f radianceOut;
 #endif
 };
@@ -64,6 +67,7 @@ struct PGLInvalidSampleData
     pgl_point3f position;
 
 #ifdef OPENPGL_EF_RADIANCE_CACHES
+    /// a vector pointing into the outgoing direction the energy is reflected to(e.g., towards the camera)
     pgl_vec3f directionOut;
 #endif
     /// if the position is inside a volume

@@ -115,7 +115,7 @@ struct VolumeSamplingDistribution
      * @brief Applies the product with a single lobe HenyeyGreenstein phase function
      * to the sampling distribution.
      *  
-     * @param dir The direction the walk/path arrives a the sample position.  
+     * @param dir The direction the walk/path arrives a the sample position.
      * @param meanCosine The mean cosine of the HG phase function.
      */
     void ApplySingleLobeHenyeyGreensteinProduct(const pgl_vec3f& dir, const float meanCosine);
@@ -128,12 +128,39 @@ struct VolumeSamplingDistribution
     uint32_t GetId() const;
 
 #ifdef OPENPGL_EF_RADIANCE_CACHES
+    /**
+     * @brief Returns the incoming radiance estimates.
+     * 
+     * @param direction The direction of the incoming radiance.
+     * @return An estimate of the incoming direction.
+    */
     pgl_vec3f IncomingRadiance(pgl_vec3f& direction) const;
 
+    /**
+     * @brief Returns the outgoing (scattered) radiance estimates.
+     * 
+     * @param direction The direction of the outgoing (scattered) radiance. 
+     * @return An estimate of the outgoing direction.
+    */
     pgl_vec3f OutgoingRadiance(pgl_vec3f& direction) const;
 
+    /**
+     * @brief Returns the in-scattered radiance estimates.
+     * The outgoing and in-scattered radiance estimates are estimates of the same qunatity.
+     * Depending of the used representation (e.g., VMM, QuadTree), more precise estimates for the inscattered
+     * might be used (e.g., VMM -> convolution of the incomming radaince).
+     *   
+     * @param direction The direction the volume radiance is scattered into.
+     * @return An estimate of the in-scattered direction.
+    */
     pgl_vec3f InscatteredRadiance(pgl_vec3f& direction, const float g) const;
 
+    /**
+     * @brief Returns the estimate of the volume fluence.
+     * The volume fluence is the radiance passing throug a point in a volume before scattering.
+     * 
+     * @return An estimate of the volume fluence direction.
+    */
     pgl_vec3f Fluence() const;
 #endif
 

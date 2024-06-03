@@ -122,10 +122,29 @@ struct SurfaceSamplingDistribution
      */
     uint32_t GetId() const;
 #ifdef OPENPGL_EF_RADIANCE_CACHES
+    /**
+     * @brief Returns the incoming radiance estimates.
+     * 
+     * @param direction The direction of the incoming radiance  
+     * @return An estimate of the incoming direction
+    */
     pgl_vec3f IncomingRadiance(pgl_vec3f& direction) const;
 
+    /**
+     * @brief Returns the outgoing (scattered) radiance estimates.
+     * 
+     * @param direction The direction of the outgoing (scattered) radiance  
+     * @return An estimate of the outgoing direction
+    */
     pgl_vec3f OutgoingRadiance(pgl_vec3f& direction) const;
 
+    /**
+     * @brief Returns the irradiance estimate for a given normal direction.
+     * The irradiance is the integral of the product of the cosine and incident radiance.
+     * 
+     * @param direction The direction of the surface normal. 
+     * @return An estimate of the irradiance.
+    */
     pgl_vec3f Irradiance(pgl_vec3f& normal) const;
 #endif
     ///////////////////////////////////////
