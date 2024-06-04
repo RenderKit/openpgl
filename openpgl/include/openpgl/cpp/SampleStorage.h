@@ -61,6 +61,13 @@ struct SampleStorage
     void AddSamples(const SampleData* samples, size_t numSamples);
 
     /**
+     * @brief Add an of invalid sample the storage container.
+     * 
+     * @param samples Pointer to the beginning of the SampleData array.
+     */
+    void AddInvalidSample(const InvalidSampleData& sample);
+
+    /**
      * @brief Adds an array of invalid samples to the storage container.
      * 
      * @param samples Pointer to the beginning of the SampleData array.
@@ -166,6 +173,12 @@ OPENPGL_INLINE void SampleStorage::AddSamples(const SampleData* samples, size_t 
 {
     OPENPGL_ASSERT(m_sampleStorageHandle);
     pglSampleStorageAddSamples(m_sampleStorageHandle, samples, numSamples);
+}
+
+OPENPGL_INLINE void SampleStorage::AddInvalidSample(InvalidSampleData& sample)
+{
+    OPENPGL_ASSERT(m_sampleStorageHandle);
+    pglSampleStorageAddInvalidSample(m_sampleStorageHandle, sample);
 }
 
 OPENPGL_INLINE void SampleStorage::AddInvalidSamples(const InvalidSampleData* samples, size_t numSamples)

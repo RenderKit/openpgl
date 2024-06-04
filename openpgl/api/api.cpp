@@ -343,6 +343,13 @@ extern "C" OPENPGL_DLLEXPORT void pglSampleStorageAddSamples(PGLSampleStorage sa
     gSampleStorage->addSamples(opglSamples, numSamples);    
 }
 
+extern "C" OPENPGL_DLLEXPORT void pglSampleStorageAddInvalidSample(PGLSampleStorage sampleStorage, PGLInvalidSampleData& sample)
+{
+    auto *gSampleStorage = (openpgl::SampleDataStorage *)sampleStorage;
+    openpgl::InvalidSampleData opglSample = /**(openpgl::SampleData*)*/sample;
+    gSampleStorage->addInvalidSample(opglSample);
+}
+
 extern "C" OPENPGL_DLLEXPORT void pglSampleStorageAddInvalidSamples(PGLSampleStorage sampleStorage, const PGLInvalidSampleData* samples, size_t numSamples)
 {
     auto *gSampleStorage = (openpgl::SampleDataStorage *)sampleStorage;
