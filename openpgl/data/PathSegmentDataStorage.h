@@ -340,17 +340,20 @@ public:
                 }
                 else if(m_track_invalid_samples)
                 {
-#if defined(OPENPGL_PATHSEGMENT_STORAGE_USE_ARRAY)
                     InvalidSampleData isd;
                     isd.position.x = pos[0];
                     isd.position.y = pos[1];
                     isd.position.z = pos[2];
+                    isd.direction.x = dir[0];
+                    isd.direction.y = dir[1];
+                    isd.direction.z = dir[2];
 #ifdef OPENPGL_RADIANCE_CACHES
                     isd.directionOut.x = dirOut[0];
                     isd.directionOut.y = dirOut[1];
                     isd.directionOut.z = dirOut[2];
 #endif
                     isd.volume = insideVolume;
+#if defined(OPENPGL_PATHSEGMENT_STORAGE_USE_ARRAY)
                     if(m_invalid_sample_idx+1 <= m_max_invalid_sample_size)
                     {
                         m_invalid_sample_idx++;

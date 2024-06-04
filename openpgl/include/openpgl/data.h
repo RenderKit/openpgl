@@ -65,7 +65,8 @@ struct PGLInvalidSampleData
 {
     /// the position of the invalid sample
     pgl_point3f position;
-
+    /// a vector pointing into the direction the path generating the zero value sample went
+    pgl_vec3f direction;
 #ifdef OPENPGL_EF_RADIANCE_CACHES
     /// a vector pointing into the outgoing direction the energy is reflected to(e.g., towards the camera)
     pgl_vec3f directionOut;

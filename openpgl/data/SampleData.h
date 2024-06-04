@@ -93,8 +93,12 @@ namespace openpgl
 
     inline bool InvalidSampleDataEqual(const PGLInvalidSampleData &compA,  const PGLInvalidSampleData &compB)
     {
-        if(compA.position.x != compB.position.x || compA.position.y != compB.position.y ||
-           compA.position.z != compB.position.z)
+        if( compA.position.x != compB.position.x || 
+            compA.position.y != compB.position.y ||
+            compA.position.z != compB.position.z ||
+            compA.direction.x != compB.direction.x || 
+            compA.direction.y != compB.direction.y ||
+            compA.direction.z != compB.direction.z)
         {
             return false;
         }
@@ -103,10 +107,13 @@ namespace openpgl
 
     inline bool InvalidSampleDataLess(const PGLInvalidSampleData &compA,  const PGLInvalidSampleData &compB )
     {
-        return  compA.position.x < compB.position.x    ||
-                (compA.position.x    == compB.position.x    &&  ( compA.position.y < compB.position.y    ||
-                (compA.position.y    == compB.position.y     &&  ( compA.position.z < compB.position.z   ||
-                (compA.position.z    == compB.position.z     )))));
+        return    compA.position.x < compB.position.x    ||   (compA.position.x    == compB.position.x    
+            &&  ( compA.position.y < compB.position.y    ||   (compA.position.y    == compB.position.y     
+            &&  ( compA.position.z < compB.position.z    ||   (compA.position.z    == compB.position.z
+            &&  ( compA.direction.x < compB.direction.x    ||   (compA.direction.x    == compB.direction.x
+            &&  ( compA.direction.y < compB.direction.y    ||   (compA.direction.y    == compB.direction.y
+            &&  ( compA.direction.z < compB.direction.z    ||   (compA.direction.z    == compB.direction.z     
+                )))))))))));
     }
 
     inline SampleData *LoadSampleData(const std::string fileName, size_t &numData){
