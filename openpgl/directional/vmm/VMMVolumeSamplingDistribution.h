@@ -138,7 +138,7 @@ struct __aligned(TVMMDistribution::VectorSize*4) VMMVolumeSamplingDistribution: 
         return m_region->getOutgoingRadiance(dir);
     }
 
-    inline Vector3 inScatteredRadiance(const Vector3 dir, const float meanCosine) const
+    inline Vector3 inScatteredRadiance(const Vector3 dir, const float meanCosine) const override
     {
         const VMMPhaseFunctionRepresentation pfRep =VMMSingleLobeHenyeyGreensteinOracle::getPhaseFunctionRepresentation(meanCosine);
 

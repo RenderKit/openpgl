@@ -44,7 +44,7 @@ struct DQTVolumeSamplingDistribution: public IVolumeSamplingDistribution {
         return m_region->getOutgoingRadiance(dir);
     }
 
-    inline Vector3 inScatteredRadiance(const Vector3 dir, const float g) const
+    inline Vector3 inScatteredRadiance(const Vector3 dir, const float g) const override
     {
         return Vector3(0.f, 0.f, 0.f);
     }
