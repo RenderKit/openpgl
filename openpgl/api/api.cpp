@@ -328,7 +328,7 @@ extern "C" OPENPGL_DLLEXPORT bool pglSampleStorageStoreToFile(PGLSampleStorage s
 }
 OPENPGL_CATCH_END(false)
 
-extern "C" OPENPGL_DLLEXPORT void pglSampleStorageAddSample(PGLSampleStorage sampleStorage, PGLSampleData& sample)
+extern "C" OPENPGL_DLLEXPORT void pglSampleStorageAddSample(PGLSampleStorage sampleStorage, const PGLSampleData& sample)
 {
     auto *gSampleStorage = (openpgl::SampleDataStorage *)sampleStorage;
     openpgl::SampleData opglSample = /**(openpgl::SampleData*)*/sample;
@@ -343,19 +343,19 @@ extern "C" OPENPGL_DLLEXPORT void pglSampleStorageAddSamples(PGLSampleStorage sa
     gSampleStorage->addSamples(opglSamples, numSamples);    
 }
 
-extern "C" OPENPGL_DLLEXPORT void pglSampleStorageAddInvalidSample(PGLSampleStorage sampleStorage, PGLInvalidSampleData& sample)
+extern "C" OPENPGL_DLLEXPORT void pglSampleStorageAddZeroValueSample(PGLSampleStorage sampleStorage, const PGLZeroValueSampleData& sample)
 {
     auto *gSampleStorage = (openpgl::SampleDataStorage *)sampleStorage;
-    openpgl::InvalidSampleData opglSample = /**(openpgl::SampleData*)*/sample;
-    gSampleStorage->addInvalidSample(opglSample);
+    openpgl::ZeroValueSampleData opglSample = /**(openpgl::SampleData*)*/sample;
+    gSampleStorage->addZeroValueSample(opglSample);
 }
 
-extern "C" OPENPGL_DLLEXPORT void pglSampleStorageAddInvalidSamples(PGLSampleStorage sampleStorage, const PGLInvalidSampleData* samples, size_t numSamples)
+extern "C" OPENPGL_DLLEXPORT void pglSampleStorageAddZeroValueSamples(PGLSampleStorage sampleStorage, const PGLZeroValueSampleData* samples, size_t numSamples)
 {
     auto *gSampleStorage = (openpgl::SampleDataStorage *)sampleStorage;
 
-    openpgl::InvalidSampleData* opglSamples = (openpgl::InvalidSampleData*)samples;
-    gSampleStorage->addInvalidSamples(opglSamples, numSamples);    
+    openpgl::ZeroValueSampleData* opglSamples = (openpgl::ZeroValueSampleData*)samples;
+    gSampleStorage->addZeroValueSamples(opglSamples, numSamples);    
 }
 
 extern "C" OPENPGL_DLLEXPORT void pglSampleStorageReserve(PGLSampleStorage sampleStorage, const size_t sizeSurface, const size_t sizeVolume)
@@ -479,9 +479,9 @@ extern "C" OPENPGL_DLLEXPORT void pglSampleDataSetFlags(PGLSampleData sampleData
 // PathSegmentStorage /////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
-extern "C" OPENPGL_DLLEXPORT PGLPathSegmentStorage pglNewPathSegmentStorage(bool trackInvalidSamples)OPENPGL_CATCH_BEGIN
+extern "C" OPENPGL_DLLEXPORT PGLPathSegmentStorage pglNewPathSegmentStorage(bool trackZeroValueSamples)OPENPGL_CATCH_BEGIN
 {
-    openpgl::PathSegmentDataStorage* pathSegmentStorage = new openpgl::PathSegmentDataStorage(trackInvalidSamples);
+    openpgl::PathSegmentDataStorage* pathSegmentStorage = new openpgl::PathSegmentDataStorage(trackZeroValueSamples);
     return (PGLPathSegmentStorage) pathSegmentStorage;
 }
 OPENPGL_CATCH_END(nullptr)
@@ -549,18 +549,18 @@ extern "C" OPENPGL_DLLEXPORT const PGLSampleData* pglPathSegmentStorageGetSample
     return (PGLSampleData*)opglSamples;
 }
 
-extern "C" OPENPGL_DLLEXPORT int pglPathSegmentGetNumInvalidSamples(PGLPathSegmentStorage pathSegmentStorage)
+extern "C" OPENPGL_DLLEXPORT int pglPathSegmentGetNumZeroValueSamples(PGLPathSegmentStorage pathSegmentStorage)
 {
     auto *gPathSegmentStorage = (openpgl::PathSegmentDataStorage *)pathSegmentStorage;
-    return gPathSegmentStorage->getNumInvalidSamples();
+    return gPathSegmentStorage->getNumZeroValueSamples();
 }
 
-extern "C" OPENPGL_DLLEXPORT const PGLInvalidSampleData* pglPathSegmentStorageGetInvalidSamples(PGLPathSegmentStorage pathSegmentStorage, size_t &nSamples)
+extern "C" OPENPGL_DLLEXPORT const PGLZeroValueSampleData* pglPathSegmentStorageGetZeroValueSamples(PGLPathSegmentStorage pathSegmentStorage, size_t &nSamples)
 {
     auto *gPathSegmentStorage = (openpgl::PathSegmentDataStorage *)pathSegmentStorage;
-    const openpgl::InvalidSampleData* opglSamples = gPathSegmentStorage->getInvalidSamples();
-    nSamples = gPathSegmentStorage->getNumInvalidSamples();
-    return (PGLInvalidSampleData*)opglSamples;
+    const openpgl::ZeroValueSampleData* opglSamples = gPathSegmentStorage->getZeroValueSamples();
+    nSamples = gPathSegmentStorage->getNumZeroValueSamples();
+    return (PGLZeroValueSampleData*)opglSamples;
 }
 
 /*

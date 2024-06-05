@@ -191,7 +191,7 @@ public:
 
     void partialUpdateMixture(VMM &vmm, PartialFittingMask &mask, SufficientStatistics &previousStats, const SampleData* samples, const size_t numSamples, const Configuration &cfg, FittingStatistics &fitStats) const;
 
-    void updateFluenceEstimate(VMM &vmm, const SampleData* samples, const size_t numSamples, const size_t numInvalidSamples, const SampleStatistics &sampleStatistics) const;
+    void updateFluenceEstimate(VMM &vmm, const SampleData* samples, const size_t numSamples, const size_t numZeroValueSamples, const SampleStatistics &sampleStatistics) const;
     
     VMM VMMfromSufficientStatistics(const SufficientStatistics &suffStats, const Configuration &cfg) const;
 
@@ -1325,7 +1325,7 @@ void ParallaxAwareVonMisesFisherWeightedEMFactory< TVMMDistribution>::updateComp
 }
 
 template<class TVMMDistribution>
-void ParallaxAwareVonMisesFisherWeightedEMFactory<TVMMDistribution>::updateFluenceEstimate(VMM &vmm, const SampleData* samples, const size_t numSamples, const size_t numInvalidSamples, const SampleStatistics &sampleStatistics) const
+void ParallaxAwareVonMisesFisherWeightedEMFactory<TVMMDistribution>::updateFluenceEstimate(VMM &vmm, const SampleData* samples, const size_t numSamples, const size_t numZeroValueSamples, const SampleStatistics &sampleStatistics) const
 {
 #ifdef MC_ESTIMATE_INCOMING_RADIANCE   //calcualting fluence and the RGB per lob estiamtions using the MC samples 
     if(numSamples == 0)
@@ -1374,7 +1374,7 @@ void ParallaxAwareVonMisesFisherWeightedEMFactory<TVMMDistribution>::updateFluen
     }
 
     const float oldNumFluenceSamples = vmm._numFluenceSamples;
-    const float newNumFluenceSamples = (oldNumFluenceSamples + float(numSamples + numInvalidSamples));
+    const float newNumFluenceSamples = (oldNumFluenceSamples + float(numSamples + numZeroValueSamples));
 
 #ifdef OPENPGL_RADIANCE_CACHES
     if ( rem > 0 )

@@ -14,7 +14,7 @@
 namespace openpgl
 {
 
-    typedef PGLInvalidSampleData InvalidSampleData;
+    typedef PGLZeroValueSampleData ZeroValueSampleData;
     typedef PGLSampleData SampleData;
     enum SampleData_Flags
     {
@@ -91,7 +91,7 @@ namespace openpgl
                 (compA.direction.y    == compB.direction.y   &&  ( compA.direction.z < compB.direction.z  ))))))))))))))));
     }
 
-    inline bool InvalidSampleDataEqual(const PGLInvalidSampleData &compA,  const PGLInvalidSampleData &compB)
+    inline bool ZeroValueSampleDataEqual(const PGLZeroValueSampleData &compA,  const PGLZeroValueSampleData &compB)
     {
         if( compA.position.x != compB.position.x || 
             compA.position.y != compB.position.y ||
@@ -105,7 +105,7 @@ namespace openpgl
         return true;
     }
 
-    inline bool InvalidSampleDataLess(const PGLInvalidSampleData &compA,  const PGLInvalidSampleData &compB )
+    inline bool ZeroValueSampleDataLess(const PGLZeroValueSampleData &compA,  const PGLZeroValueSampleData &compB )
     {
         return    compA.position.x < compB.position.x    ||   (compA.position.x    == compB.position.x    
             &&  ( compA.position.y < compB.position.y    ||   (compA.position.y    == compB.position.y     

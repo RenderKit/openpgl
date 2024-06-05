@@ -125,7 +125,7 @@ public:
 
     void update(VMM &vmm, Statistics &stats, const SampleData* samples, const size_t numSamples, const Configuration &cfg, FittingStatistics &fitStats) const;
 
-    void updateFluenceEstimate(VMM &vmm, const SampleData* samples, const size_t numSamples, const size_t numInvalidSamples, const SampleStatistics &sampleStatistics) const;
+    void updateFluenceEstimate(VMM &vmm, const SampleData* samples, const size_t numSamples, const size_t numZeroValueSamples, const SampleStatistics &sampleStatistics) const;
 
     std::string toString() const{
         std::ostringstream oss;
@@ -465,10 +465,10 @@ void AdaptiveSplitAndMergeFactory<TVMMDistribution>::update(VMM &vmm, Statistics
 
 
 template<class TVMMDistribution>
-void AdaptiveSplitAndMergeFactory<TVMMDistribution>::updateFluenceEstimate(VMM &vmm, const SampleData* samples, const size_t numSamples, const size_t numInvalidSamples, const SampleStatistics &sampleStatistics) const
+void AdaptiveSplitAndMergeFactory<TVMMDistribution>::updateFluenceEstimate(VMM &vmm, const SampleData* samples, const size_t numSamples, const size_t numZeroValueSamples, const SampleStatistics &sampleStatistics) const
 {
     WeightedEMFactory factory = WeightedEMFactory();
-    factory.updateFluenceEstimate(vmm, samples, numSamples, numInvalidSamples, sampleStatistics);
+    factory.updateFluenceEstimate(vmm, samples, numSamples, numZeroValueSamples, sampleStatistics);
 }
 
 }

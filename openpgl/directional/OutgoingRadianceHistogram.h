@@ -21,11 +21,11 @@ struct OutgoingRadianceHistogram
 
     void addSample(openpgl::Vector3 dir, openpgl::Vector3 sample);
 
-    void addInvalidSample(openpgl::Vector3 dir);
+    void addZeroValueSample(openpgl::Vector3 dir);
 
     void decay(const float alpha);
 
-    void update(const SampleData* samples, const size_t numSamples, const InvalidSampleData* invalidSamples, const size_t numInvalidSamples);
+    void update(const SampleData* samples, const size_t numSamples, const ZeroValueSampleData* zeroValueSamples, const size_t numZeroValueSamples);
 
     void serialize(std::ostream& stream) const;
         
@@ -70,7 +70,7 @@ OPENPGL_INLINE_INTER void OutgoingRadianceHistogram::addSample(Vector3 dir, open
     data[histIdx] += (sample-data[histIdx]) / numSamples[histIdx];
 }
 
-OPENPGL_INLINE_INTER void OutgoingRadianceHistogram::addInvalidSample(Vector3 dir)
+OPENPGL_INLINE_INTER void OutgoingRadianceHistogram::addZeroValueSample(Vector3 dir)
 {
     const openpgl::Point2 p = dirToCanonical(dir);
     const int res = OPENPGL_HISTOGRAM_RESOLUTION;
@@ -102,19 +102,19 @@ OPENPGL_INLINE_INTER openpgl::Point2 OutgoingRadianceHistogram::dirToCanonical(c
 }
 
 
-OPENPGL_INLINE_INTER void OutgoingRadianceHistogram::update(const SampleData* samples, const size_t numSamples, const InvalidSampleData* invalidSamples, const size_t numInvalidSamples)
+OPENPGL_INLINE_INTER void OutgoingRadianceHistogram::update(const SampleData* samples, const size_t numSamples, const ZeroValueSampleData* zeroValueSamples, const size_t numZeroValueSamples)
 {
-    //std::cout << "OutgoingRadianceHistogram::update: numSamples = " << numSamples << "\t numInvalidSamples = " << numInvalidSamples << std::endl; 
+    //std::cout << "OutgoingRadianceHistogram::update: numSamples = " << numSamples << "\t numZeroValueSamples = " << numZeroValueSamples << std::endl; 
     for(int n = 0; n < numSamples; n++)
     {
         Vector3 dir = Vector3(samples[n].directionOut.x, samples[n].directionOut.y, samples[n].directionOut.z);
         Vector3 col = Vector3(samples[n].radianceOut.x, samples[n].radianceOut.y, samples[n].radianceOut.z);
         addSample(dir, col);
     }
-    for(int n = 0; n < numInvalidSamples; n++)
+    for(int n = 0; n < numZeroValueSamples; n++)
     {
-        Vector3 dir = Vector3(invalidSamples[n].directionOut.x, invalidSamples[n].directionOut.y, invalidSamples[n].directionOut.z);
-        addInvalidSample(dir);
+        Vector3 dir = Vector3(zeroValueSamples[n].directionOut.x, zeroValueSamples[n].directionOut.y, zeroValueSamples[n].directionOut.z);
+        addZeroValueSample(dir);
     }
 }
 

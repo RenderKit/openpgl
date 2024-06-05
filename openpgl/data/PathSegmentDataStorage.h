@@ -15,8 +15,8 @@ namespace openpgl
 {
 struct PathSegmentDataStorage
 {
-    PathSegmentDataStorage(bool trackInvalidSamples = false){
-        m_track_invalid_samples = trackInvalidSamples;
+    PathSegmentDataStorage(bool trackZeroValueSamples = false){
+        m_track_zero_value_samples = trackZeroValueSamples;
     }
 
     PathSegmentDataStorage(const PathSegmentDataStorage&) = delete;
@@ -31,8 +31,8 @@ struct PathSegmentDataStorage
         if(m_sampleStorage)
             delete[] m_sampleStorage;
 
-        if(m_invalidSampleStorage)
-            delete[] m_invalidSampleStorage;
+        if(m_zeroValueSampleStorage)
+            delete[] m_zeroValueSampleStorage;
 #endif
     };
 
@@ -47,15 +47,15 @@ private:
     int m_sample_idx = {-1};
     int m_max_sample_size = {0};
 
-    bool m_track_invalid_samples {false};
-    InvalidSampleData* m_invalidSampleStorage {nullptr};
-    int m_invalid_sample_idx = {-1};
-    int m_max_invalid_sample_size = {0};
+    bool m_track_zero_value_samples {false};
+    ZeroValueSampleData* m_zeroValueSampleStorage {nullptr};
+    int m_zero_value_sample_idx = {-1};
+    int m_max_zero_value_sample_size = {0};
 
 #else
     std::vector<PathSegmentData> m_segmentStorage;  
     std::vector<SampleData> m_sampleStorage;
-    std::vector<InvalidSampleData> m_invalidSampleStorage;
+    std::vector<ZeroValueSampleData> m_zeroValueSampleStorage;
 #endif
 public:
     void reserve(const size_t &size)
@@ -77,19 +77,19 @@ public:
         m_sample_idx = -1;
         m_max_sample_size = size;
 
-        if(m_invalidSampleStorage)
-            delete[] m_invalidSampleStorage;
+        if(m_zeroValueSampleStorage)
+            delete[] m_zeroValueSampleStorage;
 
-        m_invalidSampleStorage = new InvalidSampleData[size];
-        m_invalid_sample_idx = -1;
-        m_max_invalid_sample_size = size;
+        m_zeroValueSampleStorage = new ZeroValueSampleData[size];
+        m_zero_value_sample_idx = -1;
+        m_max_zero_value_sample_size = size;
 
 #else
         if(m_segmentStorage.size() == size)
             return;
         m_segmentStorage.reserve(size);
         m_sampleStorage.reserve(size);
-        m_invalidSampleStorage.reserve(size);
+        m_zeroValueSampleStorage.reserve(size);
 #endif
     }
 
@@ -108,13 +108,13 @@ public:
         //std::cout << "PathSegmentDataStorage::clear: " << std::endl;
         m_seg_idx = -1;
         m_sample_idx = -1;
-        m_invalid_sample_idx = -1;
+        m_zero_value_sample_idx = -1;
 #else
         //m_segmentStorage.clear();
         //m_sampleStorage.clear();
         m_segmentStorage.resize(0);
         m_sampleStorage.resize(0);
-        m_invalidSampleStorage.resize(0);
+        m_zeroValueSampleStorage.resize(0);
 #endif      
     }
 
@@ -338,9 +338,9 @@ public:
 #endif
                     }
                 }
-                else if(m_track_invalid_samples)
+                else if(m_track_zero_value_samples)
                 {
-                    InvalidSampleData isd;
+                    ZeroValueSampleData isd;
                     isd.position.x = pos[0];
                     isd.position.y = pos[1];
                     isd.position.z = pos[2];
@@ -354,13 +354,13 @@ public:
 #endif
                     isd.volume = insideVolume;
 #if defined(OPENPGL_PATHSEGMENT_STORAGE_USE_ARRAY)
-                    if(m_invalid_sample_idx+1 <= m_max_invalid_sample_size)
+                    if(m_zero_value_sample_idx+1 <= m_max_zero_value_sample_size)
                     {
-                        m_invalid_sample_idx++;
-                        m_invalidSampleStorage[m_invalid_sample_idx] = isd;
+                        m_zero_value_sample_idx++;
+                        m_zeroValueSampleStorage[m_zero_value_sample_idx] = isd;
                     }
 #else
-                    m_invalidSampleStorage.emplace_back(isd);
+                    m_zeroValueSampleStorage.emplace_back(isd);
 #endif
                 }
 
@@ -573,32 +573,32 @@ public:
 #else
         sampleDataStorage->addSamples(m_sampleStorage.data(), m_sampleData.size());
 #endif
-        if(m_track_invalid_samples)
+        if(m_track_zero_value_samples)
         {
 #if defined(OPENPGL_PATHSEGMENT_STORAGE_USE_ARRAY)
-            sampleDataStorage->addInvalidSamples(m_invalidSampleStorage, m_invalid_sample_idx+1);
+            sampleDataStorage->addZeroValueSamples(m_zeroValueSampleStorage, m_zero_value_sample_idx+1);
 #else
-            sampleDataStorage->addInvalidSamples(m_invalidSampleStorage.data(), m_invalidSampleStorage.size());
+            sampleDataStorage->addZeroValueSamples(m_zeroValueSampleStorage.data(), m_zeroValueSampleStorage.size());
 #endif
         }
         clear();
     }
 
-    const InvalidSampleData* getInvalidSamples()const
+    const ZeroValueSampleData* getZeroValueSamples()const
     {
 #if defined(OPENPGL_PATHSEGMENT_STORAGE_USE_ARRAY)
-        return m_invalidSampleStorage;
+        return m_zeroValueSampleStorage;
 #else
-        return m_invalidSampleStorage.data();
+        return m_zeroValueSampleStorage.data();
 #endif
     }
 
-    int getNumInvalidSamples() const
+    int getNumZeroValueSamples() const
     {
 #if defined(OPENPGL_PATHSEGMENT_STORAGE_USE_ARRAY)
-        return m_invalid_sample_idx + 1;
+        return m_zero_value_sample_idx + 1;
 #else
-        return m_invalidSampleStorage.size();
+        return m_zeroValueSampleStorage.size();
 #endif
     }
 

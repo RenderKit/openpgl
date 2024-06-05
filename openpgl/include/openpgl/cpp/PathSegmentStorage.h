@@ -22,7 +22,7 @@ namespace cpp
 
 struct PathSegmentStorage
 {
-    PathSegmentStorage(bool trackInvalidSamples = false);
+    PathSegmentStorage(bool trackZeroValueSamples = false);
     ~PathSegmentStorage();
 
     PathSegmentStorage(const PathSegmentStorage&) = delete;
@@ -68,12 +68,12 @@ struct PathSegmentStorage
     const SampleData* GetSamples(size_t &nSamples);
 
     /**
-     * @brief Returns a pointer to the invalid samples generated from the path segments.
+     * @brief Returns a pointer to the zero value samples generated from the path segments.
      * 
      * @param nSamples The size of the array of the returned pointer.
      * @return const SampleData* The pointer to the sample data array.
      */
-    const InvalidSampleData* GetInvalidSamples(size_t &nSamples);
+    const ZeroValueSampleData* GetZeroValueSamples(size_t &nSamples);
 
     /**
      * @brief Adds a new PathSegment to the end of the path segment list and returns a pointer to it.  
@@ -130,12 +130,12 @@ struct PathSegmentStorage
     int GetNumSamples() const;
 
     /**
-     * @brief Gets the number of invalid samples generated 
+     * @brief Gets the number of zero value samples generated 
      * from the path segments.
      * 
      * @return int number of generated or added samples.
      */
-    int GetNumInvalidSamples() const;
+    int GetNumZeroValueSamples() const;
 
     /**
      * @brief Validates the PathSegments as well as the generated SampleData.
@@ -165,9 +165,9 @@ struct PathSegmentStorage
 /// Implementation
 ////////////////////////////////////////////////////////////
 
-OPENPGL_INLINE PathSegmentStorage::PathSegmentStorage(bool trackInvalidSamples)
+OPENPGL_INLINE PathSegmentStorage::PathSegmentStorage(bool trackZeroValueSamples)
 { 
-    m_pathSegmentStorageHandle = pglNewPathSegmentStorage(trackInvalidSamples);
+    m_pathSegmentStorageHandle = pglNewPathSegmentStorage(trackZeroValueSamples);
 }
 
 OPENPGL_INLINE PathSegmentStorage::~PathSegmentStorage()
@@ -250,16 +250,16 @@ OPENPGL_INLINE int PathSegmentStorage::GetNumSamples() const
     return pglPathSegmentGetNumSamples(m_pathSegmentStorageHandle);
 }
 
-OPENPGL_INLINE int PathSegmentStorage::GetNumInvalidSamples() const
+OPENPGL_INLINE int PathSegmentStorage::GetNumZeroValueSamples() const
 {
     OPENPGL_ASSERT(m_pathSegmentStorageHandle);
-    return pglPathSegmentGetNumInvalidSamples(m_pathSegmentStorageHandle);
+    return pglPathSegmentGetNumZeroValueSamples(m_pathSegmentStorageHandle);
 }
 
-OPENPGL_INLINE const InvalidSampleData* PathSegmentStorage::GetInvalidSamples(size_t &nSamples)
+OPENPGL_INLINE const ZeroValueSampleData* PathSegmentStorage::GetZeroValueSamples(size_t &nSamples)
 {
     OPENPGL_ASSERT(m_pathSegmentStorageHandle);
-    return pglPathSegmentStorageGetInvalidSamples(m_pathSegmentStorageHandle, nSamples);
+    return pglPathSegmentStorageGetZeroValueSamples(m_pathSegmentStorageHandle, nSamples);
 }
 
 OPENPGL_INLINE bool PathSegmentStorage::Validate() const

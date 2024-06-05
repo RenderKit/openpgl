@@ -18,10 +18,10 @@ namespace openpgl
 struct SampleDataStorage
 {
     typedef tbb::concurrent_vector<SampleData> SampleDataContainer;
-    typedef tbb::concurrent_vector<InvalidSampleData> InvalidSampleDataContainer;
+    typedef tbb::concurrent_vector<ZeroValueSampleData> ZeroValueSampleDataContainer;
     struct SampleContainer{
         SampleDataContainer samples;
-        InvalidSampleDataContainer invalidSamples;
+        ZeroValueSampleDataContainer zeroValueSamples;
     };
     
     SampleContainer m_surfaceContainer;
@@ -94,23 +94,23 @@ struct SampleDataStorage
         }
     }
 
-    inline void addInvalidSample(const InvalidSampleData& sample)
+    inline void addZeroValueSample(const ZeroValueSampleData& sample)
     {
         if(sample.volume)
         {
-            m_volumeContainer.invalidSamples.push_back(sample);
+            m_volumeContainer.zeroValueSamples.push_back(sample);
         }
         else
         {
-            m_surfaceContainer.invalidSamples.push_back(sample);
+            m_surfaceContainer.zeroValueSamples.push_back(sample);
         }
     }
 
-    inline void addInvalidSamples(const InvalidSampleData* samples, int nSamples)
+    inline void addZeroValueSamples(const ZeroValueSampleData* samples, int nSamples)
     {
         for (int i = 0; i<nSamples; i++)
         {
-            addInvalidSample(samples[i]);
+            addZeroValueSample(samples[i]);
         }
     }
 
@@ -183,68 +183,68 @@ struct SampleDataStorage
 
     inline void reserveInvalidSurface(const size_t &size)
     {
-        m_surfaceContainer.invalidSamples.reserve(size);
+        m_surfaceContainer.zeroValueSamples.reserve(size);
     }
 
     inline size_t sizeInvalidSurface() const
     {
-        return m_surfaceContainer.invalidSamples.size();
+        return m_surfaceContainer.zeroValueSamples.size();
     }
 
-    inline InvalidSampleData getInvalidSampleSurface(const int idx) const
+    inline ZeroValueSampleData getZeroValueSampleSurface(const int idx) const
     {
         OPENPGL_ASSERT(idx >= 0);
-        OPENPGL_ASSERT(idx < m_surfaceContainer.invalidSamples.size());
+        OPENPGL_ASSERT(idx < m_surfaceContainer.zeroValueSamples.size());
         
-        InvalidSampleData isd;
-        if(idx < m_surfaceContainer.invalidSamples.size())
+        ZeroValueSampleData isd;
+        if(idx < m_surfaceContainer.zeroValueSamples.size())
         {
-            isd = m_surfaceContainer.invalidSamples[idx];
+            isd = m_surfaceContainer.zeroValueSamples[idx];
         }
         return isd;
     }
 
     inline void clearInvalidSurface()
     {
-        m_surfaceContainer.invalidSamples.clear();
+        m_surfaceContainer.zeroValueSamples.clear();
     }
 
     void sortInvalidSurface()
     {
-        std::sort(m_surfaceContainer.invalidSamples.begin(), m_surfaceContainer.invalidSamples.end(), InvalidSampleDataLess);
+        std::sort(m_surfaceContainer.zeroValueSamples.begin(), m_surfaceContainer.zeroValueSamples.end(), ZeroValueSampleDataLess);
     }
 
     inline void reserveInvalidVolume(const size_t &size)
     {
-        m_volumeContainer.invalidSamples.reserve(size);
+        m_volumeContainer.zeroValueSamples.reserve(size);
     }
 
     inline size_t sizeInvalidVolume() const
     {
-        return m_volumeContainer.invalidSamples.size();
+        return m_volumeContainer.zeroValueSamples.size();
     }
 
-    inline InvalidSampleData getInvalidSampleVolume(const int idx) const
+    inline ZeroValueSampleData getZeroValueSampleVolume(const int idx) const
     {
         OPENPGL_ASSERT(idx >= 0);
-        OPENPGL_ASSERT(idx < m_volumeContainer.invalidSamples.size());
+        OPENPGL_ASSERT(idx < m_volumeContainer.zeroValueSamples.size());
 
-        InvalidSampleData isd;
-        if(idx < m_volumeContainer.invalidSamples.size())
+        ZeroValueSampleData isd;
+        if(idx < m_volumeContainer.zeroValueSamples.size())
         {
-            isd = m_volumeContainer.invalidSamples[idx];
+            isd = m_volumeContainer.zeroValueSamples[idx];
         }
         return isd;
     }
 
     inline void clearInvalidVolume()
     {
-        m_volumeContainer.invalidSamples.clear();
+        m_volumeContainer.zeroValueSamples.clear();
     }
 
     void sortInvalidVolume()
     {
-        std::sort(m_volumeContainer.invalidSamples.begin(), m_volumeContainer.invalidSamples.end(), InvalidSampleDataLess);
+        std::sort(m_volumeContainer.zeroValueSamples.begin(), m_volumeContainer.zeroValueSamples.end(), ZeroValueSampleDataLess);
     }
 
     void exportSurfaceSamplesToObj(std::string objFileName, bool pointsOnly = true)
@@ -282,20 +282,20 @@ struct SampleDataStorage
             stream.write(reinterpret_cast<const char*>(&dsd), sizeof(SampleData));
         }
 
-        size_t num_invalid_surface_samples = m_surfaceContainer.invalidSamples.size();
-        stream.write(reinterpret_cast<const char*>(&num_invalid_surface_samples), sizeof(size_t));
-        for ( size_t n = 0; n < num_invalid_surface_samples; n++)
+        size_t num_zero_value_surface_samples = m_surfaceContainer.zeroValueSamples.size();
+        stream.write(reinterpret_cast<const char*>(&num_zero_value_surface_samples), sizeof(size_t));
+        for ( size_t n = 0; n < num_zero_value_surface_samples; n++)
         {
-            InvalidSampleData isd = m_surfaceContainer.invalidSamples[n];
-            stream.write(reinterpret_cast<const char*>(&isd), sizeof(InvalidSampleData));
+            ZeroValueSampleData isd = m_surfaceContainer.zeroValueSamples[n];
+            stream.write(reinterpret_cast<const char*>(&isd), sizeof(ZeroValueSampleData));
         }
 
-        size_t num_invalid_volume_samples = m_volumeContainer.invalidSamples.size();
-        stream.write(reinterpret_cast<const char*>(&num_invalid_volume_samples), sizeof(size_t));
-        for ( size_t n = 0; n < num_invalid_volume_samples; n++)
+        size_t num_zero_value_volume_samples = m_volumeContainer.zeroValueSamples.size();
+        stream.write(reinterpret_cast<const char*>(&num_zero_value_volume_samples), sizeof(size_t));
+        for ( size_t n = 0; n < num_zero_value_volume_samples; n++)
         {
-            InvalidSampleData isd = m_volumeContainer.invalidSamples[n];
-            stream.write(reinterpret_cast<const char*>(&isd), sizeof(InvalidSampleData));
+            ZeroValueSampleData isd = m_volumeContainer.zeroValueSamples[n];
+            stream.write(reinterpret_cast<const char*>(&isd), sizeof(ZeroValueSampleData));
         }
     }
 
@@ -321,24 +321,24 @@ struct SampleDataStorage
             m_volumeContainer.samples.push_back(dsd);
         }
 
-        size_t num_invalid_surface_samples;
-        stream.read(reinterpret_cast<char*>(&num_invalid_surface_samples), sizeof(size_t));
-        m_surfaceContainer.invalidSamples.reserve(num_invalid_surface_samples);
-        for ( size_t n = 0; n < num_invalid_surface_samples; n++)
+        size_t num_zero_value_surface_samples;
+        stream.read(reinterpret_cast<char*>(&num_zero_value_surface_samples), sizeof(size_t));
+        m_surfaceContainer.zeroValueSamples.reserve(num_zero_value_surface_samples);
+        for ( size_t n = 0; n < num_zero_value_surface_samples; n++)
         {
-            InvalidSampleData isd;
-            stream.read(reinterpret_cast<char*>(&isd), sizeof(InvalidSampleData));
-            m_surfaceContainer.invalidSamples.push_back(isd);
+            ZeroValueSampleData isd;
+            stream.read(reinterpret_cast<char*>(&isd), sizeof(ZeroValueSampleData));
+            m_surfaceContainer.zeroValueSamples.push_back(isd);
         }
 
-        size_t num_invalid_volume_samples;
-        stream.read(reinterpret_cast<char*>(&num_invalid_volume_samples), sizeof(size_t));
-        m_volumeContainer.invalidSamples.reserve(num_invalid_volume_samples);
-        for ( size_t n = 0; n < num_invalid_volume_samples; n++)
+        size_t num_zero_value_volume_samples;
+        stream.read(reinterpret_cast<char*>(&num_zero_value_volume_samples), sizeof(size_t));
+        m_volumeContainer.zeroValueSamples.reserve(num_zero_value_volume_samples);
+        for ( size_t n = 0; n < num_zero_value_volume_samples; n++)
         {
-            InvalidSampleData isd;
-            stream.read(reinterpret_cast<char*>(&isd), sizeof(InvalidSampleData));
-            m_volumeContainer.invalidSamples.push_back(isd);
+            ZeroValueSampleData isd;
+            stream.read(reinterpret_cast<char*>(&isd), sizeof(ZeroValueSampleData));
+            m_volumeContainer.zeroValueSamples.push_back(isd);
         }
     }
 
@@ -358,14 +358,14 @@ struct SampleDataStorage
         std::vector<SampleData> surfaceSampleDataA;
         std::vector<SampleData> volumeSampleDataA;
 
-        std::vector<InvalidSampleData> surfaceInvalidSampleDataA;
-        std::vector<InvalidSampleData> volumeInvalidSampleDataA;
+        std::vector<ZeroValueSampleData> surfaceZeroValueSampleDataA;
+        std::vector<ZeroValueSampleData> volumeZeroValueSampleDataA;
 
         std::vector<SampleData> surfaceSampleDataB;
         std::vector<SampleData> volumeSampleDataB;
 
-        std::vector<InvalidSampleData> surfaceInvalidSampleDataB;
-        std::vector<InvalidSampleData> volumeInvalidSampleDataB;
+        std::vector<ZeroValueSampleData> surfaceZeroValueSampleDataB;
+        std::vector<ZeroValueSampleData> volumeZeroValueSampleDataB;
 
         surfaceSampleDataA.resize(m_surfaceContainer.samples.size());        
         volumeSampleDataA.resize(m_volumeContainer.samples.size());
@@ -380,18 +380,18 @@ struct SampleDataStorage
         }
         tbb::parallel_sort(volumeSampleDataA.begin(), volumeSampleDataA.end(), SampleDataLess);
 
-        surfaceInvalidSampleDataA.resize(m_surfaceContainer.invalidSamples.size());        
-        volumeInvalidSampleDataA.resize(m_volumeContainer.invalidSamples.size());
+        surfaceZeroValueSampleDataA.resize(m_surfaceContainer.zeroValueSamples.size());        
+        volumeZeroValueSampleDataA.resize(m_volumeContainer.zeroValueSamples.size());
 
-        for (int i = 0; i < m_surfaceContainer.invalidSamples.size(); i++){
-            surfaceInvalidSampleDataA[i] = m_surfaceContainer.invalidSamples[i];
+        for (int i = 0; i < m_surfaceContainer.zeroValueSamples.size(); i++){
+            surfaceZeroValueSampleDataA[i] = m_surfaceContainer.zeroValueSamples[i];
         }
-        tbb::parallel_sort(surfaceInvalidSampleDataA.begin(), surfaceInvalidSampleDataA.end(), InvalidSampleDataLess);
+        tbb::parallel_sort(surfaceZeroValueSampleDataA.begin(), surfaceZeroValueSampleDataA.end(), ZeroValueSampleDataLess);
 
-        for (int i = 0; i < m_volumeContainer.invalidSamples.size(); i++){
-            volumeInvalidSampleDataA[i] = m_volumeContainer.invalidSamples[i];
+        for (int i = 0; i < m_volumeContainer.zeroValueSamples.size(); i++){
+            volumeZeroValueSampleDataA[i] = m_volumeContainer.zeroValueSamples[i];
         }
-        tbb::parallel_sort(volumeInvalidSampleDataA.begin(), volumeInvalidSampleDataA.end(), InvalidSampleDataLess);
+        tbb::parallel_sort(volumeZeroValueSampleDataA.begin(), volumeZeroValueSampleDataA.end(), ZeroValueSampleDataLess);
 
         surfaceSampleDataB.resize(b.m_surfaceContainer.samples.size());        
         volumeSampleDataB.resize(b.m_volumeContainer.samples.size());
@@ -406,18 +406,18 @@ struct SampleDataStorage
         }
         tbb::parallel_sort(volumeSampleDataB.begin(), volumeSampleDataB.end(), SampleDataLess); 
 
-        surfaceInvalidSampleDataB.resize(b.m_surfaceContainer.invalidSamples.size());        
-        volumeInvalidSampleDataB.resize(b.m_volumeContainer.invalidSamples.size());
+        surfaceZeroValueSampleDataB.resize(b.m_surfaceContainer.zeroValueSamples.size());        
+        volumeZeroValueSampleDataB.resize(b.m_volumeContainer.zeroValueSamples.size());
 
-        for (int i = 0; i < b.m_surfaceContainer.invalidSamples.size(); i++){
-            surfaceInvalidSampleDataB[i] = b.m_surfaceContainer.invalidSamples[i];
+        for (int i = 0; i < b.m_surfaceContainer.zeroValueSamples.size(); i++){
+            surfaceZeroValueSampleDataB[i] = b.m_surfaceContainer.zeroValueSamples[i];
         }
-        tbb::parallel_sort(surfaceInvalidSampleDataB.begin(), surfaceInvalidSampleDataB.end(), InvalidSampleDataLess);
+        tbb::parallel_sort(surfaceZeroValueSampleDataB.begin(), surfaceZeroValueSampleDataB.end(), ZeroValueSampleDataLess);
 
-        for (int i = 0; i < b.m_volumeContainer.invalidSamples.size(); i++){
-            volumeInvalidSampleDataB[i] = b.m_volumeContainer.invalidSamples[i];
+        for (int i = 0; i < b.m_volumeContainer.zeroValueSamples.size(); i++){
+            volumeZeroValueSampleDataB[i] = b.m_volumeContainer.zeroValueSamples[i];
         }
-        tbb::parallel_sort(volumeInvalidSampleDataB.begin(), volumeInvalidSampleDataB.end(), InvalidSampleDataLess);
+        tbb::parallel_sort(volumeZeroValueSampleDataB.begin(), volumeZeroValueSampleDataB.end(), ZeroValueSampleDataLess);
 
         bool equal = true;
         int sizeB = surfaceSampleDataB.size();
@@ -427,9 +427,9 @@ struct SampleDataStorage
             }
         }
 
-        sizeB = surfaceInvalidSampleDataB.size();
-        for (int i = 0; i < surfaceInvalidSampleDataA.size(); i++) {
-            if( i< sizeB && !InvalidSampleDataEqual(surfaceInvalidSampleDataA[i], surfaceInvalidSampleDataB[i])){
+        sizeB = surfaceZeroValueSampleDataB.size();
+        for (int i = 0; i < surfaceZeroValueSampleDataA.size(); i++) {
+            if( i< sizeB && !ZeroValueSampleDataEqual(surfaceZeroValueSampleDataA[i], surfaceZeroValueSampleDataB[i])){
                 equal = false;
             }
         }
@@ -441,9 +441,9 @@ struct SampleDataStorage
             }
         }
 
-        sizeB = volumeInvalidSampleDataB.size();
-        for (int i = 0; i < volumeInvalidSampleDataA.size(); i++) {
-            if( i< sizeB && !InvalidSampleDataEqual(volumeInvalidSampleDataA[i], volumeInvalidSampleDataB[i])){
+        sizeB = volumeZeroValueSampleDataB.size();
+        for (int i = 0; i < volumeZeroValueSampleDataA.size(); i++) {
+            if( i< sizeB && !ZeroValueSampleDataEqual(volumeZeroValueSampleDataA[i], volumeZeroValueSampleDataB[i])){
                 equal = false;
             }
         }

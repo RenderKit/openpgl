@@ -14,7 +14,7 @@ namespace openpgl
         Point3 mean{0.0f};
         Vector3 sampleVariance {0.0f};
         float numSamples {0};
-        float numInvalidSamples {0.0f};
+        float numZeroValueSamples {0.0f};
 
         BBox sampleBounds{openpgl::Vector3(std::numeric_limits<float>::max()), openpgl::Vector3(-std::numeric_limits<float>::max())};
 
@@ -23,7 +23,7 @@ namespace openpgl
             mean = Point3(0.0f);
             sampleVariance = Vector3(0.0f);
             numSamples = 0.0f;
-            numInvalidSamples = 0.0f;
+            numZeroValueSamples = 0.0f;
             sampleBounds.lower = openpgl::Vector3(std::numeric_limits<float>::max());
             sampleBounds.upper = openpgl::Vector3(-std::numeric_limits<float>::max());
         }
@@ -60,7 +60,7 @@ namespace openpgl
         {
             numSamples *= a;
             sampleVariance *= a;
-            numInvalidSamples *= a;
+            numZeroValueSamples *= a;
         }
 
         inline float getNumSamples() const
@@ -68,14 +68,14 @@ namespace openpgl
             return numSamples;
         }
 
-        inline void addNumInvalidSamples( const int numInvalidSamples)
+        inline void addNumZeroValueSamples( const int numZeroValueSamples)
         {
-            this->numInvalidSamples += numInvalidSamples;
+            this->numZeroValueSamples += numZeroValueSamples;
         }
 
-        inline float getNumInvalidSamples() const
+        inline float getNumZeroValueSamples() const
         {
-            return numInvalidSamples;
+            return numZeroValueSamples;
         }
 
         void split(const uint8_t &splitDim, const float &splitPos, const float &decay, const bool &splitLower)
@@ -107,7 +107,7 @@ namespace openpgl
                 }
 
                 numSamples *= decay;
-                numInvalidSamples *= decay;
+                numZeroValueSamples *= decay;
                 sampleVariance *= decay;
             }
         }
@@ -130,14 +130,14 @@ namespace openpgl
             sampleVariance = (sampleVarianceA + numSamplesA*meanA*meanA + sampleVarianceB + numSamplesB*meanB*meanB) - numSamples * mean*mean;
             sampleBounds.extend(b.sampleBounds);
 
-            numInvalidSamples += b.numInvalidSamples;
+            numZeroValueSamples += b.numZeroValueSamples;
         }
 
         inline bool isValid() const
         {
             bool valid = true;
             valid = valid && numSamples >=0.0f;
-            valid = valid && numInvalidSamples >=0.0f;
+            valid = valid && numZeroValueSamples >=0.0f;
 
             valid = valid && embree::isvalid(mean.x);
             valid = valid && embree::isvalid(mean.y);
@@ -163,7 +163,7 @@ namespace openpgl
             ss.precision(5);
             ss << "SampleStatistics:" << std::endl;
             ss << "numSamples: " << numSamples << std::endl;
-            ss << "numInvalidSamples: " << numInvalidSamples << std::endl;
+            ss << "numZeroValueSamples: " << numZeroValueSamples << std::endl;
             ss << "mean: " << mean[0] << ",\t"<< mean[1] << ",\t"<< mean[2]  << std::endl;
             ss << "variance: " << variance[0] << ",\t"<< variance[1] << ",\t"<< variance[2]  << std::endl;
             ss << "sampleBounds: [" << sampleBounds.lower[0] << ",\t"<< sampleBounds.lower[1] << ",\t"<< sampleBounds.lower[2] << "] \t [" << sampleBounds.upper[0] << ",\t"<< sampleBounds.upper[1] << ",\t"<< sampleBounds.upper[2] << "] "<< std::endl;
@@ -177,7 +177,7 @@ namespace openpgl
             stream.write(reinterpret_cast<const char*>(&mean), sizeof(Point3));
             stream.write(reinterpret_cast<const char*>(&sampleVariance), sizeof(Vector3));
             stream.write(reinterpret_cast<const char*>(&numSamples), sizeof(float));
-            stream.write(reinterpret_cast<const char*>(&numInvalidSamples), sizeof(float));
+            stream.write(reinterpret_cast<const char*>(&numZeroValueSamples), sizeof(float));
             stream.write(reinterpret_cast<const char*>(&sampleBounds), sizeof(BBox));
         }
 
@@ -186,7 +186,7 @@ namespace openpgl
             stream.read(reinterpret_cast<char*>(&mean), sizeof(Point3));
             stream.read(reinterpret_cast<char*>(&sampleVariance), sizeof(Vector3));
             stream.read(reinterpret_cast<char*>(&numSamples), sizeof(float));
-            stream.read(reinterpret_cast<char*>(&numInvalidSamples), sizeof(float));
+            stream.read(reinterpret_cast<char*>(&numZeroValueSamples), sizeof(float));
             stream.read(reinterpret_cast<char*>(&sampleBounds), sizeof(BBox));
         }
 

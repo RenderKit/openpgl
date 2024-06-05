@@ -61,7 +61,7 @@ struct PGLSampleData
 };
 
 
-struct PGLInvalidSampleData
+struct PGLZeroValueSampleData
 {
     /// the position of the invalid sample
     pgl_point3f position;

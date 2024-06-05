@@ -15,6 +15,6 @@ namespace openpgl
          */
         typedef PGLSampleData SampleData;
 
-        typedef PGLInvalidSampleData InvalidSampleData;
+        typedef PGLZeroValueSampleData ZeroValueSampleData;
     }
 }

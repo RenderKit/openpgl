@@ -26,7 +26,7 @@ namespace openpgl
             return m_end - m_begin;
         }
 
-        inline size_t sizeInvalidSamples() const
+        inline size_t sizeZeroValueSamples() const
         {
             OPENPGL_ASSERT(int(m_is_end) - int(m_is_begin) >= 0);
             return m_is_end - m_is_begin;

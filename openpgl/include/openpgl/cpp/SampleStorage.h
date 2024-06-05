@@ -50,7 +50,7 @@ struct SampleStorage
      * 
      * @param sample 
      */
-    void AddSample(SampleData& sample);
+    void AddSample(const SampleData& sample);
 
     /**
      * @brief Adds an array of samples to the storage container.
@@ -61,19 +61,19 @@ struct SampleStorage
     void AddSamples(const SampleData* samples, size_t numSamples);
 
     /**
-     * @brief Add an of invalid sample the storage container.
+     * @brief Add an of zero value sample the storage container.
      * 
      * @param samples Pointer to the beginning of the SampleData array.
      */
-    void AddInvalidSample(const InvalidSampleData& sample);
+    void AddZeroValueSample(const ZeroValueSampleData& sample);
 
     /**
-     * @brief Adds an array of invalid samples to the storage container.
+     * @brief Adds an array of zero value samples to the storage container.
      * 
      * @param samples Pointer to the beginning of the SampleData array.
      * @param numSamples Number of SampleData elements stored in the array.
      */
-    void AddInvalidSamples(const InvalidSampleData* samples, size_t numSamples);
+    void AddZeroValueSamples(const ZeroValueSampleData* samples, size_t numSamples);
 
     /**
      * @brief Reserves initial space/memory for the sample storage container.
@@ -99,10 +99,10 @@ struct SampleStorage
     /// Returns the number of volume samples currently stored inside the storage container.
     size_t GetSizeVolume() const;
 
-    /// Returns the number of invalid surface samples currently stored inside the storage container.
+    /// Returns the number of zero value surface samples currently stored inside the storage container.
     size_t GetSizeInvalidSurface() const;
 
-    /// Returns the number of invalid volume samples currently stored inside the storage container.
+    /// Returns the number of zero value volume samples currently stored inside the storage container.
     size_t GetSizeInvalidVolume() const;
 
     /**
@@ -163,7 +163,7 @@ OPENPGL_INLINE bool SampleStorage::Store(const std::string& sampleStorageFileNam
 }
 
     
-OPENPGL_INLINE void SampleStorage::AddSample(SampleData& sample)
+OPENPGL_INLINE void SampleStorage::AddSample(const SampleData& sample)
 {
     OPENPGL_ASSERT(m_sampleStorageHandle);
     pglSampleStorageAddSample(m_sampleStorageHandle, sample);
@@ -175,16 +175,16 @@ OPENPGL_INLINE void SampleStorage::AddSamples(const SampleData* samples, size_t 
     pglSampleStorageAddSamples(m_sampleStorageHandle, samples, numSamples);
 }
 
-OPENPGL_INLINE void SampleStorage::AddInvalidSample(InvalidSampleData& sample)
+OPENPGL_INLINE void SampleStorage::AddZeroValueSample(const ZeroValueSampleData& sample)
 {
     OPENPGL_ASSERT(m_sampleStorageHandle);
-    pglSampleStorageAddInvalidSample(m_sampleStorageHandle, sample);
+    pglSampleStorageAddZeroValueSample(m_sampleStorageHandle, sample);
 }
 
-OPENPGL_INLINE void SampleStorage::AddInvalidSamples(const InvalidSampleData* samples, size_t numSamples)
+OPENPGL_INLINE void SampleStorage::AddZeroValueSamples(const ZeroValueSampleData* samples, size_t numSamples)
 {
     OPENPGL_ASSERT(m_sampleStorageHandle);
-    pglSampleStorageAddInvalidSamples(m_sampleStorageHandle, samples, numSamples);
+    pglSampleStorageAddZeroValueSamples(m_sampleStorageHandle, samples, numSamples);
 }
 
 

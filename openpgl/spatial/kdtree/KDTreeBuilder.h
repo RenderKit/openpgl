@@ -30,7 +30,7 @@
 namespace openpgl
 {
 
-template<typename TRegion, typename TSamplesContainer, typename TInvalidSamplesContainer>
+template<typename TRegion, typename TSamplesContainer, typename TZeroValueSamplesContainer>
 struct KDTreePartitionBuilder
 {
     const static PGL_SPATIAL_STRUCTURE_TYPE SPATIAL_STRUCTURE_TYPE = PGL_SPATIAL_STRUCTURE_KDTREE;
@@ -118,7 +118,7 @@ struct KDTreePartitionBuilder
     }
 
 
-void insertTree(KDTree &kdTree, TInvalidSamplesContainer &samples, tbb::concurrent_vector< std::pair<TRegion, Range> > &dataStorage) const
+void insertTree(KDTree &kdTree, TZeroValueSamplesContainer &samples, tbb::concurrent_vector< std::pair<TRegion, Range> > &dataStorage) const
     {
         KDNode &root = kdTree.getRoot();
 
@@ -364,7 +364,7 @@ private:
         );
     }
 
-    void insertTreeNode(KDTree *kdTree, KDNode &node, size_t depth, TInvalidSamplesContainer &samples, const Range sampleRange, tbb::concurrent_vector< std::pair<TRegion, Range> > *dataStorage) const
+    void insertTreeNode(KDTree *kdTree, KDNode &node, size_t depth, TZeroValueSamplesContainer &samples, const Range sampleRange, tbb::concurrent_vector< std::pair<TRegion, Range> > *dataStorage) const
     {
         if(sampleRange.size() == 0)
         {
@@ -380,8 +380,8 @@ private:
         {
             uint32_t dataIdx = node.getDataIdx();
             std::pair<TRegion, Range> &regionAndRangeData = dataStorage->operator[](dataIdx);
-            regionAndRangeData.first.sampleStatistics.addNumInvalidSamples(sampleRange.size());
-            regionAndRangeData.first.numInvalidSamples = sampleRange.size();
+            regionAndRangeData.first.sampleStatistics.addNumZeroValueSamples(sampleRange.size());
+            regionAndRangeData.first.numZeroValueSamples = sampleRange.size();
 
             regionAndRangeData.second.m_is_begin = sampleRange.m_begin;
             regionAndRangeData.second.m_is_end = sampleRange.m_end;
@@ -401,13 +401,13 @@ private:
 #ifdef USE_EMBREE_PARALLEL 
         size_t rPivotItr = 0;
 #else
-        typename TInvalidSamplesContainer::iterator rPivotItr;
+        typename TZeroValueSamplesContainer::iterator rPivotItr;
         auto begin = samples.begin() + sampleRange.m_begin, end = samples.begin() + sampleRange.m_end;
 #endif
 #ifdef USE_EMBREE_PARALLEL
-            rPivotItr = pivotSplitSamples2<typename TInvalidSamplesContainer::value_type>(samples.data(), sampleRange.m_begin, sampleRange.m_end, splitDim, splitPos);
+            rPivotItr = pivotSplitSamples2<typename TZeroValueSamplesContainer::value_type>(samples.data(), sampleRange.m_begin, sampleRange.m_end, splitDim, splitPos);
 #else
-            rPivotItr = pivotSplitSamples<TInvalidSamplesContainer>(begin, end, splitDim, splitPos);
+            rPivotItr = pivotSplitSamples<TZeroValueSamplesContainer>(begin, end, splitDim, splitPos);
 #endif
 
 
@@ -434,16 +434,16 @@ private:
 };
 
 
-template<class TRegion, typename TSamplesContainer, typename TInvalidSamplesContainer>
-inline std::string KDTreePartitionBuilder<TRegion, TSamplesContainer, TInvalidSamplesContainer>::toString() const
+template<class TRegion, typename TSamplesContainer, typename TZeroValueSamplesContainer>
+inline std::string KDTreePartitionBuilder<TRegion, TSamplesContainer, TZeroValueSamplesContainer>::toString() const
 {
     std::stringstream ss;
     ss << "KDTreePartitionBuilder" << std::endl;
     return ss.str();
 }
 
-template<class TRegion, typename TSamplesContainer, typename TInvalidSamplesContainer>
-inline std::string KDTreePartitionBuilder<TRegion, TSamplesContainer, TInvalidSamplesContainer>::Settings::toString() const
+template<class TRegion, typename TSamplesContainer, typename TZeroValueSamplesContainer>
+inline std::string KDTreePartitionBuilder<TRegion, TSamplesContainer, TZeroValueSamplesContainer>::Settings::toString() const
 {
     std::stringstream ss;
     ss << "KDTreePartitionBuilder::Settings:" << std::endl;
@@ -455,16 +455,16 @@ inline std::string KDTreePartitionBuilder<TRegion, TSamplesContainer, TInvalidSa
 }
 
 
-template<class TRegion, typename TSamplesContainer, typename TInvalidSamplesContainer>
-inline void KDTreePartitionBuilder<TRegion, TSamplesContainer, TInvalidSamplesContainer>::Settings::serialize(std::ostream& stream)const
+template<class TRegion, typename TSamplesContainer, typename TZeroValueSamplesContainer>
+inline void KDTreePartitionBuilder<TRegion, TSamplesContainer, TZeroValueSamplesContainer>::Settings::serialize(std::ostream& stream)const
     {
         stream.write(reinterpret_cast<const char*>(&minSamples), sizeof(size_t));
         stream.write(reinterpret_cast<const char*>(&maxSamples), sizeof(size_t));
         stream.write(reinterpret_cast<const char*>(&maxDepth), sizeof(size_t));
     }
 
-template<class TRegion, typename TSamplesContainer, typename TInvalidSamplesContainer>
-inline void KDTreePartitionBuilder<TRegion, TSamplesContainer, TInvalidSamplesContainer>::Settings::deserialize(std::istream& stream)
+template<class TRegion, typename TSamplesContainer, typename TZeroValueSamplesContainer>
+inline void KDTreePartitionBuilder<TRegion, TSamplesContainer, TZeroValueSamplesContainer>::Settings::deserialize(std::istream& stream)
     {
         stream.read(reinterpret_cast<char*>(&minSamples), sizeof(size_t));
         stream.read(reinterpret_cast<char*>(&maxSamples), sizeof(size_t));

@@ -19,7 +19,7 @@ namespace openpgl
         BBox regionBounds;
         TTrainingStatistics trainingStatistics;
         SampleStatistics sampleStatistics;
-        size_t numInvalidSamples {0};
+        size_t numZeroValueSamples {0};
         bool splitFlag {false};
 #ifdef OPENPGL_RADIANCE_CACHES
         OutgoingRadianceHistogram outRadianceHist;
@@ -83,7 +83,7 @@ namespace openpgl
 #ifdef OPENPGL_RADIANCE_CACHES
             outRadianceHist.serialize(stream);
 #endif
-            stream.write(reinterpret_cast<const char*>(&numInvalidSamples), sizeof(numInvalidSamples));
+            stream.write(reinterpret_cast<const char*>(&numZeroValueSamples), sizeof(numZeroValueSamples));
             stream.write(reinterpret_cast<const char*>(&splitFlag), sizeof(splitFlag));
         }
 
@@ -97,7 +97,7 @@ namespace openpgl
 #ifdef OPENPGL_RADIANCE_CACHES
             outRadianceHist.deserialize(stream);
 #endif
-            stream.read(reinterpret_cast<char*>(&numInvalidSamples), sizeof(numInvalidSamples));
+            stream.read(reinterpret_cast<char*>(&numZeroValueSamples), sizeof(numZeroValueSamples));
             stream.read(reinterpret_cast<char*>(&splitFlag), sizeof(splitFlag));
         }
 
