@@ -18,9 +18,7 @@ extern "C" {
 #endif
 
 #ifdef __cplusplus
-struct SampleStorage
-{
-};
+struct SampleStorage;
 
 struct PGLSampleData;
 

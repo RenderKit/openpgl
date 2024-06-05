@@ -12,9 +12,7 @@ extern "C" {
 
 
 #ifdef __cplusplus
-struct Region
-{
-};
+struct Region;
 #else
 typedef ManagedObject Region;
 #endif

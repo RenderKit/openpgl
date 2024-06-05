@@ -20,9 +20,7 @@ extern "C" {
 #endif
 
 #ifdef __cplusplus
-struct PathSegmentStorage
-{
-};
+struct PathSegmentStorage;
 
 struct PGLPathSegmentData;
 #else

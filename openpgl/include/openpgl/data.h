@@ -104,8 +104,8 @@ struct PGLPathSegmentData
 };
 
 struct PGLString{
-    char* m_str {nullptr};
-    size_t m_size {0};
+    char* m_str;
+    size_t m_size;
 };
 
 #ifdef __cplusplus
