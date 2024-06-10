@@ -31,7 +31,7 @@ struct FieldStatistics{
     DirectionalDistributionStatistics directionalDistributionStatistics;
 
     std::string headerCSVString() const{
-        const std::string separator = separator;
+        const std::string separator = " , ";
         std::stringstream ss;
         ss << "FieldStatistics:" << separator;
         ss << "numCacheRegions" << separator;
@@ -52,7 +52,7 @@ struct FieldStatistics{
     }
 
     std::string toCSVString() const{
-        const std::string separator = separator;
+        const std::string separator = " , ";
         std::stringstream ss;
         ss << " " << separator;
         ss << numCacheRegions << separator;
@@ -73,7 +73,7 @@ struct FieldStatistics{
     }
 
     std::string toString() const{
-        const std::string tab = tab;
+        const std::string tab = "\t";
         std::stringstream ss;
         ss << "FieldStatistics:" << std::endl;
         ss << tab << "numCacheRegions = " << numCacheRegions << std::endl;

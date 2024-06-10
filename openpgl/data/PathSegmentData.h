@@ -123,7 +123,7 @@ inline bool isValid(const PathSegmentData& psd)
         ss << "\t scatteredContribution = " << psd.scatteredContribution.x << "\t " << psd.scatteredContribution.y << "\t " << psd.scatteredContribution.z << "\t "; 
         ss << "\t russianRouletteProbability = " << psd.russianRouletteProbability;
         ss << "\t eta = " << psd.eta; 
-        ss << "\t rough = " << psd.roughness;;
+        ss << "\t rough = " << psd.roughness;
         ss << std::endl;
         
         return ss.str();   
