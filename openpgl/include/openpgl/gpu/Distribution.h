@@ -49,11 +49,14 @@ namespace cpu {
 
     OPENPGL_GPU_CALLABLE inline pgl_vec2f directionToCanonical(const Vector3& direction) 
     {
-        if (!std::isfinite(direction[0]) || !std::isfinite(direction[1]) || !std::isfinite(direction[2])) {
-            return {0.f, 0.f};
-        }
-
+        //if (!std::isfinite(direction[0]) || !std::isfinite(direction[1]) || !std::isfinite(direction[2])) {
+        //    return {0.f, 0.f};
+        //}
+#if !defined(OPENPGL_GPU_CUDA)
         const float cosTheta = std::min(std::max(direction[2], -1.f), 1.f);
+#else
+        const float cosTheta = std::fminf(std::fmaxf(direction[2], -1.f), 1.f);
+#endif
         float phi = std::atan2(direction[1], direction[0]);
         while (phi < 0)
             phi += 2.f * M_PIf;
@@ -86,6 +89,7 @@ namespace cpu {
         const float costThetaMinusOne = std::fminf(cosTheta - 1.f, 0.f);
 #endif
         const float eval = norm * expf(kappa * costThetaMinusOne);
+        return eval;
     };
 
     template <int maxComponents>
@@ -311,7 +315,7 @@ namespace cpu {
                 const float eval = norm * expf(kappaK * costThetaMinusOneK);
                 incomingRadiance[0] += this->_fluenceRGBWeights[k][0] * eval;
                 incomingRadiance[1] += this->_fluenceRGBWeights[k][1] * eval;
-                incomingRadiance[2] += this->_fluenceRGBWeights[k][1] * eval;
+                incomingRadiance[2] += this->_fluenceRGBWeights[k][2] * eval;
             }
             return {incomingRadiance[0], incomingRadiance[1], incomingRadiance[2]};
         }
@@ -324,7 +328,7 @@ namespace cpu {
             const Vector3 relativePivotShift = {this->_pivotPosition[0] - _pos[0], this->_pivotPosition[1] - _pos[1], this->_pivotPosition[2] - _pos[2]};
             
             // lookup VMF mean cosine for HG mean cosine
-            const float meanCosineVMF = 2.18853f;
+            const float meanCosineVMF = kappaToMeanCosine(2.18853f);
             Vector3 inscatteredRadiance = {0.f, 0.f, 0.f};
             for (int k =0; k < this->_numComponents; k++)
             {
@@ -340,7 +344,7 @@ namespace cpu {
 
                 inscatteredRadiance[0] += this->_fluenceRGBWeights[k][0] * eval;
                 inscatteredRadiance[1] += this->_fluenceRGBWeights[k][1] * eval;
-                inscatteredRadiance[2] += this->_fluenceRGBWeights[k][1] * eval;
+                inscatteredRadiance[2] += this->_fluenceRGBWeights[k][2] * eval;
             }
             return {inscatteredRadiance[0], inscatteredRadiance[1], inscatteredRadiance[2]};
         }
@@ -374,7 +378,7 @@ namespace cpu {
                 const float eval = norm * expf(kappaK * costThetaMinusOneK);
                 inscatteredRadiance[0] += this->_fluenceRGBWeights[k][0] * eval;
                 inscatteredRadiance[1] += this->_fluenceRGBWeights[k][1] * eval;
-                inscatteredRadiance[2] += this->_fluenceRGBWeights[k][1] * eval;
+                inscatteredRadiance[2] += this->_fluenceRGBWeights[k][2] * eval;
             }
             return {inscatteredRadiance[0], inscatteredRadiance[1], inscatteredRadiance[2]};
         }

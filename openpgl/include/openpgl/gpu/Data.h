@@ -1,7 +1,7 @@
 #pragma once
 
 #ifndef OPENPGL_BUILD
-    #include "../defines.h"
+    #include <openpgl/defines.h>
 #endif
 #define OPENPGL_GPU_HISTOGRAM_RESOLUTION 8
 #define OPENPGL_GPU_HISTOGRAM_SIZE OPENPGL_GPU_HISTOGRAM_RESOLUTION * OPENPGL_GPU_HISTOGRAM_RESOLUTION

@@ -212,6 +212,7 @@ namespace cpu {
                 m_surfaceDistributions = device->mallocArray<Distribution>(m_numSurfaceDistributions);
                 device->memcpyArrayToGPU((Distribution*) m_surfaceDistributions, (const Distribution*) fieldData.m_surfaceDistributions, m_numSurfaceDistributions);
 #ifdef OPENPGL_EF_RADIANCE_CACHES
+                m_surfaceOutgoingRadianceHistogram = device->mallocArray<OutgoingRadianceHistogramData>(m_numSurfaceDistributions);
                 device->memcpyArrayToGPU((OutgoingRadianceHistogramData*) m_surfaceOutgoingRadianceHistogram, (const OutgoingRadianceHistogramData*) fieldData.m_surfaceOutgoingRadianceHistogram, m_numSurfaceDistributions);
 #endif
             }else {
@@ -227,10 +228,11 @@ namespace cpu {
             }
 
             m_numVolumeDistributions = fieldData.m_numVolumeDistributions;
-            if(m_numSurfaceDistributions > 0 ) {
+            if(m_numVolumeDistributions > 0 ) {
                 m_volumeDistributions = device->mallocArray<Distribution>(m_numVolumeDistributions);
                 device->memcpyArrayToGPU((Distribution*) m_volumeDistributions, (const Distribution*) fieldData.m_volumeDistributions, m_numVolumeDistributions);
 #ifdef OPENPGL_EF_RADIANCE_CACHES
+                m_volumeOutgoingRadianceHistogram = device->mallocArray<OutgoingRadianceHistogramData>(m_numVolumeDistributions);
                 device->memcpyArrayToGPU((OutgoingRadianceHistogramData*) m_volumeOutgoingRadianceHistogram, (const OutgoingRadianceHistogramData*) fieldData.m_volumeOutgoingRadianceHistogram, m_numVolumeDistributions);
 #endif
             }else {
