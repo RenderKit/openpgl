@@ -39,7 +39,7 @@ struct OutgoingRadianceHistogram
    private:
     openpgl::Point2 dirToCanonical(const openpgl::Vector3 &d) const;
 
-   private:
+   public:
     openpgl::Vector3 data[OPENPGL_HISTOGRAM_SIZE];
     float numSamples[OPENPGL_HISTOGRAM_SIZE];
 };

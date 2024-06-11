@@ -45,6 +45,49 @@ namespace cpu {
         return Vector3(r * cosPhi, r * sinPhi, z);
     }
 
+
+
+    OPENPGL_GPU_CALLABLE inline pgl_vec2f directionToCanonical(const Vector3& direction) 
+    {
+        if (!std::isfinite(direction[0]) || !std::isfinite(direction[1]) || !std::isfinite(direction[2])) {
+            return {0.f, 0.f};
+        }
+
+        const float cosTheta = std::min(std::max(direction[2], -1.f), 1.f);
+        float phi = std::atan2(direction[1], direction[0]);
+        while (phi < 0)
+            phi += 2.f * M_PIf;
+
+        return {(cosTheta + 1.f) / 2.f, phi / (2.f * M_PIf)};
+    }
+
+    OPENPGL_GPU_CALLABLE inline float kappaToMeanCosine(const float kappa)
+    {
+        return kappa > 0.f ? (1.f/ std::tanh(kappa)) - (1.f / kappa): 0.f;
+    }
+
+    OPENPGL_GPU_CALLABLE inline float meanCosineToKappa(const float meanCosine)
+    {
+        const float meanCosine2 = meanCosine * meanCosine;
+        const float dim = 3.f;
+        return meanCosine < 1.f ? (meanCosine * dim - meanCosine * meanCosine2) / (1.f - meanCosine2) : 0.f;
+    }
+
+    OPENPGL_GPU_CALLABLE inline float convolvePDF(const Vector3& meanDirection, const Vector3& direction, const float meanCosine0, const float meanCosine1)
+    {
+        const float meanCosine = meanCosine0 * meanCosine1;
+        const float kappa = meanCosineToKappa(meanCosine);
+        const float norm = kappa > 0.f ? kappa / (2.f * M_PIf * (1.f - expf(-2.f * kappa))) : ONE_OVER_FOUR_PI;
+        const float cosTheta =  direction[0] * meanDirection[0] + direction[1] * meanDirection[1] + direction[2] * meanDirection[2];
+// TODO: Fix
+#if !defined(OPENPGL_GPU_CUDA)
+        const float costThetaMinusOne = std::min(cosTheta - 1.f, 0.f);
+#else
+        const float costThetaMinusOne = std::fminf(cosTheta - 1.f, 0.f);
+#endif
+        const float eval = norm * expf(kappa * costThetaMinusOne);
+    };
+
     template <int maxComponents>
     struct ParallaxAwareVonMisesFisherMixture : public FlatVMM<maxComponents>
     {
@@ -234,6 +277,109 @@ namespace cpu {
             }
             return pdf;
         }
+
+#ifdef OPENPGL_EF_RADIANCE_CACHES
+        OPENPGL_GPU_CALLABLE pgl_vec3f fluence() const
+        {
+            return {this->_fluenceRGB[0], this->_fluenceRGB[1], this->_fluenceRGB[2]}; 
+        }
+
+        OPENPGL_GPU_CALLABLE pgl_vec3f incomingRadiance(const pgl_vec3f pos, const pgl_vec3f dir) const
+        {
+            const Vector3 _dir = {dir.x, dir.y, dir.z};
+            const Vector3 _pos = {pos.x, pos.y, pos.z};
+            const Vector3 relativePivotShift = {this->_pivotPosition[0] - _pos[0], this->_pivotPosition[1] - _pos[1], this->_pivotPosition[2] - _pos[2]};
+            
+            Vector3 incomingRadiance = {0.f, 0.f, 0.f};
+            for (int k =0; k < this->_numComponents; k++)
+            {
+                Vector3 meanDirection = {this->_meanDirections[k][0], this->_meanDirections[k][1], this->_meanDirections[k][2]};
+                meanDirection *= this->_distances[k];
+                meanDirection += relativePivotShift;
+                float flength = length(meanDirection);
+                meanDirection /= flength;
+                
+                const float kappaK = this->_kappas[k];
+                float norm = kappaK > 0.f ? kappaK / (2.f * M_PIf * (1.f - expf(-2.f * kappaK))) : ONE_OVER_FOUR_PI;
+                const float cosThetaK =  _dir[0] * meanDirection[0] + _dir[1] * meanDirection[1] + _dir[2] * meanDirection[2];
+// TODO: Fix
+#if !defined(OPENPGL_GPU_CUDA)
+                const float costThetaMinusOneK = std::min(cosThetaK - 1.f, 0.f);
+#else
+                const float costThetaMinusOneK = std::fminf(cosThetaK - 1.f, 0.f);
+#endif
+                const float eval = norm * expf(kappaK * costThetaMinusOneK);
+                incomingRadiance[0] += this->_fluenceRGBWeights[k][0] * eval;
+                incomingRadiance[1] += this->_fluenceRGBWeights[k][1] * eval;
+                incomingRadiance[2] += this->_fluenceRGBWeights[k][1] * eval;
+            }
+            return {incomingRadiance[0], incomingRadiance[1], incomingRadiance[2]};
+        }
+
+
+        OPENPGL_GPU_CALLABLE pgl_vec3f irradiance(const pgl_vec3f pos, const pgl_vec3f normal) const
+        {
+            const Vector3 _normal = {normal.x, normal.y, normal.z};
+            const Vector3 _pos = {pos.x, pos.y, pos.z};
+            const Vector3 relativePivotShift = {this->_pivotPosition[0] - _pos[0], this->_pivotPosition[1] - _pos[1], this->_pivotPosition[2] - _pos[2]};
+            
+            // lookup VMF mean cosine for HG mean cosine
+            const float meanCosineVMF = 2.18853f;
+            Vector3 inscatteredRadiance = {0.f, 0.f, 0.f};
+            for (int k =0; k < this->_numComponents; k++)
+            {
+                Vector3 meanDirection = {this->_meanDirections[k][0], this->_meanDirections[k][1], this->_meanDirections[k][2]};
+                meanDirection *= this->_distances[k];
+                meanDirection += relativePivotShift;
+                float flength = length(meanDirection);
+                meanDirection /= flength;
+                
+                const float kappaK = this->_kappas[k];
+                const float meanCosineVMFK = kappaToMeanCosine(kappaK);
+                const float eval = convolvePDF(meanDirection, _normal, meanCosineVMFK, meanCosineVMF);
+
+                inscatteredRadiance[0] += this->_fluenceRGBWeights[k][0] * eval;
+                inscatteredRadiance[1] += this->_fluenceRGBWeights[k][1] * eval;
+                inscatteredRadiance[2] += this->_fluenceRGBWeights[k][1] * eval;
+            }
+            return {inscatteredRadiance[0], inscatteredRadiance[1], inscatteredRadiance[2]};
+        }
+/*
+        OPENPGL_GPU_CALLABLE pgl_vec3f inscatteredRadiance(const pgl_vec3f pos, const pgl_vec3f dir, const float g) const
+        {
+            const Vector3 _dir = {dir.x, dir.y, dir.z};
+            const Vector3 _pos = {pos.x, pos.y, pos.z};
+            const Vector3 relativePivotShift = {this->_pivotPosition[0] - _pos[0], this->_pivotPosition[1] - _pos[1], this->_pivotPosition[2] - _pos[2]};
+            
+            // lookup VMF mean cosine for HG mean cosine
+            const meanCosineVMF = g;
+            Vector3 inscatteredRadiance = {0.f, 0.f, 0.f};
+            for (int k =0; k < this->_numComponents; k++)
+            {
+                Vector3 meanDirection = {this->_meanDirections[k][0], this->_meanDirections[k][1], this->_meanDirections[k][2]};
+                meanDirection *= this->_distances[k];
+                meanDirection += relativePivotShift;
+                float flength = length(meanDirection);
+                meanDirection /= flength;
+                
+                const float kappaK = this->_kappas[k];
+                float norm = kappaK > 0.f ? kappaK / (2.f * M_PIf * (1.f - expf(-2.f * kappaK))) : ONE_OVER_FOUR_PI;
+                const float cosThetaK =  _dir[0] * meanDirection[0] + _dir[1] * meanDirection[1] + _dir[2] * meanDirection[2];
+// TODO: Fix
+#if !defined(OPENPGL_GPU_CUDA)
+                const float costThetaMinusOneK = std::min(cosThetaK - 1.f, 0.f);
+#else
+                const float costThetaMinusOneK = std::fminf(cosThetaK - 1.f, 0.f);
+#endif
+                const float eval = norm * expf(kappaK * costThetaMinusOneK);
+                inscatteredRadiance[0] += this->_fluenceRGBWeights[k][0] * eval;
+                inscatteredRadiance[1] += this->_fluenceRGBWeights[k][1] * eval;
+                inscatteredRadiance[2] += this->_fluenceRGBWeights[k][1] * eval;
+            }
+            return {inscatteredRadiance[0], inscatteredRadiance[1], inscatteredRadiance[2]};
+        }
+*/
+#endif
     };
 
 } // sycl/cuda/cpu

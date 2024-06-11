@@ -1,5 +1,11 @@
 #pragma once
 
+#ifndef OPENPGL_BUILD
+    #include "../defines.h"
+#endif
+#define OPENPGL_GPU_HISTOGRAM_RESOLUTION 8
+#define OPENPGL_GPU_HISTOGRAM_SIZE OPENPGL_GPU_HISTOGRAM_RESOLUTION * OPENPGL_GPU_HISTOGRAM_RESOLUTION
+
 namespace openpgl{
 namespace gpu{
     template<int maxComponents> 
@@ -11,6 +17,10 @@ namespace gpu{
         float _distances[maxComponents];
         float _pivotPosition[3];
         int _numComponents{maxComponents};
+#if defined(OPENPGL_EF_RADIANCE_CACHES) || defined(OPENPGL_RADIANCE_CACHES)
+        float _fluenceRGBWeights[maxComponents][3];
+        float _fluenceRGB[3];
+#endif
     };
 
     struct FieldData {
@@ -25,7 +35,18 @@ namespace gpu{
 
         void *m_surfaceDistributions;
         void *m_volumeDistributions;
+
+#if defined(OPENPGL_EF_RADIANCE_CACHES) || defined(OPENPGL_RADIANCE_CACHES)
+        void *m_surfaceOutgoingRadianceHistogram;
+        void *m_volumeOutgoingRadianceHistogram;
+#endif
     };
 
+#if defined(OPENPGL_EF_RADIANCE_CACHES) || defined(OPENPGL_RADIANCE_CACHES)
+    struct OutgoingRadianceHistogramData {
+        float data[OPENPGL_GPU_HISTOGRAM_SIZE][3];
+        //float numSamples[OPENPGL_HISTOGRAM_SIZE];
+    };
+#endif
 } // gpu
 } // openpgl

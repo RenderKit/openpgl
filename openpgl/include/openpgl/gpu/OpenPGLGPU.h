@@ -211,6 +211,9 @@ namespace cpu {
             if(m_numSurfaceDistributions > 0 ) {
                 m_surfaceDistributions = device->mallocArray<Distribution>(m_numSurfaceDistributions);
                 device->memcpyArrayToGPU((Distribution*) m_surfaceDistributions, (const Distribution*) fieldData.m_surfaceDistributions, m_numSurfaceDistributions);
+#ifdef OPENPGL_EF_RADIANCE_CACHES
+                device->memcpyArrayToGPU((OutgoingRadianceHistogramData*) m_surfaceOutgoingRadianceHistogram, (const OutgoingRadianceHistogramData*) fieldData.m_surfaceOutgoingRadianceHistogram, m_numSurfaceDistributions);
+#endif
             }else {
                 m_surfaceDistributions = nullptr;   
             }
@@ -227,6 +230,9 @@ namespace cpu {
             if(m_numSurfaceDistributions > 0 ) {
                 m_volumeDistributions = device->mallocArray<Distribution>(m_numVolumeDistributions);
                 device->memcpyArrayToGPU((Distribution*) m_volumeDistributions, (const Distribution*) fieldData.m_volumeDistributions, m_numVolumeDistributions);
+#ifdef OPENPGL_EF_RADIANCE_CACHES
+                device->memcpyArrayToGPU((OutgoingRadianceHistogramData*) m_volumeOutgoingRadianceHistogram, (const OutgoingRadianceHistogramData*) fieldData.m_volumeOutgoingRadianceHistogram, m_numVolumeDistributions);
+#endif
             }else {
                 m_volumeDistributions = nullptr;   
             }
@@ -400,6 +406,32 @@ namespace cpu {
         {
             return m_idx;
         }
+
+#ifdef OPENPGL_EF_RADIANCE_CACHES
+        OPENPGL_GPU_CALLABLE pgl_vec3f IncomingRadiance(pgl_vec3f& direction) const
+        {
+            const FieldGPU::Distribution* surfaceDistributions = static_cast<const FieldGPU::Distribution*>(m_field->m_surfaceDistributions);
+            return surfaceDistributions[m_idx].incomingRadiance(m_pos, direction); 
+        }
+
+        OPENPGL_GPU_CALLABLE pgl_vec3f Irradiance(pgl_vec3f& normal) const
+        {
+            const FieldGPU::Distribution* surfaceDistributions = static_cast<const FieldGPU::Distribution*>(m_field->m_surfaceDistributions);
+            return surfaceDistributions[m_idx].irradiance(m_pos, normal); 
+        }
+
+        OPENPGL_GPU_CALLABLE pgl_vec3f OutgoingRadiance(pgl_vec3f& direction) const
+        {
+            const OutgoingRadianceHistogramData* outgoingRadianceHistograms = static_cast<const OutgoingRadianceHistogramData*>(m_field->m_surfaceOutgoingRadianceHistogram);
+            const Vector3 dir = {direction.x, direction.y, direction.z};
+            const pgl_vec2f p = directionToCanonical(dir);
+            const int res = OPENPGL_GPU_HISTOGRAM_RESOLUTION;
+            const int histIdx =
+                std::min(int(p.x * res), res - 1) +
+                std::min(int(p.y * res), res - 1) * res;
+            return {outgoingRadianceHistograms[m_idx].data[histIdx][0], outgoingRadianceHistograms[m_idx].data[histIdx][1], outgoingRadianceHistograms[m_idx].data[histIdx][2]};
+        }
+#endif
     };
 
 
@@ -462,6 +494,37 @@ namespace cpu {
         {
             return m_idx;
         }
+
+#ifdef OPENPGL_EF_RADIANCE_CACHES
+        OPENPGL_GPU_CALLABLE pgl_vec3f IncomingRadiance(pgl_vec3f& direction) const
+        {
+            const FieldGPU::Distribution* volumeDistributions = static_cast<const FieldGPU::Distribution*>(m_field->m_volumeDistributions);
+            return volumeDistributions[m_idx].incomingRadiance(m_pos, direction); 
+        }
+        
+        OPENPGL_GPU_CALLABLE pgl_vec3f OutgoingRadiance(pgl_vec3f& direction) const
+        {
+            const OutgoingRadianceHistogramData* outgoingRadianceHistograms = static_cast<const OutgoingRadianceHistogramData*>(m_field->m_volumeOutgoingRadianceHistogram);
+            const Vector3 dir = {direction.x, direction.y, direction.z};
+            const pgl_vec2f p = directionToCanonical(dir);
+            const int res = OPENPGL_GPU_HISTOGRAM_RESOLUTION;
+            const int histIdx =
+                std::min(int(p.x * res), res - 1) +
+                std::min(int(p.y * res), res - 1) * res;
+            return {outgoingRadianceHistograms[m_idx].data[histIdx][0], outgoingRadianceHistograms[m_idx].data[histIdx][1], outgoingRadianceHistograms[m_idx].data[histIdx][2]};
+        }
+        
+        OPENPGL_GPU_CALLABLE pgl_vec3f Fluence() const
+        {
+            const FieldGPU::Distribution* volumeDistributions = static_cast<const FieldGPU::Distribution*>(m_field->m_volumeDistributions);
+            return volumeDistributions[m_idx].fluence(); 
+        }
+
+//        OPENPGL_GPU_CALLABLE pgl_vec3f InscatteredRadiance(pgl_vec3f& direction, const float g) const
+//        {
+//
+//        }
+#endif
     };
 
 } // sycl/cuda/cpu

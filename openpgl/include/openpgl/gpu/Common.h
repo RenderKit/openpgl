@@ -1,6 +1,8 @@
 #ifndef OPENPGL_COMMON_GPU_H
 #define OPENPGL_COMMON_GPU_H
 
+#include "../defines.h"
+
 #if defined(OPENPGL_GPU_SYCL_SUPPORT)
 #include <sycl/sycl.hpp>
 #endif

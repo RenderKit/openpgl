@@ -359,11 +359,18 @@ struct SurfaceVolumeField : public ISurfaceVolumeField
         openpgl::gpu::FlatVMM<32>* outSurf = (openpgl::gpu::FlatVMM<32>*) fieldGPU->m_surfaceDistributions;
         delete[] outSurf;
         fieldGPU->m_surfaceDistributions = nullptr;
+        //openpgl::gpu::OutgoingRadianceHistogramData* surfaceOutgoingRadianceHistogram = (openpgl::gpu::OutgoingRadianceHistogramData*) fieldGPU->m_surfaceOutgoingRadianceHistogram;
+        //delete[] surfaceOutgoingRadianceHistogram;
+        //fieldGPU->m_surfaceOutgoingRadianceHistogram = nullptr;
         fieldGPU->m_numSurfaceDistributions = 0;
 
         openpgl::gpu::FlatVMM<32>* outVol = (openpgl::gpu::FlatVMM<32>*) fieldGPU->m_volumeDistributions;
         delete[] outVol;
         fieldGPU->m_volumeDistributions = nullptr;
+
+        //openpgl::gpu::OutgoingRadianceHistogramData* volumeOutgoingRadianceHistogram = (openpgl::gpu::OutgoingRadianceHistogramData*) fieldGPU->m_volumeOutgoingRadianceHistogram;
+        //delete[] volumeOutgoingRadianceHistogram;
+        //fieldGPU->m_volumeOutgoingRadianceHistogram = nullptr;
         fieldGPU->m_numVolumeDistributions = 0;
     }
 
@@ -386,8 +393,9 @@ struct SurfaceVolumeField : public ISurfaceVolumeField
         fieldGPU->m_numSurfaceDistributions = numSurfaceDistriubtion;
         if(numSurfaceDistriubtion > 0) {
             openpgl::gpu::FlatVMM<32>* outSurf = new openpgl::gpu::FlatVMM<32>[numSurfaceDistriubtion];
+            openpgl::gpu::OutgoingRadianceHistogramData* outRadianceHistSurf = new openpgl::gpu::OutgoingRadianceHistogramData[numSurfaceDistriubtion];
 
-            for (int i = 0; i < m_surfaceField.m_regionStorageContainer.size(); i++)
+            for (int i = 0; i < numSurfaceDistriubtion; i++)
             {
                 auto & dist = m_surfaceField.m_regionStorageContainer[i].first.distribution;
                 for (int k = 0; k < dist._numComponents; k++) {
@@ -398,11 +406,30 @@ struct SurfaceVolumeField : public ISurfaceVolumeField
                     outSurf[i]._meanDirections[k][1] = dist._meanDirections[tmp.quot].y[tmp.rem];
                     outSurf[i]._meanDirections[k][2] = dist._meanDirections[tmp.quot].z[tmp.rem];
                     outSurf[i]._distances[k] = dist._distances[tmp.quot][tmp.rem];
+#if defined(OPENPGL_EF_RADIANCE_CACHES) || defined(OPENPGL_RADIANCE_CACHES)
+                    outSurf[i]._fluenceRGBWeights[k][0] = dist._fluenceRGBWeights[tmp.quot].x[tmp.rem];
+                    outSurf[i]._fluenceRGBWeights[k][1] = dist._fluenceRGBWeights[tmp.quot].y[tmp.rem];
+                    outSurf[i]._fluenceRGBWeights[k][2] = dist._fluenceRGBWeights[tmp.quot].z[tmp.rem];
+#endif
                 }
                 outSurf[i]._pivotPosition[0] = {dist._pivotPosition.x};
                 outSurf[i]._pivotPosition[1] = {dist._pivotPosition.y};
                 outSurf[i]._pivotPosition[2] = {dist._pivotPosition.z};
+#if defined(OPENPGL_EF_RADIANCE_CACHES) || defined(OPENPGL_RADIANCE_CACHES)
+                outSurf[i]._fluenceRGB[0] = {dist._fluenceRGB.x};
+                outSurf[i]._fluenceRGB[1] = {dist._fluenceRGB.y};
+                outSurf[i]._fluenceRGB[2] = {dist._fluenceRGB.z};
+#endif
                 outSurf[i]._numComponents = dist._numComponents;
+
+#if defined(OPENPGL_EF_RADIANCE_CACHES) || defined(OPENPGL_RADIANCE_CACHES)
+                auto & outRadianceHist = m_surfaceField.m_regionStorageContainer[i].first.outRadianceHist;
+                for (int n = 0; n < OPENPGL_GPU_HISTOGRAM_SIZE; n++) {
+                    outRadianceHistSurf[i].data[n][0] = outRadianceHist.data[n].x;
+                    outRadianceHistSurf[i].data[n][1] = outRadianceHist.data[n].y;
+                    outRadianceHistSurf[i].data[n][2] = outRadianceHist.data[n].z;
+                }
+#endif
             }
 
             //openpgl::gpu::FlatVMM<32>* deviceSurf = deviceGPU->mallocArray<openpgl::gpu::FlatVMM<32>>(numSurfaceDistriubtion);
@@ -410,9 +437,15 @@ struct SurfaceVolumeField : public ISurfaceVolumeField
             //deviceGPU->wait();
             //fieldGPU->m_surfaceDistributions = (void*) deviceSurf;
             fieldGPU->m_surfaceDistributions = (void*) outSurf;
+#if defined(OPENPGL_EF_RADIANCE_CACHES) || defined(OPENPGL_RADIANCE_CACHES)
+            fieldGPU->m_surfaceOutgoingRadianceHistogram = (void*) outRadianceHistSurf;
+#endif
             //delete[] outSurf;
         } else {
             fieldGPU->m_surfaceDistributions = nullptr;
+#if defined(OPENPGL_EF_RADIANCE_CACHES) || defined(OPENPGL_RADIANCE_CACHES)
+            fieldGPU->m_surfaceOutgoingRadianceHistogram = nullptr;
+#endif
         }
 
         int numVolumeNodes = m_volumeField.m_spatialSubdiv.m_numTreeLets;
@@ -431,8 +464,8 @@ struct SurfaceVolumeField : public ISurfaceVolumeField
         fieldGPU->m_numVolumeDistributions = numVolumeDistriubtion;
         if(numVolumeDistriubtion > 0) {
             openpgl::gpu::FlatVMM<32>* outVol = new openpgl::gpu::FlatVMM<32>[numVolumeDistriubtion];
-
-            for (int i = 0; i < m_volumeField.m_regionStorageContainer.size(); i++)
+            openpgl::gpu::OutgoingRadianceHistogramData* outRadianceHistVol = new openpgl::gpu::OutgoingRadianceHistogramData[numVolumeDistriubtion];
+            for (int i = 0; i < numVolumeDistriubtion; i++)
             {
                 auto & dist = m_volumeField.m_regionStorageContainer[i].first.distribution;
                 for (int k = 0; k < dist._numComponents; k++) {
@@ -443,11 +476,29 @@ struct SurfaceVolumeField : public ISurfaceVolumeField
                     outVol[i]._meanDirections[k][1] = dist._meanDirections[tmp.quot].y[tmp.rem];
                     outVol[i]._meanDirections[k][2] = dist._meanDirections[tmp.quot].z[tmp.rem];
                     outVol[i]._distances[k] = dist._distances[tmp.quot][tmp.rem];
+#if defined(OPENPGL_EF_RADIANCE_CACHES) || defined(OPENPGL_RADIANCE_CACHES)
+                    outVol[i]._fluenceRGBWeights[k][0] = dist._fluenceRGBWeights[tmp.quot].x[tmp.rem];
+                    outVol[i]._fluenceRGBWeights[k][1] = dist._fluenceRGBWeights[tmp.quot].y[tmp.rem];
+                    outVol[i]._fluenceRGBWeights[k][2] = dist._fluenceRGBWeights[tmp.quot].z[tmp.rem];
+#endif
                 }
                 outVol[i]._pivotPosition[0] = {dist._pivotPosition.x};
                 outVol[i]._pivotPosition[1] = {dist._pivotPosition.y};
                 outVol[i]._pivotPosition[2] = {dist._pivotPosition.z};
+#if defined(OPENPGL_EF_RADIANCE_CACHES) || defined(OPENPGL_RADIANCE_CACHES)
+                outVol[i]._fluenceRGB[0] = {dist._fluenceRGB.x};
+                outVol[i]._fluenceRGB[1] = {dist._fluenceRGB.y};
+                outVol[i]._fluenceRGB[2] = {dist._fluenceRGB.z};
+#endif
                 outVol[i]._numComponents = dist._numComponents;
+#if defined(OPENPGL_EF_RADIANCE_CACHES) || defined(OPENPGL_RADIANCE_CACHES)
+                auto & outRadianceHist = m_volumeField.m_regionStorageContainer[i].first.outRadianceHist;
+                for (int n = 0; n < OPENPGL_GPU_HISTOGRAM_SIZE; n++) {
+                    outRadianceHistVol[i].data[n][0] = outRadianceHist.data[n].x;
+                    outRadianceHistVol[i].data[n][1] = outRadianceHist.data[n].y;
+                    outRadianceHistVol[i].data[n][2] = outRadianceHist.data[n].z;
+                }
+#endif
             }
 
             //openpgl::gpu::FlatVMM<32>* deviceVol = deviceGPU->mallocArray<openpgl::gpu::FlatVMM<32>>(numVolumeDistriubtion);
@@ -455,8 +506,14 @@ struct SurfaceVolumeField : public ISurfaceVolumeField
             //deviceGPU->wait();
             //delete[] outVol;
             fieldGPU->m_volumeDistributions = (void*) outVol;
+#if defined(OPENPGL_EF_RADIANCE_CACHES) || defined(OPENPGL_RADIANCE_CACHES)
+            fieldGPU->m_volumeOutgoingRadianceHistogram = (void*) outRadianceHistVol;
+#endif
         } else {
             fieldGPU->m_volumeDistributions = nullptr;
+#if defined(OPENPGL_EF_RADIANCE_CACHES) || defined(OPENPGL_RADIANCE_CACHES)
+            fieldGPU->m_volumeOutgoingRadianceHistogram = nullptr;
+#endif
         }
     }
 
