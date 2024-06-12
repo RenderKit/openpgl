@@ -42,6 +42,11 @@ namespace gpu{
 #endif
     };
 
+    struct VMMPhaseFunctionRepresentationData {
+        float meanCosines[4] {0.f, 0.f, 0.f, 0.f};
+        float weights[4] {1.f/4.f, 1.f/4.f, 1.f/4.f, 1.f/4.f};
+    };
+
 #if defined(OPENPGL_EF_RADIANCE_CACHES) || defined(OPENPGL_RADIANCE_CACHES)
     struct OutgoingRadianceHistogramData {
         float data[OPENPGL_GPU_HISTOGRAM_SIZE][3];

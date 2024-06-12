@@ -320,14 +320,13 @@ namespace cpu {
             return {incomingRadiance[0], incomingRadiance[1], incomingRadiance[2]};
         }
 
-
         OPENPGL_GPU_CALLABLE pgl_vec3f irradiance(const pgl_vec3f pos, const pgl_vec3f normal) const
         {
             const Vector3 _normal = {normal.x, normal.y, normal.z};
             const Vector3 _pos = {pos.x, pos.y, pos.z};
             const Vector3 relativePivotShift = {this->_pivotPosition[0] - _pos[0], this->_pivotPosition[1] - _pos[1], this->_pivotPosition[2] - _pos[2]};
             
-            // lookup VMF mean cosine for HG mean cosine
+            // mean cosine for a cosine lobe
             const float meanCosineVMF = kappaToMeanCosine(2.18853f);
             Vector3 inscatteredRadiance = {0.f, 0.f, 0.f};
             for (int k =0; k < this->_numComponents; k++)
@@ -348,15 +347,23 @@ namespace cpu {
             }
             return {inscatteredRadiance[0], inscatteredRadiance[1], inscatteredRadiance[2]};
         }
-/*
+
         OPENPGL_GPU_CALLABLE pgl_vec3f inscatteredRadiance(const pgl_vec3f pos, const pgl_vec3f dir, const float g) const
         {
             const Vector3 _dir = {dir.x, dir.y, dir.z};
             const Vector3 _pos = {pos.x, pos.y, pos.z};
             const Vector3 relativePivotShift = {this->_pivotPosition[0] - _pos[0], this->_pivotPosition[1] - _pos[1], this->_pivotPosition[2] - _pos[2]};
             
-            // lookup VMF mean cosine for HG mean cosine
-            const meanCosineVMF = g;
+            // TODO: lookup VMF mean cosine for HG mean cosine
+            VMMPhaseFunctionRepresentationData vprd;
+            vprd.meanCosines[0] = g;
+            vprd.meanCosines[1] = g;
+            vprd.meanCosines[2] = g;
+            vprd.meanCosines[3] = g;
+            vprd.weights[0] = 1.f/4.f;
+            vprd.weights[1] = 1.f/4.f;
+            vprd.weights[2] = 1.f/4.f;
+            vprd.weights[3] = 1.f/4.f;
             Vector3 inscatteredRadiance = {0.f, 0.f, 0.f};
             for (int k =0; k < this->_numComponents; k++)
             {
@@ -367,22 +374,20 @@ namespace cpu {
                 meanDirection /= flength;
                 
                 const float kappaK = this->_kappas[k];
-                float norm = kappaK > 0.f ? kappaK / (2.f * M_PIf * (1.f - expf(-2.f * kappaK))) : ONE_OVER_FOUR_PI;
-                const float cosThetaK =  _dir[0] * meanDirection[0] + _dir[1] * meanDirection[1] + _dir[2] * meanDirection[2];
-// TODO: Fix
-#if !defined(OPENPGL_GPU_CUDA)
-                const float costThetaMinusOneK = std::min(cosThetaK - 1.f, 0.f);
-#else
-                const float costThetaMinusOneK = std::fminf(cosThetaK - 1.f, 0.f);
-#endif
-                const float eval = norm * expf(kappaK * costThetaMinusOneK);
-                inscatteredRadiance[0] += this->_fluenceRGBWeights[k][0] * eval;
-                inscatteredRadiance[1] += this->_fluenceRGBWeights[k][1] * eval;
-                inscatteredRadiance[2] += this->_fluenceRGBWeights[k][2] * eval;
+                const float meanCosineVMFK = kappaToMeanCosine(kappaK);
+                
+                for (int i =0; i < 4; i++)
+                {
+                    const float meanCosineI = vprd.meanCosines[i] >= 0.f ? vprd.meanCosines[i]: -vprd.meanCosines[i];
+                    const Vector3 directionI = vprd.meanCosines[i] >= 0.f ? _dir : Vector3(-_dir[0], -_dir[1], -_dir[2]);
+                    const float eval = convolvePDF(meanDirection, directionI, meanCosineVMFK, meanCosineI);
+                    inscatteredRadiance[0] += vprd.weights[i] * this->_fluenceRGBWeights[k][0] * eval;
+                    inscatteredRadiance[1] += vprd.weights[i] * this->_fluenceRGBWeights[k][1] * eval;
+                    inscatteredRadiance[2] += vprd.weights[i] * this->_fluenceRGBWeights[k][2] * eval;
+                }
             }
             return {inscatteredRadiance[0], inscatteredRadiance[1], inscatteredRadiance[2]};
         }
-*/
 #endif
     };
 

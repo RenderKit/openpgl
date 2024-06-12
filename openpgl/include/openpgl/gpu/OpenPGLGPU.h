@@ -522,10 +522,11 @@ namespace cpu {
             return volumeDistributions[m_idx].fluence(); 
         }
 
-//        OPENPGL_GPU_CALLABLE pgl_vec3f InscatteredRadiance(pgl_vec3f& direction, const float g) const
-//        {
-//
-//        }
+        OPENPGL_GPU_CALLABLE pgl_vec3f InscatteredRadiance(pgl_vec3f& direction, const float g) const
+        {
+            const FieldGPU::Distribution* volumeDistributions = static_cast<const FieldGPU::Distribution*>(m_field->m_volumeDistributions);
+            return volumeDistributions[m_idx].inscatteredRadiance(m_pos, direction, g); 
+        }
 #endif
     };
 
