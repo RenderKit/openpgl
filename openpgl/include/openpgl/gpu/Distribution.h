@@ -348,22 +348,13 @@ namespace cpu {
             return {inscatteredRadiance[0], inscatteredRadiance[1], inscatteredRadiance[2]};
         }
 
-        OPENPGL_GPU_CALLABLE pgl_vec3f inscatteredRadiance(const pgl_vec3f pos, const pgl_vec3f dir, const float g) const
+        OPENPGL_GPU_CALLABLE pgl_vec3f inscatteredRadiance(const pgl_vec3f pos, const pgl_vec3f dir, const VMMPhaseFunctionRepresentationData& vprd) const
         {
             const Vector3 _dir = {dir.x, dir.y, dir.z};
             const Vector3 _pos = {pos.x, pos.y, pos.z};
             const Vector3 relativePivotShift = {this->_pivotPosition[0] - _pos[0], this->_pivotPosition[1] - _pos[1], this->_pivotPosition[2] - _pos[2]};
             
             // TODO: lookup VMF mean cosine for HG mean cosine
-            VMMPhaseFunctionRepresentationData vprd;
-            vprd.meanCosines[0] = g;
-            vprd.meanCosines[1] = g;
-            vprd.meanCosines[2] = g;
-            vprd.meanCosines[3] = g;
-            vprd.weights[0] = 1.f/4.f;
-            vprd.weights[1] = 1.f/4.f;
-            vprd.weights[2] = 1.f/4.f;
-            vprd.weights[3] = 1.f/4.f;
             Vector3 inscatteredRadiance = {0.f, 0.f, 0.f};
             for (int k =0; k < this->_numComponents; k++)
             {

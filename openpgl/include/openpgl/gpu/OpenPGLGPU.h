@@ -207,6 +207,14 @@ namespace cpu {
                 m_surfaceTreeLets = nullptr;
             }
 
+            m_numPhaseFunctionRepresentations = fieldData.m_numPhaseFunctionRepresentations;
+            if(m_numPhaseFunctionRepresentations > 0) {
+                m_phaseFunctionRepresentations = device->mallocArray<VMMPhaseFunctionRepresentationData>(m_numPhaseFunctionRepresentations);
+                device->memcpyArrayToGPU((VMMPhaseFunctionRepresentationData*) m_phaseFunctionRepresentations, (const VMMPhaseFunctionRepresentationData*) fieldData.m_phaseFunctionRepresentations, m_numPhaseFunctionRepresentations);
+            } else {
+                m_phaseFunctionRepresentations = nullptr;
+            }
+
             m_numSurfaceDistributions = fieldData.m_numSurfaceDistributions;
             if(m_numSurfaceDistributions > 0 ) {
                 m_surfaceDistributions = device->mallocArray<Distribution>(m_numSurfaceDistributions);
@@ -329,6 +337,18 @@ namespace cpu {
             return getDataIdxAtPos(pos, (const KDTreeLet*) m_volumeTreeLets);
         }
 
+
+        OPENPGL_GPU_CALLABLE VMMPhaseFunctionRepresentationData GetHenyeyGreensteinPhaseFunctionRepresentation(const float g) const
+        {
+            const float meanCosine = g;
+            const float absMeanCosine = std::fabs(meanCosine);
+            const float stepSize = (0.99f-0.f)/float(m_numPhaseFunctionRepresentations);
+            int idx = std::floor((absMeanCosine-0.f)/stepSize);
+            idx = std::fminf(idx, m_numPhaseFunctionRepresentations-1);
+
+            return ((VMMPhaseFunctionRepresentationData*)m_phaseFunctionRepresentations)[idx];
+        }
+
 //#ifdef USE_TREELETS
 /* Need to disable these direct initializations to pass through the std::is_trivially_default_constructible_v test. If not the following error is throughen:
 *  error: static assertion failed due to requirement 'std::is_trivially_default_constructible_v<const openpgl_gpu::FieldGPU>': Type T must be trivially default constructable (until C++20 consteval is supported and enabled.)
@@ -443,6 +463,7 @@ namespace cpu {
         const FieldGPU* m_field {nullptr};
         pgl_point3f m_pos {0.f, 0.f, 0.f};
         int m_idx {-1};
+        VMMPhaseFunctionRepresentationData m_phaseRep;
     };
 
     struct VolumeSamplingDistribution: public VolumeSamplingDistributionData
@@ -458,6 +479,11 @@ namespace cpu {
             m_idx = m_field->getVolumeDistributionIdxAtPos(_pos);
 
             return m_idx >= 0;
+        }
+
+        OPENPGL_GPU_CALLABLE void SetPhaseFunction(const float g)
+        {
+            m_phaseRep = m_field->GetHenyeyGreensteinPhaseFunctionRepresentation(g);
         }
 
         OPENPGL_GPU_CALLABLE void Clear()
@@ -524,8 +550,9 @@ namespace cpu {
 
         OPENPGL_GPU_CALLABLE pgl_vec3f InscatteredRadiance(pgl_vec3f& direction, const float g) const
         {
+            // TODO: lookup VMF mean cosine for HG mean cosine
             const FieldGPU::Distribution* volumeDistributions = static_cast<const FieldGPU::Distribution*>(m_field->m_volumeDistributions);
-            return volumeDistributions[m_idx].inscatteredRadiance(m_pos, direction, g); 
+            return volumeDistributions[m_idx].inscatteredRadiance(m_pos, direction, m_phaseRep); 
         }
 #endif
     };

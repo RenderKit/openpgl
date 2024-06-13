@@ -6,6 +6,7 @@
 #include "Field.h"
 #include "FieldStatistics.h"
 #include "ISurfaceVolumeField.h"
+#include "../directional/vmm/VMMPhaseFunctions.h"
 #include "../include/openpgl/gpu/Device.h"
 #include "../include/openpgl/gpu/Data.h"
 
@@ -388,6 +389,21 @@ struct SurfaceVolumeField : public ISurfaceVolumeField
         } else {
             fieldGPU->m_surfaceTreeLets = nullptr;
         }
+
+        int numPhaseFunctionRepresentations = VMMSingleLobeHenyeyGreensteinOracle::representations.size();
+        openpgl::gpu::VMMPhaseFunctionRepresentationData* phaseFunctionRepresentations = new openpgl::gpu::VMMPhaseFunctionRepresentationData[numPhaseFunctionRepresentations];
+        for (int i = 0; i < numPhaseFunctionRepresentations; i++)
+        {
+            phaseFunctionRepresentations[i].g = VMMSingleLobeHenyeyGreensteinOracle::representations[i].g;
+            phaseFunctionRepresentations[i].weights[0] = VMMSingleLobeHenyeyGreensteinOracle::representations[i].weights[0];
+            phaseFunctionRepresentations[i].weights[1] = VMMSingleLobeHenyeyGreensteinOracle::representations[i].weights[1];
+            phaseFunctionRepresentations[i].weights[2] = VMMSingleLobeHenyeyGreensteinOracle::representations[i].weights[2];
+            phaseFunctionRepresentations[i].meanCosines[0] = VMMSingleLobeHenyeyGreensteinOracle::representations[i].meanCosines[0];
+            phaseFunctionRepresentations[i].meanCosines[1] = VMMSingleLobeHenyeyGreensteinOracle::representations[i].meanCosines[1];
+            phaseFunctionRepresentations[i].meanCosines[2] = VMMSingleLobeHenyeyGreensteinOracle::representations[i].meanCosines[2];
+        }
+        fieldGPU->m_numPhaseFunctionRepresentations = numPhaseFunctionRepresentations;
+        fieldGPU->m_phaseFunctionRepresentations = (void*) phaseFunctionRepresentations;
 
         int numSurfaceDistriubtion = m_surfaceField.m_regionStorageContainer.size();
         fieldGPU->m_numSurfaceDistributions = numSurfaceDistriubtion;

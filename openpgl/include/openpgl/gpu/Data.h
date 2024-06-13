@@ -36,6 +36,9 @@ namespace gpu{
         void *m_surfaceDistributions;
         void *m_volumeDistributions;
 
+        int m_numPhaseFunctionRepresentations;
+        void *m_phaseFunctionRepresentations;
+
 #if defined(OPENPGL_EF_RADIANCE_CACHES) || defined(OPENPGL_RADIANCE_CACHES)
         void *m_surfaceOutgoingRadianceHistogram;
         void *m_volumeOutgoingRadianceHistogram;
@@ -43,6 +46,7 @@ namespace gpu{
     };
 
     struct VMMPhaseFunctionRepresentationData {
+        float g = 0.f;
         float meanCosines[4] {0.f, 0.f, 0.f, 0.f};
         float weights[4] {1.f/4.f, 1.f/4.f, 1.f/4.f, 1.f/4.f};
     };
