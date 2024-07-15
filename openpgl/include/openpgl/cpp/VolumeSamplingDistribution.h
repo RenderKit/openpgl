@@ -134,7 +134,7 @@ struct VolumeSamplingDistribution
      * @param direction The direction of the incoming radiance.
      * @return An estimate of the incoming direction.
     */
-    pgl_vec3f IncomingRadiance(pgl_vec3f& direction) const;
+    pgl_vec3f IncomingRadiance(pgl_vec3f& direction, const bool withMIS) const;
 
     /**
      * @brief Returns the outgoing (scattered) radiance estimates.
@@ -153,7 +153,7 @@ struct VolumeSamplingDistribution
      * @param direction The direction the volume radiance is scattered into.
      * @return An estimate of the in-scattered direction.
     */
-    pgl_vec3f InscatteredRadiance(pgl_vec3f& direction, const float g) const;
+    pgl_vec3f InscatteredRadiance(pgl_vec3f& direction, const float g, const bool withMIS) const;
 
     /**
      * @brief Returns the estimate of the volume fluence.
@@ -161,7 +161,7 @@ struct VolumeSamplingDistribution
      * 
      * @return An estimate of the volume fluence direction.
     */
-    pgl_vec3f Fluence() const;
+    pgl_vec3f Fluence(const bool withMIS) const;
 #endif
 
     ///////////////////////////////////////
@@ -290,10 +290,10 @@ OPENPGL_INLINE uint32_t VolumeSamplingDistribution::GetId() const
 }
 
 #ifdef OPENPGL_EF_RADIANCE_CACHES
-OPENPGL_INLINE pgl_vec3f VolumeSamplingDistribution::IncomingRadiance(pgl_vec3f& direction) const
+OPENPGL_INLINE pgl_vec3f VolumeSamplingDistribution::IncomingRadiance(pgl_vec3f& direction, const bool withMIS) const
 {
     OPENPGL_ASSERT(m_volumeSamplingDistributionHandle);
-    return pglVolumeSamplingDistributionIncomingRadiance(m_volumeSamplingDistributionHandle, direction);
+    return pglVolumeSamplingDistributionIncomingRadiance(m_volumeSamplingDistributionHandle, direction, withMIS);
 }
 
 OPENPGL_INLINE pgl_vec3f VolumeSamplingDistribution::OutgoingRadiance(pgl_vec3f& direction) const
@@ -302,16 +302,16 @@ OPENPGL_INLINE pgl_vec3f VolumeSamplingDistribution::OutgoingRadiance(pgl_vec3f&
     return pglVolumeSamplingDistributionOutgoingRadiance(m_volumeSamplingDistributionHandle, direction); 
 }
 
-OPENPGL_INLINE pgl_vec3f VolumeSamplingDistribution::InscatteredRadiance(pgl_vec3f& direction, const float g) const
+OPENPGL_INLINE pgl_vec3f VolumeSamplingDistribution::InscatteredRadiance(pgl_vec3f& direction, const float g, const bool withMIS) const
 {
     OPENPGL_ASSERT(m_volumeSamplingDistributionHandle);
-    return pglVolumeSamplingDistributionInscatteredRadiance(m_volumeSamplingDistributionHandle, direction, g); 
+    return pglVolumeSamplingDistributionInscatteredRadiance(m_volumeSamplingDistributionHandle, direction, g, withMIS); 
 }
 
-OPENPGL_INLINE pgl_vec3f VolumeSamplingDistribution::Fluence() const
+OPENPGL_INLINE pgl_vec3f VolumeSamplingDistribution::Fluence(const bool withMIS) const
 {
     OPENPGL_ASSERT(m_volumeSamplingDistributionHandle);
-    return pglVolumeSamplingDistributionFluence(m_volumeSamplingDistributionHandle);
+    return pglVolumeSamplingDistributionFluence(m_volumeSamplingDistributionHandle, withMIS);
 }
 #endif
 

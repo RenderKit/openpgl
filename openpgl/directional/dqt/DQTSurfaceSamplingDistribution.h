@@ -43,12 +43,12 @@ struct DQTSurfaceSamplingDistribution: public ISurfaceSamplingDistribution {
         return distribution.pdf(dir);
     };
 #ifdef OPENPGL_RADIANCE_CACHES
-    inline Vector3 incomingRadiance(const Vector3 dir) const override
+    inline Vector3 incomingRadiance(const Vector3 dir, const bool withMIS) const override
     {
         return Vector3(0.f, 0.f, 0.f);
     }
 
-    inline Vector3 irradiance(const Vector3 normal) const override
+    inline Vector3 irradiance(const Vector3 normal, const bool withMIS) const override
     {
         return Vector3(0.f, 0.f, 0.f);
     }

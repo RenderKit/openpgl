@@ -305,24 +305,16 @@ public:
                         OPENPGL_ASSERT(embree::isvalid(weight));
                         OPENPGL_ASSERT(weight >= 0.f);
                         SampleData dsd;
-                        dsd.position.x = pos[0];
-                        dsd.position.y = pos[1];
-                        dsd.position.z = pos[2];
-                        dsd.direction.x = dir[0];
-                        dsd.direction.y = dir[1];
-                        dsd.direction.z = dir[2];
+                        dsd.position = {pos[0], pos[1], pos[2]};
+                        dsd.direction = {dir[0], dir[1], dir[2]};
                         dsd.weight = weight;
 #ifdef OPENPGL_RADIANCE_CACHES
-                        dsd.directionOut.x = dirOut[0];
-                        dsd.directionOut.y = dirOut[1];
-                        dsd.directionOut.z = dirOut[2];
+                        dsd.directionOut = {dirOut[0], dirOut[1], dirOut[2]};
                         dsd.radianceOut.x = /*directContribution.x*/ + scatteredContribution.x + scatteringWeight.x * contribution[0];
                         dsd.radianceOut.y = /*directContribution.y*/ + scatteredContribution.y + scatteringWeight.y * contribution[1];
                         dsd.radianceOut.z = /*directContribution.z*/ + scatteredContribution.z + scatteringWeight.z * contribution[2];
-
-                        dsd.weightRGB.x = contribution[0] / pdf;
-                        dsd.weightRGB.y = contribution[1] / pdf;
-                        dsd.weightRGB.z = contribution[2] / pdf;
+                        
+                        dsd.radianceIn = {contribution[0] / pdf, contribution[1] / pdf, contribution[2] / pdf};
 #endif
                         dsd.pdf = pdf;
                         dsd.distance = distance;
@@ -341,16 +333,10 @@ public:
                 else if(m_track_zero_value_samples)
                 {
                     ZeroValueSampleData isd;
-                    isd.position.x = pos[0];
-                    isd.position.y = pos[1];
-                    isd.position.z = pos[2];
-                    isd.direction.x = dir[0];
-                    isd.direction.y = dir[1];
-                    isd.direction.z = dir[2];
+                    isd.position = {pos[0], pos[1], pos[2]};
+                    isd.direction = {dir[0], dir[1], dir[2]};
 #ifdef OPENPGL_RADIANCE_CACHES
-                    isd.directionOut.x = dirOut[0];
-                    isd.directionOut.y = dirOut[1];
-                    isd.directionOut.z = dirOut[2];
+                    isd.directionOut= {dirOut[0], dirOut[1], dirOut[2]};
 #endif
                     isd.volume = insideVolume;
 #if defined(OPENPGL_PATHSEGMENT_STORAGE_USE_ARRAY)

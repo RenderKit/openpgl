@@ -25,7 +25,9 @@ struct PGLSampleData
         /// point does not represent any real scene intersection point
         ESplatted = 1<<0, 
         /// point does not represent any real scene intersection point
-        EInsideVolume = 1<<1 
+        EInsideVolume = 1<<1, 
+        /// if the samples represents direct light from a light source
+        EDirectLight = 1<<2 
     };
 
     /// the position of the sample (i.e., at which energy arrives)
@@ -40,7 +42,8 @@ struct PGLSampleData
 
 #ifdef OPENPGL_EF_RADIANCE_CACHES
     /// a scalar representation of the incident radiance in RGB divide by @ref pdf
-    pgl_vec3f weightRGB; 
+    pgl_vec3f radianceIn; 
+    float radianceInMISWeight;
 #endif
 
     /// the PDF used for sampling @ref direction at @ref position   
