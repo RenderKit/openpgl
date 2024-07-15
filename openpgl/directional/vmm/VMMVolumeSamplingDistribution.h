@@ -128,9 +128,9 @@ struct __aligned(TVMMDistribution::VectorSize*4) VMMVolumeSamplingDistribution: 
     }
 
 #ifdef OPENPGL_RADIANCE_CACHES
-    inline Vector3 incomingRadiance(const Vector3 dir) const override
+    inline Vector3 incomingRadiance(const Vector3 dir, const bool withMIS) const override
     {
-        return m_liDistribution.incomingRadiance(dir);
+        return m_liDistribution.incomingRadiance(dir, withMIS);
     }
 
     inline Vector3 outgoingRadiance(const Vector3 dir) const override
@@ -138,7 +138,7 @@ struct __aligned(TVMMDistribution::VectorSize*4) VMMVolumeSamplingDistribution: 
         return m_region->getOutgoingRadiance(dir);
     }
 
-    inline Vector3 inScatteredRadiance(const Vector3 dir, const float meanCosine) const override
+    inline Vector3 inScatteredRadiance(const Vector3 dir, const float meanCosine, const bool withMIS) const override
     {
         const VMMPhaseFunctionRepresentation pfRep =VMMSingleLobeHenyeyGreensteinOracle::getPhaseFunctionRepresentation(meanCosine);
 
@@ -146,14 +146,14 @@ struct __aligned(TVMMDistribution::VectorSize*4) VMMVolumeSamplingDistribution: 
         for (int i=0; i < pfRep.K; i++)
         {
             const Vector3 outDir = meanCosine * pfRep.meanCosines[i] > 0.f ? dir: -dir;
-            inscatteredRad += pfRep.weights[i] * m_liDistribution.inscatteredRadiance(outDir, pfRep.meanCosines[i]);
+            inscatteredRad += pfRep.weights[i] * m_liDistribution.inscatteredRadiance(outDir, pfRep.meanCosines[i], withMIS);
         }
         return inscatteredRad;
     }
 
-    inline Vector3 fluence() const override
+    inline Vector3 fluence(const bool withMIS) const override
     {
-        return m_liDistribution.fluence();
+        return m_liDistribution.fluence(withMIS);
     } 
 #endif
 

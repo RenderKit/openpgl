@@ -19,7 +19,8 @@ namespace openpgl
     enum SampleData_Flags
     {
         ESplatted = 1<<0,      // point does not represent any real scene intersection point
-        EInsideVolume = 1<<1   // point does not represent any real scene intersection point
+        EInsideVolume = 1<<1,   // point does not represent any real scene intersection point
+        EDirectLight = 1<<2  // if the samples represents direct light from a light source
     };
 
     inline bool isValid(const SampleData& dsd)
@@ -48,6 +49,11 @@ namespace openpgl
     inline bool isInsideVolume(const SampleData& sd)
     {
         return (sd.flags & EInsideVolume);
+    }
+
+    inline bool isDirectLight(const SampleData& sd)
+    {
+        return (sd.flags & EDirectLight);
     }
 
     inline std::string toString(const SampleData& sd)

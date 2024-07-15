@@ -1358,15 +1358,15 @@ void ParallaxAwareVonMisesFisherWeightedEMFactory<TVMMDistribution>::updateFluen
     {            
         sumFluence += samples[n].weight;
         const Vector3 sampleDirection(samples[n].direction.x, samples[n].direction.y, samples[n].direction.z);
-        const Vector3 weightRGB(samples[n].weightRGB.x, samples[n].weightRGB.y, samples[n].weightRGB.z);
-        sumFluenceRGB += weightRGB;
+        const Vector3 radianceIn(samples[n].radianceIn.x, samples[n].radianceIn.y, samples[n].radianceIn.z);
+        sumFluenceRGB += radianceIn;
         if (vmm.softAssignment(sampleDirection, softAssign))
         {
             for (size_t k = 0; k < cnt; k++)
             {
-                sumFluenceRGBWeights[k].x += weightRGB.x * softAssign.assignments[k];
-                sumFluenceRGBWeights[k].y += weightRGB.y * softAssign.assignments[k];
-                sumFluenceRGBWeights[k].z += weightRGB.z * softAssign.assignments[k];
+                sumFluenceRGBWeights[k].x += radianceIn.x * softAssign.assignments[k];
+                sumFluenceRGBWeights[k].y += radianceIn.y * softAssign.assignments[k];
+                sumFluenceRGBWeights[k].z += radianceIn.z * softAssign.assignments[k];
             }
         }
     }
@@ -1387,9 +1387,9 @@ void ParallaxAwareVonMisesFisherWeightedEMFactory<TVMMDistribution>::updateFluen
     // TODO: switch to numerical more stable version
     for (size_t k = 0; k < cnt; k++)
     {
-        vmm._fluenceRGBWeights[k].x = ((vmm._fluenceRGBWeights[k].x * oldNumFluenceSamples) + sumFluenceRGBWeights[k].x) / newNumFluenceSamples;
-        vmm._fluenceRGBWeights[k].y = ((vmm._fluenceRGBWeights[k].y * oldNumFluenceSamples) + sumFluenceRGBWeights[k].y) / newNumFluenceSamples;
-        vmm._fluenceRGBWeights[k].z = ((vmm._fluenceRGBWeights[k].z * oldNumFluenceSamples) + sumFluenceRGBWeights[k].z) / newNumFluenceSamples;
+        vmm._fluenceRGBWeightsWithMIS[k].x = ((vmm._fluenceRGBWeightsWithMIS[k].x * oldNumFluenceSamples) + sumFluenceRGBWeights[k].x) / newNumFluenceSamples;
+        vmm._fluenceRGBWeightsWithMIS[k].y = ((vmm._fluenceRGBWeightsWithMIS[k].y * oldNumFluenceSamples) + sumFluenceRGBWeights[k].y) / newNumFluenceSamples;
+        vmm._fluenceRGBWeightsWithMIS[k].z = ((vmm._fluenceRGBWeightsWithMIS[k].z * oldNumFluenceSamples) + sumFluenceRGBWeights[k].z) / newNumFluenceSamples;
     }
 
     vmm._fluenceRGB = ((vmm._fluenceRGB * oldNumFluenceSamples) + sumFluenceRGB) / newNumFluenceSamples;
@@ -1426,9 +1426,9 @@ void ParallaxAwareVonMisesFisherWeightedEMFactory<TVMMDistribution>::updateFluen
         const Vector3 sampleDirection(samples[n].direction.x, samples[n].direction.y, samples[n].direction.z);
         embree::Vec3< embree::vfloat<VMM::VectorSize> > sampleDirectionVec(sampleDirection[0], sampleDirection[1], sampleDirection[2]);
 
-        Vector3 weightRGB(samples[n].weightRGB.x, samples[n].weightRGB.y, samples[n].weightRGB.z);
+        Vector3 radianceIn(samples[n].radianceIn.x, samples[n].radianceIn.y, samples[n].radianceIn.z);
         sumFluence += samples[n].weight;
-        sumFluenceRGBMC += weightRGB / samples[n].pdf;
+        sumFluenceRGBMC += radianceIn / samples[n].pdf;
 
         if (vmm.softAssignment(sampleDirection, softAssign))
         {
@@ -1438,11 +1438,11 @@ void ParallaxAwareVonMisesFisherWeightedEMFactory<TVMMDistribution>::updateFluen
                 const embree::vfloat<VMM::VectorSize> cosTheta = embree::dot(sampleDirectionVec, vmm._meanDirections[k]);
                 const embree::vfloat<VMM::VectorSize> cosThetaMinusOne = embree::min(cosTheta - ones, zeros);
                 OPENPGL_ASSERT(embree::isvalid(pdfs));
-                sumFluenceRGBWeights[k].x += weightRGB.x * softAssign.assignments[k] * pdfs;
+                sumFluenceRGBWeights[k].x += radianceIn.x * softAssign.assignments[k] * pdfs;
                 OPENPGL_ASSERT(embree::isvalid(sumFluenceRGBWeights[k].x));
-                sumFluenceRGBWeights[k].y += weightRGB.y * softAssign.assignments[k] * pdfs;
+                sumFluenceRGBWeights[k].y += radianceIn.y * softAssign.assignments[k] * pdfs;
                 OPENPGL_ASSERT(embree::isvalid(sumFluenceRGBWeights[k].y));
-                sumFluenceRGBWeights[k].z += weightRGB.z * softAssign.assignments[k] * pdfs;
+                sumFluenceRGBWeights[k].z += radianceIn.z * softAssign.assignments[k] * pdfs;
                 OPENPGL_ASSERT(embree::isvalid(sumFluenceRGBWeights[k].z));
                 sumPdfs[k] += pdfs;
                 OPENPGL_ASSERT(embree::isvalid(sumPdfs[k]));
@@ -1469,9 +1469,9 @@ void ParallaxAwareVonMisesFisherWeightedEMFactory<TVMMDistribution>::updateFluen
     float alpha = float(numSamples) / (vmm._numFluenceSamples + numSamples);
     for (size_t k = 0; k < cnt; k++)
     {
-        vmm._fluenceRGBWeights[k].x = (vmm._fluenceRGBWeights[k].x * (1.f - alpha)) + alpha * sumFluenceRGBWeights[k].x;
-        vmm._fluenceRGBWeights[k].y = (vmm._fluenceRGBWeights[k].y * (1.f - alpha)) + alpha * sumFluenceRGBWeights[k].y;
-        vmm._fluenceRGBWeights[k].z = (vmm._fluenceRGBWeights[k].z * (1.f - alpha)) + alpha * sumFluenceRGBWeights[k].z;
+        vmm._fluenceRGBWeightsWithMIS[k].x = (vmm._fluenceRGBWeightsWithMIS[k].x * (1.f - alpha)) + alpha * sumFluenceRGBWeights[k].x;
+        vmm._fluenceRGBWeightsWithMIS[k].y = (vmm._fluenceRGBWeightsWithMIS[k].y * (1.f - alpha)) + alpha * sumFluenceRGBWeights[k].y;
+        vmm._fluenceRGBWeightsWithMIS[k].z = (vmm._fluenceRGBWeightsWithMIS[k].z * (1.f - alpha)) + alpha * sumFluenceRGBWeights[k].z;
     }    
 
     vmm._fluenceRGB = (1.f - alpha) * vmm._fluenceRGB + alpha * sumFluenceRGB;
