@@ -382,9 +382,10 @@ private:
             std::pair<TRegion, Range> &regionAndRangeData = dataStorage->operator[](dataIdx);
             regionAndRangeData.first.sampleStatistics.addNumZeroValueSamples(sampleRange.size());
             regionAndRangeData.first.numZeroValueSamples = sampleRange.size();
-
+#ifdef OPENPGL_RADIANCE_CACHES
             regionAndRangeData.second.m_is_begin = sampleRange.m_begin;
             regionAndRangeData.second.m_is_end = sampleRange.m_end;
+#endif
             return;
         }
         else

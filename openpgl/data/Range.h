@@ -25,13 +25,13 @@ namespace openpgl
             OPENPGL_ASSERT(int(m_end) - int(m_begin) >= 0);
             return m_end - m_begin;
         }
-
+#ifdef OPENPGL_RADIANCE_CACHES
         inline size_t sizeZeroValueSamples() const
         {
             OPENPGL_ASSERT(int(m_is_end) - int(m_is_begin) >= 0);
             return m_is_end - m_is_begin;
         }
-
+#endif
         inline void reset()
         {
             m_begin = 0;

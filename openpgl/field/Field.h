@@ -451,8 +451,8 @@ private:
                 	typename DirectionalDistributionFactory::FittingStatistics fittingStats;
                 	m_distributionFactory.prepareSamples(samples.data() + regionStorage.second.m_begin, regionStorage.second.m_end - regionStorage.second.m_begin, regionStorage.first.sampleStatistics, m_distributionFactorySettings);
                 	m_distributionFactory.fit(regionStorage.first.distribution, regionStorage.first.trainingStatistics, samples.data() + regionStorage.second.m_begin, regionStorage.second.m_end - regionStorage.second.m_begin, m_distributionFactorySettings, fittingStats);
-                	m_distributionFactory.updateFluenceEstimate(regionStorage.first.distribution, samples.data() + regionStorage.second.m_begin, regionStorage.second.m_end - regionStorage.second.m_begin, regionStorage.first.numZeroValueSamples, regionStorage.first.sampleStatistics);
 #ifdef OPENPGL_RADIANCE_CACHES
+                    m_distributionFactory.updateFluenceEstimate(regionStorage.first.distribution, samples.data() + regionStorage.second.m_begin, regionStorage.second.m_end - regionStorage.second.m_begin, regionStorage.first.numZeroValueSamples, regionStorage.first.sampleStatistics);
                 	regionStorage.first.outRadianceHist.update(samples.data() + regionStorage.second.m_begin, regionStorage.second.m_end - regionStorage.second.m_begin, zeroValueSamples.data() + regionStorage.second.m_is_begin, regionStorage.second.m_is_end - regionStorage.second.m_is_begin);
 #endif
                 	// TODO: we should move setting the pivot to the factory
@@ -527,9 +527,8 @@ private:
 	                typename DirectionalDistributionFactory::FittingStatistics fittingStats;
 	                m_distributionFactory.prepareSamples(samples.data() + regionStorage.second.m_begin, regionStorage.second.m_end - regionStorage.second.m_begin, regionStorage.first.sampleStatistics, m_distributionFactorySettings);
 	                m_distributionFactory.update(regionStorage.first.distribution, regionStorage.first.trainingStatistics, samples.data() + regionStorage.second.m_begin, regionStorage.second.m_end - regionStorage.second.m_begin, m_distributionFactorySettings, fittingStats);
-	                m_distributionFactory.updateFluenceEstimate(regionStorage.first.distribution, samples.data() + regionStorage.second.m_begin, regionStorage.second.m_end - regionStorage.second.m_begin, regionStorage.first.numZeroValueSamples, regionStorage.first.sampleStatistics);
-	                //regionStorage.first.valid = regionStorage.first.distribution.isValid();
 #ifdef OPENPGL_RADIANCE_CACHES
+                    m_distributionFactory.updateFluenceEstimate(regionStorage.first.distribution, samples.data() + regionStorage.second.m_begin, regionStorage.second.m_end - regionStorage.second.m_begin, regionStorage.first.numZeroValueSamples, regionStorage.first.sampleStatistics);
 	                regionStorage.first.outRadianceHist.update(samples.data() + regionStorage.second.m_begin, regionStorage.second.m_end - regionStorage.second.m_begin, zeroValueSamples.data() + regionStorage.second.m_is_begin, regionStorage.second.m_is_end - regionStorage.second.m_is_begin);
 #endif
 	                regionStorage.first.valid = regionStorage.first.isValid();

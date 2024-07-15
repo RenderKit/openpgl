@@ -191,8 +191,10 @@ public:
 
     void partialUpdateMixture(VMM &vmm, PartialFittingMask &mask, SufficientStatistics &previousStats, const SampleData* samples, const size_t numSamples, const Configuration &cfg, FittingStatistics &fitStats) const;
 
+#ifdef OPENPGL_RADIANCE_CACHES
     void updateFluenceEstimate(VMM &vmm, const SampleData* samples, const size_t numSamples, const size_t numZeroValueSamples, const SampleStatistics &sampleStatistics) const;
-    
+#endif
+
     VMM VMMfromSufficientStatistics(const SufficientStatistics &suffStats, const Configuration &cfg) const;
 
     std::string toString() const
@@ -1324,6 +1326,7 @@ void ParallaxAwareVonMisesFisherWeightedEMFactory< TVMMDistribution>::updateComp
 
 }
 
+#ifdef OPENPGL_RADIANCE_CACHES
 template<class TVMMDistribution>
 void ParallaxAwareVonMisesFisherWeightedEMFactory<TVMMDistribution>::updateFluenceEstimate(VMM &vmm, const SampleData* samples, const size_t numSamples, const size_t numZeroValueSamples, const SampleStatistics &sampleStatistics) const
 {
@@ -1341,7 +1344,6 @@ void ParallaxAwareVonMisesFisherWeightedEMFactory<TVMMDistribution>::updateFluen
     float sumFluence {0.f};
     Vector3 sumFluenceRGB {0.f, 0.f, 0.f};
 
-#ifdef OPENPGL_RADIANCE_CACHES
     embree::Vec3<embree::vfloat<VMM::VectorSize> > sumFluenceRGBWeights[VMM::NumVectors];
     typename VMM::SoftAssignment softAssign;
 
@@ -1352,12 +1354,9 @@ void ParallaxAwareVonMisesFisherWeightedEMFactory<TVMMDistribution>::updateFluen
         sumFluenceRGBWeights[k].z = zeros;
     }
 
-#endif
-
     for (size_t n = 0; n < numSamples; n++)
     {            
         sumFluence += samples[n].weight;
-#ifdef OPENPGL_RADIANCE_CACHES
         const Vector3 sampleDirection(samples[n].direction.x, samples[n].direction.y, samples[n].direction.z);
         const Vector3 weightRGB(samples[n].weightRGB.x, samples[n].weightRGB.y, samples[n].weightRGB.z);
         sumFluenceRGB += weightRGB;
@@ -1370,13 +1369,11 @@ void ParallaxAwareVonMisesFisherWeightedEMFactory<TVMMDistribution>::updateFluen
                 sumFluenceRGBWeights[k].z += weightRGB.z * softAssign.assignments[k];
             }
         }
-#endif
     }
 
     const float oldNumFluenceSamples = vmm._numFluenceSamples;
     const float newNumFluenceSamples = (oldNumFluenceSamples + float(numSamples + numZeroValueSamples));
 
-#ifdef OPENPGL_RADIANCE_CACHES
     if ( rem > 0 )
     {
         for ( size_t i = rem; i < VMM::VectorSize; i++)
@@ -1396,7 +1393,6 @@ void ParallaxAwareVonMisesFisherWeightedEMFactory<TVMMDistribution>::updateFluen
     }
 
     vmm._fluenceRGB = ((vmm._fluenceRGB * oldNumFluenceSamples) + sumFluenceRGB) / newNumFluenceSamples;
-#endif
     vmm._fluence = ((vmm._fluence * oldNumFluenceSamples) + sumFluence) / newNumFluenceSamples;
     vmm._numFluenceSamples = newNumFluenceSamples;
 #else //calcualting fluence and the RGB per lob estiamtions using the soft assigns counter to average the incoming radiance per lobe (getting rid of the PDF dependency) TODO: maybe drop this code
@@ -1484,6 +1480,7 @@ void ParallaxAwareVonMisesFisherWeightedEMFactory<TVMMDistribution>::updateFluen
 
 #endif
 }
+#endif
 
 template<class TVMMDistribution>
 void ParallaxAwareVonMisesFisherWeightedEMFactory< TVMMDistribution>::Configuration::init()
