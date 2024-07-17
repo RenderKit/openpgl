@@ -105,10 +105,10 @@ OPENPGL_INLINE void SetMiWeight(PathSegment* pathSegment, const float& miWeight)
     pathSegment->miWeight = miWeight;
 }
 
-OPENPGL_INLINE void SetRussianRouletteProbability(PathSegment* pathSegment, const float& russianRouletteProbability)
+OPENPGL_INLINE void SetRussianRouletteProbability(PathSegment* pathSegment, const float& russianRouletteSurvivalProbability)
 {
     OPENPGL_ASSERT(pathSegment);
-    pathSegment->russianRouletteProbability = russianRouletteProbability;
+    pathSegment->russianRouletteSurvivalProbability = russianRouletteSurvivalProbability;
 }
 
 OPENPGL_INLINE void SetEta(PathSegment* pathSegment, const float& eta)

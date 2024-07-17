@@ -194,17 +194,24 @@ public:
         size_t numSegments = m_segmentStorage.size();
 #endif
         float lastDistance = 0.0f;
+        // go revese from the start vertex of the last path segment (the end vertex of 2nd last segment)
+        // towards the vertex of the first path segment 
         for (int i=numSegments-2; i>=0; --i)
         {
             const openpgl::PathSegmentData &currentPathSegment = m_segmentStorage[i];
             float currentDistance = embree::length(openpgl::Point3(m_segmentStorage[i+1].position.x, m_segmentStorage[i+1].position.y, m_segmentStorage[i+1].position.z) - openpgl::Point3(currentPathSegment.position.x, currentPathSegment.position.y, currentPathSegment.position.z));
+            // calcualte the distance to the source 
             float distance = std::fmin(currentDistance + lastDistance, 2.0f * m_max_distance);
 
+            ////// Calculating/updating the distance to the source of the incident radiance for the next vertex
+            // if the current vertex is not a delta intercation or rough we reset the previous distacne
+            // TODO: double check the roughness threshold at some point
             if(!currentPathSegment.isDelta && currentPathSegment.roughness >=0.3f)
             {
                 lastDistance = 0.0f;
             }
-            else
+            // else if the curent vetex is a dirac/delta interaction update the previous distance
+            else 
             {
                 lastDistance = distance;
                 if(currentPathSegment.eta!= 1.0f)
@@ -241,10 +248,12 @@ public:
                     flags |= SampleData::EInsideVolume;
                 }
                 
+                bool directLightSample = false;
+                float misWeight = 1.f;
                 // evalaute the incident radiance the incident
                 openpgl::Vector3 throughput {1.0f};
                 openpgl::Vector3 contribution {0.0f};
-                float previousRR = 1.0f;
+                float previousRRSurvivalProb = 1.0f;
                 for (size_t j = i+1; j < numSegments; ++j)
                 {
                     const openpgl::PathSegmentData &nextPathSegment = m_segmentStorage[j];
@@ -258,22 +267,37 @@ public:
                     OPENPGL_ASSERT(contribution[0] >= 0.f && contribution[1] >= 0.f && contribution[2] >= 0.f);
                     
                     openpgl::Vector3 directContribution = openpgl::Vector3(nextPathSegment.directContribution.x, nextPathSegment.directContribution.y, nextPathSegment.directContribution.z);
+                    // Todo: need explanation
                     if(!rrAffectsDirectContribution)
                     {
-                        directContribution *= previousRR;
+                        directContribution *= previousRRSurvivalProb;
                     }
-                    if(j == i+1 && !useNEEMiWeights)
-                    {
-                        if(guideDirectLight)
+                    if(directContribution[0] > 0.f || directContribution[1] > 0.f || directContribution[2] > 0.f){
+                        if(j == i+1)
                         {
-                            contribution += clampedThroughput * directContribution;
-                            OPENPGL_ASSERT(embree::isvalid(contribution));
-                            OPENPGL_ASSERT(contribution[0] >= 0.f && contribution[1] >= 0.f && contribution[2] >= 0.f);
+                            if(contribution[0] > 0.f || contribution[1] > 0.f || contribution[2] > 0.f){
+                                std::cout << "scateredContribution" << std::endl;
+                            } else {
+                                directLightSample = true;
+                            }
+                            if(guideDirectLight)
+                            {
+                                if(!useNEEMiWeights)
+                                {
+                                    contribution += clampedThroughput * directContribution;
+                                    OPENPGL_ASSERT(embree::isvalid(contribution));
+                                    OPENPGL_ASSERT(contribution[0] >= 0.f && contribution[1] >= 0.f && contribution[2] >= 0.f);
+                                } 
+                                else 
+                                {
+                                    contribution += clampedThroughput * nextPathSegment.miWeight * directContribution;
+                                    misWeight = nextPathSegment.miWeight;
+                                    OPENPGL_ASSERT(embree::isvalid(contribution));
+                                    OPENPGL_ASSERT(contribution[0] >= 0.f && contribution[1] >= 0.f && contribution[2] >= 0.f);
+                                }
+                            }
                         }
-                    }
-                    else
-                    {
-                        if(j>i+1 || guideDirectLight)
+                        else
                         {
                             contribution += clampedThroughput * nextPathSegment.miWeight * directContribution;
                             OPENPGL_ASSERT(embree::isvalid(contribution));
@@ -281,18 +305,22 @@ public:
                         }
                     }
                     throughput = throughput * openpgl::Vector3(nextPathSegment.scatteringWeight.x, nextPathSegment.scatteringWeight.y, nextPathSegment.scatteringWeight.z);
-                    if(nextPathSegment.russianRouletteProbability > 0.f)
+                    if(nextPathSegment.russianRouletteSurvivalProbability > 0.f)
                     {
-                        throughput /= nextPathSegment.russianRouletteProbability;
+                        throughput /= nextPathSegment.russianRouletteSurvivalProbability;
                     }
                     else
                     {
                         throughput = openpgl::Vector3(0.f);
                     }
-                    previousRR = nextPathSegment.russianRouletteProbability;
+                    previousRRSurvivalProb = nextPathSegment.russianRouletteSurvivalProbability;
 
                     OPENPGL_ASSERT(embree::isvalid(throughput));
                     OPENPGL_ASSERT(throughput[0] >= 0.f && throughput[1] >= 0.f && throughput[2] >= 0.f)
+                }
+                if(directLightSample) 
+                {
+                    flags |= SampleData::EDirectLight;
                 }
 
 				OPENPGL_ASSERT(embree::isvalid(contribution));
@@ -314,7 +342,8 @@ public:
                         dsd.radianceOut.y = /*directContribution.y*/ + scatteredContribution.y + scatteringWeight.y * contribution[1];
                         dsd.radianceOut.z = /*directContribution.z*/ + scatteredContribution.z + scatteringWeight.z * contribution[2];
                         
-                        dsd.radianceIn = {contribution[0] / pdf, contribution[1] / pdf, contribution[2] / pdf};
+                        dsd.radianceIn = {contribution[0], contribution[1], contribution[2]};
+                        dsd.radianceInMISWeight = misWeight;
 #endif
                         dsd.pdf = pdf;
                         dsd.distance = distance;
@@ -380,7 +409,7 @@ public:
         // evalaute the incident radiance the incident
         openpgl::Vector3 throughput {1.0f};
         openpgl::Vector3 contribution {0.0f};
-        float previousRR = m_segmentStorage[0].russianRouletteProbability;
+        float previousRRSurvivalProb = m_segmentStorage[0].russianRouletteSurvivalProbability;
         for (size_t j = 0+1; j < numSegments; ++j)
         {
             const openpgl::PathSegmentData &nextPathSegment = m_segmentStorage[j];
@@ -396,22 +425,22 @@ public:
             openpgl::Vector3 directContribution = openpgl::Vector3(nextPathSegment.directContribution.x, nextPathSegment.directContribution.y, nextPathSegment.directContribution.z);
             if(!rrAffectsDirectContribution)
             {
-                directContribution *= previousRR;
+                directContribution *= previousRRSurvivalProb;
             }
             contribution += throughput * nextPathSegment.miWeight * directContribution;
             OPENPGL_ASSERT(embree::isvalid(contribution));
             OPENPGL_ASSERT(contribution[0] >= 0.f && contribution[1] >= 0.f && contribution[2] >= 0.f);
 
             throughput = throughput * openpgl::Vector3(nextPathSegment.scatteringWeight.x, nextPathSegment.scatteringWeight.y, nextPathSegment.scatteringWeight.z);
-            if(nextPathSegment.russianRouletteProbability > 0.f)
+            if(nextPathSegment.russianRouletteSurvivalProbability > 0.f)
             {
-                throughput /= nextPathSegment.russianRouletteProbability;
+                throughput /= nextPathSegment.russianRouletteSurvivalProbability;
             }
             else
             {
                 throughput = openpgl::Vector3(0.f);
             }
-            previousRR = nextPathSegment.russianRouletteProbability;
+            previousRRSurvivalProb = nextPathSegment.russianRouletteSurvivalProbability;
             OPENPGL_ASSERT(embree::isvalid(throughput));
             OPENPGL_ASSERT(throughput[0] >= 0.f && throughput[1] >= 0.f && throughput[2] >= 0.f)
         }
@@ -419,11 +448,11 @@ public:
         OPENPGL_ASSERT(embree::isvalid(contribution));
         OPENPGL_ASSERT(contribution[0] >= 0.f && contribution[1] >= 0.f && contribution[2] >= 0.f);
 
-        if(m_segmentStorage[0].russianRouletteProbability > 0.f)
+        if(m_segmentStorage[0].russianRouletteSurvivalProbability > 0.f)
         {
-            finalColor.x = m_segmentStorage[0].directContribution.x + m_segmentStorage[0].scatteredContribution.x + m_segmentStorage[0].scatteringWeight.x /** m_segmentStorage[0].transmittanceWeight.x*/ * contribution[0] / m_segmentStorage[0].russianRouletteProbability;
-            finalColor.y = m_segmentStorage[0].directContribution.y + m_segmentStorage[0].scatteredContribution.y + m_segmentStorage[0].scatteringWeight.y /** m_segmentStorage[0].transmittanceWeight.y*/ * contribution[1] / m_segmentStorage[0].russianRouletteProbability;
-            finalColor.z = m_segmentStorage[0].directContribution.z + m_segmentStorage[0].scatteredContribution.z + m_segmentStorage[0].scatteringWeight.z /** m_segmentStorage[0].transmittanceWeight.z*/ * contribution[2] / m_segmentStorage[0].russianRouletteProbability;
+            finalColor.x = m_segmentStorage[0].directContribution.x + m_segmentStorage[0].scatteredContribution.x + m_segmentStorage[0].scatteringWeight.x /** m_segmentStorage[0].transmittanceWeight.x*/ * contribution[0] / m_segmentStorage[0].russianRouletteSurvivalProbability;
+            finalColor.y = m_segmentStorage[0].directContribution.y + m_segmentStorage[0].scatteredContribution.y + m_segmentStorage[0].scatteringWeight.y /** m_segmentStorage[0].transmittanceWeight.y*/ * contribution[1] / m_segmentStorage[0].russianRouletteSurvivalProbability;
+            finalColor.z = m_segmentStorage[0].directContribution.z + m_segmentStorage[0].scatteredContribution.z + m_segmentStorage[0].scatteringWeight.z /** m_segmentStorage[0].transmittanceWeight.z*/ * contribution[2] / m_segmentStorage[0].russianRouletteSurvivalProbability;
         } else {
             finalColor.x = m_segmentStorage[0].directContribution.x + m_segmentStorage[0].scatteredContribution.x + m_segmentStorage[0].scatteringWeight.x /** m_segmentStorage[0].transmittanceWeight.x*/ * contribution[0];
             finalColor.y = m_segmentStorage[0].directContribution.y + m_segmentStorage[0].scatteredContribution.y + m_segmentStorage[0].scatteringWeight.y /** m_segmentStorage[0].transmittanceWeight.y*/ * contribution[1];
