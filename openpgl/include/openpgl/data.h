@@ -120,7 +120,7 @@ struct PGLPathSegmentData
     pgl_vec3f scatteredContribution{0.0f, 0.0f, 0.0f};
 
     /// The probability to survive Russian roulette
-    float russianRouletteProbability{1.0f};
+    float russianRouletteSurvivalProbability{1.0f};
 
     // BSDF information
     /// The refractive index (eta) of the material at @ref position.

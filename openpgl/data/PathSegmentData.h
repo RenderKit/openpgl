@@ -91,8 +91,8 @@ inline bool isValid(const PathSegmentData& psd)
         valid = valid && psd.miWeight >=0.f && psd.miWeight <=1.0f;
         OPENPGL_ASSERT(valid);
 
-        valid = valid && embree::isvalid(psd.russianRouletteProbability);
-        valid = valid && psd.miWeight >=0.f && psd.russianRouletteProbability <=1.0f;
+        valid = valid && embree::isvalid(psd.russianRouletteSurvivalProbability);
+        valid = valid && psd.miWeight >=0.f && psd.russianRouletteSurvivalProbability <=1.0f;
         OPENPGL_ASSERT(valid);
 
         valid = valid && embree::isvalid(psd.eta);
@@ -122,7 +122,7 @@ inline bool isValid(const PathSegmentData& psd)
         ss << "\t directContribution = " << psd.directContribution.x << "\t " << psd.directContribution.y << "\t " << psd.directContribution.z << "\t "; 
         ss << "\t miWeight = " << psd.miWeight;
         ss << "\t scatteredContribution = " << psd.scatteredContribution.x << "\t " << psd.scatteredContribution.y << "\t " << psd.scatteredContribution.z << "\t "; 
-        ss << "\t russianRouletteProbability = " << psd.russianRouletteProbability;
+        ss << "\t russianRouletteSurvivalProbability = " << psd.russianRouletteSurvivalProbability;
         ss << "\t eta = " << psd.eta; 
         ss << "\t rough = " << psd.roughness;
         ss << std::endl;

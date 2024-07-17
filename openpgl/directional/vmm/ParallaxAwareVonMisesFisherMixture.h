@@ -78,10 +78,10 @@ public:
 
 #ifdef OPENPGL_RADIANCE_CACHES
     // fluence attributes
-    float _fluence {0.0f};
+    //float _fluence {0.0f};
     float _numFluenceSamples {0.f};
     Vector3 _fluenceRGB {0.0f, 0.0f, 0.0f};
-    Vector3 _fluenceRGBWithRGB {0.0f, 0.0f, 0.0f};
+    Vector3 _fluenceRGBWithMIS {0.0f, 0.0f, 0.0f};
     embree::Vec3<embree::vfloat<VecSize> > _fluenceRGBWeightsWithMIS[NumVectors];
     embree::Vec3<embree::vfloat<VecSize> > _fluenceRGBWeights[NumVectors];
 #endif
@@ -262,7 +262,7 @@ std::string ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents,UseParalla
     ss << "pivot: " << _pivotPosition << std::endl;
     ss << "sumWeights: " << sumWeights << std::endl;
 #ifdef OPENPGL_RADIANCE_CACHES
-    ss << "fluence: " << _fluence << std::endl;
+    //ss << "fluence: " << _fluence << std::endl;
     ss << "fluenceRGB: " << _fluenceRGB.x << "\t" << _fluenceRGB.y << "\t" << _fluenceRGB.z << std::endl;
     ss << "numFluenceSamples: " << _numFluenceSamples << std::endl;
 #endif
@@ -500,7 +500,7 @@ void ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents,UseParallaxCompen
     stream.write(reinterpret_cast<const char*>(&_pivotPosition), sizeof(Point3));
 
 #ifdef OPENPGL_RADIANCE_CACHES
-    stream.write(reinterpret_cast<const char*>(&_fluence), sizeof(float));
+    //stream.write(reinterpret_cast<const char*>(&_fluence), sizeof(float));
     stream.write(reinterpret_cast<const char*>(&_fluenceRGB), sizeof(Vector3));
     stream.write(reinterpret_cast<const char*>(&_fluenceRGBWithMIS), sizeof(Vector3));
     stream.write(reinterpret_cast<const char*>(&_numFluenceSamples), sizeof(float));
@@ -525,7 +525,7 @@ void ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents,UseParallaxCompen
     stream.read(reinterpret_cast<char*>(&_pivotPosition), sizeof(Point3));
 
 #ifdef OPENPGL_RADIANCE_CACHES
-    stream.read(reinterpret_cast<char*>(&_fluence), sizeof(float));
+    //stream.read(reinterpret_cast<char*>(&_fluence), sizeof(float));
     stream.read(reinterpret_cast<char*>(&_fluenceRGB), sizeof(Vector3));
     stream.read(reinterpret_cast<char*>(&_fluenceRGBWithMIS), sizeof(Vector3));
     stream.read(reinterpret_cast<char*>(&_numFluenceSamples), sizeof(float));

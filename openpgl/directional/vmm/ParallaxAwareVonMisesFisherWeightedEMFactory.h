@@ -1343,8 +1343,10 @@ void ParallaxAwareVonMisesFisherWeightedEMFactory<TVMMDistribution>::updateFluen
 
     float sumFluence {0.f};
     Vector3 sumFluenceRGB {0.f, 0.f, 0.f};
+    Vector3 sumFluenceRGBWithMIS {0.f, 0.f, 0.f};
 
     embree::Vec3<embree::vfloat<VMM::VectorSize> > sumFluenceRGBWeights[VMM::NumVectors];
+    embree::Vec3<embree::vfloat<VMM::VectorSize> > sumFluenceRGBWeightsWithMIS[VMM::NumVectors];
     typename VMM::SoftAssignment softAssign;
 
     for (size_t k = 0; k < cnt; k++)
@@ -1352,21 +1354,34 @@ void ParallaxAwareVonMisesFisherWeightedEMFactory<TVMMDistribution>::updateFluen
         sumFluenceRGBWeights[k].x = zeros;
         sumFluenceRGBWeights[k].y = zeros;
         sumFluenceRGBWeights[k].z = zeros;
+
+        sumFluenceRGBWeightsWithMIS[k].x = zeros;
+        sumFluenceRGBWeightsWithMIS[k].y = zeros;
+        sumFluenceRGBWeightsWithMIS[k].z = zeros;
     }
 
     for (size_t n = 0; n < numSamples; n++)
     {            
-        sumFluence += samples[n].weight;
+        //sumFluence += samples[n].weight;
         const Vector3 sampleDirection(samples[n].direction.x, samples[n].direction.y, samples[n].direction.z);
-        const Vector3 radianceIn(samples[n].radianceIn.x, samples[n].radianceIn.y, samples[n].radianceIn.z);
-        sumFluenceRGB += radianceIn;
+        Vector3 radianceIn(samples[n].radianceIn.x, samples[n].radianceIn.y, samples[n].radianceIn.z);
+        radianceIn /= samples[n].pdf;
+        
+        Vector3 radianceInNoMIS = isDirectLight(samples[n]) ? radianceIn / samples[n].radianceInMISWeight : radianceIn;
+
+        sumFluenceRGB += radianceInNoMIS;
+        sumFluenceRGBWithMIS += radianceIn;
         if (vmm.softAssignment(sampleDirection, softAssign))
         {
             for (size_t k = 0; k < cnt; k++)
             {
-                sumFluenceRGBWeights[k].x += radianceIn.x * softAssign.assignments[k];
-                sumFluenceRGBWeights[k].y += radianceIn.y * softAssign.assignments[k];
-                sumFluenceRGBWeights[k].z += radianceIn.z * softAssign.assignments[k];
+                sumFluenceRGBWeights[k].x += radianceInNoMIS.x * softAssign.assignments[k];
+                sumFluenceRGBWeights[k].y += radianceInNoMIS.y * softAssign.assignments[k];
+                sumFluenceRGBWeights[k].z += radianceInNoMIS.z * softAssign.assignments[k];
+
+                sumFluenceRGBWeightsWithMIS[k].x += radianceIn.x * softAssign.assignments[k];
+                sumFluenceRGBWeightsWithMIS[k].y += radianceIn.y * softAssign.assignments[k];
+                sumFluenceRGBWeightsWithMIS[k].z += radianceIn.z * softAssign.assignments[k];
             }
         }
     }
@@ -1381,19 +1396,28 @@ void ParallaxAwareVonMisesFisherWeightedEMFactory<TVMMDistribution>::updateFluen
             sumFluenceRGBWeights[cnt-1].x[i] = 0.0f;
             sumFluenceRGBWeights[cnt-1].y[i] = 0.0f;
             sumFluenceRGBWeights[cnt-1].z[i] = 0.0f;
+
+            sumFluenceRGBWeightsWithMIS[cnt-1].x[i] = 0.0f;
+            sumFluenceRGBWeightsWithMIS[cnt-1].y[i] = 0.0f;
+            sumFluenceRGBWeightsWithMIS[cnt-1].z[i] = 0.0f;
         }
     }
 
     // TODO: switch to numerical more stable version
     for (size_t k = 0; k < cnt; k++)
     {
-        vmm._fluenceRGBWeightsWithMIS[k].x = ((vmm._fluenceRGBWeightsWithMIS[k].x * oldNumFluenceSamples) + sumFluenceRGBWeights[k].x) / newNumFluenceSamples;
-        vmm._fluenceRGBWeightsWithMIS[k].y = ((vmm._fluenceRGBWeightsWithMIS[k].y * oldNumFluenceSamples) + sumFluenceRGBWeights[k].y) / newNumFluenceSamples;
-        vmm._fluenceRGBWeightsWithMIS[k].z = ((vmm._fluenceRGBWeightsWithMIS[k].z * oldNumFluenceSamples) + sumFluenceRGBWeights[k].z) / newNumFluenceSamples;
+        vmm._fluenceRGBWeights[k].x = ((vmm._fluenceRGBWeights[k].x * oldNumFluenceSamples) + sumFluenceRGBWeights[k].x) / newNumFluenceSamples;
+        vmm._fluenceRGBWeights[k].y = ((vmm._fluenceRGBWeights[k].y * oldNumFluenceSamples) + sumFluenceRGBWeights[k].y) / newNumFluenceSamples;
+        vmm._fluenceRGBWeights[k].z = ((vmm._fluenceRGBWeights[k].z * oldNumFluenceSamples) + sumFluenceRGBWeights[k].z) / newNumFluenceSamples;
+
+        vmm._fluenceRGBWeightsWithMIS[k].x = ((vmm._fluenceRGBWeightsWithMIS[k].x * oldNumFluenceSamples) + sumFluenceRGBWeightsWithMIS[k].x) / newNumFluenceSamples;
+        vmm._fluenceRGBWeightsWithMIS[k].y = ((vmm._fluenceRGBWeightsWithMIS[k].y * oldNumFluenceSamples) + sumFluenceRGBWeightsWithMIS[k].y) / newNumFluenceSamples;
+        vmm._fluenceRGBWeightsWithMIS[k].z = ((vmm._fluenceRGBWeightsWithMIS[k].z * oldNumFluenceSamples) + sumFluenceRGBWeightsWithMIS[k].z) / newNumFluenceSamples;
     }
 
     vmm._fluenceRGB = ((vmm._fluenceRGB * oldNumFluenceSamples) + sumFluenceRGB) / newNumFluenceSamples;
-    vmm._fluence = ((vmm._fluence * oldNumFluenceSamples) + sumFluence) / newNumFluenceSamples;
+    vmm._fluenceRGBWithMIS = ((vmm._fluenceRGBWithMIS * oldNumFluenceSamples) + sumFluenceRGBWithMIS) / newNumFluenceSamples;
+    //vmm._fluence = ((vmm._fluence * oldNumFluenceSamples) + sumFluence) / newNumFluenceSamples;
     vmm._numFluenceSamples = newNumFluenceSamples;
 #else //calcualting fluence and the RGB per lob estiamtions using the soft assigns counter to average the incoming radiance per lobe (getting rid of the PDF dependency) TODO: maybe drop this code
     const embree::vfloat<VMM::VectorSize> zeros(0.0f);
