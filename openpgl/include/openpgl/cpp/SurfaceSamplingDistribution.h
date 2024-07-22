@@ -128,7 +128,7 @@ struct SurfaceSamplingDistribution
      * @param direction The direction of the incoming radiance  
      * @return An estimate of the incoming direction
     */
-    pgl_vec3f IncomingRadiance(pgl_vec3f& direction, const bool withMIS) const;
+    pgl_vec3f IncomingRadiance(pgl_vec3f& direction, const bool directLightMIS) const;
 
     /**
      * @brief Returns the outgoing (scattered) radiance estimates.
@@ -145,7 +145,7 @@ struct SurfaceSamplingDistribution
      * @param direction The direction of the surface normal. 
      * @return An estimate of the irradiance.
     */
-    pgl_vec3f Irradiance(pgl_vec3f& normal, const bool withMIS) const;
+    pgl_vec3f Irradiance(pgl_vec3f& normal, const bool directLightMIS) const;
 #endif
     ///////////////////////////////////////
     /// Future plans
@@ -277,10 +277,10 @@ OPENPGL_INLINE uint32_t SurfaceSamplingDistribution::GetId() const
     return pglSurfaceSamplingDistributionGetId(m_surfaceSamplingDistributionHandle);
 }
 #ifdef OPENPGL_EF_RADIANCE_CACHES
-OPENPGL_INLINE pgl_vec3f SurfaceSamplingDistribution::IncomingRadiance(pgl_vec3f& direction, const bool withMIS) const
+OPENPGL_INLINE pgl_vec3f SurfaceSamplingDistribution::IncomingRadiance(pgl_vec3f& direction, const bool directLightMIS) const
 {
     OPENPGL_ASSERT(m_surfaceSamplingDistributionHandle);
-    return pglSurfaceSamplingDistributionIncomingRadiance(m_surfaceSamplingDistributionHandle, direction, withMIS);
+    return pglSurfaceSamplingDistributionIncomingRadiance(m_surfaceSamplingDistributionHandle, direction, directLightMIS);
 }
 
 OPENPGL_INLINE pgl_vec3f SurfaceSamplingDistribution::OutgoingRadiance(pgl_vec3f& direction) const
@@ -289,10 +289,10 @@ OPENPGL_INLINE pgl_vec3f SurfaceSamplingDistribution::OutgoingRadiance(pgl_vec3f
     return pglSurfaceSamplingDistributionOutgoingRadiance(m_surfaceSamplingDistributionHandle, direction); 
 }
 
-OPENPGL_INLINE pgl_vec3f SurfaceSamplingDistribution::Irradiance(pgl_vec3f& normal, const bool withMIS) const
+OPENPGL_INLINE pgl_vec3f SurfaceSamplingDistribution::Irradiance(pgl_vec3f& normal, const bool directLightMIS) const
 {
     OPENPGL_ASSERT(m_surfaceSamplingDistributionHandle);
-    return pglSurfaceSamplingDistributionIrradiance(m_surfaceSamplingDistributionHandle, normal, withMIS);
+    return pglSurfaceSamplingDistributionIrradiance(m_surfaceSamplingDistributionHandle, normal, directLightMIS);
 }
 #endif
 
