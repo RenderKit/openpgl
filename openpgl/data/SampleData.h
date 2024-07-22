@@ -21,9 +21,8 @@ namespace openpgl
     typedef PGLSampleData SampleData;
     enum SampleData_Flags
     {
-        ESplatted = 1<<0,      // point does not represent any real scene intersection point
-        EInsideVolume = 1<<1,   // point does not represent any real scene intersection point
-        EDirectLight = 1<<2  // if the samples represents direct light from a light source
+        EInsideVolume = 1<<0,   // point does not represent any real scene intersection point
+        EDirectLight = 1<<1  // if the samples represents direct light from a light source
     };
 
     inline bool isValid(const SampleData& dsd)
