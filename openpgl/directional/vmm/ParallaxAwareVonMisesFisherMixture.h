@@ -109,13 +109,13 @@ public:
     void performRelativeParallaxShift( const Vector3 &shiftDirection);
 
 #ifdef OPENPGL_RADIANCE_CACHES
-    Vector3 incomingRadiance( const Vector3 &direction, const bool withMIS) const;
+    Vector3 incomingRadiance( const Vector3 &direction, const bool directLightMIS) const;
 
-    Vector3 irradiance( const Vector3 &normal, const bool withMIS) const;
+    Vector3 irradiance( const Vector3 &normal, const bool directLightMIS) const;
 
-    Vector3 inscatteredRadiance( const Vector3 &dir, const float meanCosine, const bool withMIS) const;
+    Vector3 inscatteredRadiance( const Vector3 &dir, const float meanCosine, const bool directLightMIS) const;
 
-    Vector3 fluence(const bool withMIS) const;
+    Vector3 fluence(const bool directLightMIS) const;
 #endif
 
     // Product and convolution functions
@@ -1130,7 +1130,7 @@ bool ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents,UseParallaxCompen
 
 #ifdef OPENPGL_RADIANCE_CACHES
 template<int VecSize, int maxComponents, bool UseParallaxCompensation>
-Vector3 ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents,UseParallaxCompensation>::incomingRadiance( const Vector3 &direction, const bool withMIS) const{
+Vector3 ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents,UseParallaxCompensation>::incomingRadiance( const Vector3 &direction, const bool directLightMIS) const{
     const int cnt = (_numComponents+VecSize-1) / VecSize;
 
     embree::Vec3< embree::vfloat<VecSize> > incomingRadiance = {0.0f, 0.0f, 0.0f};
@@ -1144,7 +1144,7 @@ Vector3 ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents,UseParallaxCom
         const embree::vfloat<VecSize> cosTheta = embree::dot(vec3Direction, _meanDirections[k]);
         const embree::vfloat<VecSize> cosThetaMinusOne = embree::min(cosTheta - ones, zeros);
         const embree::vfloat<VecSize> eval = _normalizations[k] * embree::fastapprox::exp< embree::vfloat<VecSize> >( _kappas[k] * cosThetaMinusOne );
-        incomingRadiance += withMIS ? _fluenceRGBWeightsWithMIS[k] * eval : _fluenceRGBWeights[k] * eval;
+        incomingRadiance += directLightMIS ? _fluenceRGBWeightsWithMIS[k] * eval : _fluenceRGBWeights[k] * eval;
     }
 
     return Vector3(reduce_add(incomingRadiance.x), reduce_add(incomingRadiance.y), reduce_add(incomingRadiance.z));
@@ -1152,7 +1152,7 @@ Vector3 ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents,UseParallaxCom
 
 
 template<int VecSize, int maxComponents, bool UseParallaxCompensation>
-Vector3 ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents,UseParallaxCompensation>::irradiance( const Vector3 &normal, const bool withMIS) const{
+Vector3 ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents,UseParallaxCompensation>::irradiance( const Vector3 &normal, const bool directLightMIS) const{
     const embree::vfloat<VecSize> cosine_meanCosine(KappaToMeanCosine<float>(2.18853f)); // TODO
 
     const int cnt = (_numComponents+VecSize-1) / VecSize;
@@ -1166,14 +1166,14 @@ Vector3 ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents,UseParallaxCom
     for(int k = 0; k < cnt;k++)
     {
         const embree::vfloat<VecSize> eval = _convolvePDF(k, vec3Normal, cosine_meanCosine);
-        irradiance += withMIS ? _fluenceRGBWeightsWithMIS[k] * eval : _fluenceRGBWeights[k] * eval;
+        irradiance += directLightMIS ? _fluenceRGBWeightsWithMIS[k] * eval : _fluenceRGBWeights[k] * eval;
     }
     return Vector3(reduce_add(irradiance.x), reduce_add(irradiance.y), reduce_add(irradiance.z));
 }
 
 
 template<int VecSize, int maxComponents, bool UseParallaxCompensation>
-Vector3 ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents,UseParallaxCompensation>::inscatteredRadiance( const Vector3 &dir, const float meanCosine, const bool withMIS) const{
+Vector3 ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents,UseParallaxCompensation>::inscatteredRadiance( const Vector3 &dir, const float meanCosine, const bool directLightMIS) const{
     const embree::vfloat<VecSize> meanCosineVec(meanCosine);
 
     const int cnt = (_numComponents+VecSize-1) / VecSize;
@@ -1187,14 +1187,14 @@ Vector3 ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents,UseParallaxCom
     for(int k = 0; k < cnt;k++)
     {
         const embree::vfloat<VecSize> eval = _convolvePDF(k, vec3Dir, meanCosineVec);
-        inscatteredRadiance += withMIS ? _fluenceRGBWeightsWithMIS[k] * eval : _fluenceRGBWeights[k] * eval;
+        inscatteredRadiance += directLightMIS ? _fluenceRGBWeightsWithMIS[k] * eval : _fluenceRGBWeights[k] * eval;
     }
     return Vector3(reduce_add(inscatteredRadiance.x), reduce_add(inscatteredRadiance.y), reduce_add(inscatteredRadiance.z));
 }
 
 template<int VecSize, int maxComponents, bool UseParallaxCompensation>
-Vector3 ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents,UseParallaxCompensation>::fluence(const bool withMIS) const{
-    return withMIS ? _fluenceRGBWithMIS : _fluenceRGB;
+Vector3 ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents,UseParallaxCompensation>::fluence(const bool directLightMIS) const{
+    return directLightMIS ? _fluenceRGBWithMIS : _fluenceRGB;
 }
 #endif
 

@@ -97,9 +97,9 @@ struct __aligned(TVMMDistribution::VectorSize*4) VMMSurfaceSamplingDistribution:
     }
 
 #ifdef OPENPGL_RADIANCE_CACHES
-    inline Vector3 incomingRadiance(const Vector3 dir, const bool withMIS) const override
+    inline Vector3 incomingRadiance(const Vector3 dir, const bool directLightMIS) const override
     {
-        return m_liDistribution.incomingRadiance(dir, withMIS);
+        return m_liDistribution.incomingRadiance(dir, directLightMIS);
     }
 
     inline Vector3 outgoingRadiance(const Vector3 dir) const override
@@ -107,9 +107,9 @@ struct __aligned(TVMMDistribution::VectorSize*4) VMMSurfaceSamplingDistribution:
         return m_region->getOutgoingRadiance(dir);
     }
 
-    inline Vector3 irradiance(const Vector3 normal, const bool withMIS) const override
+    inline Vector3 irradiance(const Vector3 normal, const bool directLightMIS) const override
     {
-        return m_liDistribution.irradiance(normal, withMIS);
+        return m_liDistribution.irradiance(normal, directLightMIS);
     }
 #endif
 
