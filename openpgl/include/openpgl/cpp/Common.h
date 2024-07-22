@@ -100,5 +100,38 @@ namespace cpp
       return box3;
    }
 
+
+   OPENPGL_INLINE pgl_direction CompressDirection(const pgl_vec3f& dir) {
+#if defined(OPENPGL_DIRECTION_COMPRESSION)
+      return quantize_direction(dir);
+#else
+      return dir;
+#endif
+   }
+
+   OPENPGL_INLINE pgl_vec3f DecompressDirection(const pgl_direction cdir) {
+#if defined(OPENPGL_DIRECTION_COMPRESSION)
+      return dequantize_direction(cdir);
+#else
+      return cdir;
+#endif  
+   }
+
+   OPENPGL_INLINE pgl_spectrum CompressSpectrum(const pgl_vec3f& specRGB) {
+#if defined(OPENPGL_RADIANCE_COMPRESSION)
+      return vec3f2rgbe(specRGB);
+#else
+      return specRGB;
+#endif    
+   }
+
+   OPENPGL_INLINE  pgl_vec3f DecompressSpectrum(const pgl_spectrum& cspecRGB) {
+#if defined(OPENPGL_RADIANCE_COMPRESSION)
+      return rgbe2vec3f(cspecRGB);
+#else
+      return cspecRGB;
+#endif    
+   }
+
 }
 }
