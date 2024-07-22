@@ -416,7 +416,11 @@ void export_samples(DebugParams &debugParams){
         objFile << "v " << sample.position.x << "\t" << sample.position.y << "\t"<< sample.position.z << std::endl;
         if (!pointsOnly)
         {
+#ifdef OPENPGL_DIRECTION_COMPRESSION
+            pgl_vec3f dir = openpgl::cpp::DecompressDirection(sample.direction);
+#else
             pgl_vec3f dir = sample.direction;
+#endif
             pgl_vec3f samplePosition = sample.position;
             pgl_vec3f pos2;
             pos2.x = samplePosition.x + dir.x * sample.distance;
@@ -429,7 +433,11 @@ void export_samples(DebugParams &debugParams){
 
     for (auto& sample : subSampledData)
     {
+#ifdef OPENPGL_DIRECTION_COMPRESSION
+        pgl_vec3f dir = openpgl::cpp::DecompressDirection(sample.direction);
+#else
         pgl_vec3f dir = sample.direction;
+#endif
         objFile << "vn " << dir.x << "\t" << dir.y << "\t"<< dir.z << std::endl;
         if (!pointsOnly)
         {

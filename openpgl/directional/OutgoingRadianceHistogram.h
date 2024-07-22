@@ -5,6 +5,10 @@
 
 #include "../openpgl_common.h"
 
+#ifdef PGL_USE_DIRECTION_COMPRESSION
+#include "../include/openpgl/compression.h"
+#endif
+
 #define OPENPGL_INLINE_INTER inline
 
 #define OPENPGL_HISTOGRAM_RESOLUTION 8
@@ -107,13 +111,28 @@ OPENPGL_INLINE_INTER void OutgoingRadianceHistogram::update(const SampleData* sa
     //std::cout << "OutgoingRadianceHistogram::update: numSamples = " << numSamples << "\t numZeroValueSamples = " << numZeroValueSamples << std::endl; 
     for(int n = 0; n < numSamples; n++)
     {
-        Vector3 dir = Vector3(samples[n].directionOut.x, samples[n].directionOut.y, samples[n].directionOut.z);
-        Vector3 col = Vector3(samples[n].radianceOut.x, samples[n].radianceOut.y, samples[n].radianceOut.z);
+#ifndef PGL_USE_DIRECTION_COMPRESSION
+        pgl_vec3f directionOut = samples[n].directionOut;
+#else
+        pgl_vec3f directionOut = dequantize_direction(samples[n].directionOut);
+#endif
+        Vector3 dir = Vector3(directionOut.x, directionOut.y, directionOut.z);
+#ifndef PGL_USE_COLOR_COMPRESSION
+        pgl_vec3f color = {samples[n].radianceOut.x, samples[n].radianceOut.y, samples[n].radianceOut.z};
+#else
+        pgl_vec3f color = rgbe2vec3f(samples[n].radianceOut);
+#endif
+        Vector3 col = Vector3(color.x, color.y, color.z);
         addSample(dir, col);
     }
     for(int n = 0; n < numZeroValueSamples; n++)
     {
-        Vector3 dir = Vector3(zeroValueSamples[n].directionOut.x, zeroValueSamples[n].directionOut.y, zeroValueSamples[n].directionOut.z);
+#ifndef PGL_USE_DIRECTION_COMPRESSION        
+        pgl_vec3f directionOut = zeroValueSamples[n].directionOut;
+#else
+        pgl_vec3f directionOut = dequantize_direction(zeroValueSamples[n].directionOut);
+#endif
+        Vector3 dir = Vector3(directionOut.x, directionOut.y, directionOut.z);
         addZeroValueSample(dir);
     }
 }

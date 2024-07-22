@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include <cstdint>
+
 #ifdef BUILD_SHARED
   #ifdef _WIN32
   #  ifdef openpgl_EXPORTS
@@ -86,3 +88,15 @@ inline void pglBox3f(pgl_box3f& box, const float lx, const float ly, const float
   pglVec3f(box.lower, lx, ly, lz);
   pglVec3f(box.upper, ux, uy, uz);
 }
+
+#if defined(PGL_USE_DIRECTION_COMPRESSION) || defined(OPENPGL_DIRECTION_COMPRESSION)
+  typedef uint32_t pgl_direction;
+#else
+  typedef pgl_vec3f pgl_direction;
+#endif
+
+#if defined(PGL_USE_COLOR_COMPRESSION) || defined(OPENPGL_RADIANCE_COMPRESSION)
+  typedef uint32_t pgl_spectrum;
+#else
+  typedef pgl_vec3f pgl_spectrum;
+#endif

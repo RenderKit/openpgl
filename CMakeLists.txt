@@ -53,6 +53,9 @@ try_compile(COMPILER_SUPPORTS_ARM_NEON "${CMAKE_BINARY_DIR}" "${PROJECT_SOURCE_D
 
 OPTION(OPENPGL_EF_RADIANCE_CACHES "Enables experimental feature (ir)radiance caches." ON)
 
+OPTION(OPENPGL_DIRECTION_COMPRESSION "Using 32-Bit compression to represent directions." ON)
+OPTION(OPENPGL_RADIANCE_COMPRESSION "Using RGBE 32-Bit compression to represent radiance data (linear RGB)." ON)
+
 if(COMPILER_SUPPORTS_ARM_NEON)
   option(OPENPGL_ISA_NEON "Build with support for NEON." ON)
   option(OPENPGL_ISA_NEON2X "Build with support for NEON double pumped." ON)

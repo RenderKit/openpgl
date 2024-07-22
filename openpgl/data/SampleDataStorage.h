@@ -5,6 +5,10 @@
 
 #include "../openpgl_common.h"
 
+#ifdef PGL_USE_DIRECTION_COMPRESSION
+#include "../include/openpgl/compression.h"
+#endif
+
 #include "SampleData.h"
 
 #include <tbb/concurrent_vector.h>
@@ -467,7 +471,12 @@ struct SampleDataStorage
             objFile << "v " << sample.position.x << "\t" << sample.position.y << "\t"<< sample.position.z << std::endl;
             if (!pointsOnly)
             {
-                Vector3 dir(sample.direction.x, sample.direction.y, sample.direction.z);
+#ifdef PGL_USE_DIRECTION_COMPRESSION
+                pgl_vec3f direction = dequantize_direction(sample.direction);
+#else
+                pgl_vec3f direction = sample.direction;
+#endif
+                Vector3 dir(direction.x, direction.y, direction.z);
                 Point3 samplePosition(sample.position.x, sample.position.y, sample.position.z);
                 Point3 pos2 = samplePosition + dir * sample.distance;
                 objFile << "v " << pos2[0] << "\t" << pos2[1] << "\t"<< pos2[2] << std::endl;
@@ -477,7 +486,12 @@ struct SampleDataStorage
 
         for (auto& sample : subSampledData)
         {
-            Vector3 dir(sample.direction.x, sample.direction.y, sample.direction.z);
+#ifdef PGL_USE_DIRECTION_COMPRESSION
+            pgl_vec3f direction = dequantize_direction(sample.direction);
+#else
+            pgl_vec3f direction = sample.direction;
+#endif
+            Vector3 dir(direction.x, direction.y, direction.z);
             objFile << "vn " << dir[0] << "\t" << dir[1] << "\t"<< dir[2] << std::endl;
             if (!pointsOnly)
             {

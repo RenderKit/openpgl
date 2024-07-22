@@ -866,7 +866,12 @@ float ParallaxAwareVonMisesFisherWeightedEMFactory< TVMMDistribution>::weightedE
     {
         const SampleData sampleData = samples[n];
         const embree::vfloat<VMM::VectorSize> sampleWeight = sampleData.weight;
+#ifdef PGL_USE_DIRECTION_COMPRESSION
+        pgl_vec3f direction = dequantize_direction(sampleData.direction);
+        const Vector3 sampleDirection(direction.x, direction.y, direction.z);
+#else
         const Vector3 sampleDirection(sampleData.direction.x, sampleData.direction.y, sampleData.direction.z);
+#endif
         const embree::Vec3< embree::vfloat<VMM::VectorSize> > sampleDirectionSIMD( sampleDirection );
 
         // check if the samples is covered by any of the components
@@ -1166,7 +1171,12 @@ void ParallaxAwareVonMisesFisherWeightedEMFactory< TVMMDistribution>::reprojectS
 
     const float distance = fmaxf(minDistance, sample.distance);
     const openpgl::Point3 samplePosition(sample.position.x, sample.position.y, sample.position.z);
+#ifdef PGL_USE_DIRECTION_COMPRESSION
+    pgl_vec3f direction = dequantize_direction(sample.direction);
+    const openpgl::Vector3 sampleDirection(direction.x, direction.y, direction.z);
+#else
     const openpgl::Vector3 sampleDirection(sample.direction.x, sample.direction.y, sample.direction.z);
+#endif
     const openpgl::Point3 originPosition = samplePosition + sampleDirection * distance;
     openpgl::Vector3 newDirection = originPosition - pivotPoint;
     const float newDistance = embree::length(newDirection);
@@ -1176,9 +1186,12 @@ void ParallaxAwareVonMisesFisherWeightedEMFactory< TVMMDistribution>::reprojectS
     sample.position.y = pivotPoint[1];
     sample.position.z = pivotPoint[2];
     sample.distance = newDistance;
-    sample.direction.x = newDirection[0];
-    sample.direction.y = newDirection[1];
-    sample.direction.z = newDirection[2];
+#ifdef PGL_USE_DIRECTION_COMPRESSION
+    pgl_vec3f qdirection = {newDirection[0], newDirection[1], newDirection[2]};
+    sample.direction = quantize_direction(qdirection);
+#else
+    sample.direction = {newDirection[0], newDirection[1], newDirection[2]};
+#endif
 }
 
 template<class TVMMDistribution>
@@ -1225,7 +1238,12 @@ void ParallaxAwareVonMisesFisherWeightedEMFactory< TVMMDistribution>::initCompon
 #else
         sampleDistance = samples[n].distance;
 #endif
+#ifdef PGL_USE_DIRECTION_COMPRESSION
+        pgl_vec3f direction = dequantize_direction(samples[n].direction);
+        const Vector3 sampleDirection(direction.x, direction.y, direction.z);
+#else
         const Vector3 sampleDirection(samples[n].direction.x, samples[n].direction.y, samples[n].direction.z);
+#endif
         if (vmm.softAssignment(sampleDirection, softAssign))
         {
             for (size_t k = 0; k < cnt; k++)
@@ -1288,7 +1306,12 @@ void ParallaxAwareVonMisesFisherWeightedEMFactory< TVMMDistribution>::updateComp
 #else
         sampleDistance = samples[n].distance;
 #endif
+#ifdef PGL_USE_DIRECTION_COMPRESSION
+        pgl_vec3f direction = dequantize_direction(samples[n].direction);
+        const Vector3 sampleDirection(direction.x, direction.y, direction.z);
+#else
         const Vector3 sampleDirection(samples[n].direction.x, samples[n].direction.y, samples[n].direction.z);
+#endif
         if (vmm.softAssignment(sampleDirection, softAssign))
         {
             for (size_t k = 0; k < cnt; k++)
@@ -1363,8 +1386,18 @@ void ParallaxAwareVonMisesFisherWeightedEMFactory<TVMMDistribution>::updateFluen
     for (size_t n = 0; n < numSamples; n++)
     {            
         //sumFluence += samples[n].weight;
+#ifdef PGL_USE_DIRECTION_COMPRESSION
+        pgl_vec3f direction = dequantize_direction(samples[n].direction);
+        const Vector3 sampleDirection(direction.x, direction.y, direction.z);
+#else
         const Vector3 sampleDirection(samples[n].direction.x, samples[n].direction.y, samples[n].direction.z);
-        Vector3 radianceIn(samples[n].radianceIn.x, samples[n].radianceIn.y, samples[n].radianceIn.z);
+#endif
+#ifndef PGL_USE_COLOR_COMPRESSION
+        pgl_vec3f color = {samples[n].radianceIn.x, samples[n].radianceIn.y, samples[n].radianceIn.z};
+#else
+        pgl_vec3f color = rgbe2vec3f(samples[n].radianceIn);
+#endif 
+        Vector3 radianceIn(color.x, color.y, color.z);
         radianceIn /= samples[n].pdf;
         
         Vector3 radianceInNoMIS = isDirectLight(samples[n]) ? radianceIn / samples[n].radianceInMISWeight : radianceIn;

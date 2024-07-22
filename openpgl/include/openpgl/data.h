@@ -35,14 +35,17 @@ struct PGLSampleData
 
     /// a vector pointing into the direction the energy (e.g., radiance or importance)
     /// comes from 
-    pgl_vec3f direction; 
+    pgl_direction direction; 
 
     /// a scalar representation of the incident radiance divide by @ref pdf
     float weight;
 
 #ifdef OPENPGL_EF_RADIANCE_CACHES
-    /// a scalar representation of the incident radiance in RGB divide by @ref pdf
-    pgl_vec3f radianceIn; 
+    /// a scalar representation of the incident radiance in RGB NOT divide by @ref pdf
+    /// but probably weighted with @ref radianceInMISWeight if the racince comes from a
+    /// light source.
+    pgl_spectrum radianceIn; 
+    /// The nex
     float radianceInMISWeight;
 #endif
 
@@ -57,9 +60,9 @@ struct PGLSampleData
 
 #ifdef OPENPGL_EF_RADIANCE_CACHES
     /// a vector pointing into the outgoing direction the energy is reflected to(e.g., towards the camera)
-    pgl_vec3f directionOut;
+    pgl_direction directionOut;
     /// the outgoing, reflected/scattered radiance (i.e., incident radiance time BSDF/phase divided by pdf)
-    pgl_vec3f radianceOut;
+    pgl_spectrum radianceOut;
 #endif
 };
 
@@ -69,10 +72,10 @@ struct PGLZeroValueSampleData
     /// the position of the invalid sample
     pgl_point3f position;
     /// a vector pointing into the direction the path generating the zero value sample went
-    pgl_vec3f direction;
+    pgl_direction direction;
 #ifdef OPENPGL_EF_RADIANCE_CACHES
     /// a vector pointing into the outgoing direction the energy is reflected to(e.g., towards the camera)
-    pgl_vec3f directionOut;
+    pgl_direction directionOut;
 #endif
     /// if the position is inside a volume
     bool volume;
@@ -129,7 +132,7 @@ struct PGLPathSegmentData
     /// The roughness of the material (e.g., GGX roughness on surfaces and mean cosine in volumes). 
     float roughness {1.0f};
 
-    /// The pointer to the Region
+    /// The pointer to the Region (DEPRECATED)
     const void* regionPtr{nullptr};
 };
 
