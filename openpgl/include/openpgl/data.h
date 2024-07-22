@@ -23,11 +23,9 @@ struct PGLSampleData
     enum Flags
     {
         /// point does not represent any real scene intersection point
-        ESplatted = 1<<0, 
-        /// point does not represent any real scene intersection point
-        EInsideVolume = 1<<1, 
+        EInsideVolume = 1<<0, 
         /// if the samples represents direct light from a light source
-        EDirectLight = 1<<2 
+        EDirectLight = 1<<1 
     };
 
     /// the position of the sample (i.e., at which energy arrives)
