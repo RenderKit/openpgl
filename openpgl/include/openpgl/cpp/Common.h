@@ -6,6 +6,9 @@
 
 #include "../openpgl.h"
 
+/* we consider floating point numbers in that range as valid input numbers */
+#define FLT_LARGE 1.844E18f
+
 namespace openpgl
 {
 namespace cpp
@@ -100,6 +103,92 @@ namespace cpp
       return box3;
    }
 
+   OPENPGL_INLINE bool IsValid(const pgl_vec3f& vec)
+   {
+      return   ((vec.x > -FLT_LARGE) & (vec.x < +FLT_LARGE)) 
+            && ((vec.y > -FLT_LARGE) & (vec.y < +FLT_LARGE)) 
+            && ((vec.z > -FLT_LARGE) & (vec.z < +FLT_LARGE));
+   }
+
+   OPENPGL_INLINE bool IsZero(const pgl_vec3f& vec)
+   {
+      return vec.x == 0.f && vec.y == 0.f && vec.z == 0.f;
+   }
+
+   OPENPGL_INLINE float Max(const pgl_vec3f& vec)
+   {
+      return std::max(vec.x, std::max(vec.y, vec.z));
+   }
+
+   OPENPGL_INLINE float Average(const pgl_vec3f& vec)
+   {
+      return (vec.x + vec.y + vec.z) / 3.f;
+   }
+
+   OPENPGL_INLINE float Average(const pgl_vec2f& vec)
+   {
+      return (vec.x + vec.y) * 0.5f;
+   }
+
+   OPENPGL_INLINE pgl_vec3f operator+(const pgl_vec3f& v1, const pgl_vec3f& v2)
+   {
+      return {v1.x + v2.x, v1.y + v2.y, v1.z + v2.z};
+   }
+
+   OPENPGL_INLINE pgl_vec3f operator+(const float f, const pgl_vec3f& v)
+   {
+      return {v.x + f, v.y + f, v.z + f};
+   }
+
+   OPENPGL_INLINE pgl_vec3f operator+(const pgl_vec3f& v, const float f)
+   {
+      return {v.x + f, v.y + f, v.z + f};
+   }
+
+   OPENPGL_INLINE pgl_vec3f operator-(const pgl_vec3f& v1, const pgl_vec3f& v2)
+   {
+      return {v1.x - v2.x, v1.y - v2.y, v1.z - v2.z};
+   }
+
+   OPENPGL_INLINE pgl_vec3f operator-(const float f, const pgl_vec3f& v)
+   {
+      return {v.x - f, v.y - f, v.z - f};
+   }
+
+   OPENPGL_INLINE pgl_vec3f operator-(const pgl_vec3f& v, const float f)
+   {
+      return {v.x - f, v.y - f, v.z - f};
+   }
+
+   OPENPGL_INLINE pgl_vec3f operator*(const pgl_vec3f& v1, const pgl_vec3f& v2)
+   {
+      return {v1.x * v2.x, v1.y * v2.y, v1.z * v2.z};
+   }
+
+   OPENPGL_INLINE pgl_vec3f operator*(const float f, const pgl_vec3f& v)
+   {
+      return {v.x * f, v.y * f, v.z * f};
+   }
+
+   OPENPGL_INLINE pgl_vec3f operator*(const pgl_vec3f& v, const float f)
+   {
+      return {v.x * f, v.y * f, v.z * f};
+   }
+
+   OPENPGL_INLINE pgl_vec3f operator/(const pgl_vec3f& v1, const pgl_vec3f& v2)
+   {
+      return {v1.x / v2.x, v1.y / v2.y, v1.z / v2.z};
+   }
+
+   OPENPGL_INLINE pgl_vec3f operator/(const float f, const pgl_vec3f& v)
+   {
+      return {v.x / f, v.y / f, v.z / f};
+   }
+
+   OPENPGL_INLINE pgl_vec3f operator/(const pgl_vec3f& v, const float f)
+   {
+      return {v.x / f, v.y / f, v.z / f};
+   }
 
    OPENPGL_INLINE pgl_direction CompressDirection(const pgl_vec3f& dir) {
       return dir;
