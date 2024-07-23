@@ -15,6 +15,7 @@
 #include "Field.h"
 #include "PathSegmentStorage.h"
 #include "Region.h"
+#include "RussianRoulette.h"
 #include "SampleData.h"
 #include "SampleStorage.h"
 #include "SurfaceSamplingDistribution.h"
