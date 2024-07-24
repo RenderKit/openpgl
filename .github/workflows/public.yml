@@ -1,0 +1,56 @@
+## Copyright 2024 Intel Corporation
+## SPDX-License-Identifier: Apache-2.0
+
+name: continuous (public)
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions: read-all
+
+jobs:
+  rocky-8:
+    runs-on: ubuntu-latest
+    container:
+      image: rockylinux:8
+    steps:
+      - name: Install packages (rocky 8)
+        run: |
+          yum -y install gcc-c++ clang tar git-lfs make tbb-devel 
+          yum -y install cmake
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Build and Run
+        run: |
+          gitlab/build.sh
+
+
+  ubuntu-22_04:
+    runs-on: ubuntu-latest
+    container:
+      image: ubuntu:22.04
+    steps:
+      - name: Install packages (ubuntu 22.04)
+        run: |
+          apt-get update
+          apt-get -y upgrade
+          apt-get -y install g++ clang git-lfs libtbb-dev python3 pip
+          pip install --upgrade cmake
+          cmake --version
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Build and Run
+        run: |
+          gitlab/build.sh
