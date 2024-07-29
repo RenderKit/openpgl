@@ -32,18 +32,11 @@ namespace openpgl
         valid = valid && embree::isvalid(dsd.position.y);
         valid = valid && embree::isvalid(dsd.position.z);
         OPENPGL_ASSERT(valid);
-#ifndef PGL_USE_DIRECTION_COMPRESSION
-        valid = valid && embree::isvalid(dsd.direction.x);
-        valid = valid && embree::isvalid(dsd.direction.y);
-        valid = valid && embree::isvalid(dsd.direction.z);
+        pgl_vec3f d = dsd.direction;
+        valid = valid && embree::isvalid(d.x);
+        valid = valid && embree::isvalid(d.y);
+        valid = valid && embree::isvalid(d.z);
         OPENPGL_ASSERT(valid);
-#else 
-        pgl_vec3f dir = dequantize_direction(dsd.direction);
-        valid = valid && embree::isvalid(dir.x);
-        valid = valid && embree::isvalid(dir.y);
-        valid = valid && embree::isvalid(dir.z);
-        OPENPGL_ASSERT(valid);
-#endif
         valid = valid && embree::isvalid(dsd.weight);
         valid = valid && dsd.weight >=0.f;
         OPENPGL_ASSERT(valid);
@@ -55,16 +48,7 @@ namespace openpgl
         OPENPGL_ASSERT(valid);
 
 #ifdef OPENPGL_EF_RADIANCE_CACHES
-#ifndef PGL_USE_COLOR_COMPRESSION
-        valid = valid && embree::isvalid(dsd.radianceIn.x);
-        valid = valid && dsd.radianceIn.x >= 0.f;
-        valid = valid && embree::isvalid(dsd.radianceIn.y);
-        valid = valid && dsd.radianceIn.y >= 0.f;
-        valid = valid && embree::isvalid(dsd.radianceIn.z);
-        valid = valid && dsd.radianceIn.z >= 0.f;
-        OPENPGL_ASSERT(valid);
-#else
-        pgl_vec3f radianceIn = rgbe2vec3f(dsd.radianceIn);
+        pgl_vec3f radianceIn = dsd.radianceIn;
         valid = valid && embree::isvalid(radianceIn.x);
         valid = valid && radianceIn.x >= 0.f;
         valid = valid && embree::isvalid(radianceIn.y);
@@ -72,32 +56,15 @@ namespace openpgl
         valid = valid && embree::isvalid(radianceIn.z);
         valid = valid && radianceIn.z >= 0.f;
         OPENPGL_ASSERT(valid);
-#endif
         valid = valid && embree::isvalid(dsd.radianceInMISWeight);
         valid = valid && dsd.radianceInMISWeight >0.f;
         OPENPGL_ASSERT(valid);
-#ifndef PGL_USE_DIRECTION_COMPRESSION
-        valid = valid && embree::isvalid(dsd.directionOut.x);
-        valid = valid && embree::isvalid(dsd.directionOut.y);
-        valid = valid && embree::isvalid(dsd.directionOut.z);
+        d = dsd.directionOut;
+        valid = valid && embree::isvalid(d.x);
+        valid = valid && embree::isvalid(d.y);
+        valid = valid && embree::isvalid(d.z);
         OPENPGL_ASSERT(valid);
-#else 
-        pgl_vec3f dirOut = dequantize_direction(dsd.directionOut);
-        valid = valid && embree::isvalid(dirOut.x);
-        valid = valid && embree::isvalid(dirOut.y);
-        valid = valid && embree::isvalid(dirOut.z);
-        OPENPGL_ASSERT(valid);
-#endif
-#ifndef PGL_USE_COLOR_COMPRESSION
-        valid = valid && embree::isvalid(dsd.radianceOut.x);
-        valid = valid && dsd.radianceOut.x >= 0.f;
-        valid = valid && embree::isvalid(dsd.radianceOut.y);
-        valid = valid && dsd.radianceOut.y >= 0.f;
-        valid = valid && embree::isvalid(dsd.radianceOut.z);
-        valid = valid && dsd.radianceOut.z >= 0.f;
-        OPENPGL_ASSERT(valid);
-#else
-        pgl_vec3f radianceOut = rgbe2vec3f(dsd.radianceOut);
+        pgl_vec3f radianceOut = dsd.radianceOut;
         valid = valid && embree::isvalid(radianceOut.x);
         valid = valid && radianceOut.x >= 0.f;
         valid = valid && embree::isvalid(radianceOut.y);
@@ -105,7 +72,6 @@ namespace openpgl
         valid = valid && embree::isvalid(radianceOut.z);
         valid = valid && radianceOut.z >= 0.f;
         OPENPGL_ASSERT(valid);
-#endif
 #endif
         return valid;
     }
@@ -125,36 +91,23 @@ namespace openpgl
         std::stringstream ss;
         ss << "SampleData: "; 
         ss << "position = " << sd.position.x << "\t " << sd.position.y << "\t " << sd.position.z << "\t ";
-#ifndef PGL_USE_DIRECTION_COMPRESSION
-        ss << "\t direction = " << sd.direction.x << "\t " << sd.direction.y << "\t " << sd.direction.z << "\t ";
-#else
-        pgl_vec3f direction = dequantize_direction(sd.direction);
+        pgl_vec3f direction = sd.direction;
         ss << "\t direction = " << direction.x << "\t " << direction.y << "\t " << direction.z << "\t ";
-#endif
         ss << "\t weight = " << sd.weight << "\t ";
         ss << "\t pdf = " << sd.pdf << "\t ";
         ss << "\t distance = " << sd.distance << "\t ";
         ss << "\t flags = " << sd.flags;
 #ifdef OPENPGL_EF_RADIANCE_CACHES
-#ifndef PGL_USE_COLOR_COMPRESSION
-        ss << "\t radianceIn = " << sd.radianceIn.x << "\t " << sd.radianceIn.y << "\t " << sd.radianceIn.z << "\t ";
-#else
-        pgl_vec3f radianceIn = rgbe2vec3f(sd.radianceIn);
+        pgl_vec3f radianceIn = sd.radianceIn;
         ss << "\t radianceIn = " << radianceIn.x << "\t " << radianceIn.y << "\t " << radianceIn.z << "\t ";
-#endif
+
         ss << "\t radianceInMISWeight = " << sd.radianceInMISWeight;
-#ifndef PGL_USE_COLOR_COMPRESSION
-        ss << "\t radianceOut = " << sd.radianceOut.x << "\t " << sd.radianceOut.y << "\t " << sd.radianceOut.z << "\t ";
-#else
-        pgl_vec3f radianceOut = rgbe2vec3f(sd.radianceOut);
+
+        pgl_vec3f radianceOut = sd.radianceOut;
         ss << "\t radianceOut = " << radianceOut.x << "\t " << radianceOut.y << "\t " << radianceOut.z << "\t ";
-#endif
-#ifndef PGL_USE_DIRECTION_COMPRESSION
-        ss << "\t directionOut = " << sd.directionOut.x << "\t " << sd.directionOut.y << "\t " << sd.directionOut.z << "\t ";
-#else
-        pgl_vec3f directionOut = dequantize_direction(sd.directionOut);
+
+        pgl_vec3f directionOut = sd.directionOut;
         ss << "\t directionOut = " << directionOut.x << "\t " << directionOut.y << "\t " << directionOut.z << "\t ";
-#endif
 #endif
         ss << std::endl;
         
@@ -191,7 +144,7 @@ namespace openpgl
                 ( compA.direction.x < compB.direction.x  || (compA.direction.x    == compB.direction.x   &&  ( compA.direction.y < compB.direction.y  ||
                 (compA.direction.y    == compB.direction.y   &&  ( compA.direction.z < compB.direction.z  )))))
 #else
-                compA.direction < compB.direction
+                compA.direction.compressed_direction < compB.direction.compressed_direction
 #endif
                 )))))))))));
     }
@@ -226,8 +179,8 @@ namespace openpgl
             &&  ( compA.direction.z < compB.direction.z    ||   (compA.direction.z    == compB.direction.z     
                 ))))))
 #else
-            && compA.direction < compB.direction
-#endif
+            && compA.direction.compressed_direction < compB.direction.compressed_direction
+#endif    
                 )))));
     }
 

@@ -69,11 +69,6 @@ inline pgl_vec3f rgbe2vec3f(const uint32_t rgbe)
 //  (https://onlinelibrary.wiley.com/doi/10.1111/j.1467-8659.2010.01737.x)
 ////////////////////////////////////////////////////////////////////////
 
-inline pgl_vec3f normalize(pgl_vec3f n){
-  const float f = 1.f / std::sqrt(n.x*n.x + n.y*n.y + n.z*n.z);
-  return {n.x * f, n.y * f, n.z * f};
-}
-
 // represent 0, -1 and 1 precisely by integers
 inline uint32_t quantize_direction(const pgl_vec3f& n) {
   const float nl1 = 1.f / (std::fabs(n.x) + std::fabs(n.y) + std::fabs(n.z));

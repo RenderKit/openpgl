@@ -373,12 +373,8 @@ ComponentSplitinfo VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::GetPro
     for (size_t n = 0; n < numData; n++)
     {
         const SampleData sample = data[n];
-#ifdef PGL_USE_DIRECTION_COMPRESSION
-        pgl_vec3f direction = dequantize_direction(sample.direction);
+        pgl_vec3f direction = sample.direction;
         openpgl::Vector3 sampleDirection(direction.x, direction.y, direction.z);
-#else
-        openpgl::Vector3 sampleDirection(sample.direction.x, sample.direction.y, sample.direction.z);
-#endif
         if (vmm.softAssignment(sampleDirection, softAssign) )
         {
             const div_t tmp = div(idx, static_cast<int>(VMM::VectorSize));
@@ -456,12 +452,8 @@ void VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::UpdateSplitStatistic
     for (size_t n = 0; n < numData; n++)
     {
         const SampleData sample = data[n];
-#ifdef PGL_USE_DIRECTION_COMPRESSION
-        pgl_vec3f direction = dequantize_direction(sample.direction);
+        pgl_vec3f direction = sample.direction;
         const openpgl::Vector3 sampleDirection(direction.x, direction.y, direction.z);
-#else
-        const openpgl::Vector3 sampleDirection(sample.direction.x, sample.direction.y, sample.direction.z);
-#endif
         if (vmm.softAssignment(sampleDirection, softAssign) )
         {
             const embree::vfloat<VMM::VectorSize> weight = sample.weight;
