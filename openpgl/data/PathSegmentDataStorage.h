@@ -335,35 +335,20 @@ public:
                         OPENPGL_ASSERT(weight >= 0.f);
                         SampleData dsd;
                         dsd.position = {pos[0], pos[1], pos[2]};
-#ifdef PGL_USE_DIRECTION_COMPRESSION
                         pgl_vec3f pglDirection = {dir[0], dir[1], dir[2]};
-                        dsd.direction = quantize_direction(pglDirection);
-#else
-                        dsd.direction = {dir[0], dir[1], dir[2]};
-#endif
+                        dsd.direction = pglDirection;
                         dsd.weight = weight;
 #ifdef OPENPGL_RADIANCE_CACHES
-#ifdef PGL_USE_DIRECTION_COMPRESSION
-                        pgl_vec3f pglDirectionOut = {dirOut[0], dirOut[1], dirOut[2]};
-                        dsd.directionOut = quantize_direction(pglDirectionOut);
-#else
-                        dsd.directionOut = {dirOut[0], dirOut[1], dirOut[2]};
-#endif
+                        pgl_vec3f pgl_directionOut = {dirOut[0], dirOut[1], dirOut[2]};
+                        dsd.directionOut = pgl_directionOut;
 
-#ifndef PGL_USE_COLOR_COMPRESSION
-                        dsd.radianceOut.x = /*directContribution.x*/ + scatteredContribution.x + scatteringWeight.x * contribution[0];
-                        dsd.radianceOut.y = /*directContribution.y*/ + scatteredContribution.y + scatteringWeight.y * contribution[1];
-                        dsd.radianceOut.z = /*directContribution.z*/ + scatteredContribution.z + scatteringWeight.z * contribution[2];
-                        dsd.radianceIn = {contribution[0], contribution[1], contribution[2]};
-#else
                         pgl_vec3f colorOut;
                         colorOut.x = /*directContribution.x*/ + scatteredContribution.x + scatteringWeight.x * contribution[0];
                         colorOut.y = /*directContribution.y*/ + scatteredContribution.y + scatteringWeight.y * contribution[1];
                         colorOut.z = /*directContribution.z*/ + scatteredContribution.z + scatteringWeight.z * contribution[2];
-                        dsd.radianceOut = vec3f2rgbe(colorOut);
+                        dsd.radianceOut = colorOut;
                         pgl_vec3f colorIn = {contribution[0], contribution[1], contribution[2]};
-                        dsd.radianceIn = vec3f2rgbe(colorIn);
-#endif                                    
+                        dsd.radianceIn = colorIn;
                         dsd.radianceInMISWeight = misWeight;
 #endif
                         dsd.pdf = pdf;
@@ -384,19 +369,11 @@ public:
                 {
                     ZeroValueSampleData isd;
                     isd.position = {pos[0], pos[1], pos[2]};
-#ifdef PGL_USE_DIRECTION_COMPRESSION
                     pgl_vec3f pglDirection = {dir[0], dir[1], dir[2]};
-                    isd.direction = quantize_direction(pglDirection);
-#else
-                    isd.direction = {dir[0], dir[1], dir[2]};
-#endif
+                    isd.direction = pglDirection;
 #ifdef OPENPGL_RADIANCE_CACHES
-#ifdef PGL_USE_DIRECTION_COMPRESSION
-                    pgl_vec3f pglDirectionOut = {dirOut[0], dirOut[1], dirOut[2]};
-                    isd.directionOut = quantize_direction(pglDirectionOut);
-#else
-                    isd.directionOut= {dirOut[0], dirOut[1], dirOut[2]};
-#endif
+                    pglDirection = {dirOut[0], dirOut[1], dirOut[2]};
+                    isd.directionOut = pglDirection;
 #endif
                     isd.volume = insideVolume;
 #if defined(OPENPGL_PATHSEGMENT_STORAGE_USE_ARRAY)

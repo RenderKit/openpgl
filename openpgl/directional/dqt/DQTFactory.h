@@ -220,12 +220,8 @@ private:
                 firstMoment = sample.weight * sample.pdf;
                 secondMoment = firstMoment * firstMoment;
             }
-#ifdef PGL_USE_DIRECTION_COMPRESSION
-            const pgl_vec3f pglDirection = dequantize_direction(sample.direction);
+            const pgl_vec3f pglDirection = sample.direction;
             const Vector3 direction = {pglDirection.x, pglDirection.y, pglDirection.z};
-#else
-            const Vector3 direction = {sample.direction.x, sample.direction.y, sample.direction.z};
-#endif
             float footprintFactor = ctx.cfg->footprintFactor;
             splat<TIsFootprintFactorNonZero>(ctx.stats->nodes.data(), footprintFactor, Sphere2Square::directionToPoint(direction), [&](StatsNode &node, float weight) {
                 node.numSamples += weight;
