@@ -1,4 +1,4 @@
-# Intel® Open Path Guiding Library
+# Intel® Open Path Guiding LibraryX
 
 This is release v0.6.0 of Intel® Open PGL. For changes and new features,
 see the [changelog](CHANGELOG.md). Visit http://www.openpgl.org for more
