@@ -141,7 +141,7 @@ Version History
         Support can be checked with `SupportsApplySingleLobeHenyeyGreensteinProduct()`.
 
 
-## Open PGL 0.1.0
+## Open PGL 0.1.0.0
 
 -   Initial release of Open PGL
     Features:
