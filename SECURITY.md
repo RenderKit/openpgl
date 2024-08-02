@@ -1,4 +1,4 @@
-Security Policy
+Security Policys
 ===============
 
 Intel is committed to rapidly addressing security vulnerabilities
