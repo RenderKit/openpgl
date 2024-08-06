@@ -29,20 +29,124 @@
 #define PGL_VMM_MAX_COMPONENTS 32
 #define PGL_VMM_MAX_KAPPA 320000.f
 
-typedef struct
+struct pgl_vec3f
 {
   float x, y, z;
-} pgl_vec3f;
+  #ifdef __cplusplus
+  void operator+=(const float f){
+    this->x += f;
+    this->y += f;
+    this->z += f;
+  }
+  void operator-=(const float f){
+    this->x -= f;
+    this->y -= f;
+    this->z -= f;
+  }
+  void operator*=(const float f){
+    this->x *= f;
+    this->y *= f;
+    this->z *= f;
+  }
+
+  void operator/=(const float f){
+    this->x /= f;
+    this->y /= f;
+    this->z /= f;
+  } 
+  #endif
+};
+
+inline pgl_vec3f operator+(const pgl_vec3f& v1, const pgl_vec3f& v2)
+{
+  return {v1.x + v2.x, v1.y + v2.y, v1.z + v2.z};
+}
+
+inline pgl_vec3f operator+(const float f, const pgl_vec3f& v)
+{
+  return {v.x + f, v.y + f, v.z + f};
+}
+
+inline pgl_vec3f operator+(const pgl_vec3f& v, const float f)
+{
+  return {v.x + f, v.y + f, v.z + f};
+}
+
+inline pgl_vec3f operator-(const pgl_vec3f& v1, const pgl_vec3f& v2)
+{
+  return {v1.x - v2.x, v1.y - v2.y, v1.z - v2.z};
+}
+
+inline pgl_vec3f operator-(const float f, const pgl_vec3f& v)
+{
+  return {v.x - f, v.y - f, v.z - f};
+}
+
+inline pgl_vec3f operator-(const pgl_vec3f& v, const float f)
+{
+  return {v.x - f, v.y - f, v.z - f};
+}
+
+inline pgl_vec3f operator*(const pgl_vec3f& v1, const pgl_vec3f& v2)
+{
+  return {v1.x * v2.x, v1.y * v2.y, v1.z * v2.z};
+}
+
+inline pgl_vec3f operator*(const float f, const pgl_vec3f& v)
+{
+  return {v.x * f, v.y * f, v.z * f};
+}
+
+inline pgl_vec3f operator*(const pgl_vec3f& v, const float f)
+{
+  return {v.x * f, v.y * f, v.z * f};
+}
+
+inline pgl_vec3f operator/(const pgl_vec3f& v1, const pgl_vec3f& v2)
+{
+  return {v1.x / v2.x, v1.y / v2.y, v1.z / v2.z};
+}
+
+inline pgl_vec3f operator/(const float f, const pgl_vec3f& v)
+{
+  return {v.x / f, v.y / f, v.z / f};
+}
+
+inline pgl_vec3f operator/(const pgl_vec3f& v, const float f)
+{
+  return {v.x / f, v.y / f, v.z / f};
+}
 
 typedef pgl_vec3f pgl_point3f;
 
+typedef struct
+{
+  int32_t x, y, z;
+  #ifdef __cplusplus 
+  #endif
+} pgl_vec3i;
+
+typedef pgl_vec3i pgl_point3i;
 
 typedef struct
 {
   float x, y;
+  #ifdef __cplusplus
+
+  #endif
 } pgl_vec2f;
 
 typedef pgl_vec2f pgl_point2f;
+
+typedef struct
+{
+  int32_t x, y;
+  #ifdef __cplusplus
+
+  #endif
+} pgl_vec2i;
+
+typedef pgl_vec2i pgl_point2i;
 
 typedef struct
 {
@@ -98,11 +202,11 @@ inline pgl_vec3f normalize(pgl_vec3f n)
 }
 
 #if defined(PGL_USE_DIRECTION_COMPRESSION) || defined(OPENPGL_DIRECTION_COMPRESSION)
-////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////
 //  Directional 32-Bit compression based on octahdral maps
 //  as described by Meyer et al. in "On Floating-Point Normal Vectors"
 //  (https://onlinelibrary.wiley.com/doi/10.1111/j.1467-8659.2010.01737.x)
-////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////
 
 uint32_t quantize_direction(const pgl_vec3f &n);
 pgl_vec3f dequantize_direction(const uint32_t word);

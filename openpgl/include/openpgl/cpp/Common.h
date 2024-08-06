@@ -13,9 +13,124 @@ namespace openpgl
 {
 namespace cpp
 {
-   /**
-    * @brief Wrapper function to simulate a C++ constructur
-    * for a 3d vector of type pgl_vec3f.
+   struct Vector3f : public pgl_vec3f{
+
+      Vector3f(const pgl_vec3f& v) {
+         this->x = v.x;
+         this->y = v.y;
+         this->z = v.z;
+      }
+
+      Vector3f(float x, float y, float z) {
+         this->x = x;
+         this->y = y;
+         this->z = z;
+      }
+
+      Vector3f(float v) {
+         this->x = v;
+         this->y = v;
+         this->z = v;
+       }
+   };
+   
+   struct Vector2f : public pgl_vec2f{
+      Vector2f(const pgl_vec2f& v) {
+         this->x = v.x;
+         this->y = v.y;
+      }       
+       
+       Vector2f(float x, float y) {
+         this->x = x;
+         this->y = y;
+       }
+
+      Vector2f(float v) {
+         this->x = v;
+         this->y = v;
+       }
+   };
+
+   struct Point3f : public pgl_point3f{
+      Point3f(const pgl_point3f& p) {
+         this->x = p.x;
+         this->y = p.y;
+         this->z = p.z;
+      }
+      Point3f(float x, float y, float z) {
+         this->x = x;
+         this->y = y;
+         this->z = z;
+      }
+
+      Point3f(float v) {
+         this->x = v;
+         this->y = v;
+         this->z = v;
+      }
+   };
+   
+
+   struct Point3i : public pgl_point3i{
+      Point3i(const pgl_point3i& p) {
+         this->x = p.x;
+         this->y = p.y;
+         this->z = p.z;
+      }
+      Point3i(int32_t x, int32_t y, int32_t z) {
+         this->x = x;
+         this->y = y;
+         this->z = z;
+      }
+
+      Point3i(int32_t v) {
+         this->x = v;
+         this->y = v;
+         this->z = v;
+      }
+   };
+
+   struct Point2f : public pgl_point2f{
+      Point2f(const pgl_point2f& p) {
+         this->x = p.x;
+         this->y = p.y;
+      } 
+      Point2f(float x, float y) {
+         this->x = x;
+         this->y = y;
+      }
+
+      Point2f(float v) {
+         this->x = v;
+         this->y = v;
+      }
+   };
+   
+   struct Point2i : public pgl_point2i{
+      Point2i(const pgl_point2i& p) {
+         this->x = p.x;
+         this->y = p.y;
+      }
+      Point2i(int32_t x, int32_t y) {
+         this->x = x;
+         this->y = y;
+      }
+
+      Point2i(int32_t v) {
+         this->x = v;
+         this->y = v;
+      }
+   };
+
+   struct Box3f : public pgl_box3f 
+   {
+      Box3f(Point3f lower, Point3f upper) {
+         this->lower = lower;
+         this->upper = upper;
+      }
+   };
+
+   /* for a 3d vector of type pgl_vec3f.
     * 
     * @param x 
     * @param y 
@@ -129,7 +244,7 @@ namespace cpp
    {
       return (vec.x + vec.y) * 0.5f;
    }
-
+/*
    OPENPGL_INLINE pgl_vec3f operator+(const pgl_vec3f& v1, const pgl_vec3f& v2)
    {
       return {v1.x + v2.x, v1.y + v2.y, v1.z + v2.z};
@@ -189,7 +304,7 @@ namespace cpp
    {
       return {v.x / f, v.y / f, v.z / f};
    }
-
+*/
    OPENPGL_INLINE pgl_direction CompressDirection(const pgl_vec3f& dir) {
       return dir;
    }
