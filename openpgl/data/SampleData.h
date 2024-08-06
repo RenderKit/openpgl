@@ -47,7 +47,7 @@ namespace openpgl
         valid = valid && dsd.distance >0.f;
         OPENPGL_ASSERT(valid);
 
-#ifdef OPENPGL_EF_RADIANCE_CACHES
+#ifdef OPENPGL_RADIANCE_CACHES
         pgl_vec3f radianceIn = dsd.radianceIn;
         valid = valid && embree::isvalid(radianceIn.x);
         valid = valid && radianceIn.x >= 0.f;
@@ -97,7 +97,7 @@ namespace openpgl
         ss << "\t pdf = " << sd.pdf << "\t ";
         ss << "\t distance = " << sd.distance << "\t ";
         ss << "\t flags = " << sd.flags;
-#ifdef OPENPGL_EF_RADIANCE_CACHES
+#ifdef OPENPGL_RADIANCE_CACHES
         pgl_vec3f radianceIn = sd.radianceIn;
         ss << "\t radianceIn = " << radianceIn.x << "\t " << radianceIn.y << "\t " << radianceIn.z << "\t ";
 

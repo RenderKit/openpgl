@@ -205,6 +205,11 @@ configure_file(
 )
 
 ## Defines header ##
+
+if(OPENPGL_EF_RADIANCE_CACHES)
+  set(OPENPGL_RADIANCE_CACHES ON)
+endif()
+
 configure_file(
   ${CMAKE_CURRENT_SOURCE_DIR}/include/${PROJECT_NAME}/defines.h.in
   ${CMAKE_CURRENT_BINARY_DIR}/include/${PROJECT_NAME}/defines.h

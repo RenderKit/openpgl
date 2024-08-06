@@ -5,12 +5,6 @@
 
 #include "include/openpgl/common.h"
 
-#ifdef OPENPGL_RADIANCE_CACHES
-#ifndef OPENPGL_EF_RADIANCE_CACHES
-#define OPENPGL_EF_RADIANCE_CACHES
-#endif
-#endif
-
 #define USE_EMBREE_PARALLEL
 #define USE_INTEGER_ARITHMETIC_STATS
 

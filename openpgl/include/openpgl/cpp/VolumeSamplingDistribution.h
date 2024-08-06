@@ -127,7 +127,7 @@ struct VolumeSamplingDistribution
      */   
     uint32_t GetId() const;
 
-#ifdef OPENPGL_EF_RADIANCE_CACHES
+#ifdef OPENPGL_RADIANCE_CACHES
     /**
      * @brief Returns the incoming radiance estimates.
      * 
@@ -289,7 +289,7 @@ OPENPGL_INLINE uint32_t VolumeSamplingDistribution::GetId() const
     return pglVolumeSamplingDistributionGetId(m_volumeSamplingDistributionHandle);
 }
 
-#ifdef OPENPGL_EF_RADIANCE_CACHES
+#ifdef OPENPGL_RADIANCE_CACHES
 OPENPGL_INLINE pgl_vec3f VolumeSamplingDistribution::IncomingRadiance(pgl_vec3f& direction, const bool directLightMIS) const
 {
     OPENPGL_ASSERT(m_volumeSamplingDistributionHandle);

@@ -492,7 +492,7 @@ void ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents,UseParallaxCompen
     serializeFloatVectors<NumVectors, VectorSize>(stream, _eMinus2Kappa);
     serializeFloatVectors<NumVectors, VectorSize>(stream, _meanCosines);
     serializeFloatVectors<NumVectors, VectorSize>(stream, _distances);
-#ifdef OPENPGL_EF_RADIANCE_CACHES
+#ifdef OPENPGL_RADIANCE_CACHES
 	serializeVec3Vectors<NumVectors, VectorSize>(stream, _fluenceRGBWeightsWithMIS);
     serializeVec3Vectors<NumVectors, VectorSize>(stream, _fluenceRGBWeights);
 #endif
@@ -517,7 +517,7 @@ void ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents,UseParallaxCompen
     deserializeFloatVectors<NumVectors, VectorSize>(stream, _eMinus2Kappa);
     deserializeFloatVectors<NumVectors, VectorSize>(stream, _meanCosines);
     deserializeFloatVectors<NumVectors, VectorSize>(stream, _distances);
-#ifdef OPENPGL_EF_RADIANCE_CACHES
+#ifdef OPENPGL_RADIANCE_CACHES
 	deserializeVec3Vectors<NumVectors, VectorSize>(stream, _fluenceRGBWeightsWithMIS);
     deserializeVec3Vectors<NumVectors, VectorSize>(stream, _fluenceRGBWeights);
 #endif

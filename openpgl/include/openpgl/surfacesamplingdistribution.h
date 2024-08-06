@@ -45,7 +45,7 @@ OPENPGL_CORE_INTERFACE void pglSurfaceSamplingDistributionClear(PGLSurfaceSampli
 
 OPENPGL_CORE_INTERFACE PGLRegion pglSurfaceSamplingGetRegion(PGLSurfaceSamplingDistribution surfaceSamplingDistribution);
 
-#ifdef OPENPGL_EF_RADIANCE_CACHES
+#ifdef OPENPGL_RADIANCE_CACHES
 OPENPGL_CORE_INTERFACE pgl_vec3f pglSurfaceSamplingDistributionIncomingRadiance(PGLSurfaceSamplingDistribution surfaceSamplingDistribution, pgl_vec3f direction, const bool directLightMIS);
 
 OPENPGL_CORE_INTERFACE pgl_vec3f pglSurfaceSamplingDistributionIrradiance(PGLSurfaceSamplingDistribution surfaceSamplingDistribution, pgl_vec3f normal, const bool directLightMIS);
