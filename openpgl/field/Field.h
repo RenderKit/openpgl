@@ -14,10 +14,10 @@
 #ifdef USE_EMBREE_PARALLEL
 #define TASKING_TBB
 #include <embreeSrc/common/algorithms/parallel_for.h>
-#endif
+#else
 #include <tbb/parallel_for.h>
 #include <tbb/parallel_sort.h>
-
+#endif
 #define USE_PRECOMPUTED_NN 1
 
 namespace openpgl
@@ -177,7 +177,7 @@ public:
 #ifdef USE_EMBREE_PARALLEL
             embree::parallel_for( size_t(0), samples.zeroValueSamples.size(), size_t(4*4096), [&](const embree::range<size_t>& r) {
 #else
-tbb::parallel_for( tbb::blocked_range<int>(0,samples.zeroValueSamples.size()), [&](tbb::blocked_range<int> r) {
+            tbb::parallel_for( tbb::blocked_range<int>(0,samples.zeroValueSamples.size()), [&](tbb::blocked_range<int> r) {
 #endif
                 for (size_t i=r.begin(); i<r.end(); i++) 
                     zeroValueSamples_[i] = samples.zeroValueSamples[i];

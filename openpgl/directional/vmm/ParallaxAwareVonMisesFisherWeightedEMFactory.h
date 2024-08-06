@@ -1344,7 +1344,7 @@ void ParallaxAwareVonMisesFisherWeightedEMFactory<TVMMDistribution>::updateFluen
 
     const embree::vfloat<VMM::VectorSize> zeros(0.0f);
 
-    float sumFluence {0.f};
+    //float sumFluence {0.f};
     Vector3 sumFluenceRGB {0.f, 0.f, 0.f};
     Vector3 sumFluenceRGBWithMIS {0.f, 0.f, 0.f};
 
