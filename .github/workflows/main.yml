@@ -36,30 +36,12 @@ jobs:
       #artifact-out: build-centos7-icx
       #artifact-path: ./build/install ./build/openvkl/build
       cmd: |
-        module load cmake
-        module load intel/2022.1
+        module load cmake/3.25.3
+        module load intel/2024.1.0
         export CC=icx
         export CXX=icpx
         export CXXFLAGS="-fPIC -fp-model=precise"
         export LDFLAGS="-static-intel"
-        gitlab/build.sh
-
-
-  build-rocky87-icc:
-    secrets: inherit
-    uses: intel-innersource/libraries.devops.renderkit.workflows/.github/workflows/docker.yml@main
-    with:
-      force-delete: true    # guarantees .gitattributes are respected in working dir
-      submodules: true
-      image: rockylinux:8.7
-      #artifact-out: build-centos7-icc
-      #artifact-path: ./build/install ./build/openvkl/build
-      cmd: |
-        module load cmake
-        module load intel/2019.4
-        export CC=icc
-        export CXX=icpc
-        export CXXFLAGS="-static-intel -fPIC"
         gitlab/build.sh
 
   build-centos8:
