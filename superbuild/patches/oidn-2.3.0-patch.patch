@@ -1,0 +1,25 @@
+--- ./core/context.h	2024-08-06 18:46:32.035455202 +0200
++++ ./core/context.h	2024-08-06 18:49:51.317783723 +0200
+@@ -6,8 +6,8 @@
+ #include "module.h"
+ #include "device_factory.h"
+ #include <mutex>
+-#include <unordered_set>
+-#include <unordered_map>
++#include <set>
++#include <map>
+ 
+ OIDN_NAMESPACE_BEGIN
+ 
+@@ -116,9 +116,9 @@
+ 
+     std::mutex mutex;
+     bool fullyInited = false;
+-    std::unordered_set<DeviceType> initedDeviceTypes;
++    std::set<DeviceType> initedDeviceTypes;
+     ModuleLoader modules;
+-    std::unordered_map<DeviceType, std::unique_ptr<DeviceFactory>> deviceFactories;
++    std::map<DeviceType, std::unique_ptr<DeviceFactory>> deviceFactories;
+     std::vector<Ref<PhysicalDevice>> physicalDevices;
+   };
+ 
