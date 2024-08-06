@@ -30,3 +30,6 @@
 #include "fieldstatistics.h"
 #include "surfacesamplingdistribution.h"
 #include "volumesamplingdistribution.h"
+#if defined(OPENPGL_IMAGE_SPACE_GUIDING_BUFFER)
+#include "imagespaceguidingbuffer.h"
+#endif

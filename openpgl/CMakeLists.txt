@@ -46,6 +46,10 @@ if(OPENPGL_EF_RADIANCE_CACHES)
 target_compile_definitions(${PROJECT_NAME} PRIVATE OPENPGL_RADIANCE_CACHES)
 endif()
 
+if(OPENPGL_EF_IMAGE_SPACE_GUIDING_BUFFER)
+target_compile_definitions(${PROJECT_NAME} PRIVATE OPENPGL_IMAGE_SPACE_GUIDING_BUFFER)
+endif()
+
 if(OPENPGL_DIRECTION_COMPRESSION)
 target_compile_definitions(${PROJECT_NAME} PRIVATE PGL_USE_DIRECTION_COMPRESSION)
 endif()
@@ -176,6 +180,16 @@ target_include_directories(${PROJECT_NAME}
 )
 
 target_link_libraries(${PROJECT_NAME} PRIVATE TBB::${OPENPGL_TBB_COMPONENT})
+if (OPENPGL_EF_IMAGE_SPACE_GUIDING_BUFFER)
+  target_include_directories(${PROJECT_NAME}
+    PRIVATE
+      OpenImageDenoise
+      ZLIB
+  )
+  target_link_libraries(${PROJECT_NAME} PRIVATE OpenImageDenoise)
+  target_link_libraries(${PROJECT_NAME} PRIVATE ZLIB::ZLIB)
+endif()
+
 set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME ${OPENPGL_LIBRARY_NAME})
 ## Configure OpenPGL installation ##
 
@@ -208,6 +222,10 @@ configure_file(
 
 if(OPENPGL_EF_RADIANCE_CACHES)
   set(OPENPGL_RADIANCE_CACHES ON)
+endif()
+
+if(OPENPGL_EF_IMAGE_SPACE_GUIDING_BUFFER)
+  set(OPENPGL_IMAGE_SPACE_GUIDING_BUFFER ON)
 endif()
 
 configure_file(

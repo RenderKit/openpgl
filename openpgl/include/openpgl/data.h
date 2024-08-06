@@ -134,6 +134,17 @@ struct PGLPathSegmentData
     const void* regionPtr{nullptr};
 };
 
+#if defined(OPENPGL_IMAGE_SPACE_GUIDING_BUFFER)
+
+struct PGLImageSpaceSample{
+    pgl_vec3f color {0.f, 0.f, 0.f};
+    pgl_vec3f albedo {0.f,0.f,0.f};
+    pgl_vec3f normal {0.f, 0.f, -1.f};
+    bool isVolume {false};
+};
+
+#endif
+
 struct PGLString{
     char* m_str;
     size_t m_size;

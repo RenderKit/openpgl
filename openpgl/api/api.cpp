@@ -17,6 +17,10 @@
 #include "data/SampleData.h"
 #include "data/SampleDataStorage.h"
 
+#if defined(OPENPGL_IMAGE_SPACE_GUIDING_BUFFER)
+#include "imagespace/ImageSpaceGuidingBuffer.h"
+#endif
+
 #include <cstring>
 
 using namespace openpgl;
@@ -968,3 +972,56 @@ extern "C" OPENPGL_DLLEXPORT void pglReleaseString(PGLString str)
     }
 }
 
+
+#if defined(OPENPGL_IMAGE_SPACE_GUIDING_BUFFER)
+///////////////////////////////////////////////////////////////////////////////
+// ImageSpaceGuidingBuffer  ///////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+
+extern "C" OPENPGL_DLLEXPORT  PGLImageSpaceGuidingBuffer pglFieldNewImageSpaceGuidingBuffer(const pgl_point2i resolution)
+{
+     return (PGLImageSpaceGuidingBuffer) new openpgl::ImageSpaceGuidingBuffer(resolution, false);
+}
+
+extern "C" OPENPGL_DLLEXPORT  PGLImageSpaceGuidingBuffer pglFieldNewImageSpaceGuidingBufferFromFile(const char* fileName)
+{
+    return (PGLImageSpaceGuidingBuffer) new openpgl::ImageSpaceGuidingBuffer(fileName);
+}
+
+extern "C" OPENPGL_DLLEXPORT  void pglReleaseImageSpaceGuidingBuffer(PGLImageSpaceGuidingBuffer imageSpaceGuidingBuffer)
+{
+    auto *gImageSpaceGuidingBuffer = (openpgl::ImageSpaceGuidingBuffer *)imageSpaceGuidingBuffer;
+    delete gImageSpaceGuidingBuffer;
+}
+
+extern "C" OPENPGL_DLLEXPORT  void pglImageSpaceGuidingBufferUpdate(PGLImageSpaceGuidingBuffer imageSpaceGuidingBuffer)
+{
+    auto *gImageSpaceGuidingBuffer = (openpgl::ImageSpaceGuidingBuffer *)imageSpaceGuidingBuffer;
+    gImageSpaceGuidingBuffer->update();
+}
+
+extern "C" OPENPGL_DLLEXPORT  void pglImageSpaceGuidingBufferAddSample(PGLImageSpaceGuidingBuffer imageSpaceGuidingBuffer, const pgl_point2i pixel, const PGLImageSpaceSample sample)
+{
+    auto *gImageSpaceGuidingBuffer = (openpgl::ImageSpaceGuidingBuffer *)imageSpaceGuidingBuffer;
+    gImageSpaceGuidingBuffer->addSample(pixel, sample);
+}
+
+extern "C" OPENPGL_DLLEXPORT  void pglImageSpaceGuidingBufferStore(PGLImageSpaceGuidingBuffer imageSpaceGuidingBuffer, const char* fileName)
+{
+    auto *gImageSpaceGuidingBuffer = (openpgl::ImageSpaceGuidingBuffer *)imageSpaceGuidingBuffer;
+    gImageSpaceGuidingBuffer->store(fileName);
+}
+
+extern "C" OPENPGL_DLLEXPORT  pgl_vec3f pglImageSpaceGuidingBufferGetContributionEstimate(PGLImageSpaceGuidingBuffer imageSpaceGuidingBuffer, const pgl_point2i pixel)
+{
+    auto *gImageSpaceGuidingBuffer = (openpgl::ImageSpaceGuidingBuffer *)imageSpaceGuidingBuffer;
+    return gImageSpaceGuidingBuffer->getContributionEstimate(pixel);
+}
+
+extern "C" OPENPGL_DLLEXPORT  bool pglImageSpaceGuidingBufferIsReady(PGLImageSpaceGuidingBuffer imageSpaceGuidingBuffer)
+{
+    auto *gImageSpaceGuidingBuffer = (openpgl::ImageSpaceGuidingBuffer *)imageSpaceGuidingBuffer;
+    return gImageSpaceGuidingBuffer->isReady();
+}
+
+#endif

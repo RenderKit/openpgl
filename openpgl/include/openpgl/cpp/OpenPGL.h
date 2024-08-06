@@ -13,6 +13,9 @@
 #include "FieldStatistics.h"
 #include "FieldConfig.h"
 #include "Field.h"
+#if defined(OPENPGL_IMAGE_SPACE_GUIDING_BUFFER) 
+#include "ImageSpaceGuidingBuffer.h"
+#endif
 #include "PathSegmentStorage.h"
 #include "Region.h"
 #include "RussianRoulette.h"
