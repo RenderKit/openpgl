@@ -668,7 +668,7 @@ extern int LoadEXRFromMemory(float **out_rgba, int *width, int *height,
 
 #if defined(TINYEXR_USE_NANOZLIB) && (TINYEXR_USE_NANOZLIB==1)
 #define NANOZLIB_IMPLEMENTATION
-#include "nanozlib.h"
+#include "deps/nanozlib/nanozlib.h"
 #endif
 
 #if TINYEXR_USE_STB_ZLIB

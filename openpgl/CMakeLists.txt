@@ -184,10 +184,10 @@ if (OPENPGL_EF_IMAGE_SPACE_GUIDING_BUFFER)
   target_include_directories(${PROJECT_NAME}
     PRIVATE
       OpenImageDenoise
-      ZLIB
+      #ZLIB
   )
   target_link_libraries(${PROJECT_NAME} PRIVATE OpenImageDenoise)
-  target_link_libraries(${PROJECT_NAME} PRIVATE ZLIB::ZLIB)
+  #target_link_libraries(${PROJECT_NAME} PRIVATE ZLIB::ZLIB)
 endif()
 
 set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME ${OPENPGL_LIBRARY_NAME})
