@@ -159,8 +159,7 @@ jobs:
         cmake -S superbuild -B build_deps -DBUILD_JOBS=`nproc` -DBUILD_DEPENDENCIES_ONLY=ON &&
         cmake --build build_deps &&
         DEP_INSTALL_DIR=build_deps/install &&
-        export embree_DIR=$DEP_INSTALL_DIR &&
-        cmake -S . -B build -DTBB_ROOT=$DEP_INSTALL_DIR
+        cmake -S . -B build -DTBB_ROOT=$DEP_INSTALL_DIR -DCMAKE_PREFIX_PATH=$DEP_INSTALL_DIR
       build: cmake --build build
 
   ### Protex Jobs ###
