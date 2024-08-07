@@ -413,10 +413,10 @@ struct ImageSpaceGuidingBuffer{
         m_contributionEstimateBuffers->spp[pixelIdx] += 1;
         float alpha = 1.f / m_contributionEstimateBuffers->spp[pixelIdx];
 
-        m_contributionEstimateBuffers->contribution[pixelIdx] = (1.f - alpha) * m_contributionEstimateBuffers->contribution[pixelIdx] + alpha * sample.color;
+        m_contributionEstimateBuffers->contribution[pixelIdx] = (1.f - alpha) * m_contributionEstimateBuffers->contribution[pixelIdx] + alpha * sample.contribution;
         m_contributionEstimateBuffers->albedo[pixelIdx] = (1.f - alpha) * m_contributionEstimateBuffers->albedo[pixelIdx] + alpha * sample.albedo;
         m_contributionEstimateBuffers->normal[pixelIdx] = (1.f - alpha) * m_contributionEstimateBuffers->normal[pixelIdx] + alpha * sample.normal;
-        m_contributionEstimateBuffers->secondMoment[pixelIdx] = (1.f - alpha) * m_contributionEstimateBuffers->secondMoment[pixelIdx] + alpha * (sample.color * sample.color);
+        m_contributionEstimateBuffers->secondMoment[pixelIdx] = (1.f - alpha) * m_contributionEstimateBuffers->secondMoment[pixelIdx] + alpha * (sample.contribution * sample.contribution);
     }
 
     pgl_vec3f getContributionEstimate(const pgl_point2i pixel, const bool secondMoment = false) const{

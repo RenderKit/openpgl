@@ -1012,7 +1012,7 @@ extern "C" OPENPGL_DLLEXPORT  void pglImageSpaceGuidingBufferStore(PGLImageSpace
     gImageSpaceGuidingBuffer->store(fileName);
 }
 
-extern "C" OPENPGL_DLLEXPORT  pgl_vec3f pglImageSpaceGuidingBufferGetContributionEstimate(PGLImageSpaceGuidingBuffer imageSpaceGuidingBuffer, const pgl_point2i pixel)
+extern "C" OPENPGL_DLLEXPORT  pgl_vec3f pglImageSpaceGuidingBufferGetPixelContributionEstimate(PGLImageSpaceGuidingBuffer imageSpaceGuidingBuffer, const pgl_point2i pixel)
 {
     auto *gImageSpaceGuidingBuffer = (openpgl::ImageSpaceGuidingBuffer *)imageSpaceGuidingBuffer;
     return gImageSpaceGuidingBuffer->getContributionEstimate(pixel);

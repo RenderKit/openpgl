@@ -31,7 +31,7 @@ OPENPGL_CORE_INTERFACE void pglImageSpaceGuidingBufferAddSample(PGLImageSpaceGui
 
 OPENPGL_CORE_INTERFACE void pglImageSpaceGuidingBufferStore(PGLImageSpaceGuidingBuffer imageSpaceGuidingBuffer, const char* fileName);
 
-OPENPGL_CORE_INTERFACE pgl_vec3f pglImageSpaceGuidingBufferGetContributionEstimate(PGLImageSpaceGuidingBuffer imageSpaceGuidingBuffer, const pgl_point2i pixel);
+OPENPGL_CORE_INTERFACE pgl_vec3f pglImageSpaceGuidingBufferGetPixelContributionEstimate(PGLImageSpaceGuidingBuffer imageSpaceGuidingBuffer, const pgl_point2i pixel);
 
 OPENPGL_CORE_INTERFACE bool pglImageSpaceGuidingBufferIsReady(PGLImageSpaceGuidingBuffer imageSpaceGuidingBuffer);
 

@@ -136,11 +136,42 @@ struct PGLPathSegmentData
 
 #if defined(OPENPGL_IMAGE_SPACE_GUIDING_BUFFER)
 
+/**
+ * @brief The class representing the contribution and some auxiliary information (e.g., albedo, normal) about the MC (random walk) sample for estimating a pixel value.
+ */
 struct PGLImageSpaceSample{
-    pgl_vec3f color {0.f, 0.f, 0.f};
+    enum Flags
+    {
+        /// if the first event of the random walk is inside a volume
+        EVolumeEvent = 1<<0,
+    };
+    /// @brief The contribution of the MC sample.
+    pgl_vec3f contribution {0.f, 0.f, 0.f};
+    /// @brief The albedo of the surface or volume at the first hit position (on a surface or in a volume).
     pgl_vec3f albedo {0.f,0.f,0.f};
+    /// @brief The surface normal if the first hit position is on a surface or the primary ray
+    /// direction if the first hit is inside a volume.
     pgl_vec3f normal {0.f, 0.f, -1.f};
-    bool isVolume {false};
+    /// @brief Stores a set of binary sample attributes.
+    uint32_t flags {0};
+
+#ifdef __cplusplus
+    /// @brief Sets the bit-flag if the sample originates from a surface envent or not.
+    /// @param isSurfaceEvent If the samples originates from a surface event.
+    void SetSurfaceEvent(bool isSurfaceEvent)
+    {
+        if (isSurfaceEvent)
+            flags ^= EVolumeEvent;
+        else
+            flags |= EVolumeEvent;
+    }
+
+    /// @brief If the samples originates from a surface event.
+    bool IsSurfaceEvent() const
+    {
+        return flags ^ EVolumeEvent;
+    }
+#endif
 };
 
 #endif
