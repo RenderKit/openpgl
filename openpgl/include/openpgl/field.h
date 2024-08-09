@@ -30,7 +30,6 @@ struct Field;
 typedef ManagedObject Field;
 #endif
 
-
 typedef Field *PGLField;
 
 OPENPGL_CORE_INTERFACE void pglReleaseField(PGLField field);
@@ -42,8 +41,6 @@ OPENPGL_CORE_INTERFACE size_t pglFieldGetIteration(PGLField field);
 OPENPGL_CORE_INTERFACE void pglFieldSetSceneBounds(PGLField field, pgl_box3f bounds);
 
 OPENPGL_CORE_INTERFACE pgl_box3f pglFieldGetSceneBounds(PGLField field);
-
-//OPENPGL_CORE_INTERFACE pgl_box3f pglFieldGetSceneBounds(PGLField field);
 
 OPENPGL_CORE_INTERFACE void pglFieldUpdate(PGLField field, PGLSampleStorage sampleStorage);
 

@@ -19,11 +19,7 @@ typedef ManagedObject VolumeSamplingDistribution;
 
 typedef VolumeSamplingDistribution *PGLVolumeSamplingDistribution;
 
-//OPENPGL_CORE_INTERFACE PGLVolumeSamplingDistribution pglNewVolumeSamplingDistribution();
-
 OPENPGL_CORE_INTERFACE void pglReleaseVolumeSamplingDistribution(PGLVolumeSamplingDistribution VolumeSamplingDistribution);
-
-//OPENPGL_CORE_INTERFACE void pglVolumeSamplingDistributionInit(PGLVolumeSamplingDistribution VolumeSamplingDistribution, PGLRegion region, pgl_point3f samplePosition, bool useParallaxComp = true);
 
 OPENPGL_CORE_INTERFACE pgl_vec3f pglVolumeSamplingDistributionSample(PGLVolumeSamplingDistribution VolumeSamplingDistribution, pgl_point2f sample);
 

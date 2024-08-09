@@ -19,11 +19,7 @@ typedef ManagedObject SurfaceSamplingDistribution;
 
 typedef SurfaceSamplingDistribution *PGLSurfaceSamplingDistribution;
 
-//OPENPGL_CORE_INTERFACE PGLSurfaceSamplingDistribution pglNewSurfaceSamplingDistribution();
-
 OPENPGL_CORE_INTERFACE void pglReleaseSurfaceSamplingDistribution(PGLSurfaceSamplingDistribution surfaceSamplingDistribution);
-
-//OPENPGL_CORE_INTERFACE void pglSurfaceSamplingDistributionInit(PGLSurfaceSamplingDistribution SurfaceSamplingDistribution, PGLRegion region, pgl_point3f samplePosition, bool useParallaxComp = true);
 
 OPENPGL_CORE_INTERFACE void pglSurfaceSamplingDistributionApplyCosineProduct(PGLSurfaceSamplingDistribution surfaceSamplingDistribution, pgl_vec3f normal);
 

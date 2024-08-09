@@ -62,22 +62,6 @@ OPENPGL_INLINE Region::Region(PGLRegion regionHandle)
 {
     m_regionHandle = regionHandle;
 }
-/*
-OPENPGL_INLINE bool Region::GetValid()const
-{
-    if(m_regionHandle)
-        return pglRegionGetValid(m_regionHandle);
-    else
-        return false;
-}
 
-
-OPENPGL_INLINE Distribution Region::GetDistribution(pgl_point3f samplePosition, const bool &useParallaxComp) const
-{
-    OPENPGL_ASSERT(m_regionHandle);
-    PGLDistribution distributionHandle = pglRegionGetDistribution(m_regionHandle, samplePosition, useParallaxComp);
-    return Distribution(distributionHandle);
-}
-*/
 }
 }

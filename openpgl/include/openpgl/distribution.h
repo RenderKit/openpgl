@@ -28,12 +28,6 @@ typedef ManagedObject Distribution;
 typedef Distribution *PGLDistribution;
 typedef Region *PGLRegion;
 
-//bool pglDistributionIsValid(PGLDistribution distribution);
-
-//void pglGetDistribution(PGLRegion region, pgl_point3f samplePosition, const bool &useParallaxComp);
-
-
-
 #ifdef __cplusplus
 }  // extern "C"
 #endif

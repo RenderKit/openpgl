@@ -26,7 +26,6 @@ OPENPGL_CORE_INTERFACE PGLString pglFieldStatisticsHeaderCSVString(PGLFieldStati
 
 OPENPGL_CORE_INTERFACE PGLString pglFieldStatisticsToCSVString(PGLFieldStatistics fieldStatistics);
 
-
 #ifdef __cplusplus
 }  // extern "C"
 #endif

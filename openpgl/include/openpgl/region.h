@@ -19,11 +19,6 @@ typedef ManagedObject Region;
 
 typedef Region *PGLRegion;
 
-//OPENPGL_CORE_INTERFACE bool pglRegionGetValid(PGLRegion region);
-
-//OPENPGL_CORE_INTERFACE PGLDistribution pglRegionGetDistribution(PGLRegion region, pgl_point3f samplePosition, const bool useParallaxComp);
-
-
 #ifdef __cplusplus
 }  // extern "C"
 #endif

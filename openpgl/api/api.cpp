@@ -174,18 +174,6 @@ extern "C" OPENPGL_DLLEXPORT pgl_box3f pglFieldGetSceneBounds(PGLField field)
     return bounds;
 }
 
-/*
-extern "C" OPENPGL_DLLEXPORT pgl_box3f pglFieldGetSceneBounds(PGLField field)
-{
-    auto *gField = (GuidingField *)field;
-    openpgl::BBox sceneBounds = gField->getSceneBounds();
-    pgl_box3f bounds;
-    pglBox3f(bounds, sceneBounds.lower.x, sceneBounds.lower.y, sceneBounds.lower.z, sceneBounds.upper.x, sceneBounds.upper.y, sceneBounds.upper.z);
-    return bounds;
-    //return gField->getIteration();
-}
-*/
-
 extern "C" OPENPGL_DLLEXPORT  void pglFieldUpdate(PGLField field, PGLSampleStorage sampleStorage)OPENPGL_CATCH_BEGIN
 {
     auto *gField = (IGuidingField *)field;
@@ -274,29 +262,6 @@ extern "C" OPENPGL_DLLEXPORT PGLFieldStatistics pglFieldGetVolumeStatistics(PGLF
     const auto *gField = (const IGuidingField *)field;
     return (PGLFieldStatistics)gField->getVolumeStatistics();
 }
-
-///////////////////////////////////////////////////////////////////////////////
-// Region /////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-/*
-extern "C" OPENPGL_DLLEXPORT bool pglRegionGetValid(PGLRegion region)
-{
-    auto *gRegion = (IRegion *)region;
-    return gRegion->valid;
-}
-*/
-/*
-extern "C" OPENPGL_DLLEXPORT PGLDistribution pglRegionGetDistribution(PGLRegion region, pgl_point3f samplePosition, const bool &useParallaxComp)
-{
-    const openpgl::Point3 samplePos(samplePosition.x, samplePosition.y, samplePosition.z);
-    auto *gRegion = (IRegion *)region;
-
-    GuidingDistribution gDistribution;
-    gRegion->getDistribution(gDistribution, samplePos, useParallaxComp);
-    return (PGLDistribution)nullptr;
-}
-*/
-
 
 ///////////////////////////////////////////////////////////////////////////////
 // SampleStorage //////////////////////////////////////////////////////////////
@@ -445,41 +410,6 @@ extern "C" OPENPGL_DLLEXPORT bool pglSampleStorageCompare(PGLSampleStorage sampl
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// SampleData /////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-/*
-extern "C" OPENPGL_DLLEXPORT void pglSampleDataSetPosition(PGLSampleData sampleData, const pgl_point3f pos)
-{
-    sampleData->position = pos;
-}
-
-extern "C" OPENPGL_DLLEXPORT void pglSampleDataSetDirection(PGLSampleData sampleData, const pgl_vec3f direction)
-{
-    sampleData->direction = direction;
-}
-
-extern "C" OPENPGL_DLLEXPORT void pglSampleDataSetDistance(PGLSampleData sampleData, const float distance)
-{
-    sampleData->distance = distance;
-}
-
-extern "C" OPENPGL_DLLEXPORT void pglSampleDataSetPDF(PGLSampleData sampleData, const float pdf)
-{
-    sampleData->pdf = pdf;
-}
-
-extern "C" OPENPGL_DLLEXPORT void pglSampleDataSetWeight(PGLSampleData sampleData, const float weight)
-{
-    sampleData->weight = weight;
-}
-
-extern "C" OPENPGL_DLLEXPORT void pglSampleDataSetFlags(PGLSampleData sampleData, const int flags)
-{
-    sampleData->flags = flags;
-}
-*/
-
-///////////////////////////////////////////////////////////////////////////////
 // PathSegmentStorage /////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -567,13 +497,6 @@ extern "C" OPENPGL_DLLEXPORT const PGLZeroValueSampleData* pglPathSegmentStorage
     return (PGLZeroValueSampleData*)opglSamples;
 }
 
-/*
-extern "C" OPENPGL_DLLEXPORT void pglPathSegmentStorageAddSegment(PGLPathSegmentStorage pathSegmentStorage, PGLPathSegment pathSegment)
-{
-    //auto *gPathSegmentStorage = (openpgl::PathSegmentDataStorage *)pathSegmentStorage;
-    //gPathSegmentStorage->
-}
-*/
 extern "C" OPENPGL_DLLEXPORT void pglPathSegmentStorageAddSample(PGLPathSegmentStorage pathSegmentStorage, PGLSampleData sample)
 {
     auto *gPathSegmentStorage = (openpgl::PathSegmentDataStorage *)pathSegmentStorage;
@@ -616,21 +539,6 @@ extern "C" OPENPGL_DLLEXPORT void pglPathSegmentStoragePropagateSamples(PGLPathS
 ///////////////////////////////////////////////////////////////////////////////
 // Distribution ///// /////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-/*
-extern "C" OPENPGL_DLLEXPORT bool pglDistributionIsValid(PGLDistribution distribution)
-{
-    auto *gDistribution = (GuidingDistribution *)distribution;
-    return gDistribution->isValid();
-}
-*/
-/*
-extern "C" OPENPGL_DLLEXPORT PGLSurfaceSamplingDistribution pglNewSurfaceSamplingDistribution()OPENPGL_CATCH_BEGIN
-{
-    GuidedSurfaceSamplingDistribution* gSurfaceSamplingDistribution =  new GuidedSurfaceSamplingDistribution();
-    return (PGLSurfaceSamplingDistribution)gSurfaceSamplingDistribution;
-}
-OPENPGL_CATCH_END(nullptr)
-*/
 
 extern "C" OPENPGL_DLLEXPORT void pglReleaseSurfaceSamplingDistribution(PGLSurfaceSamplingDistribution surfaceSamplingDistribution)OPENPGL_CATCH_BEGIN
 {
@@ -638,16 +546,7 @@ extern "C" OPENPGL_DLLEXPORT void pglReleaseSurfaceSamplingDistribution(PGLSurfa
     delete gSurfaceSamplingDistribution;
 }
 OPENPGL_CATCH_END_VOID
-/*
-extern "C" OPENPGL_DLLEXPORT void pglSurfaceSamplingDistributionInit(PGLSurfaceSamplingDistribution surfaceSamplingDistribution, PGLRegion region, pgl_point3f samplePosition, bool useParallaxComp)
-{
-    ISurfaceSamplingDistribution* gSurfaceSamplingDistribution =  (ISurfaceSamplingDistribution*)surfaceSamplingDistribution;
-    IRegion *gRegion = (IRegion*)region;
-    openpgl::Vector3 opglSamplePosition(samplePosition.x, samplePosition.y, samplePosition.z);
-    GuidingDistribution Distribution = gRegion->getDistribution(opglSamplePosition, useParallaxComp);
-    gSurfaceSamplingDistribution->init(&Distribution);
-}
-*/
+
 extern "C" OPENPGL_DLLEXPORT void pglSurfaceSamplingDistributionApplyCosineProduct(PGLSurfaceSamplingDistribution surfaceSamplingDistribution, pgl_vec3f normal)
 {
     ISurfaceSamplingDistribution* gSurfaceSamplingDistribution =  (ISurfaceSamplingDistribution*)surfaceSamplingDistribution;
@@ -750,30 +649,13 @@ extern "C" OPENPGL_DLLEXPORT pgl_vec3f pglSurfaceSamplingDistributionIrradiance(
 
 #endif
 
-/*
-extern "C" OPENPGL_DLLEXPORT PGLVolumeSamplingDistribution pglNewVolumeSamplingDistribution()OPENPGL_CATCH_BEGIN
-{
-    GuidedVolumeSamplingDistribution* gVolumeSamplingDistribution =  new GuidedVolumeSamplingDistribution();
-    return (PGLVolumeSamplingDistribution)gVolumeSamplingDistribution;
-}
-OPENPGL_CATCH_END(nullptr)
-*/
 extern "C" OPENPGL_DLLEXPORT void pglReleaseVolumeSamplingDistribution(PGLVolumeSamplingDistribution volumeSamplingDistribution)OPENPGL_CATCH_BEGIN
 {
     IVolumeSamplingDistribution* gVolumeSamplingDistribution =  (IVolumeSamplingDistribution*)volumeSamplingDistribution;
     delete gVolumeSamplingDistribution;
 }
 OPENPGL_CATCH_END_VOID
-/*
-extern "C" OPENPGL_DLLEXPORT void pglVolumeSamplingDistributionInit(PGLVolumeSamplingDistribution volumeSamplingDistribution, PGLRegion region, pgl_point3f samplePosition, bool useParallaxComp)
-{
-    IVolumeSamplingDistribution* gVolumeSamplingDistribution =  (IVolumeSamplingDistribution*)volumeSamplingDistribution;
-    IRegion *gRegion = (IRegion*)region;
-    openpgl::Vector3 opglSamplePosition(samplePosition.x, samplePosition.y, samplePosition.z);
-    GuidingDistribution Distribution = gRegion->getDistribution(opglSamplePosition, useParallaxComp);
-    gVolumeSamplingDistribution->init(&Distribution);
-}
-*/
+
 extern "C" OPENPGL_DLLEXPORT pgl_vec3f pglVolumeSamplingDistributionSample(PGLVolumeSamplingDistribution volumeSamplingDistribution, pgl_point2f sample)
 {
     IVolumeSamplingDistribution* gVolumeSamplingDistribution =  (IVolumeSamplingDistribution*)volumeSamplingDistribution;

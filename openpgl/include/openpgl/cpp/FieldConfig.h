@@ -73,6 +73,10 @@ struct FieldConfig
         PGLFieldArguments m_args;
 };
 
+////////////////////////////////////////////////////////////
+/// Implementation
+////////////////////////////////////////////////////////////
+
 OPENPGL_INLINE void FieldConfig::Init(const PGL_SPATIAL_STRUCTURE_TYPE spatialType, const PGL_DIRECTIONAL_DISTRIBUTION_TYPE directionalType, const bool deterministic, const size_t maxSamplesPerLeaf){
     pglFieldArgumentsSetDefaults(m_args, spatialType, directionalType, deterministic, maxSamplesPerLeaf);
 }

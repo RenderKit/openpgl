@@ -201,13 +201,6 @@ struct VolumeSamplingDistribution
 /// Implementation
 ////////////////////////////////////////////////////////////
 
-/*
-VolumeSamplingDistribution::VolumeSamplingDistribution()
-{
-    m_volumeSamplingDistributionHandle = pglNewVolumeSamplingDistribution();
-}
-*/
-
 OPENPGL_INLINE VolumeSamplingDistribution::VolumeSamplingDistribution(const Field* field)
 {
     m_volumeSamplingDistributionHandle = pglFieldNewVolumeSamplingDistribution(field->m_fieldHandle);

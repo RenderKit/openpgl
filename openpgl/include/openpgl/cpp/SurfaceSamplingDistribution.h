@@ -189,12 +189,6 @@ struct SurfaceSamplingDistribution
 /// Implementation
 ////////////////////////////////////////////////////////////
 
-/*
-SurfaceSamplingDistribution::SurfaceSamplingDistribution()
-{
-    m_surfaceSamplingDistributionHandle = pglNewSurfaceSamplingDistribution();
-}
-*/
 OPENPGL_INLINE SurfaceSamplingDistribution::SurfaceSamplingDistribution(const Field* field)
 {
     m_surfaceSamplingDistributionHandle = pglFieldNewSurfaceSamplingDistribution(field->m_fieldHandle);
