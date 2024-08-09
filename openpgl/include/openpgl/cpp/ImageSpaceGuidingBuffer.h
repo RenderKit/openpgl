@@ -80,6 +80,11 @@ struct ImageSpaceGuidingBuffer
      */
     bool IsReady() const;
 
+    /**
+     * @brief Resets the ImageSpaceGuidingBuffer (e.g., if the camera is moved or the scene changed).
+     */
+    void Reset();
+
     private:
         PGLImageSpaceGuidingBuffer m_imageSpaceGuidingBufferHandle{nullptr};
 };
@@ -134,6 +139,12 @@ OPENPGL_INLINE bool ImageSpaceGuidingBuffer::IsReady() const
 {
     OPENPGL_ASSERT(m_imageSpaceGuidingBufferHandle);
     return pglImageSpaceGuidingBufferIsReady(m_imageSpaceGuidingBufferHandle);
+}
+
+OPENPGL_INLINE void ImageSpaceGuidingBuffer::Reset()
+{
+    OPENPGL_ASSERT(m_imageSpaceGuidingBufferHandle);
+    pglImageSpaceGuidingBufferReset(m_imageSpaceGuidingBufferHandle);
 }
 
 }

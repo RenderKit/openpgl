@@ -35,6 +35,9 @@ OPENPGL_CORE_INTERFACE pgl_vec3f pglImageSpaceGuidingBufferGetPixelContributionE
 
 OPENPGL_CORE_INTERFACE bool pglImageSpaceGuidingBufferIsReady(PGLImageSpaceGuidingBuffer imageSpaceGuidingBuffer);
 
+OPENPGL_CORE_INTERFACE void pglImageSpaceGuidingBufferReset(PGLImageSpaceGuidingBuffer imageSpaceGuidingBuffer);
+
+
 #ifdef __cplusplus
 }  // extern "C"
 #endif

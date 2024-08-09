@@ -906,4 +906,10 @@ extern "C" OPENPGL_DLLEXPORT  bool pglImageSpaceGuidingBufferIsReady(PGLImageSpa
     return gImageSpaceGuidingBuffer->isReady();
 }
 
+extern "C" OPENPGL_DLLEXPORT  void pglImageSpaceGuidingBufferReset(PGLImageSpaceGuidingBuffer imageSpaceGuidingBuffer)
+{
+    auto *gImageSpaceGuidingBuffer = (openpgl::ImageSpaceGuidingBuffer *)imageSpaceGuidingBuffer;
+    gImageSpaceGuidingBuffer->reset();
+}
+
 #endif

@@ -33,7 +33,8 @@ namespace openpgl
 struct ImageSpaceGuidingBuffer{
 
     struct Buffers {
-        Buffers(pgl_point2i resolution): numPixels(resolution.x*resolution.y) {
+        Buffers(pgl_point2i resolution): numPixels(resolution.x*resolution.y)
+        {
             contribution = new pgl_vec3f[numPixels];
             secondMoment = new pgl_vec3f[numPixels];
 
@@ -45,7 +46,8 @@ struct ImageSpaceGuidingBuffer{
             filteredSecondMoment = new pgl_vec3f[numPixels];
         } 
         
-        ~Buffers() {
+        ~Buffers()
+        {
             delete[] contribution;
             delete[] secondMoment;
 
@@ -55,6 +57,31 @@ struct ImageSpaceGuidingBuffer{
 
             delete[] filteredContribution;
             delete[] filteredSecondMoment;
+        }
+
+        void reset()
+        {
+
+#ifdef USE_EMBREE_PARALLEL
+            embree::parallel_for(0,(int)numPixels, 1, [&] ( const embree::range<unsigned>& r ) {
+            for (size_t pIdx=r.begin(); pIdx<r.end(); pIdx++)
+#else
+            tbb::parallel_for( tbb::blocked_range<int>(0,numPixels), [&](tbb::blocked_range<int> r)
+            {
+            for (int pIdx = r.begin(); pIdx<r.end(); ++pIdx)
+#endif
+            {
+                contribution[pIdx] = {0.f, 0.f, 0.f};
+                secondMoment[pIdx] = {0.f, 0.f, 0.f};
+
+                albedo[pIdx] = {0.f, 0.f, 0.f};
+                normal[pIdx] = {0.f, 0.f, 0.f};
+                spp[pIdx] = 0.f;
+
+                filteredContribution[pIdx] = {0.f, 0.f, 0.f};
+                filteredSecondMoment[pIdx] = {0.f, 0.f, 0.f};
+            }
+            });
         }
 
         int numPixels {0};
@@ -428,6 +455,15 @@ struct ImageSpaceGuidingBuffer{
     bool isReady() const
     {
         return m_ready;
+    }
+
+    void reset() 
+    {
+        if(m_contributionEstimateBuffers)
+        {
+            m_contributionEstimateBuffers->reset();
+        }
+        m_ready = false;
     }
 
     private:
