@@ -31,7 +31,7 @@ jobs:
 
       - name: Build and Run
         run: |
-          gitlab/build.sh
+          scripts/build.sh
 
 
   ubuntu-22_04:
@@ -53,4 +53,4 @@ jobs:
 
       - name: Build and Run
         run: |
-          gitlab/build.sh
+          scripts/build.sh

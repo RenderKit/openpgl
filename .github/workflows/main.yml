@@ -25,7 +25,7 @@ jobs:
     with:
       image: rockylinux:8.7
       cmd: |
-        gitlab/build.sh
+        scripts/build.sh
 
   build-rocky87-icx:
     secrets: inherit
@@ -42,7 +42,7 @@ jobs:
         export CXX=icpx
         export CXXFLAGS="-fPIC -fp-model=precise"
         export LDFLAGS="-static-intel"
-        gitlab/build.sh
+        scripts/build.sh
 
   build-centos8:
     secrets: inherit
@@ -50,7 +50,7 @@ jobs:
     with:
       image: centos:8
       cmd: |
-        gitlab/build.sh
+        scripts/build.sh
 
 
   #build-ubuntu16-04:
@@ -60,7 +60,7 @@ jobs:
   #    image: ospray/docker-images:ubuntu16.04
   #    # artifact-name: build-ubuntu1804-gcc_artifact
   #    cmd: |
-  #      gitlab/build.sh
+  #      scripts/build.sh
 
 
   build-ubuntu20-04:
@@ -69,7 +69,7 @@ jobs:
     with:
       image: ubuntu:20.04
       cmd: |
-        gitlab/build.sh
+        scripts/build.sh
 
   build-ubuntu22-04:
     secrets: inherit
@@ -77,7 +77,7 @@ jobs:
     with:
       image: ubuntu:22.04
       cmd: |
-        gitlab/build.sh
+        scripts/build.sh
 
   build-arch:
     secrets: inherit
@@ -85,7 +85,7 @@ jobs:
     with:
       image: archlinux:latest
       cmd: |
-        gitlab/build.sh
+        scripts/build.sh
   
   ### Build Windows Jobs ###
 
@@ -94,7 +94,7 @@ jobs:
     uses: intel-innersource/libraries.devops.renderkit.workflows/.github/workflows/windows.yml@main
     with:
       cmd: |
-          gitlab/build.bat "Visual Studio 15 2017 Win64" "v141" '"-DTBB_VERSION=2021.1.1"' '"-DTBB_HASH="""'           
+          scripts/build.bat "Visual Studio 15 2017 Win64" "v141" '"-DTBB_VERSION=2021.1.1"' '"-DTBB_HASH="""'           
 
   build-windows-icx:
     secrets: inherit
@@ -105,7 +105,7 @@ jobs:
         call "C:\Program Files (x86)\Intel\oneAPI\compiler\latest\env\vars.bat"
         set CXX=icx.exe
         set CC=icx.exe
-        Powershell.exe -ExecutionPolicy RemoteSigned -File gitlab\build_win.ps1 Ninja -DTBB_VERSION=2021.1.1 -DTBB_HASH="" -DBUILD_TOOLS=ON          
+        Powershell.exe -ExecutionPolicy RemoteSigned -File scripts\build_win.ps1 Ninja -DTBB_VERSION=2021.1.1 -DTBB_HASH="" -DBUILD_TOOLS=ON          
 
 
   ### Build MacOS Jobs ###
@@ -116,7 +116,7 @@ jobs:
     with:
       runs-on: '[ "macOS", "build", "avx2", "x86_64" ]'
       cmd: |
-          gitlab/build_mac.sh
+          scripts/build_mac.sh
 
   #build-macOS-icc:
   #  secrets: inherit
@@ -127,7 +127,7 @@ jobs:
   #        export CC=icc
   #        export CXX=icpc
   #        export CXXFLAGS="-static-intel -fPIC"
-  #        gitlab/build_mac.sh
+  #        scripts/build_mac.sh
 
   build-macOS-arm-old:
     secrets: inherit
@@ -135,7 +135,7 @@ jobs:
     with:
       runs-on: '[ "macOS", "arm", "vis-mac-mini-m1-2" ]'
       cmd: |
-          gitlab/build_mac.sh -DBUILD_TBB_FROM_SOURCE=ON
+          scripts/build_mac.sh -DBUILD_TBB_FROM_SOURCE=ON
 
   build-macOS-arm-new:
     secrets: inherit
@@ -143,7 +143,7 @@ jobs:
     with:
       runs-on: '[ "macOS", "build", "arm", "vis-mac-mini-m1-1" ]'
       cmd: |
-          gitlab/build_mac.sh -DBUILD_TBB_FROM_SOURCE=ON
+          scripts/build_mac.sh -DBUILD_TBB_FROM_SOURCE=ON
 
   ### KW Jobs ###
 
@@ -173,7 +173,7 @@ jobs:
       image: rockylinux:8.7
       cmd: |
         export OPENPGL_RELEASE_PACKAGE_VERSION=0.6.0
-        gitlab/release/linux.sh
+        scripts/release/linux.sh
       artifact-out: release-linux
       artifact-path: ./openpgl*.gz
 
@@ -188,7 +188,7 @@ jobs:
       cmd: |
         $env:OPENPGL_RELEASE_PACKAGE_VERSION="0.6.0"
         $OPENPGL_RELEASE_PACKAGE_VERSION="0.6.0"
-        gitlab/release/windows.ps1 "Visual Studio 15 2017 Win64" "v141"
+        scripts/release/windows.ps1 "Visual Studio 15 2017 Win64" "v141"
 
   release-macos:
     secrets: inherit
@@ -200,7 +200,7 @@ jobs:
       artifact-path: ./*.zip
       cmd: |
         export OPENPGL_RELEASE_PACKAGE_VERSION="0.6.0"
-        gitlab/release/macos.sh
+        scripts/release/macos.sh
 
   #release-macos-arm:
   #  secrets: inherit
@@ -212,7 +212,7 @@ jobs:
   #    artifact-path: ./*.zip
   #    cmd: |
   #      export OPENPGL_RELEASE_PACKAGE_VERSION="0.6.0"
-  #      gitlab/release/macos.sh -DBUILD_TBB_FROM_SOURCE=ON
+  #      scripts/release/macos.sh -DBUILD_TBB_FROM_SOURCE=ON
 
   ## Binary Scan Jobs ##
 

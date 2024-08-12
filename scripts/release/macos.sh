@@ -95,6 +95,6 @@ cd $OPENPGL_INSTALL_DIR/..
 zip -ry $OPENPGL_PKG_BASE.zip $OPENPGL_PKG_BASE
 
 # sign
-$ROOT_DIR/gitlab/release/sign.sh $OPENPGL_PKG_BASE.zip
+$ROOT_DIR/scripts/release/sign.sh $OPENPGL_PKG_BASE.zip
 
 mv *.zip $ROOT_DIR
