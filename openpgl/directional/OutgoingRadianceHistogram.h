@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include "../data/SampleData.h"
 #include "../openpgl_common.h"
 
 #ifdef PGL_USE_DIRECTION_COMPRESSION

@@ -42,7 +42,7 @@ namespace openpgl
             return outRadianceHist.getOugoingRadiance(dir);
         }
 #endif
-/*
+        /*
         TDistribution getDistribution(Point3 samplePosition, const bool &useParallaxComp) const
         {
             TDistribution pDistribution = distribution;
@@ -53,7 +53,7 @@ namespace openpgl
             }
             return pDistribution;
         }
-*/
+        */
 
         const TDistribution* getDistribution(Point3 samplePosition) const
         {

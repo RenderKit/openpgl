@@ -60,12 +60,12 @@ struct __aligned(TVMMDistribution::VectorSize*4) VMMVolumeSamplingDistribution: 
         {
             this->m_distributions[i] = m_liDistribution;
             const Vector3 outDir = meanCosine * pfRep.meanCosines[i] > 0.f ? dir: -dir;
-/*     
+            /*     
             const float absMeanCosine = std::fabs(pfRep.meanCosines[i]);
             float kappa = MeanCosineToKappa< float >(absMeanCosine);
             kappa = kappa<= 1e-4f ? 0.0f: kappa;
             this->m_weights[i] = this->m_distributions[i].product(pfRep.weights[i], outDir, kappa);
-*/            
+            */            
             this->m_weights[i] = this->m_distributions[i].product(pfRep.weights[i], outDir, pfRep.kappas[i], pfRep.normalizations[i]);
             sumWeights += this->m_weights[i];
         }
