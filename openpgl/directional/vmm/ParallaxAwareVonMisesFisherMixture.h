@@ -729,6 +729,8 @@ float ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents,UseParallaxCompe
     const embree::vfloat<VecSize> zeroKappaNorm(ONE_OVER_FOUR_PI);
 
     const int cnt = (_numComponents+VecSize-1) / VecSize;
+    const int rem = _numComponents % VecSize;
+
     const embree::vfloat<VecSize> weight = _weight;
     const embree::vfloat<VecSize> kappa = _kappa;
     const embree::vfloat<VecSize> normalization = _normalization;
@@ -780,6 +782,23 @@ float ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents,UseParallaxCompe
     {
         _weights[k] /= productIntegral;
     }
+
+    if ( rem > 0 )
+    {
+        for ( size_t i = rem; i < VecSize; i++)
+        {
+            _meanDirections[cnt-1].x[i] = 0.0f;
+            _meanDirections[cnt-1].y[i] = 0.0f;
+            _meanDirections[cnt-1].z[i] = 1.0f;
+
+            _meanCosines[cnt-1][i] = 0.0f;
+            _kappas[cnt-1][i] = 0.0f;
+            _normalizations[cnt-1][i] = ONE_OVER_FOUR_PI;
+            _eMinus2Kappa[cnt-1][i] = 1.0f;
+            _distances[cnt-1][i] = 0.0f;
+        }
+    }
+
     return productIntegral;
     //_normalizeWeights();
 }
@@ -936,6 +955,7 @@ inline void ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents,UseParalla
     
     cdf = _weights[selectedVector][selectedComponent];
 
+    cdf = std::max(FLT_EPSILON, cdf);
     _sample[1] = std::min(1 - FLT_EPSILON, (searched - sumWeights) / cdf);
 
 #ifdef VALIDATE_SELECT_COMPONENT_SIMD
