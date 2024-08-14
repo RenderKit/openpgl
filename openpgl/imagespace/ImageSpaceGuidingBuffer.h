@@ -470,7 +470,7 @@ struct ImageSpaceGuidingBuffer{
     bool m_ready {false};
     bool m_useSecondMoment {false};
     pgl_point2i m_resolution;
-    Denoiser* m_denoiser;
+    Denoiser* m_denoiser{nullptr};
 
     Buffers *m_contributionEstimateBuffers {nullptr};
 };
