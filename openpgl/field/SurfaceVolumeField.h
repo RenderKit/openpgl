@@ -3,25 +3,27 @@
 
 #pragma once
 
+#include "../directional/vmm/VMMPhaseFunctions.h"
+#include "../include/openpgl/gpu/Data.h"
+#include "../include/openpgl/gpu/Device.h"
 #include "Field.h"
 #include "FieldStatistics.h"
 #include "ISurfaceVolumeField.h"
-#include "../directional/vmm/VMMPhaseFunctions.h"
-#include "../include/openpgl/gpu/Device.h"
-#include "../include/openpgl/gpu/Data.h"
 
 #define FIELD_FILE_HEADER_STRING "OPENPGL_" OPENPGL_VERSION_STRING "_FIELD"
 
 namespace openpgl
 {
-    template<int maxComponents> struct FlatVMM {
-        float _weights[maxComponents];
-        float _kappas[maxComponents];
-        float _meanDirections[maxComponents][3];
-        float _distances[maxComponents];
-        float _pivotPosition[3];
-        int _numComponents{maxComponents};
-    };
+template <int maxComponents>
+struct FlatVMM
+{
+    float _weights[maxComponents];
+    float _kappas[maxComponents];
+    float _meanDirections[maxComponents][3];
+    float _distances[maxComponents];
+    float _pivotPosition[3];
+    int _numComponents{maxComponents};
+};
 
 template <int Vecsize, class TDirectionalDistributionFactory, template <typename, typename, typename> class TSpatialStructureBuilder, typename TSurfaceSamplingDistribution,
           typename TVolumeSamplingDistribution>
@@ -261,137 +263,139 @@ struct SurfaceVolumeField : public ISurfaceVolumeField
         FieldStatistics *stats = m_volumeField.getStatistics();
         return stats;
     }
-/*
-    virtual int GetNumNodes(bool isSurface = true) const override
-    {
-        if(isSurface)
+    /*
+        virtual int GetNumNodes(bool isSurface = true) const override
         {
-            return m_surfaceField.m_spatialSubdiv.m_numTreeLets;
-        } 
-        else 
-        {
-            return m_volumeField.m_spatialSubdiv.m_numTreeLets;
-        }
-
-    }
-
-    virtual void *GetNodes(bool isSurface = true) const override
-    {
-        if(isSurface)
-        {
-            return m_surfaceField.m_spatialSubdiv.m_treeLets;
-        } 
-        else 
-        {
-            return m_volumeField.m_spatialSubdiv.m_treeLets;
-        }
-    }
-
-    virtual int GetNumDistributions(bool isSurface = true) const override
-    {
-        if(isSurface)
-        {
-            return m_surfaceField.m_regionStorageContainer.size();
-        } 
-        else 
-        {
-            return m_volumeField.m_regionStorageContainer.size();
-        }
-    }
-
-    virtual void CopyDistributionsTo(void *o_distrib, bool isSurface = true) const override
-    {
-        if(isSurface)
-        {
-            openpgl::gpu::FlatVMM<32> *out = reinterpret_cast<openpgl::gpu::FlatVMM<32>*>(o_distrib);
-            for (int i = 0; i < m_surfaceField.m_regionStorageContainer.size(); i++)
+            if(isSurface)
             {
-                auto & dist = m_surfaceField.m_regionStorageContainer[i].first.distribution;
-                for (int k = 0; k < dist._numComponents; k++) {
-                    const div_t tmp = div(k, static_cast<int>(Vecsize));
-                    out[i]._weights[k] = dist._weights[tmp.quot][tmp.rem];
-                    out[i]._kappas[k] = dist._kappas[tmp.quot][tmp.rem];
-                    out[i]._meanDirections[k][0] = dist._meanDirections[tmp.quot].x[tmp.rem];
-                    out[i]._meanDirections[k][1] = dist._meanDirections[tmp.quot].y[tmp.rem];
-                    out[i]._meanDirections[k][2] = dist._meanDirections[tmp.quot].z[tmp.rem];
-                    out[i]._distances[k] = dist._distances[tmp.quot][tmp.rem];
-                }
-                out[i]._pivotPosition[0] = {dist._pivotPosition.x};
-                out[i]._pivotPosition[1] = {dist._pivotPosition.y};
-                out[i]._pivotPosition[2] = {dist._pivotPosition.z};
-                out[i]._numComponents = dist._numComponents;
+                return m_surfaceField.m_spatialSubdiv.m_numTreeLets;
+            }
+            else
+            {
+                return m_volumeField.m_spatialSubdiv.m_numTreeLets;
+            }
+
+        }
+
+        virtual void *GetNodes(bool isSurface = true) const override
+        {
+            if(isSurface)
+            {
+                return m_surfaceField.m_spatialSubdiv.m_treeLets;
+            }
+            else
+            {
+                return m_volumeField.m_spatialSubdiv.m_treeLets;
             }
         }
-        else
+
+        virtual int GetNumDistributions(bool isSurface = true) const override
         {
-            openpgl::gpu::FlatVMM<32> *out = reinterpret_cast<openpgl::gpu::FlatVMM<32>*>(o_distrib);
-            for (int i = 0; i < m_volumeField.m_regionStorageContainer.size(); i++)
+            if(isSurface)
             {
-                auto & dist = m_volumeField.m_regionStorageContainer[i].first.distribution;
-                for (int k = 0; k < dist._numComponents; k++) {
-                    const div_t tmp = div(k, static_cast<int>(Vecsize));
-                    out[i]._weights[k] = dist._weights[tmp.quot][tmp.rem];
-                    out[i]._kappas[k] = dist._kappas[tmp.quot][tmp.rem];
-                    out[i]._meanDirections[k][0] = dist._meanDirections[tmp.quot].x[tmp.rem];
-                    out[i]._meanDirections[k][1] = dist._meanDirections[tmp.quot].y[tmp.rem];
-                    out[i]._meanDirections[k][2] = dist._meanDirections[tmp.quot].z[tmp.rem];
-                    out[i]._distances[k] = dist._distances[tmp.quot][tmp.rem];
-                }
-                out[i]._pivotPosition[0] = {dist._pivotPosition.x};
-                out[i]._pivotPosition[1] = {dist._pivotPosition.y};
-                out[i]._pivotPosition[2] = {dist._pivotPosition.z};
-                out[i]._numComponents = dist._numComponents;
+                return m_surfaceField.m_regionStorageContainer.size();
+            }
+            else
+            {
+                return m_volumeField.m_regionStorageContainer.size();
             }
         }
-    }
-*/
 
-    void ReleaseFieldData(openpgl::gpu::FieldData* fieldGPU, openpgl::gpu::Device* deviceGPU) const override {
-        KDTree::NodesType* deviceSurfNodes = (KDTree::NodesType*) fieldGPU->m_surfaceTreeLets;
+        virtual void CopyDistributionsTo(void *o_distrib, bool isSurface = true) const override
+        {
+            if(isSurface)
+            {
+                openpgl::gpu::FlatVMM<32> *out = reinterpret_cast<openpgl::gpu::FlatVMM<32>*>(o_distrib);
+                for (int i = 0; i < m_surfaceField.m_regionStorageContainer.size(); i++)
+                {
+                    auto & dist = m_surfaceField.m_regionStorageContainer[i].first.distribution;
+                    for (int k = 0; k < dist._numComponents; k++) {
+                        const div_t tmp = div(k, static_cast<int>(Vecsize));
+                        out[i]._weights[k] = dist._weights[tmp.quot][tmp.rem];
+                        out[i]._kappas[k] = dist._kappas[tmp.quot][tmp.rem];
+                        out[i]._meanDirections[k][0] = dist._meanDirections[tmp.quot].x[tmp.rem];
+                        out[i]._meanDirections[k][1] = dist._meanDirections[tmp.quot].y[tmp.rem];
+                        out[i]._meanDirections[k][2] = dist._meanDirections[tmp.quot].z[tmp.rem];
+                        out[i]._distances[k] = dist._distances[tmp.quot][tmp.rem];
+                    }
+                    out[i]._pivotPosition[0] = {dist._pivotPosition.x};
+                    out[i]._pivotPosition[1] = {dist._pivotPosition.y};
+                    out[i]._pivotPosition[2] = {dist._pivotPosition.z};
+                    out[i]._numComponents = dist._numComponents;
+                }
+            }
+            else
+            {
+                openpgl::gpu::FlatVMM<32> *out = reinterpret_cast<openpgl::gpu::FlatVMM<32>*>(o_distrib);
+                for (int i = 0; i < m_volumeField.m_regionStorageContainer.size(); i++)
+                {
+                    auto & dist = m_volumeField.m_regionStorageContainer[i].first.distribution;
+                    for (int k = 0; k < dist._numComponents; k++) {
+                        const div_t tmp = div(k, static_cast<int>(Vecsize));
+                        out[i]._weights[k] = dist._weights[tmp.quot][tmp.rem];
+                        out[i]._kappas[k] = dist._kappas[tmp.quot][tmp.rem];
+                        out[i]._meanDirections[k][0] = dist._meanDirections[tmp.quot].x[tmp.rem];
+                        out[i]._meanDirections[k][1] = dist._meanDirections[tmp.quot].y[tmp.rem];
+                        out[i]._meanDirections[k][2] = dist._meanDirections[tmp.quot].z[tmp.rem];
+                        out[i]._distances[k] = dist._distances[tmp.quot][tmp.rem];
+                    }
+                    out[i]._pivotPosition[0] = {dist._pivotPosition.x};
+                    out[i]._pivotPosition[1] = {dist._pivotPosition.y};
+                    out[i]._pivotPosition[2] = {dist._pivotPosition.z};
+                    out[i]._numComponents = dist._numComponents;
+                }
+            }
+        }
+    */
+
+    void ReleaseFieldData(openpgl::gpu::FieldData *fieldGPU, openpgl::gpu::Device *deviceGPU) const override
+    {
+        KDTree::NodesType *deviceSurfNodes = (KDTree::NodesType *)fieldGPU->m_surfaceTreeLets;
         delete[] deviceSurfNodes;
         fieldGPU->m_surfaceTreeLets = nullptr;
         fieldGPU->m_numSurfaceTreeLets = 0;
 
-        KDTree::NodesType* deviceVolumeNodes = (KDTree::NodesType*) fieldGPU->m_volumeTreeLets;
+        KDTree::NodesType *deviceVolumeNodes = (KDTree::NodesType *)fieldGPU->m_volumeTreeLets;
         delete[] deviceVolumeNodes;
         fieldGPU->m_volumeTreeLets = nullptr;
         fieldGPU->m_numVolumeTreeLets = 0;
 
-        openpgl::gpu::FlatVMM<32>* outSurf = (openpgl::gpu::FlatVMM<32>*) fieldGPU->m_surfaceDistributions;
+        openpgl::gpu::FlatVMM<32> *outSurf = (openpgl::gpu::FlatVMM<32> *)fieldGPU->m_surfaceDistributions;
         delete[] outSurf;
         fieldGPU->m_surfaceDistributions = nullptr;
-        //openpgl::gpu::OutgoingRadianceHistogramData* surfaceOutgoingRadianceHistogram = (openpgl::gpu::OutgoingRadianceHistogramData*) fieldGPU->m_surfaceOutgoingRadianceHistogram;
-        //delete[] surfaceOutgoingRadianceHistogram;
-        //fieldGPU->m_surfaceOutgoingRadianceHistogram = nullptr;
+        // openpgl::gpu::OutgoingRadianceHistogramData* surfaceOutgoingRadianceHistogram = (openpgl::gpu::OutgoingRadianceHistogramData*)
+        // fieldGPU->m_surfaceOutgoingRadianceHistogram; delete[] surfaceOutgoingRadianceHistogram; fieldGPU->m_surfaceOutgoingRadianceHistogram = nullptr;
         fieldGPU->m_numSurfaceDistributions = 0;
 
-        openpgl::gpu::FlatVMM<32>* outVol = (openpgl::gpu::FlatVMM<32>*) fieldGPU->m_volumeDistributions;
+        openpgl::gpu::FlatVMM<32> *outVol = (openpgl::gpu::FlatVMM<32> *)fieldGPU->m_volumeDistributions;
         delete[] outVol;
         fieldGPU->m_volumeDistributions = nullptr;
 
-        //openpgl::gpu::OutgoingRadianceHistogramData* volumeOutgoingRadianceHistogram = (openpgl::gpu::OutgoingRadianceHistogramData*) fieldGPU->m_volumeOutgoingRadianceHistogram;
-        //delete[] volumeOutgoingRadianceHistogram;
-        //fieldGPU->m_volumeOutgoingRadianceHistogram = nullptr;
+        // openpgl::gpu::OutgoingRadianceHistogramData* volumeOutgoingRadianceHistogram = (openpgl::gpu::OutgoingRadianceHistogramData*)
+        // fieldGPU->m_volumeOutgoingRadianceHistogram; delete[] volumeOutgoingRadianceHistogram; fieldGPU->m_volumeOutgoingRadianceHistogram = nullptr;
         fieldGPU->m_numVolumeDistributions = 0;
     }
 
-    void FillFieldData(openpgl::gpu::FieldData* fieldGPU, openpgl::gpu::Device* deviceGPU) const override {
-            
+    void FillFieldData(openpgl::gpu::FieldData *fieldGPU, openpgl::gpu::Device *deviceGPU) const override
+    {
         int numSurfaceNodes = m_surfaceField.m_spatialSubdiv.m_numTreeLets;
         fieldGPU->m_numSurfaceTreeLets = numSurfaceNodes;
-        if (numSurfaceNodes > 0) {
-            KDTree::NodesType* deviceSurfNodes = new KDTree::NodesType[numSurfaceNodes];
+        if (numSurfaceNodes > 0)
+        {
+            KDTree::NodesType *deviceSurfNodes = new KDTree::NodesType[numSurfaceNodes];
             std::memcpy(deviceSurfNodes, m_surfaceField.m_spatialSubdiv.m_treeLets, numSurfaceNodes * sizeof(KDTree::NodesType));
-            //KDTree::NodesType* deviceSurfNodes = deviceGPU->mallocArray<KDTree::NodesType>(numSurfaceNodes);
-            //deviceGPU->memcpyArrayToGPU(deviceSurfNodes, m_surfaceField.m_spatialSubdiv.m_treeLets, numSurfaceNodes);
-            
-            fieldGPU->m_surfaceTreeLets = (void*) deviceSurfNodes;
-        } else {
+            // KDTree::NodesType* deviceSurfNodes = deviceGPU->mallocArray<KDTree::NodesType>(numSurfaceNodes);
+            // deviceGPU->memcpyArrayToGPU(deviceSurfNodes, m_surfaceField.m_spatialSubdiv.m_treeLets, numSurfaceNodes);
+
+            fieldGPU->m_surfaceTreeLets = (void *)deviceSurfNodes;
+        }
+        else
+        {
             fieldGPU->m_surfaceTreeLets = nullptr;
         }
 
         int numPhaseFunctionRepresentations = VMMSingleLobeHenyeyGreensteinOracle::representations.size();
-        openpgl::gpu::VMMPhaseFunctionRepresentationData* phaseFunctionRepresentations = new openpgl::gpu::VMMPhaseFunctionRepresentationData[numPhaseFunctionRepresentations];
+        openpgl::gpu::VMMPhaseFunctionRepresentationData *phaseFunctionRepresentations = new openpgl::gpu::VMMPhaseFunctionRepresentationData[numPhaseFunctionRepresentations];
         for (int i = 0; i < numPhaseFunctionRepresentations; i++)
         {
             phaseFunctionRepresentations[i].g = VMMSingleLobeHenyeyGreensteinOracle::representations[i].g;
@@ -403,18 +407,20 @@ struct SurfaceVolumeField : public ISurfaceVolumeField
             phaseFunctionRepresentations[i].meanCosines[2] = VMMSingleLobeHenyeyGreensteinOracle::representations[i].meanCosines[2];
         }
         fieldGPU->m_numPhaseFunctionRepresentations = numPhaseFunctionRepresentations;
-        fieldGPU->m_phaseFunctionRepresentations = (void*) phaseFunctionRepresentations;
+        fieldGPU->m_phaseFunctionRepresentations = (void *)phaseFunctionRepresentations;
 
         int numSurfaceDistriubtion = m_surfaceField.m_regionStorageContainer.size();
         fieldGPU->m_numSurfaceDistributions = numSurfaceDistriubtion;
-        if(numSurfaceDistriubtion > 0) {
-            openpgl::gpu::FlatVMM<32>* outSurf = new openpgl::gpu::FlatVMM<32>[numSurfaceDistriubtion];
-            openpgl::gpu::OutgoingRadianceHistogramData* outRadianceHistSurf = new openpgl::gpu::OutgoingRadianceHistogramData[numSurfaceDistriubtion];
+        if (numSurfaceDistriubtion > 0)
+        {
+            openpgl::gpu::FlatVMM<32> *outSurf = new openpgl::gpu::FlatVMM<32>[numSurfaceDistriubtion];
+            openpgl::gpu::OutgoingRadianceHistogramData *outRadianceHistSurf = new openpgl::gpu::OutgoingRadianceHistogramData[numSurfaceDistriubtion];
 
             for (int i = 0; i < numSurfaceDistriubtion; i++)
             {
-                auto & dist = m_surfaceField.m_regionStorageContainer[i].first.distribution;
-                for (int k = 0; k < dist._numComponents; k++) {
+                auto &dist = m_surfaceField.m_regionStorageContainer[i].first.distribution;
+                for (int k = 0; k < dist._numComponents; k++)
+                {
                     const div_t tmp = div(k, static_cast<int>(Vecsize));
                     outSurf[i]._weights[k] = dist._weights[tmp.quot][tmp.rem];
                     outSurf[i]._kappas[k] = dist._kappas[tmp.quot][tmp.rem];
@@ -439,8 +445,9 @@ struct SurfaceVolumeField : public ISurfaceVolumeField
                 outSurf[i]._numComponents = dist._numComponents;
 
 #if defined(OPENPGL_EF_RADIANCE_CACHES) || defined(OPENPGL_RADIANCE_CACHES)
-                auto & outRadianceHist = m_surfaceField.m_regionStorageContainer[i].first.outRadianceHist;
-                for (int n = 0; n < OPENPGL_GPU_HISTOGRAM_SIZE; n++) {
+                auto &outRadianceHist = m_surfaceField.m_regionStorageContainer[i].first.outRadianceHist;
+                for (int n = 0; n < OPENPGL_GPU_HISTOGRAM_SIZE; n++)
+                {
                     outRadianceHistSurf[i].data[n][0] = outRadianceHist.data[n].x;
                     outRadianceHistSurf[i].data[n][1] = outRadianceHist.data[n].y;
                     outRadianceHistSurf[i].data[n][2] = outRadianceHist.data[n].z;
@@ -448,16 +455,18 @@ struct SurfaceVolumeField : public ISurfaceVolumeField
 #endif
             }
 
-            //openpgl::gpu::FlatVMM<32>* deviceSurf = deviceGPU->mallocArray<openpgl::gpu::FlatVMM<32>>(numSurfaceDistriubtion);
-            //deviceGPU->memcpyArrayToGPU(deviceSurf, outSurf, numSurfaceDistriubtion);
-            //deviceGPU->wait();
-            //fieldGPU->m_surfaceDistributions = (void*) deviceSurf;
-            fieldGPU->m_surfaceDistributions = (void*) outSurf;
+            // openpgl::gpu::FlatVMM<32>* deviceSurf = deviceGPU->mallocArray<openpgl::gpu::FlatVMM<32>>(numSurfaceDistriubtion);
+            // deviceGPU->memcpyArrayToGPU(deviceSurf, outSurf, numSurfaceDistriubtion);
+            // deviceGPU->wait();
+            // fieldGPU->m_surfaceDistributions = (void*) deviceSurf;
+            fieldGPU->m_surfaceDistributions = (void *)outSurf;
 #if defined(OPENPGL_EF_RADIANCE_CACHES) || defined(OPENPGL_RADIANCE_CACHES)
-            fieldGPU->m_surfaceOutgoingRadianceHistogram = (void*) outRadianceHistSurf;
+            fieldGPU->m_surfaceOutgoingRadianceHistogram = (void *)outRadianceHistSurf;
 #endif
-            //delete[] outSurf;
-        } else {
+            // delete[] outSurf;
+        }
+        else
+        {
             fieldGPU->m_surfaceDistributions = nullptr;
 #if defined(OPENPGL_EF_RADIANCE_CACHES) || defined(OPENPGL_RADIANCE_CACHES)
             fieldGPU->m_surfaceOutgoingRadianceHistogram = nullptr;
@@ -466,25 +475,30 @@ struct SurfaceVolumeField : public ISurfaceVolumeField
 
         int numVolumeNodes = m_volumeField.m_spatialSubdiv.m_numTreeLets;
         fieldGPU->m_numVolumeTreeLets = numVolumeNodes;
-        if (numVolumeNodes > 0) {
-            KDTree::NodesType* deviceVolumeNodes = new KDTree::NodesType[numVolumeNodes];
+        if (numVolumeNodes > 0)
+        {
+            KDTree::NodesType *deviceVolumeNodes = new KDTree::NodesType[numVolumeNodes];
             std::memcpy(deviceVolumeNodes, m_volumeField.m_spatialSubdiv.m_treeLets, numVolumeNodes * sizeof(KDTree::NodesType));
-            //KDTree::NodesType* deviceVolumeNodes = deviceGPU->mallocArray<KDTree::NodesType>(numVolumeNodes);
-            //deviceGPU->memcpyArrayToGPU(deviceVolumeNodes, m_volumeField.m_spatialSubdiv.m_treeLets, numVolumeNodes);
-            fieldGPU->m_volumeTreeLets = (void*) deviceVolumeNodes;
-        } else {
+            // KDTree::NodesType* deviceVolumeNodes = deviceGPU->mallocArray<KDTree::NodesType>(numVolumeNodes);
+            // deviceGPU->memcpyArrayToGPU(deviceVolumeNodes, m_volumeField.m_spatialSubdiv.m_treeLets, numVolumeNodes);
+            fieldGPU->m_volumeTreeLets = (void *)deviceVolumeNodes;
+        }
+        else
+        {
             fieldGPU->m_volumeTreeLets = nullptr;
         }
 
         int numVolumeDistriubtion = m_volumeField.m_regionStorageContainer.size();
         fieldGPU->m_numVolumeDistributions = numVolumeDistriubtion;
-        if(numVolumeDistriubtion > 0) {
-            openpgl::gpu::FlatVMM<32>* outVol = new openpgl::gpu::FlatVMM<32>[numVolumeDistriubtion];
-            openpgl::gpu::OutgoingRadianceHistogramData* outRadianceHistVol = new openpgl::gpu::OutgoingRadianceHistogramData[numVolumeDistriubtion];
+        if (numVolumeDistriubtion > 0)
+        {
+            openpgl::gpu::FlatVMM<32> *outVol = new openpgl::gpu::FlatVMM<32>[numVolumeDistriubtion];
+            openpgl::gpu::OutgoingRadianceHistogramData *outRadianceHistVol = new openpgl::gpu::OutgoingRadianceHistogramData[numVolumeDistriubtion];
             for (int i = 0; i < numVolumeDistriubtion; i++)
             {
-                auto & dist = m_volumeField.m_regionStorageContainer[i].first.distribution;
-                for (int k = 0; k < dist._numComponents; k++) {
+                auto &dist = m_volumeField.m_regionStorageContainer[i].first.distribution;
+                for (int k = 0; k < dist._numComponents; k++)
+                {
                     const div_t tmp = div(k, static_cast<int>(Vecsize));
                     outVol[i]._weights[k] = dist._weights[tmp.quot][tmp.rem];
                     outVol[i]._kappas[k] = dist._kappas[tmp.quot][tmp.rem];
@@ -508,8 +522,9 @@ struct SurfaceVolumeField : public ISurfaceVolumeField
 #endif
                 outVol[i]._numComponents = dist._numComponents;
 #if defined(OPENPGL_EF_RADIANCE_CACHES) || defined(OPENPGL_RADIANCE_CACHES)
-                auto & outRadianceHist = m_volumeField.m_regionStorageContainer[i].first.outRadianceHist;
-                for (int n = 0; n < OPENPGL_GPU_HISTOGRAM_SIZE; n++) {
+                auto &outRadianceHist = m_volumeField.m_regionStorageContainer[i].first.outRadianceHist;
+                for (int n = 0; n < OPENPGL_GPU_HISTOGRAM_SIZE; n++)
+                {
                     outRadianceHistVol[i].data[n][0] = outRadianceHist.data[n].x;
                     outRadianceHistVol[i].data[n][1] = outRadianceHist.data[n].y;
                     outRadianceHistVol[i].data[n][2] = outRadianceHist.data[n].z;
@@ -517,15 +532,17 @@ struct SurfaceVolumeField : public ISurfaceVolumeField
 #endif
             }
 
-            //openpgl::gpu::FlatVMM<32>* deviceVol = deviceGPU->mallocArray<openpgl::gpu::FlatVMM<32>>(numVolumeDistriubtion);
-            //deviceGPU->memcpyArrayToGPU(deviceVol, outVol, numVolumeDistriubtion);
-            //deviceGPU->wait();
-            //delete[] outVol;
-            fieldGPU->m_volumeDistributions = (void*) outVol;
+            // openpgl::gpu::FlatVMM<32>* deviceVol = deviceGPU->mallocArray<openpgl::gpu::FlatVMM<32>>(numVolumeDistriubtion);
+            // deviceGPU->memcpyArrayToGPU(deviceVol, outVol, numVolumeDistriubtion);
+            // deviceGPU->wait();
+            // delete[] outVol;
+            fieldGPU->m_volumeDistributions = (void *)outVol;
 #if defined(OPENPGL_EF_RADIANCE_CACHES) || defined(OPENPGL_RADIANCE_CACHES)
-            fieldGPU->m_volumeOutgoingRadianceHistogram = (void*) outRadianceHistVol;
+            fieldGPU->m_volumeOutgoingRadianceHistogram = (void *)outRadianceHistVol;
 #endif
-        } else {
+        }
+        else
+        {
             fieldGPU->m_volumeDistributions = nullptr;
 #if defined(OPENPGL_EF_RADIANCE_CACHES) || defined(OPENPGL_RADIANCE_CACHES)
             fieldGPU->m_volumeOutgoingRadianceHistogram = nullptr;
@@ -533,7 +550,8 @@ struct SurfaceVolumeField : public ISurfaceVolumeField
         }
     }
 
-    openpgl::gpu::FieldData GetFieldGPU(openpgl::gpu::Device* deviceGPU) {
+    openpgl::gpu::FieldData GetFieldGPU(openpgl::gpu::Device *deviceGPU)
+    {
         openpgl::gpu::FieldData field;
         FillFieldData(&field, deviceGPU);
         return field;

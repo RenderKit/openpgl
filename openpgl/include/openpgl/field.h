@@ -68,9 +68,9 @@ typedef ManagedObject Field;
 
     OPENPGL_CORE_INTERFACE PGLFieldStatistics pglFieldGetVolumeStatistics(PGLField field);
 
-// Stefan SYCL
-OPENPGL_CORE_INTERFACE void pglFieldFillFieldGPU(PGLField field, void* fieldData, void* deviceGPU);
-OPENPGL_CORE_INTERFACE void pglFieldReleaseFieldGPU(PGLField field, void* fieldData, void* deviceGPU);
+    // Stefan SYCL
+    OPENPGL_CORE_INTERFACE void pglFieldFillFieldGPU(PGLField field, void *fieldData, void *deviceGPU);
+    OPENPGL_CORE_INTERFACE void pglFieldReleaseFieldGPU(PGLField field, void *fieldData, void *deviceGPU);
 /*
 OPENPGL_CORE_INTERFACE int pglFieldGetNumSurfaceNodes(PGLField field);
 OPENPGL_CORE_INTERFACE void *pglFieldGetSurfaceNodes(PGLField field);

@@ -2,7 +2,7 @@
 #define OPENPGL_COMMON_GPU_H
 
 #ifndef OPENPGL_BUILD
-    #include <openpgl/defines.h>
+#include <openpgl/defines.h>
 #endif
 
 #if defined(OPENPGL_GPU_SYCL_SUPPORT)
@@ -14,256 +14,281 @@
 
 #if defined(OPENPGL_GPU_CPU)
 #ifndef FLT_EPSILON
-    #define FLT_EPSILON 1.19209290E-07F
+#define FLT_EPSILON 1.19209290E-07F
 #endif
-    #include <cstring>
+#include <cstring>
 #endif
 
 #if defined(OPENPGL_GPU_SYCL)
 #ifndef FLT_EPSILON
-    #define FLT_EPSILON 1.19209290E-07F
+#define FLT_EPSILON 1.19209290E-07F
 #endif
-    #define OPENPGL_GPU_CALLABLE
+#define OPENPGL_GPU_CALLABLE
 #elif defined(OPENPGL_GPU_CUDA) && defined(__CUDACC__)
 #ifndef FLT_EPSILON
-    #define FLT_EPSILON 1.19209290E-07F
+#define FLT_EPSILON 1.19209290E-07F
 #endif
-    #define OPENPGL_GPU_CALLABLE __host__ __device__
+#define OPENPGL_GPU_CALLABLE __host__ __device__
 #else
-    #define OPENPGL_GPU_CALLABLE
+#define OPENPGL_GPU_CALLABLE
 #endif
 
 namespace openpgl
 {
-namespace gpu {
+namespace gpu
+{
 #if defined(OPENPGL_GPU_SYCL)
-namespace sycl {
+namespace sycl
+{
 #elif defined(OPENPGL_GPU_CUDA)
-namespace cuda {
+namespace cuda
+{
 #else
-namespace cpu {
+namespace cpu
+{
 #endif
 
-    OPENPGL_GPU_CALLABLE inline void pgl_sincosf(float x, float *sin, float *cos)
-    {
+OPENPGL_GPU_CALLABLE inline void pgl_sincosf(float x, float *sin, float *cos)
+{
 #ifdef SYCL_LANGUAGE_VERSION
-        *sin = ::sycl::sincos(x, cos);
+    *sin = ::sycl::sincos(x, cos);
 #else
-        sincosf(x, sin, cos);
+    sincosf(x, sin, cos);
 #endif
-    }
+}
 
 #if !defined(OPENPGL_GPU_CUDA) && !defined(OPENPGL_GPU_SYCL)
-    struct float2 {
-        float x;
-        float y;
-    };
+struct float2
+{
+    float x;
+    float y;
+};
 
-    struct float3 {
-        float x;
-        float y;
-        float z;
-    };
+struct float3
+{
+    float x;
+    float y;
+    float z;
+};
 
-    inline float rsqrt(float v)
-    {
-        return 1.0f/std::sqrt(v);
-    }
+inline float rsqrt(float v)
+{
+    return 1.0f / std::sqrt(v);
+}
 
 #endif
 
 #if defined(OPENPGL_GPU_SYCL)
-    typedef ::sycl::float2 Vector2;
-    typedef ::sycl::float3 Vector3;
-    typedef ::sycl::float2 Point2;
-    typedef ::sycl::float3 Point3;
-    using namespace sycl;
+typedef ::sycl::float2 Vector2;
+typedef ::sycl::float3 Vector3;
+typedef ::sycl::float2 Point2;
+typedef ::sycl::float3 Point3;
+using namespace sycl;
 
-#else //defined(OPENPGL_GPU_CUDA)
+#else  // defined(OPENPGL_GPU_CUDA)
 
-    union Vector2
+union Vector2
+{
+    float2 vec;
+    float data[2];
+    OPENPGL_GPU_CALLABLE Vector2(float x, float y)
     {
-        float2 vec;
-        float data[2];
-        OPENPGL_GPU_CALLABLE Vector2(float x, float y)
-        {
-            vec = {x, y};
-        }
-        
-        OPENPGL_GPU_CALLABLE inline float& operator[](std::size_t idx)       { return data[idx]; }
-        OPENPGL_GPU_CALLABLE inline const float& operator[](std::size_t idx) const { return data[idx]; }
-
-        OPENPGL_GPU_CALLABLE inline const Vector2& operator*=(const Vector2& b){
-            this->vec.x *= b.vec.x;
-            this->vec.y *= b.vec.y;
-            return *this;
-        }
-
-        OPENPGL_GPU_CALLABLE inline const Vector2& operator*=(const float b){
-            this->vec.x *= b;
-            this->vec.y *= b;
-            return *this;
-        }
-
-        OPENPGL_GPU_CALLABLE inline const Vector2& operator/=(const Vector2& b){
-            this->vec.x /= b.vec.x;
-            this->vec.y /= b.vec.y;
-            return *this;
-        }
-
-        OPENPGL_GPU_CALLABLE inline const Vector2& operator/=(const float b){
-            this->vec.x /= b;
-            this->vec.y /= b;
-            return *this;
-        }
-    };
-
-    OPENPGL_GPU_CALLABLE inline const Vector2 operator*(Vector2 lhs, const Vector2& rhs)
-    {
-        return lhs *= rhs;
+        vec = {x, y};
     }
 
-    OPENPGL_GPU_CALLABLE inline const Vector2 operator*(Vector2 lhs, const float f)
+    OPENPGL_GPU_CALLABLE inline float &operator[](std::size_t idx)
     {
-        return lhs *= f;
+        return data[idx];
+    }
+    OPENPGL_GPU_CALLABLE inline const float &operator[](std::size_t idx) const
+    {
+        return data[idx];
     }
 
-    OPENPGL_GPU_CALLABLE inline const Vector2 operator/(Vector2 lhs, const Vector2& rhs)
+    OPENPGL_GPU_CALLABLE inline const Vector2 &operator*=(const Vector2 &b)
     {
-        return lhs /= rhs;
+        this->vec.x *= b.vec.x;
+        this->vec.y *= b.vec.y;
+        return *this;
     }
 
-    OPENPGL_GPU_CALLABLE inline const Vector2 operator/(Vector2 lhs, const float f)
+    OPENPGL_GPU_CALLABLE inline const Vector2 &operator*=(const float b)
     {
-        return lhs /= f;
+        this->vec.x *= b;
+        this->vec.y *= b;
+        return *this;
     }
 
-    OPENPGL_GPU_CALLABLE inline float dot(const Vector2 a, const Vector2 b)
+    OPENPGL_GPU_CALLABLE inline const Vector2 &operator/=(const Vector2 &b)
     {
-        return a[0]*b[0] + a[1]*b[1];
+        this->vec.x /= b.vec.x;
+        this->vec.y /= b.vec.y;
+        return *this;
     }
 
-
-    OPENPGL_GPU_CALLABLE inline float length(const Vector2 &a)
+    OPENPGL_GPU_CALLABLE inline const Vector2 &operator/=(const float b)
     {
-        return sqrtf(dot(a,a));
+        this->vec.x /= b;
+        this->vec.y /= b;
+        return *this;
+    }
+};
+
+OPENPGL_GPU_CALLABLE inline const Vector2 operator*(Vector2 lhs, const Vector2 &rhs)
+{
+    return lhs *= rhs;
+}
+
+OPENPGL_GPU_CALLABLE inline const Vector2 operator*(Vector2 lhs, const float f)
+{
+    return lhs *= f;
+}
+
+OPENPGL_GPU_CALLABLE inline const Vector2 operator/(Vector2 lhs, const Vector2 &rhs)
+{
+    return lhs /= rhs;
+}
+
+OPENPGL_GPU_CALLABLE inline const Vector2 operator/(Vector2 lhs, const float f)
+{
+    return lhs /= f;
+}
+
+OPENPGL_GPU_CALLABLE inline float dot(const Vector2 a, const Vector2 b)
+{
+    return a[0] * b[0] + a[1] * b[1];
+}
+
+OPENPGL_GPU_CALLABLE inline float length(const Vector2 &a)
+{
+    return sqrtf(dot(a, a));
+}
+
+OPENPGL_GPU_CALLABLE inline Vector2 normalize(const Vector2 &a)
+{
+    return a * rsqrt(dot(a, a));
+}
+
+union Vector3
+{
+    float3 vec;
+    float data[3];
+    OPENPGL_GPU_CALLABLE Vector3(float x, float y, float z)
+    {
+        vec = {x, y, z};
     }
 
-
-    OPENPGL_GPU_CALLABLE inline Vector2 normalize(const Vector2 &a)
+    OPENPGL_GPU_CALLABLE inline float &operator[](std::size_t idx)
     {
-        return a*rsqrt(dot(a,a));
+        return data[idx];
+    }
+    OPENPGL_GPU_CALLABLE inline const float &operator[](std::size_t idx) const
+    {
+        return data[idx];
     }
 
-    union Vector3
+    OPENPGL_GPU_CALLABLE inline const Vector3 &operator*=(const Vector3 &b)
     {
-        float3 vec;
-        float data[3];
-        OPENPGL_GPU_CALLABLE Vector3(float x, float y, float z)
-        {
-            vec = {x, y, z};
-        }
-        
-        OPENPGL_GPU_CALLABLE inline float& operator[](std::size_t idx)       { return data[idx]; }
-        OPENPGL_GPU_CALLABLE inline const float& operator[](std::size_t idx) const { return data[idx]; }
-
-        OPENPGL_GPU_CALLABLE inline const Vector3& operator*=(const Vector3& b){
-            this->vec.x *= b.vec.x;
-            this->vec.y *= b.vec.y;
-            this->vec.z *= b.vec.z;
-            return *this;
-        }
-        OPENPGL_GPU_CALLABLE inline const Vector3& operator*=(const float b){
-            this->vec.x *= b;
-            this->vec.y *= b;
-            this->vec.z *= b;
-            return *this;
-        }
-
-        OPENPGL_GPU_CALLABLE inline const Vector3& operator/=(const Vector3& b){
-            this->vec.x /= b.vec.x;
-            this->vec.y /= b.vec.y;
-            this->vec.z /= b.vec.z;
-            return *this;
-        }
-        OPENPGL_GPU_CALLABLE inline const Vector3& operator/=(const float b){
-            this->vec.x /= b;
-            this->vec.y /= b;
-            this->vec.z /= b;
-            return *this;
-        }
-
-        OPENPGL_GPU_CALLABLE inline const Vector3& operator+=(const Vector3& b){
-            this->vec.x += b.vec.x;
-            this->vec.y += b.vec.y;
-            this->vec.z += b.vec.z;
-            return *this;
-        }
-        OPENPGL_GPU_CALLABLE inline const Vector3& operator+=(const float b){
-            this->vec.x += b;
-            this->vec.y += b;
-            this->vec.z += b;
-            return *this;
-        }
-    };
-
-    OPENPGL_GPU_CALLABLE inline const Vector3 operator*(Vector3 lhs, const Vector3& rhs)
+        this->vec.x *= b.vec.x;
+        this->vec.y *= b.vec.y;
+        this->vec.z *= b.vec.z;
+        return *this;
+    }
+    OPENPGL_GPU_CALLABLE inline const Vector3 &operator*=(const float b)
     {
-        return lhs *= rhs;
+        this->vec.x *= b;
+        this->vec.y *= b;
+        this->vec.z *= b;
+        return *this;
     }
 
-    OPENPGL_GPU_CALLABLE inline const Vector3 operator*(Vector3 lhs, const float f)
+    OPENPGL_GPU_CALLABLE inline const Vector3 &operator/=(const Vector3 &b)
     {
-        return lhs *= f;
+        this->vec.x /= b.vec.x;
+        this->vec.y /= b.vec.y;
+        this->vec.z /= b.vec.z;
+        return *this;
+    }
+    OPENPGL_GPU_CALLABLE inline const Vector3 &operator/=(const float b)
+    {
+        this->vec.x /= b;
+        this->vec.y /= b;
+        this->vec.z /= b;
+        return *this;
     }
 
-    OPENPGL_GPU_CALLABLE inline const Vector3 operator/(Vector3 lhs, const Vector3& rhs)
+    OPENPGL_GPU_CALLABLE inline const Vector3 &operator+=(const Vector3 &b)
     {
-        return lhs /= rhs;
+        this->vec.x += b.vec.x;
+        this->vec.y += b.vec.y;
+        this->vec.z += b.vec.z;
+        return *this;
     }
-
-    OPENPGL_GPU_CALLABLE inline const Vector3 operator/(Vector3 lhs, const float f)
+    OPENPGL_GPU_CALLABLE inline const Vector3 &operator+=(const float b)
     {
-        return lhs /= f;
+        this->vec.x += b;
+        this->vec.y += b;
+        this->vec.z += b;
+        return *this;
     }
+};
 
-    OPENPGL_GPU_CALLABLE inline const Vector3 operator+(Vector3 lhs, const Vector3& rhs)
-    {
-        return lhs += rhs;
-    }
+OPENPGL_GPU_CALLABLE inline const Vector3 operator*(Vector3 lhs, const Vector3 &rhs)
+{
+    return lhs *= rhs;
+}
 
-    OPENPGL_GPU_CALLABLE inline const Vector3 operator+(Vector3 lhs, const float f)
-    {
-        return lhs += f;
-    }
+OPENPGL_GPU_CALLABLE inline const Vector3 operator*(Vector3 lhs, const float f)
+{
+    return lhs *= f;
+}
 
-    OPENPGL_GPU_CALLABLE inline float dot(const Vector3 &a, const Vector3 &b)
-    {
-        return a[0]*b[0] + a[1]*b[1] + a[2]*b[2];
-    }
+OPENPGL_GPU_CALLABLE inline const Vector3 operator/(Vector3 lhs, const Vector3 &rhs)
+{
+    return lhs /= rhs;
+}
 
-    OPENPGL_GPU_CALLABLE inline float length(const Vector3 &a)
-    {
-        return sqrtf(dot(a,a));
-    }
+OPENPGL_GPU_CALLABLE inline const Vector3 operator/(Vector3 lhs, const float f)
+{
+    return lhs /= f;
+}
 
-    OPENPGL_GPU_CALLABLE inline Vector3 normalize(const Vector3 &a)
-    {
-        return a*rsqrt(dot(a,a));
-    }
+OPENPGL_GPU_CALLABLE inline const Vector3 operator+(Vector3 lhs, const Vector3 &rhs)
+{
+    return lhs += rhs;
+}
 
-    OPENPGL_GPU_CALLABLE inline Vector3 cross(const Vector3 &a, const Vector3 &b)
-    {
-        return Vector3( a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0] );
-    }
+OPENPGL_GPU_CALLABLE inline const Vector3 operator+(Vector3 lhs, const float f)
+{
+    return lhs += f;
+}
 
-    typedef Vector2 Point2;
-    typedef Vector3 Point3;
+OPENPGL_GPU_CALLABLE inline float dot(const Vector3 &a, const Vector3 &b)
+{
+    return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+}
+
+OPENPGL_GPU_CALLABLE inline float length(const Vector3 &a)
+{
+    return sqrtf(dot(a, a));
+}
+
+OPENPGL_GPU_CALLABLE inline Vector3 normalize(const Vector3 &a)
+{
+    return a * rsqrt(dot(a, a));
+}
+
+OPENPGL_GPU_CALLABLE inline Vector3 cross(const Vector3 &a, const Vector3 &b)
+{
+    return Vector3(a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]);
+}
+
+typedef Vector2 Point2;
+typedef Vector3 Point3;
 #endif
 
-} // sycl/cuda/cpu
-} // gpu
-} // openpgl
+}  // sycl/cuda/cpu
+}  // namespace gpu
+}  // namespace openpgl
 
-
-#endif //OPENPGL_COMMON_GPU_H
+#endif  // OPENPGL_COMMON_GPU_H

@@ -717,7 +717,7 @@ struct KDTree
     tbb::concurrent_vector<KDNode> m_nodes;
 
     // node storage used during querying
-    KDNode* m_nodesPtr{nullptr};
+    KDNode *m_nodesPtr{nullptr};
     size_t m_numNodes{0};
 
     KDTreeLet *m_treeLets{nullptr};

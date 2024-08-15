@@ -747,7 +747,6 @@ struct Field
     SpatialStructureBuilder m_spatialSubdivBuilder;
     SpatialBuilderSettings m_spatialSubdivBuilderSettings;
 
-
     bool m_useStochasticNNLookUp{false};
     bool m_useISNNLookUp{false};
     KNearestRegionsSearchTree<Vecsize> m_regionKNNSearchTree;
@@ -759,7 +758,8 @@ struct Field
     float m_timeLastUpdateCopySamples{0.f};
     float m_timeLastUpdateSpatialStructureUpdate{0.f};
     float m_timeLastUpdateDirectionalDistriubtionUpdate{0.f};
-public:
+
+   public:
     SpatialStructure m_spatialSubdiv;
     RegionStorageContainerType m_regionStorageContainer;
 };

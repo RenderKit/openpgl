@@ -304,16 +304,16 @@ extern "C" OPENPGL_DLLEXPORT  void pglFieldCopyVolumeDistributions(PGLField fiel
 }
 
 */
-extern "C" OPENPGL_DLLEXPORT void pglFieldFillFieldGPU(PGLField field, void* fieldData, void* deviceGPU)
+extern "C" OPENPGL_DLLEXPORT void pglFieldFillFieldGPU(PGLField field, void *fieldData, void *deviceGPU)
 {
     const auto *gField = (const IGuidingField *)field;
-    return gField->FillFieldData(static_cast<openpgl::gpu::FieldData*>(fieldData), static_cast<openpgl::gpu::Device*>(deviceGPU));
+    return gField->FillFieldData(static_cast<openpgl::gpu::FieldData *>(fieldData), static_cast<openpgl::gpu::Device *>(deviceGPU));
 }
 
-extern "C" OPENPGL_DLLEXPORT void pglFieldReleaseFieldGPU(PGLField field, void* fieldData, void* deviceGPU)
+extern "C" OPENPGL_DLLEXPORT void pglFieldReleaseFieldGPU(PGLField field, void *fieldData, void *deviceGPU)
 {
     const auto *gField = (const IGuidingField *)field;
-    return gField->ReleaseFieldData(static_cast<openpgl::gpu::FieldData*>(fieldData), static_cast<openpgl::gpu::Device*>(deviceGPU));
+    return gField->ReleaseFieldData(static_cast<openpgl::gpu::FieldData *>(fieldData), static_cast<openpgl::gpu::Device *>(deviceGPU));
 }
 
 ///////////////////////////////////////////////////////////////////////////////
