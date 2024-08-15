@@ -8,15 +8,15 @@
 
 namespace openpgl
 {
-    
-    struct IRegion
-    {
-        virtual ~IRegion(){};
+
+struct IRegion
+{
+    virtual ~IRegion(){};
 
 #ifdef OPENPGL_RADIANCE_CACHES
-        virtual Vector3 getOutgoingRadiance(const Vector3 dir) const = 0;
+    virtual Vector3 getOutgoingRadiance(const Vector3 dir) const = 0;
 #endif
-        public:
-        bool valid{true};
-    };
-}
+   public:
+    bool valid{true};
+};
+}  // namespace openpgl

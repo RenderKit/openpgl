@@ -7,17 +7,17 @@
 #include "distribution.h"
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
-
 #ifdef __cplusplus
-struct Region;
+    struct Region;
 #else
 typedef ManagedObject Region;
 #endif
 
-typedef Region *PGLRegion;
+    typedef Region *PGLRegion;
 
 #ifdef __cplusplus
 }  // extern "C"

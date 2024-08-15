@@ -2,18 +2,22 @@
 
 #include "../../openpgl_common.h"
 
-namespace openpgl {
+namespace openpgl
+{
 
 template <class T>
-struct Rect {
+struct Rect
+{
     embree::Vec2<T> min;
     embree::Vec2<T> max;
 
-    T area() {
+    T area()
+    {
         return (max.x - min.x) * (max.y - min.y);
     }
 
-    Rect<T> intersect(const Rect<T> &other) const {
+    Rect<T> intersect(const Rect<T> &other) const
+    {
         Rect<T> isect;
         isect.min.x = std::max<T>(min.x, other.min.x);
         isect.min.y = std::max<T>(min.y, other.min.y);
@@ -24,19 +28,11 @@ struct Rect {
         return isect;
     }
 
-    Rect<T> child(uint32_t idx) const {
+    Rect<T> child(uint32_t idx) const
+    {
         const embree::Vec2<T> mid = (min + max) / (T)2;
-        return {
-            {
-                (idx & 1) == 0 ? min.x : mid.x,
-                (idx & 2) == 0 ? min.y : mid.y
-            },
-            {
-                (idx & 1) == 0 ? mid.x : max.x,
-                (idx & 2) == 0 ? mid.y : max.y
-            }
-        };
+        return {{(idx & 1) == 0 ? min.x : mid.x, (idx & 2) == 0 ? min.y : mid.y}, {(idx & 1) == 0 ? mid.x : max.x, (idx & 2) == 0 ? mid.y : max.y}};
     }
 };
 
-}
+}  // namespace openpgl

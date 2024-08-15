@@ -1,26 +1,30 @@
 #pragma once
 #include <chrono>
 
-class Timer {
-private:
+class Timer
+{
+   private:
     using clock = std::chrono::high_resolution_clock;
     using time_point = clock::time_point;
 
-public:
-    Timer() {
+   public:
+    Timer()
+    {
         reset();
     }
 
-    void reset() {
+    void reset()
+    {
         start = clock::now();
     }
 
-    double elapsed() {
+    double elapsed()
+    {
         time_point end = clock::now();
         std::chrono::duration<double, std::micro> diff = end - start;
         return diff.count();
     }
 
-private:
+   private:
     time_point start;
 };

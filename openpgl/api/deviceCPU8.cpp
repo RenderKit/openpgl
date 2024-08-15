@@ -1,9 +1,11 @@
 #include "device/Device.h"
 
-namespace openpgl {
+namespace openpgl
+{
 
-IDevice* newDeviceCPU8(size_t numThreads) {
-    return (IDevice*) new Device<8>(numThreads);
+IDevice *newDeviceCPU8(size_t numThreads)
+{
+    return (IDevice *)new Device<8>(numThreads);
 }
 
-}
+}  // namespace openpgl

@@ -3,168 +3,165 @@
 
 #pragma once
 
-#include "../../openpgl_common.h"
-#include "../../data/SampleData.h"
-#include "ParallaxAwareVonMisesFisherMixture.h"
-
 #include <embreeSrc/common/math/vec2.h>
 #include <embreeSrc/common/math/vec3.h>
 
 #include <algorithm>
-#include <vector>
-
 #include <fstream>
 #include <iostream>
+#include <vector>
+
+#include "../../data/SampleData.h"
+#include "../../openpgl_common.h"
+#include "ParallaxAwareVonMisesFisherMixture.h"
 
 #define OPENPGL_USE_LOGMAP
 #define OPENPGL_ZERO_MEAN
-//#define OPENPGL_USE_THREE_SPLIT
+// #define OPENPGL_USE_THREE_SPLIT
 
 namespace openpgl
 {
 
 struct ComponentSplitinfo
 {
-    Vector2 mean {0.0f};
+    Vector2 mean{0.0f};
     Vector3 covariance{0.0f};
 
-    float eigenValue0 {0.0f};
-    float eigenValue1 {0.0f};
+    float eigenValue0{0.0f};
+    float eigenValue1{0.0f};
 
-    Vector2 eigenVector0 {0.0f};
-    Vector2 eigenVector1 {0.0f};
+    Vector2 eigenVector0{0.0f};
+    Vector2 eigenVector1{0.0f};
 
     std::string toString() const;
 };
 
-template<class TVMMFactory>
+template <class TVMMFactory>
 struct VonMisesFisherChiSquareComponentSplitter
 {
-
-public:
+   public:
     typedef typename TVMMFactory::Distribution VMM;
     typedef TVMMFactory VMMFactory;
 
     typedef typename VMMFactory::SufficientStatistics SufficientStatistics;
     typedef typename VMMFactory::PartialFittingMask PartialFittingMask;
 
-struct SplitCandidate
-{
-    size_t componentIndex;
-    float chiSquareEst;
-
-    bool operator<( const SplitCandidate &sc ) const
+    struct SplitCandidate
     {
-        return chiSquareEst < sc.chiSquareEst;
-    }
+        size_t componentIndex;
+        float chiSquareEst;
 
-    bool operator>( const SplitCandidate &sc ) const
+        bool operator<(const SplitCandidate &sc) const
+        {
+            return chiSquareEst < sc.chiSquareEst;
+        }
+
+        bool operator>(const SplitCandidate &sc) const
+        {
+            return chiSquareEst > sc.chiSquareEst;
+        }
+    };
+
+    struct ComponentSplitStatistics
     {
-        return chiSquareEst > sc.chiSquareEst;
-    }
-};
+        ComponentSplitStatistics() = default;
 
-struct ComponentSplitStatistics
-{
+        embree::vfloat<VMM::VectorSize> chiSquareMCEstimates[VMM::NumVectors];
+        embree::Vec2<embree::vfloat<VMM::VectorSize> > splitMeans[VMM::NumVectors];
+        embree::Vec3<embree::vfloat<VMM::VectorSize> > splitWeightedSampleCovariances[VMM::NumVectors];
 
-    ComponentSplitStatistics() = default;
+        embree::vfloat<VMM::VectorSize> numSamples[VMM::NumVectors];
+        embree::vfloat<VMM::VectorSize> sumWeights[VMM::NumVectors];
 
-    embree::vfloat<VMM::VectorSize> chiSquareMCEstimates[VMM::NumVectors];
-    embree::Vec2<embree::vfloat<VMM::VectorSize> > splitMeans[VMM::NumVectors];
-    embree::Vec3<embree::vfloat<VMM::VectorSize> > splitWeightedSampleCovariances[VMM::NumVectors];
+        embree::vfloat<VMM::VectorSize> sumAssignedSamples[VMM::NumVectors];
 
-    embree::vfloat<VMM::VectorSize> numSamples[VMM::NumVectors];
-    embree::vfloat<VMM::VectorSize> sumWeights[VMM::NumVectors];
+        size_t numComponents{0};
 
-    embree::vfloat<VMM::VectorSize> sumAssignedSamples[VMM::NumVectors];
+        void clear(const size_t &_numComponents);
+        void clearAll();
 
-    size_t numComponents{0};
+        float getChiSquareEst(const size_t &idx) const;
+        float getSumChiSquareEst() const;
+        size_t getHighestChiSquareIdx() const;
 
-    void clear(const size_t &_numComponents);
-    void clearAll();
+        void mergeComponentStats(const size_t &idxI, const size_t &idxJ, const float &weightI, const Vector3 &meanDirectionI, const float &weightJ, const Vector3 &meanDirectionJ,
+                                 const float &weightK, const Vector3 &meanDirectionK);
 
-    float getChiSquareEst(const size_t &idx) const;
-    float getSumChiSquareEst() const;
-    size_t getHighestChiSquareIdx() const;
+        Vector2 getSplitMean(const size_t &idx) const;
 
-    void mergeComponentStats(const size_t &idxI, const size_t &idxJ, const float &weightI, const Vector3 &meanDirectionI, const float &weightJ, const Vector3 &meanDirectionJ, const float &weightK, const Vector3 &meanDirectionK);
+        Vector3 getSplitCovariance(const size_t &idx) const;
 
-    Vector2 getSplitMean(const size_t &idx) const;
+        std::vector<SplitCandidate> getSplitCandidates() const;
 
-    Vector3 getSplitCovariance(const size_t &idx) const;
+        void decay(const float &alpha);
 
-    std::vector<SplitCandidate> getSplitCandidates() const;
+        bool isValid() const;
 
-    void decay( const float &alpha );
+        void serialize(std::ostream &stream) const;
 
-    bool isValid() const;
+        void deserialize(std::istream &stream);
 
-    void serialize(std::ostream& stream) const;
+        inline size_t getNumComponents() const
+        {
+            return numComponents;
+        }
 
-    void deserialize(std::istream& stream);
+        void setNumComponents(const size_t &n)
+        {
+            numComponents = n;
+        }
 
-    inline size_t getNumComponents() const
-    {
-        return numComponents;
-    }
+        std::string toString() const;
 
-    void setNumComponents(const size_t &n)
-    {
-        numComponents = n;
-    }
+        bool operator==(const ComponentSplitStatistics &b) const;
+    };
 
-    std::string toString() const;
+    void PerformSplitting(VMM &vmm, const float &splitThreshold, const float &mcEstimate, const SampleData *data, const size_t &numData,
+                          const typename VMMFactory::Configuration factoryCfg, const bool &doPartialRefit, const int &maxSplittingItr = -1) const;
 
-    bool operator==(const ComponentSplitStatistics& b) const;
-};
+    void PerformRecursiveSplitting(VMM &vmm, typename VMMFactory::SufficientStatistics &suffStats, const float &splitThreshold, const float &mcEstimate, const SampleData *data,
+                                   const size_t &numData, const typename VMMFactory::Configuration factoryCfg) const;
 
+    void PerformSplittingIteration(VMM &vmm, const float &splitThreshold) const;
 
-void PerformSplitting(VMM &vmm, const float &splitThreshold, const float &mcEstimate, const SampleData *data, const size_t &numData, const typename VMMFactory::Configuration factoryCfg, const bool &doPartialRefit, const int &maxSplittingItr = -1) const;
+    void CalculateSplitStatistics(const VMM &vmm, ComponentSplitStatistics &splitStats, const float &mcEstimate, const SampleData *data, const size_t &numData) const;
 
-void PerformRecursiveSplitting(VMM &vmm, typename VMMFactory::SufficientStatistics &suffStats, const float &splitThreshold, const float &mcEstimate, const SampleData *data, const size_t &numData, const typename VMMFactory::Configuration factoryCfg) const;
+    void UpdateSplitStatistics(const VMM &vmm, ComponentSplitStatistics &splitStats, const float &mcEstimate, const SampleData *data, const size_t &numData) const;
 
-void PerformSplittingIteration(VMM &vmm, const float &splitThreshold) const;
+    bool SplitComponent(VMM &vmm, ComponentSplitStatistics &splitStats, SufficientStatistics &suffStats, const size_t idx) const;
 
-void CalculateSplitStatistics(const VMM &vmm, ComponentSplitStatistics &splitStats, const float &mcEstimate, const SampleData *data, const size_t &numData) const;
+    bool SplitComponentIntoThree(VMM &vmm, ComponentSplitStatistics &splitStats, SufficientStatistics &suffStats, const size_t idx) const;
 
-void UpdateSplitStatistics(const VMM &vmm, ComponentSplitStatistics &splitStats, const float &mcEstimate, const SampleData *data, const size_t &numData) const;
-
-bool SplitComponent(VMM &vmm, ComponentSplitStatistics &splitStats, SufficientStatistics &suffStats, const size_t idx) const;
-
-bool SplitComponentIntoThree(VMM &vmm, ComponentSplitStatistics &splitStats, SufficientStatistics &suffStats, const size_t idx) const;
-
-ComponentSplitinfo GetProjectedLocalDirections(const VMM &vmm, const size_t &idx, const SampleData *data, const size_t &numData, Vector3 *local2D) const;
-
-
+    ComponentSplitinfo GetProjectedLocalDirections(const VMM &vmm, const size_t &idx, const SampleData *data, const size_t &numData, Vector3 *local2D) const;
 };
 
 #ifndef OPENPGL_USE_LOGMAP
 
-template<typename Vec3Type, typename Vec2Type, typename ScalarType>
+template <typename Vec3Type, typename Vec2Type, typename ScalarType>
 inline Vec2Type Map3DTo2D(const Vec3Type &vec3D)
 {
     return Vec2Type(vec3D.x, vec3D.y);
 }
 
-template<typename Vec3Type, typename Vec2Type, typename ScalarType>
+template <typename Vec3Type, typename Vec2Type, typename ScalarType>
 inline Vec3Type Map2DTo3D(const Vec2Type &vec2D)
 {
     Vec3Type vec3D = Vec3Type(0.0f);
     vec3D.x = vec2D.x;
     vec3D.y = vec2D.y;
-    vec3D.z = embree::sqrt(1.0f - vec2D.x*vec2D.x - vec2D.y*vec2D.y);
+    vec3D.z = embree::sqrt(1.0f - vec2D.x * vec2D.x - vec2D.y * vec2D.y);
     return vec3D;
 }
 
 #else
 
-//logMapping https://ronnybergmann.net/mvirt/manifolds/Sn/log.html
-template<typename Vec3Type, typename Vec2Type, typename ScalarType>
+// logMapping https://ronnybergmann.net/mvirt/manifolds/Sn/log.html
+template <typename Vec3Type, typename Vec2Type, typename ScalarType>
 inline Vec2Type Map3DTo2D(const Vec3Type &vec3D)
 {
     Vec2Type vec2D(0.0f);
 
-    //OPENPGL_ASSERT((vec3D.z <= 1.0f &&  vec3D.z >= -1.0f));
+    // OPENPGL_ASSERT((vec3D.z <= 1.0f &&  vec3D.z >= -1.0f));
     ScalarType alpha = embree::fastapprox::acos(vec3D.z);
     ScalarType inv_sinc = alpha / embree::fastapprox::sin(alpha);
     // TODO: Needs to be implmented
@@ -174,12 +171,12 @@ inline Vec2Type Map3DTo2D(const Vec3Type &vec3D)
     return vec2D;
 }
 
-//expMapping https://ronnybergmann.net/mvirt/manifolds/Sn/exp.html
-template<typename Vec3Type, typename Vec2Type, typename ScalarType>
+// expMapping https://ronnybergmann.net/mvirt/manifolds/Sn/exp.html
+template <typename Vec3Type, typename Vec2Type, typename ScalarType>
 inline Vec3Type Map2DTo3D(const Vec2Type &vec2D)
 {
     Vec3Type vec3D = Vec3Type(0.0f);
-    ScalarType length = embree::sqrt(vec2D.x*vec2D.x + vec2D.y*vec2D.y);
+    ScalarType length = embree::sqrt(vec2D.x * vec2D.x + vec2D.y * vec2D.y);
     OPENPGL_ASSERT(length < M_PI_F);
     ScalarType sinc = embree::fastapprox::sin(length) / length;
 
@@ -190,32 +187,33 @@ inline Vec3Type Map2DTo3D(const Vec2Type &vec2D)
     return vec3D;
 }
 
-
 #endif
 
 inline std::string ComponentSplitinfo::toString() const
 {
     std::stringstream ss;
     ss << "ComponentSplitinfo:" << std::endl;
-    //ss << "mean: " << mean << std::endl;
-    //ss << "covariance: " << covariance << std::endl;
+    // ss << "mean: " << mean << std::endl;
+    // ss << "covariance: " << covariance << std::endl;
     ss << "eigenValue0: " << eigenValue0 << std::endl;
     ss << "eigenValue1: " << eigenValue1 << std::endl;
-    //ss << "eigenVector0: " << eigenVector0 << std::endl;
-    //ss << "eigenVector1: " << eigenVector1 << std::endl;
+    // ss << "eigenVector0: " << eigenVector0 << std::endl;
+    // ss << "eigenVector1: " << eigenVector1 << std::endl;
     return ss.str();
 }
 
-template<class TVMMFactory>
-void VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::CalculateSplitStatistics(const VMM &vmm, ComponentSplitStatistics &splitStats, const float &mcEstimate, const SampleData *data, const size_t &numData) const
+template <class TVMMFactory>
+void VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::CalculateSplitStatistics(const VMM &vmm, ComponentSplitStatistics &splitStats, const float &mcEstimate,
+                                                                                     const SampleData *data, const size_t &numData) const
 {
     splitStats.clear(vmm._numComponents);
     this->UpdateSplitStatistics(vmm, splitStats, mcEstimate, data, numData);
 }
 
-
-template<class TVMMFactory>
-void VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::PerformSplitting(VMM &vmm, const float &splitThreshold, const float &mcEstimate, const SampleData *data, const size_t &numData, const typename VMMFactory::Configuration factoryCfg, const bool &doPartialRefit, const int &maxSplittingItr) const
+template <class TVMMFactory>
+void VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::PerformSplitting(VMM &vmm, const float &splitThreshold, const float &mcEstimate, const SampleData *data,
+                                                                             const size_t &numData, const typename VMMFactory::Configuration factoryCfg, const bool &doPartialRefit,
+                                                                             const int &maxSplittingItr) const
 {
     PartialFittingMask mask;
     ComponentSplitStatistics splitStatistics;
@@ -229,9 +227,9 @@ void VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::PerformSplitting(VMM
     typename VMMFactory::FittingStatistics vmmFitStats;
 
 #ifndef OPENPGL_USE_THREE_SPLIT
-    while ( vmm._numComponents < VMM::MaxComponents && !stopSplitting)
+    while (vmm._numComponents < VMM::MaxComponents && !stopSplitting)
 #else
-    while ( vmm._numComponents < VMM::MaxComponents-1 && !stopSplitting)
+    while (vmm._numComponents < VMM::MaxComponents - 1 && !stopSplitting)
 #endif
     {
         stopSplitting = true;
@@ -244,18 +242,18 @@ void VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::PerformSplitting(VMM
         const size_t numComp = vmm._numComponents;
         for (size_t k = 0; k < numComp; k++)
         {
-            if (splitComps[k].chiSquareEst > splitThreshold && vmm._numComponents  < VMM::MaxComponents)
+            if (splitComps[k].chiSquareEst > splitThreshold && vmm._numComponents < VMM::MaxComponents)
             {
-                //std::cout << "split[" << k << "]: idx:" << splitComps[k].componentIndex << "\t chi2: " << splitComps[k].chiSquareEst << std::endl;
+                // std::cout << "split[" << k << "]: idx:" << splitComps[k].componentIndex << "\t chi2: " << splitComps[k].chiSquareEst << std::endl;
 #ifndef OPENPGL_USE_THREE_SPLIT
                 bool splitSucess = SplitComponent(vmm, splitStatistics, suffStatistics, splitComps[k].componentIndex);
                 mask.setToTrue(splitComps[k].componentIndex);
-                mask.setToTrue(vmm._numComponents-1);
+                mask.setToTrue(vmm._numComponents - 1);
 #else
                 bool splitSucess = SplitComponentIntoThree(vmm, splitStatistics, suffStatistics, splitComps[k].componentIndex);
                 mask.setToTrue(splitComps[k].componentIndex);
-                mask.setToTrue(vmm._numComponents-2);
-                mask.setToTrue(vmm._numComponents-1);
+                mask.setToTrue(vmm._numComponents - 2);
+                mask.setToTrue(vmm._numComponents - 1);
 #endif
                 if (splitSucess)
                 {
@@ -268,14 +266,14 @@ void VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::PerformSplitting(VMM
             }
         }
         suffStatistics.clear(vmm._numComponents);
-        //std::cout << "mask: " << mask.toString() << std::endl;
-        //std::cout << "vmmSplit: " << vmm.toString() << std::endl;
-        //std::cout << "factoryCfg: " << factoryCfg.toString() << std::endl;
-        //std::cout << "suffStatistics: " << suffStatistics.toString() << std::endl;
+        // std::cout << "mask: " << mask.toString() << std::endl;
+        // std::cout << "vmmSplit: " << vmm.toString() << std::endl;
+        // std::cout << "factoryCfg: " << factoryCfg.toString() << std::endl;
+        // std::cout << "suffStatistics: " << suffStatistics.toString() << std::endl;
         if (doPartialRefit)
         {
             vmmFactory.partialUpdateMixture(vmm, mask, suffStatistics, data, numData, factoryCfg, vmmFitStats);
-            //std::cout << "vmmpartialUpdate: " << vmm.toString() << std::endl;
+            // std::cout << "vmmpartialUpdate: " << vmm.toString() << std::endl;
             splitItr++;
         }
         else
@@ -290,26 +288,28 @@ void VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::PerformSplitting(VMM
     }
 }
 
-template<class TVMMFactory>
-void VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::PerformRecursiveSplitting(VMM &vmm, typename VMMFactory::SufficientStatistics &suffStatistics, const float &splitThreshold, const float &mcEstimate, const SampleData *data, const size_t &numData, const typename VMMFactory::Configuration factoryCfg) const
+template <class TVMMFactory>
+void VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::PerformRecursiveSplitting(VMM &vmm, typename VMMFactory::SufficientStatistics &suffStatistics,
+                                                                                      const float &splitThreshold, const float &mcEstimate, const SampleData *data,
+                                                                                      const size_t &numData, const typename VMMFactory::Configuration factoryCfg) const
 {
     PartialFittingMask mask;
     ComponentSplitStatistics splitStatistics;
     SufficientStatistics tempSuffStatistics = suffStatistics;
 
-    //bool stopSplitting = false;
-    //size_t splitItr = 0;
+    // bool stopSplitting = false;
+    // size_t splitItr = 0;
 
     VMMFactory vmmFactory;
     typename VMMFactory::FittingStatistics vmmFitStats;
-    //std::cout << "vmm: " << vmm.toString() << std::endl;
+    // std::cout << "vmm: " << vmm.toString() << std::endl;
     int numSplits = -1;
 #ifndef OPENPGL_USE_THREE_SPLIT
-    while ( vmm._numComponents < VMM::MaxComponents && numSplits != 0)
+    while (vmm._numComponents < VMM::MaxComponents && numSplits != 0)
 #else
 
 #endif
-    //for (size_t j =0; j<1; j++)
+    // for (size_t j =0; j<1; j++)
     {
         numSplits = 0;
         splitStatistics.clearAll();
@@ -321,17 +321,17 @@ void VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::PerformRecursiveSpli
         const size_t numComp = vmm._numComponents;
         for (size_t k = 0; k < numComp; k++)
         {
-            if (splitComps[k].chiSquareEst > splitThreshold && vmm._numComponents  < VMM::MaxComponents)
+            if (splitComps[k].chiSquareEst > splitThreshold && vmm._numComponents < VMM::MaxComponents)
             {
 #ifndef OPENPGL_USE_THREE_SPLIT
                 bool splitSucess = SplitComponent(vmm, splitStatistics, tempSuffStatistics, splitComps[k].componentIndex);
                 mask.setToTrue(splitComps[k].componentIndex);
-                mask.setToTrue(vmm._numComponents-1);
+                mask.setToTrue(vmm._numComponents - 1);
 #else
                 bool splitSucess = SplitComponentIntoThree(vmm, splitStatistics, tempSuffStatistics, splitComps[k].componentIndex);
                 mask.setToTrue(splitComps[k].componentIndex);
-                mask.setToTrue(vmm._numComponents-1);
-                mask.setToTrue(vmm._numComponents-2);
+                mask.setToTrue(vmm._numComponents - 1);
+                mask.setToTrue(vmm._numComponents - 2);
 #endif
                 if (splitSucess)
                 {
@@ -347,22 +347,23 @@ void VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::PerformRecursiveSpli
         {
             tempSuffStatistics.clear(vmm._numComponents);
             vmmFactory.partialUpdateMixture(vmm, mask, tempSuffStatistics, data, numData, factoryCfg, vmmFitStats);
-            //std::cout << "tempSuffStatistics" << std::endl << tempSuffStatistics.toString() << std::endl;
+            // std::cout << "tempSuffStatistics" << std::endl << tempSuffStatistics.toString() << std::endl;
             suffStatistics.setNumComponents(vmm._numComponents);
             suffStatistics.maskedReplace(mask, tempSuffStatistics);
         }
-        //std::cout << "vmmpartialUpdate: " << vmm.toString() << std::endl;
-        //splitItr++;
+        // std::cout << "vmmpartialUpdate: " << vmm.toString() << std::endl;
+        // splitItr++;
     }
 }
 
-template<class TVMMFactory>
-ComponentSplitinfo VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::GetProjectedLocalDirections(const VMM &vmm, const size_t &idx, const SampleData *data, const size_t &numData, Vector3 *local2D) const
+template <class TVMMFactory>
+ComponentSplitinfo VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::GetProjectedLocalDirections(const VMM &vmm, const size_t &idx, const SampleData *data,
+                                                                                                      const size_t &numData, Vector3 *local2D) const
 {
     typename VMM::SoftAssignment softAssign;
     const embree::vfloat<VMM::VectorSize> zeros(0.f);
-    //const int cnt = (vmm._numComponents + VMM::VectorSize-1) / VMM::VectorSize;
-    //size_t validDataCount = 0.0f;
+    // const int cnt = (vmm._numComponents + VMM::VectorSize-1) / VMM::VectorSize;
+    // size_t validDataCount = 0.0f;
 
     ComponentSplitinfo splitInfo;
 
@@ -375,19 +376,19 @@ ComponentSplitinfo VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::GetPro
         const SampleData sample = data[n];
         pgl_vec3f direction = sample.direction;
         openpgl::Vector3 sampleDirection(direction.x, direction.y, direction.z);
-        if (vmm.softAssignment(sampleDirection, softAssign) )
+        if (vmm.softAssignment(sampleDirection, softAssign))
         {
             const div_t tmp = div(idx, static_cast<int>(VMM::VectorSize));
 
             const embree::vfloat<VMM::VectorSize> weight = sample.weight;
-            //const embree::vfloat<VMM::VectorSize> samplePDF = sample.pdf;
-            //const vfloat<VMM::VectorSize> value =  weight * samplePDF;
+            // const embree::vfloat<VMM::VectorSize> samplePDF = sample.pdf;
+            // const vfloat<VMM::VectorSize> value =  weight * samplePDF;
 
-
-            const embree::Vec3< embree::vfloat<VMM::VectorSize> > localDirection = embree::frame( vmm._meanDirections[tmp.quot] ).inverse() * embree::Vec3< embree::vfloat<VMM::VectorSize> > (sampleDirection);
-            //const embree::Vec2< embree::vfloat<VMM::VectorSize> > localDirection2D = Map3DTo2D< embree::Vec3< embree::vfloat<VMM::VectorSize> >,  embree::Vec2< embree::vfloat<VMM::VectorSize> >, embree::vfloat<VMM::VectorSize> >(localDirection);
-            const Vector2 localDirection2D = Map3DTo2D< Vector3,  Vector2, float >(Vector3(localDirection.x[tmp.rem], localDirection.y[tmp.rem], localDirection.z[tmp.rem]));
-
+            const embree::Vec3<embree::vfloat<VMM::VectorSize> > localDirection =
+                embree::frame(vmm._meanDirections[tmp.quot]).inverse() * embree::Vec3<embree::vfloat<VMM::VectorSize> >(sampleDirection);
+            // const embree::Vec2< embree::vfloat<VMM::VectorSize> > localDirection2D = Map3DTo2D< embree::Vec3< embree::vfloat<VMM::VectorSize> >,  embree::Vec2<
+            // embree::vfloat<VMM::VectorSize> >, embree::vfloat<VMM::VectorSize> >(localDirection);
+            const Vector2 localDirection2D = Map3DTo2D<Vector3, Vector2, float>(Vector3(localDirection.x[tmp.rem], localDirection.y[tmp.rem], localDirection.z[tmp.rem]));
 
             const embree::vfloat<VMM::VectorSize> assignedWeight = softAssign.assignments[tmp.quot] * weight;
             local2D[n].x = localDirection2D.x;
@@ -410,11 +411,13 @@ ComponentSplitinfo VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::GetPro
     mean /= sumWeights;
 
     splitInfo.mean = mean;
-    splitInfo.covariance.x = covarianceStats.x / sumWeights - mean.x*mean.x;
-    splitInfo.covariance.y = covarianceStats.y / sumWeights - mean.y*mean.y;
-    splitInfo.covariance.z = covarianceStats.z / sumWeights - mean.x*mean.y;
+    splitInfo.covariance.x = covarianceStats.x / sumWeights - mean.x * mean.x;
+    splitInfo.covariance.y = covarianceStats.y / sumWeights - mean.y * mean.y;
+    splitInfo.covariance.z = covarianceStats.z / sumWeights - mean.x * mean.y;
 
-    float D = embree::sqrt((splitInfo.covariance.x - splitInfo.covariance.y) * (splitInfo.covariance.x - splitInfo.covariance.y) + (splitInfo.covariance.z * splitInfo.covariance.z *4.0f)) * 0.5f;
+    float D = embree::sqrt((splitInfo.covariance.x - splitInfo.covariance.y) * (splitInfo.covariance.x - splitInfo.covariance.y) +
+                           (splitInfo.covariance.z * splitInfo.covariance.z * 4.0f)) *
+              0.5f;
     splitInfo.eigenValue0 = (splitInfo.covariance.x + splitInfo.covariance.y) * 0.5;
     splitInfo.eigenValue0 += D;
 
@@ -430,37 +433,39 @@ ComponentSplitinfo VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::GetPro
     splitInfo.eigenVector0 /= embree::sqrt(splitInfo.eigenVector0.x * splitInfo.eigenVector0.x + splitInfo.eigenVector0.y * splitInfo.eigenVector0.y);
     splitInfo.eigenVector1 /= embree::sqrt(splitInfo.eigenVector1.x * splitInfo.eigenVector1.x + splitInfo.eigenVector1.y * splitInfo.eigenVector1.y);
 #ifdef OPENPGL_SHOW_PRINT_OUTS
-    std::cout << "split: " << "\tmean: " << splitInfo.mean.x << ", \t " << splitInfo.mean.y<< "\t covariance: " << splitInfo.covariance.x << ", \t "  << splitInfo.covariance.y << ", \t "  << splitInfo.covariance.z << std::endl;
-    std::cout << "eigen: " << "\tevalue0: " << splitInfo.eigenValue0 << "\teVec0: " << splitInfo.eigenVector0.x << ", \t " << splitInfo.eigenVector0.y << "\tevalue1: " << splitInfo.eigenValue1 << "\teVec1: " << splitInfo.eigenVector1.x << ", \t " << splitInfo.eigenVector1.y << std::endl;
+    std::cout << "split: " << "\tmean: " << splitInfo.mean.x << ", \t " << splitInfo.mean.y << "\t covariance: " << splitInfo.covariance.x << ", \t " << splitInfo.covariance.y
+              << ", \t " << splitInfo.covariance.z << std::endl;
+    std::cout << "eigen: " << "\tevalue0: " << splitInfo.eigenValue0 << "\teVec0: " << splitInfo.eigenVector0.x << ", \t " << splitInfo.eigenVector0.y
+              << "\tevalue1: " << splitInfo.eigenValue1 << "\teVec1: " << splitInfo.eigenVector1.x << ", \t " << splitInfo.eigenVector1.y << std::endl;
 #endif
     return splitInfo;
 }
 
-
-template<class TVMMFactory>
-void VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::UpdateSplitStatistics(const VMM &vmm, ComponentSplitStatistics &splitStats, const float &mcEstimate, const SampleData *data, const size_t &numData) const
+template <class TVMMFactory>
+void VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::UpdateSplitStatistics(const VMM &vmm, ComponentSplitStatistics &splitStats, const float &mcEstimate,
+                                                                                  const SampleData *data, const size_t &numData) const
 {
-    //std::cout << "UpdateSplitStatistics" << std::endl;
+    // std::cout << "UpdateSplitStatistics" << std::endl;
 
     OPENPGL_ASSERT(vmm._numComponents == splitStats.numComponents);
 
     typename VMM::SoftAssignment softAssign;
     const embree::vfloat<VMM::VectorSize> zeros(0.f);
-    const int cnt = (splitStats.numComponents + VMM::VectorSize-1) / VMM::VectorSize;
-    //size_t validDataCount = 0.0f;
+    const int cnt = (splitStats.numComponents + VMM::VectorSize - 1) / VMM::VectorSize;
+    // size_t validDataCount = 0.0f;
 
     for (size_t n = 0; n < numData; n++)
     {
         const SampleData sample = data[n];
         pgl_vec3f direction = sample.direction;
         const openpgl::Vector3 sampleDirection(direction.x, direction.y, direction.z);
-        if (vmm.softAssignment(sampleDirection, softAssign) )
+        if (vmm.softAssignment(sampleDirection, softAssign))
         {
             const embree::vfloat<VMM::VectorSize> weight = sample.weight;
             const embree::vfloat<VMM::VectorSize> samplePDF = sample.pdf;
-            const embree::vfloat<VMM::VectorSize> value =  weight * samplePDF;
-            //std::cout << "data[" << n << "]: " << "value: " << value << "\t samplePDF: " << samplePDF;
-            for (size_t k =0; k < cnt; k++)
+            const embree::vfloat<VMM::VectorSize> value = weight * samplePDF;
+            // std::cout << "data[" << n << "]: " << "value: " << value << "\t samplePDF: " << samplePDF;
+            for (size_t k = 0; k < cnt; k++)
             {
                 OPENPGL_ASSERT(embree::all(embree::isvalid(splitStats.splitMeans[k].x)));
                 OPENPGL_ASSERT(embree::all(embree::isvalid(splitStats.splitMeans[k].y)));
@@ -471,43 +476,47 @@ void VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::UpdateSplitStatistic
                 embree::vfloat<VMM::VectorSize> vmfPDF = softAssign.assignments[k] * softAssign.pdf;
                 embree::vfloat<VMM::VectorSize> partialValuePDF = vmfPDF * value;
                 partialValuePDF /= (mcEstimate * softAssign.pdf);
-                //partialValuePDF /= vmm._weights[k] * mcEstimate;
-                //std::cout << "\tweights: " << vmm._weights[k] << "\t assign: " << softAssign.assignments[k] << "\t pdf: " << softAssign.pdf << std::endl;
-                //std::cout << "\tpvPDF: " << partialValuePDF << "\t vmfPDF: " << vmfPDF << std::endl;
+                // partialValuePDF /= vmm._weights[k] * mcEstimate;
+                // std::cout << "\tweights: " << vmm._weights[k] << "\t assign: " << softAssign.assignments[k] << "\t pdf: " << softAssign.pdf << std::endl;
+                // std::cout << "\tpvPDF: " << partialValuePDF << "\t vmfPDF: " << vmfPDF << std::endl;
 
-                embree::vfloat<VMM::VectorSize> chiSquareEst = value *value * vmfPDF;
+                embree::vfloat<VMM::VectorSize> chiSquareEst = value * value * vmfPDF;
                 chiSquareEst /= mcEstimate * mcEstimate * softAssign.pdf * softAssign.pdf;
-                //chiSquareEst *= chiSquareEst;
+                // chiSquareEst *= chiSquareEst;
                 chiSquareEst -= 2.0f * partialValuePDF;
                 chiSquareEst += vmfPDF;
                 chiSquareEst /= samplePDF;
 
-                chiSquareEst = select(softAssign.assignments[k] > 0.f , chiSquareEst, zeros);
+                chiSquareEst = select(softAssign.assignments[k] > 0.f, chiSquareEst, zeros);
 
                 splitStats.sumAssignedSamples[k] += softAssign.assignments[k];
                 // incremental updated of the MC chiSquare estimate
                 splitStats.numSamples[k] += 1.0f;
                 splitStats.chiSquareMCEstimates[k] += (chiSquareEst - splitStats.chiSquareMCEstimates[k]) / splitStats.numSamples[k];
 
-                const embree::Vec3< embree::vfloat<VMM::VectorSize> > localDirection = embree::frame( vmm._meanDirections[k] ).inverse() * embree::Vec3< embree::vfloat<VMM::VectorSize> > (sampleDirection);
-                const embree::Vec2< embree::vfloat<VMM::VectorSize> > localDirection2D(localDirection.x, localDirection.y);
+                const embree::Vec3<embree::vfloat<VMM::VectorSize> > localDirection =
+                    embree::frame(vmm._meanDirections[k]).inverse() * embree::Vec3<embree::vfloat<VMM::VectorSize> >(sampleDirection);
+                const embree::Vec2<embree::vfloat<VMM::VectorSize> > localDirection2D(localDirection.x, localDirection.y);
                 const embree::vfloat<VMM::VectorSize> assignedWeight = softAssign.assignments[k] * weight;
-                //const vfloat<VMM::VectorSize> assignedWeight = softAssign.assignments[k] * weight * weight;
+                // const vfloat<VMM::VectorSize> assignedWeight = softAssign.assignments[k] * weight * weight;
 
                 splitStats.sumWeights[k] += assignedWeight;
-//                const vfloat<VMM::VectorSize> incWeight = select(splitStats.sumWeights[k] > 0.0f, assignedWeight / splitStats.sumWeights[k], zeros);
+                //                const vfloat<VMM::VectorSize> incWeight = select(splitStats.sumWeights[k] > 0.0f, assignedWeight / splitStats.sumWeights[k], zeros);
 
 #ifdef OPENPGL_ZERO_MEAN
-                splitStats.splitMeans[k] += embree::Vec2< embree::vfloat<VMM::VectorSize> >(0.0f);
+                splitStats.splitMeans[k] += embree::Vec2<embree::vfloat<VMM::VectorSize> >(0.0f);
                 splitStats.splitWeightedSampleCovariances[k].x += assignedWeight * (localDirection2D.x * localDirection2D.x);
                 splitStats.splitWeightedSampleCovariances[k].y += assignedWeight * (localDirection2D.y * localDirection2D.y);
                 splitStats.splitWeightedSampleCovariances[k].z += assignedWeight * (localDirection2D.x * localDirection2D.y);
 #else
-                const Vec2< vfloat<VMM::VectorSize> > previousSplitMeans = splitStats.splitMeans[k];
-                splitStats.splitMeans[k] += incWeight * ( localDirection2D - splitStats.splitMeans[k]);
-                splitStats.splitWeightedSampleCovariances[k].x += assignedWeight * ((localDirection2D.x - previousSplitMeans.x) * (localDirection2D.x - splitStats.splitMeans[k].x));
-                splitStats.splitWeightedSampleCovariances[k].y += assignedWeight * ((localDirection2D.y - previousSplitMeans.y) * (localDirection2D.y - splitStats.splitMeans[k].y));
-                splitStats.splitWeightedSampleCovariances[k].z += assignedWeight * ((localDirection2D.x - previousSplitMeans.x) * (localDirection2D.y - splitStats.splitMeans[k].y));
+                const Vec2<vfloat<VMM::VectorSize> > previousSplitMeans = splitStats.splitMeans[k];
+                splitStats.splitMeans[k] += incWeight * (localDirection2D - splitStats.splitMeans[k]);
+                splitStats.splitWeightedSampleCovariances[k].x +=
+                    assignedWeight * ((localDirection2D.x - previousSplitMeans.x) * (localDirection2D.x - splitStats.splitMeans[k].x));
+                splitStats.splitWeightedSampleCovariances[k].y +=
+                    assignedWeight * ((localDirection2D.y - previousSplitMeans.y) * (localDirection2D.y - splitStats.splitMeans[k].y));
+                splitStats.splitWeightedSampleCovariances[k].z +=
+                    assignedWeight * ((localDirection2D.x - previousSplitMeans.x) * (localDirection2D.y - splitStats.splitMeans[k].y));
 #endif
                 OPENPGL_ASSERT(embree::all(embree::isvalid(assignedWeight)));
                 OPENPGL_ASSERT(embree::all(embree::isvalid(splitStats.splitMeans[k].x)));
@@ -515,23 +524,21 @@ void VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::UpdateSplitStatistic
                 OPENPGL_ASSERT(embree::all(embree::isvalid(splitStats.splitWeightedSampleCovariances[k].x)));
                 OPENPGL_ASSERT(embree::all(embree::isvalid(splitStats.splitWeightedSampleCovariances[k].y)));
                 OPENPGL_ASSERT(embree::all(embree::isvalid(splitStats.splitWeightedSampleCovariances[k].z)));
-                //splitStats.sumWeights[k] += assignedWeight;
+                // splitStats.sumWeights[k] += assignedWeight;
             }
-            //validDataCount++;
-            //std::cout << std::endl;
+            // validDataCount++;
+            // std::cout << std::endl;
         }
     }
-    //splitStats.numSamplesOld += validDataCount;
-    //splitStats.mcEstimate += mcEstimate;
+    // splitStats.numSamplesOld += validDataCount;
+    // splitStats.mcEstimate += mcEstimate;
 }
 
-
-template<class TVMMFactory>
+template <class TVMMFactory>
 bool VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::SplitComponent(VMM &vmm, ComponentSplitStatistics &splitStats, SufficientStatistics &suffStats, const size_t idx) const
 {
     ComponentSplitinfo splitInfo;
     const div_t tmpK = div(idx, static_cast<int>(VMM::VectorSize));
-
 
     float numAssignedSamples = splitStats.sumAssignedSamples[tmpK.quot][tmpK.rem];
 
@@ -543,7 +550,9 @@ bool VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::SplitComponent(VMM &
     splitInfo.covariance.y = splitStats.splitWeightedSampleCovariances[tmpK.quot].y[tmpK.rem] * inv_sumWeights;
     splitInfo.covariance.z = splitStats.splitWeightedSampleCovariances[tmpK.quot].z[tmpK.rem] * inv_sumWeights;
 
-    float D = embree::sqrt((splitInfo.covariance.x - splitInfo.covariance.y) * (splitInfo.covariance.x - splitInfo.covariance.y) + (splitInfo.covariance.z * splitInfo.covariance.z *4.0f)) * 0.5f;
+    float D = embree::sqrt((splitInfo.covariance.x - splitInfo.covariance.y) * (splitInfo.covariance.x - splitInfo.covariance.y) +
+                           (splitInfo.covariance.z * splitInfo.covariance.z * 4.0f)) *
+              0.5f;
     splitInfo.eigenValue0 = (splitInfo.covariance.x + splitInfo.covariance.y) * 0.5;
     splitInfo.eigenValue0 += D;
 
@@ -558,15 +567,16 @@ bool VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::SplitComponent(VMM &
 
     splitInfo.eigenVector0 /= embree::sqrt(splitInfo.eigenVector0.x * splitInfo.eigenVector0.x + splitInfo.eigenVector0.y * splitInfo.eigenVector0.y);
     splitInfo.eigenVector1 /= embree::sqrt(splitInfo.eigenVector1.x * splitInfo.eigenVector1.x + splitInfo.eigenVector1.y * splitInfo.eigenVector1.y);
-/* */
-    //std::cout << "D: " << D << std::endl;
-    //std::cout << "sumWeights: " << splitStats.sumWeights[tmpK.quot][tmpK.rem] << "\t inSumWeights: " << inv_sumWeights << std::endl;
-    //std::cout << "splitMean: " << splitInfo.mean << "\t splitCovariance: " << splitInfo.covariance << std::endl;
+    /* */
+    // std::cout << "D: " << D << std::endl;
+    // std::cout << "sumWeights: " << splitStats.sumWeights[tmpK.quot][tmpK.rem] << "\t inSumWeights: " << inv_sumWeights << std::endl;
+    // std::cout << "splitMean: " << splitInfo.mean << "\t splitCovariance: " << splitInfo.covariance << std::endl;
 
-    //std::cout << "splitCovariancesRaw: " << splitStats.splitCovariances[tmpK.quot].x[tmpK.rem] << "\t" << splitStats.splitCovariances[tmpK.quot].y[tmpK.rem] << "\t" << splitStats.splitCovariances[tmpK.quot].z[tmpK.rem] << std::endl;
-//    std::cout << "eigenValue0: " << splitInfo.eigenValue0 << "\t eigenVector0: " << splitInfo.eigenVector0 << std::endl;
-//    std::cout << "eigenValue1: " << splitInfo.eigenValue1 << "\t eigenVector1: " << splitInfo.eigenVector1 << std::endl;
-/**/
+    // std::cout << "splitCovariancesRaw: " << splitStats.splitCovariances[tmpK.quot].x[tmpK.rem] << "\t" << splitStats.splitCovariances[tmpK.quot].y[tmpK.rem] << "\t" <<
+    // splitStats.splitCovariances[tmpK.quot].z[tmpK.rem] << std::endl;
+    //    std::cout << "eigenValue0: " << splitInfo.eigenValue0 << "\t eigenVector0: " << splitInfo.eigenVector0 << std::endl;
+    //    std::cout << "eigenValue1: " << splitInfo.eigenValue1 << "\t eigenVector1: " << splitInfo.eigenVector1 << std::endl;
+    /**/
 
     float weight = vmm._weights[tmpK.quot][tmpK.rem];
     float meanCosine = vmm._meanCosines[tmpK.quot][tmpK.rem];
@@ -577,9 +587,7 @@ bool VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::SplitComponent(VMM &
         return false;
     }
 
-    Vector3 meanDirection = Vector3(vmm._meanDirections[tmpK.quot].x[tmpK.rem],
-                                    vmm._meanDirections[tmpK.quot].y[tmpK.rem],
-                                    vmm._meanDirections[tmpK.quot].z[tmpK.rem]);
+    Vector3 meanDirection = Vector3(vmm._meanDirections[tmpK.quot].x[tmpK.rem], vmm._meanDirections[tmpK.quot].y[tmpK.rem], vmm._meanDirections[tmpK.quot].z[tmpK.rem]);
 
     float newWeight0 = weight * 0.5f;
     float newWeight1 = newWeight0;
@@ -588,17 +596,17 @@ bool VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::SplitComponent(VMM &
     Vector3 meanDirection1 = meanDirection;
 
     float newMeanCosine0 = meanCosine;
-    float newMeanCosine1 = meanCosine*meanCosine;
+    float newMeanCosine1 = meanCosine * meanCosine;
 
     if (D > 1e-8f)
     {
         Vector2 meanDir2D0 = splitInfo.mean + (splitInfo.eigenVector0 * splitInfo.eigenValue0 * 0.5f);
-        meanDirection0 =  embree::frame(meanDirection) * Map2DTo3D<Vector3, Vector2, float>(meanDir2D0);
+        meanDirection0 = embree::frame(meanDirection) * Map2DTo3D<Vector3, Vector2, float>(meanDir2D0);
         newMeanCosine0 = meanCosine / std::abs(dot(meanDirection, meanDirection0));
-        
-        //TODO: further investigate:
-        //newMeanCosine0 = meanCosine / dot(meanDirection, meanDirection0);
-        
+
+        // TODO: further investigate:
+        // newMeanCosine0 = meanCosine / dot(meanDirection, meanDirection0);
+
         OPENPGL_ASSERT(meanCosine >= 0.f);
         OPENPGL_ASSERT(std::abs(dot(meanDirection, meanDirection0)) > 0.f);
         OPENPGL_ASSERT(newMeanCosine0 >= 0.f);
@@ -610,25 +618,29 @@ bool VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::SplitComponent(VMM &
         meanDirection1 = embree::frame(meanDirection) * Map2DTo3D<Vector3, Vector2, float>(meanDir2D1);
 
 #ifdef OPENPGL_SHOW_PRINT_OUTS
-        //std::cout << "meanCosine: " << meanCosine << "\t kappa: " << kappa << "\t newMeanCosine: " << newMeanCosine0 << " \t newKkappa: " <<  newKkappa0 << std::endl;
-        //std::cout << "localMeanDirection0: " << Map2DTo3D<Vector3, Vector2, float>(meanDir2D0) << "\t meanDirection0: " << meanDirection0 << "\t meanCosine: " << meanCosine << " \t costheta0: " <<  dot(meanDirection, meanDirection0) << std::endl;
-        //std::cout << "localMeanDirection1: " << Map2DTo3D<Vector3, Vector2, float>(meanDir2D1) << "\t meanDirection1: " << meanDirection1 << "\t meanCosine: " << meanCosine << " \t costheta1: " <<  dot(meanDirection, meanDirection1) << std::endl;
-        //std::cout << "eigenValue0: " << splitInfo.eigenValue0 << "\t eigenVector0: " << splitInfo.eigenVector0 << std::endl;
-        //std::cout << "eigenValue1: " << splitInfo.eigenValue1 << "\t eigenVector1: " << splitInfo.eigenVector1 << std::endl;
-        std::cout << "D: " << D << "\t idx: " << idx << " \t assignedSamples: " << numAssignedSamples <<std::endl;
-        //std::cout << "kappa: " << kappa <<  " \t newKkappa: " <<  newKkappa0  << " \t costheta0: " <<  dot(meanDirection, meanDirection0) << "\t angle: " << std::acos(dot(meanDirection, meanDirection0)) * 180.0f / M_PI_F<< std::endl;
+        // std::cout << "meanCosine: " << meanCosine << "\t kappa: " << kappa << "\t newMeanCosine: " << newMeanCosine0 << " \t newKkappa: " <<  newKkappa0 << std::endl;
+        // std::cout << "localMeanDirection0: " << Map2DTo3D<Vector3, Vector2, float>(meanDir2D0) << "\t meanDirection0: " << meanDirection0 << "\t meanCosine: " << meanCosine << "
+        // \t costheta0: " <<  dot(meanDirection, meanDirection0) << std::endl; std::cout << "localMeanDirection1: " << Map2DTo3D<Vector3, Vector2, float>(meanDir2D1) << "\t
+        // meanDirection1: " << meanDirection1 << "\t meanCosine: " << meanCosine << " \t costheta1: " <<  dot(meanDirection, meanDirection1) << std::endl; std::cout <<
+        // "eigenValue0: " << splitInfo.eigenValue0 << "\t eigenVector0: " << splitInfo.eigenVector0 << std::endl; std::cout << "eigenValue1: " << splitInfo.eigenValue1 << "\t
+        // eigenVector1: " << splitInfo.eigenVector1 << std::endl;
+        std::cout << "D: " << D << "\t idx: " << idx << " \t assignedSamples: " << numAssignedSamples << std::endl;
+        // std::cout << "kappa: " << kappa <<  " \t newKkappa: " <<  newKkappa0  << " \t costheta0: " <<  dot(meanDirection, meanDirection0) << "\t angle: " <<
+        // std::acos(dot(meanDirection, meanDirection0)) * 180.0f / M_PI_F<< std::endl;
 #endif
     }
     else
     {
 #ifdef OPENPGL_SHOW_PRINT_OUTS
-        std::cout << "!!!!   D: " << D << "\t idx: " << idx << " \t assignedSamples: " << numAssignedSamples <<std::endl;
+        std::cout << "!!!!   D: " << D << "\t idx: " << idx << " \t assignedSamples: " << numAssignedSamples << std::endl;
 
-        std::cout << "sampleCovariance: [" << splitStats.splitWeightedSampleCovariances[tmpK.quot].x[tmpK.rem] << ",\t" << splitStats.splitWeightedSampleCovariances[tmpK.quot].y[tmpK.rem] << ",\t" << splitStats.splitWeightedSampleCovariances[tmpK.quot].z[tmpK.rem] << "]"<<std::endl;
-        std::cout << "sumWeights: " << splitStats.sumWeights[tmpK.quot][tmpK.rem] <<std::endl;
-        std::cout << "weight: " << weight << "\t meanCosine: " << meanCosine <<std::endl;
+        std::cout << "sampleCovariance: [" << splitStats.splitWeightedSampleCovariances[tmpK.quot].x[tmpK.rem] << ",\t"
+                  << splitStats.splitWeightedSampleCovariances[tmpK.quot].y[tmpK.rem] << ",\t" << splitStats.splitWeightedSampleCovariances[tmpK.quot].z[tmpK.rem] << "]"
+                  << std::endl;
+        std::cout << "sumWeights: " << splitStats.sumWeights[tmpK.quot][tmpK.rem] << std::endl;
+        std::cout << "weight: " << weight << "\t meanCosine: " << meanCosine << std::endl;
 #endif
-        if( numAssignedSamples <2.0f)
+        if (numAssignedSamples < 2.0f)
         {
             return false;
         }
@@ -662,17 +674,17 @@ bool VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::SplitComponent(VMM &
     splitStats.splitWeightedSampleCovariances[tmpJ.quot].y[tmpJ.rem] = 0.0f;
     splitStats.splitWeightedSampleCovariances[tmpJ.quot].z[tmpJ.rem] = 0.0f;
 
-    splitStats.numComponents = K +1;
+    splitStats.numComponents = K + 1;
 
     return true;
 }
 
-template<class TVMMFactory>
-bool VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::SplitComponentIntoThree(VMM &vmm, ComponentSplitStatistics &splitStats, SufficientStatistics &suffStats, const size_t idx) const
+template <class TVMMFactory>
+bool VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::SplitComponentIntoThree(VMM &vmm, ComponentSplitStatistics &splitStats, SufficientStatistics &suffStats,
+                                                                                    const size_t idx) const
 {
     ComponentSplitinfo splitInfo;
     const div_t tmpK = div(idx, static_cast<int>(VMM::VectorSize));
-
 
     float numAssignedSamples = splitStats.sumAssignedSamples[tmpK.quot][tmpK.rem];
 
@@ -683,7 +695,9 @@ bool VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::SplitComponentIntoTh
     splitInfo.covariance.y = splitStats.splitWeightedSampleCovariances[tmpK.quot].y[tmpK.rem] * inv_sumWeights;
     splitInfo.covariance.z = splitStats.splitWeightedSampleCovariances[tmpK.quot].z[tmpK.rem] * inv_sumWeights;
 
-    float D = embree::sqrt((splitInfo.covariance.x - splitInfo.covariance.y) * (splitInfo.covariance.x - splitInfo.covariance.y) + (splitInfo.covariance.z * splitInfo.covariance.z *4.0f)) * 0.5f;
+    float D = embree::sqrt((splitInfo.covariance.x - splitInfo.covariance.y) * (splitInfo.covariance.x - splitInfo.covariance.y) +
+                           (splitInfo.covariance.z * splitInfo.covariance.z * 4.0f)) *
+              0.5f;
     splitInfo.eigenValue0 = (splitInfo.covariance.x + splitInfo.covariance.y) * 0.5;
     splitInfo.eigenValue0 += D;
 
@@ -698,15 +712,16 @@ bool VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::SplitComponentIntoTh
 
     splitInfo.eigenVector0 /= embree::sqrt(splitInfo.eigenVector0.x * splitInfo.eigenVector0.x + splitInfo.eigenVector0.y * splitInfo.eigenVector0.y);
     splitInfo.eigenVector1 /= embree::sqrt(splitInfo.eigenVector1.x * splitInfo.eigenVector1.x + splitInfo.eigenVector1.y * splitInfo.eigenVector1.y);
-/* */
-    //std::cout << "D: " << D << std::endl;
-    //std::cout << "sumWeights: " << splitStats.sumWeights[tmpK.quot][tmpK.rem] << "\t inSumWeights: " << inv_sumWeights << std::endl;
-    //std::cout << "splitMean: " << splitInfo.mean << "\t splitCovariance: " << splitInfo.covariance << std::endl;
+    /* */
+    // std::cout << "D: " << D << std::endl;
+    // std::cout << "sumWeights: " << splitStats.sumWeights[tmpK.quot][tmpK.rem] << "\t inSumWeights: " << inv_sumWeights << std::endl;
+    // std::cout << "splitMean: " << splitInfo.mean << "\t splitCovariance: " << splitInfo.covariance << std::endl;
 
-    //std::cout << "splitCovariancesRaw: " << splitStats.splitCovariances[tmpK.quot].x[tmpK.rem] << "\t" << splitStats.splitCovariances[tmpK.quot].y[tmpK.rem] << "\t" << splitStats.splitCovariances[tmpK.quot].z[tmpK.rem] << std::endl;
-//    std::cout << "eigenValue0: " << splitInfo.eigenValue0 << "\t eigenVector0: " << splitInfo.eigenVector0 << std::endl;
-//    std::cout << "eigenValue1: " << splitInfo.eigenValue1 << "\t eigenVector1: " << splitInfo.eigenVector1 << std::endl;
-/**/
+    // std::cout << "splitCovariancesRaw: " << splitStats.splitCovariances[tmpK.quot].x[tmpK.rem] << "\t" << splitStats.splitCovariances[tmpK.quot].y[tmpK.rem] << "\t" <<
+    // splitStats.splitCovariances[tmpK.quot].z[tmpK.rem] << std::endl;
+    //    std::cout << "eigenValue0: " << splitInfo.eigenValue0 << "\t eigenVector0: " << splitInfo.eigenVector0 << std::endl;
+    //    std::cout << "eigenValue1: " << splitInfo.eigenValue1 << "\t eigenVector1: " << splitInfo.eigenVector1 << std::endl;
+    /**/
 
     float weight = vmm._weights[tmpK.quot][tmpK.rem];
     float meanCosine = vmm._meanCosines[tmpK.quot][tmpK.rem];
@@ -717,13 +732,11 @@ bool VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::SplitComponentIntoTh
         return false;
     }
 
-    Vector3 meanDirection = Vector3(vmm._meanDirections[tmpK.quot].x[tmpK.rem],
-                                    vmm._meanDirections[tmpK.quot].y[tmpK.rem],
-                                    vmm._meanDirections[tmpK.quot].z[tmpK.rem]);
+    Vector3 meanDirection = Vector3(vmm._meanDirections[tmpK.quot].x[tmpK.rem], vmm._meanDirections[tmpK.quot].y[tmpK.rem], vmm._meanDirections[tmpK.quot].z[tmpK.rem]);
 
     float distance = vmm._distances[tmpK.quot][tmpK.rem];
 
-    float newWeight0 = weight *embree::rcp(3.0f);
+    float newWeight0 = weight * embree::rcp(3.0f);
     float newWeight1 = newWeight0;
     float newWeight2 = newWeight0;
 
@@ -731,57 +744,61 @@ bool VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::SplitComponentIntoTh
     Vector3 meanDirection1 = meanDirection;
 
     float newMeanCosine0 = meanCosine;
-    float newMeanCosine1 = meanCosine*meanCosine;
+    float newMeanCosine1 = meanCosine * meanCosine;
 
-    float newKkappa0 = MeanCosineToKappa<float> (newMeanCosine0);
-    float newKkappa1 = MeanCosineToKappa<float> (newMeanCosine1);
+    float newKkappa0 = MeanCosineToKappa<float>(newMeanCosine0);
+    float newKkappa1 = MeanCosineToKappa<float>(newMeanCosine1);
 
     if (D > 1e-8f)
     {
         Vector2 meanDir2D0 = splitInfo.mean + (splitInfo.eigenVector0 * splitInfo.eigenValue0 * 1.0f);
-        meanDirection0 =  embree::frame(meanDirection) * Map2DTo3D<Vector3, Vector2, float>(meanDir2D0);
+        meanDirection0 = embree::frame(meanDirection) * Map2DTo3D<Vector3, Vector2, float>(meanDir2D0);
         newMeanCosine0 = meanCosine / dot(meanDirection, meanDirection0);
         // ensure that the new mean cosine is in a valid range (i.e., < 1.0 and < the mean cosine of max kappa)
         newMeanCosine0 = std::min(newMeanCosine0, KappaToMeanCosine<float>(OPENPGL_MAX_KAPPA));
         newMeanCosine1 = newMeanCosine0;
-        newKkappa0 = MeanCosineToKappa<float> (newMeanCosine0);
+        newKkappa0 = MeanCosineToKappa<float>(newMeanCosine0);
         newKkappa1 = newKkappa0;
 
         Vector2 meanDir2D1 = splitInfo.mean - (splitInfo.eigenVector0 * splitInfo.eigenValue0 * 1.0f);
         meanDirection1 = embree::frame(meanDirection) * Map2DTo3D<Vector3, Vector2, float>(meanDir2D1);
-        //float meanCosine1 = meanCosine / meanDirection0.z;
-        //float kappa1 = MeanCosineToKappa<float> (meanCosine1);
+        // float meanCosine1 = meanCosine / meanDirection0.z;
+        // float kappa1 = MeanCosineToKappa<float> (meanCosine1);
 #ifdef OPENPGL_SHOW_PRINT_OUTS
-        //std::cout << "meanCosine: " << meanCosine << "\t kappa: " << kappa << "\t newMeanCosine: " << newMeanCosine0 << " \t newKkappa: " <<  newKkappa0 << std::endl;
-        //std::cout << "localMeanDirection0: " << Map2DTo3D<Vector3, Vector2, float>(meanDir2D0) << "\t meanDirection0: " << meanDirection0 << "\t meanCosine: " << meanCosine << " \t costheta0: " <<  dot(meanDirection, meanDirection0) << std::endl;
-        //std::cout << "localMeanDirection1: " << Map2DTo3D<Vector3, Vector2, float>(meanDir2D1) << "\t meanDirection1: " << meanDirection1 << "\t meanCosine: " << meanCosine << " \t costheta1: " <<  dot(meanDirection, meanDirection1) << std::endl;
-        //std::cout << "eigenValue0: " << splitInfo.eigenValue0 << "\t eigenVector0: " << splitInfo.eigenVector0 << std::endl;
-        //std::cout << "eigenValue1: " << splitInfo.eigenValue1 << "\t eigenVector1: " << splitInfo.eigenVector1 << std::endl;
-        std::cout << "D: " << D << "\t idx: " << idx << " \t assignedSamples: " << numAssignedSamples <<std::endl;
-        std::cout << "kappa: " << kappa <<  " \t newKkappa: " <<  newKkappa0  << " \t costheta0: " <<  dot(meanDirection, meanDirection0) << "\t angle: " << std::acos(dot(meanDirection, meanDirection0)) * 180.0f / M_PI_F<< std::endl;
+        // std::cout << "meanCosine: " << meanCosine << "\t kappa: " << kappa << "\t newMeanCosine: " << newMeanCosine0 << " \t newKkappa: " <<  newKkappa0 << std::endl;
+        // std::cout << "localMeanDirection0: " << Map2DTo3D<Vector3, Vector2, float>(meanDir2D0) << "\t meanDirection0: " << meanDirection0 << "\t meanCosine: " << meanCosine << "
+        // \t costheta0: " <<  dot(meanDirection, meanDirection0) << std::endl; std::cout << "localMeanDirection1: " << Map2DTo3D<Vector3, Vector2, float>(meanDir2D1) << "\t
+        // meanDirection1: " << meanDirection1 << "\t meanCosine: " << meanCosine << " \t costheta1: " <<  dot(meanDirection, meanDirection1) << std::endl; std::cout <<
+        // "eigenValue0: " << splitInfo.eigenValue0 << "\t eigenVector0: " << splitInfo.eigenVector0 << std::endl; std::cout << "eigenValue1: " << splitInfo.eigenValue1 << "\t
+        // eigenVector1: " << splitInfo.eigenVector1 << std::endl;
+        std::cout << "D: " << D << "\t idx: " << idx << " \t assignedSamples: " << numAssignedSamples << std::endl;
+        std::cout << "kappa: " << kappa << " \t newKkappa: " << newKkappa0 << " \t costheta0: " << dot(meanDirection, meanDirection0)
+                  << "\t angle: " << std::acos(dot(meanDirection, meanDirection0)) * 180.0f / M_PI_F << std::endl;
 #endif
     }
     else
     {
 #ifdef OPENPGL_SHOW_PRINT_OUTS
-        std::cout << "!!!!   D: " << D << "\t idx: " << idx << " \t assignedSamples: " << numAssignedSamples <<std::endl;
+        std::cout << "!!!!   D: " << D << "\t idx: " << idx << " \t assignedSamples: " << numAssignedSamples << std::endl;
 
-        std::cout << "sampleCovariance: [" << splitStats.splitWeightedSampleCovariances[tmpK.quot].x[tmpK.rem] << ",\t" << splitStats.splitWeightedSampleCovariances[tmpK.quot].y[tmpK.rem] << ",\t" << splitStats.splitWeightedSampleCovariances[tmpK.quot].z[tmpK.rem] << "]"<<std::endl;
-        std::cout << "sumWeights: " << splitStats.sumWeights[tmpK.quot][tmpK.rem] <<std::endl;
-        std::cout << "weight: " << weight << "\t meanCosine: " << meanCosine <<std::endl;
+        std::cout << "sampleCovariance: [" << splitStats.splitWeightedSampleCovariances[tmpK.quot].x[tmpK.rem] << ",\t"
+                  << splitStats.splitWeightedSampleCovariances[tmpK.quot].y[tmpK.rem] << ",\t" << splitStats.splitWeightedSampleCovariances[tmpK.quot].z[tmpK.rem] << "]"
+                  << std::endl;
+        std::cout << "sumWeights: " << splitStats.sumWeights[tmpK.quot][tmpK.rem] << std::endl;
+        std::cout << "weight: " << weight << "\t meanCosine: " << meanCosine << std::endl;
 #endif
-        if( numAssignedSamples <2.0f)
+        if (numAssignedSamples < 2.0f)
         {
             return false;
         }
     }
     size_t K = vmm._numComponents;
-    //vmm.swapComponents(K-1, idx);
-    //suffStats.swapComponentStats(K-1, idx);
-    //const div_t tmpI = div(K-1, static_cast<int>(VMM::VectorSize));
+    // vmm.swapComponents(K-1, idx);
+    // suffStats.swapComponentStats(K-1, idx);
+    // const div_t tmpI = div(K-1, static_cast<int>(VMM::VectorSize));
     const div_t tmpI = tmpK;
     const div_t tmpJ = div(K, static_cast<int>(VMM::VectorSize));
-    const div_t tmpL = div(K+1, static_cast<int>(VMM::VectorSize));
+    const div_t tmpL = div(K + 1, static_cast<int>(VMM::VectorSize));
 
     vmm._weights[tmpI.quot][tmpI.rem] = newWeight0;
     vmm._meanCosines[tmpI.quot][tmpI.rem] = newMeanCosine0;
@@ -870,8 +887,8 @@ bool VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::SplitComponentIntoTh
     return true;
 }
 
-template<class TVMMFactory>
-void VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::ComponentSplitStatistics::serialize(std::ostream& stream) const
+template <class TVMMFactory>
+void VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::ComponentSplitStatistics::serialize(std::ostream &stream) const
 {
     serializeFloatVectors<VMM::NumVectors, VMM::VectorSize>(stream, chiSquareMCEstimates);
     serializeVec2Vectors<VMM::NumVectors, VMM::VectorSize>(stream, splitMeans);
@@ -879,11 +896,11 @@ void VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::ComponentSplitStatis
     serializeFloatVectors<VMM::NumVectors, VMM::VectorSize>(stream, numSamples);
     serializeFloatVectors<VMM::NumVectors, VMM::VectorSize>(stream, sumWeights);
     serializeFloatVectors<VMM::NumVectors, VMM::VectorSize>(stream, sumAssignedSamples);
-    stream.write(reinterpret_cast<const char*>(&numComponents), sizeof(size_t));
+    stream.write(reinterpret_cast<const char *>(&numComponents), sizeof(size_t));
 }
 
-template<class TVMMFactory>
-void VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::ComponentSplitStatistics::deserialize(std::istream& stream)
+template <class TVMMFactory>
+void VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::ComponentSplitStatistics::deserialize(std::istream &stream)
 {
     deserializeFloatVectors<VMM::NumVectors, VMM::VectorSize>(stream, chiSquareMCEstimates);
     deserializeVec2Vectors<VMM::NumVectors, VMM::VectorSize>(stream, splitMeans);
@@ -891,17 +908,17 @@ void VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::ComponentSplitStatis
     deserializeFloatVectors<VMM::NumVectors, VMM::VectorSize>(stream, numSamples);
     deserializeFloatVectors<VMM::NumVectors, VMM::VectorSize>(stream, sumWeights);
     deserializeFloatVectors<VMM::NumVectors, VMM::VectorSize>(stream, sumAssignedSamples);
-    stream.read(reinterpret_cast<char*>(&numComponents), sizeof(size_t));
+    stream.read(reinterpret_cast<char *>(&numComponents), sizeof(size_t));
 }
 
-template<class TVMMFactory>
+template <class TVMMFactory>
 bool VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::ComponentSplitStatistics::isValid() const
 {
     bool valid = true;
-    
+
     embree::vbool<VMM::VectorSize> validVec(true);
-    const int cnt = (VMM::MaxComponents + VMM::VectorSize-1) / VMM::VectorSize;
-    for (size_t k =0; k < cnt; k++)
+    const int cnt = (VMM::MaxComponents + VMM::VectorSize - 1) / VMM::VectorSize;
+    for (size_t k = 0; k < cnt; k++)
     {
         validVec &= embree::isvalid(splitMeans[k].x);
         validVec &= embree::isvalid(splitMeans[k].y);
@@ -927,7 +944,6 @@ bool VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::ComponentSplitStatis
         validVec &= embree::isvalid(numSamples[k]);
         validVec &= numSamples[k] >= 0.0f;
         OPENPGL_ASSERT(embree::any(validVec));
-
     }
 
     valid = valid && embree::any(validVec);
@@ -939,72 +955,71 @@ bool VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::ComponentSplitStatis
     return valid;
 }
 
-template<class TVMMFactory>
-bool VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::ComponentSplitStatistics::operator==(const ComponentSplitStatistics& b) const
+template <class TVMMFactory>
+bool VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::ComponentSplitStatistics::operator==(const ComponentSplitStatistics &b) const
 {
     bool equal = true;
-    if(numComponents != b.numComponents)
+    if (numComponents != b.numComponents)
     {
-       equal = false; 
+        equal = false;
     }
 
-    for(int k = 0; k < VMM::NumVectors;k++)
+    for (int k = 0; k < VMM::NumVectors; k++)
     {
-        
-        if( embree::any(chiSquareMCEstimates[k] != b.chiSquareMCEstimates[k]) || 
-            embree::any(splitMeans[k].x != b.splitMeans[k].x) || 
-            embree::any(splitMeans[k].y != b.splitMeans[k].y) || 
-            embree::any(splitWeightedSampleCovariances[k].x != b.splitWeightedSampleCovariances[k].x) || 
-            embree::any(splitWeightedSampleCovariances[k].y != b.splitWeightedSampleCovariances[k].y) || 
-            embree::any(splitWeightedSampleCovariances[k].z != b.splitWeightedSampleCovariances[k].z) || 
-            embree::any(numSamples[k] != b.numSamples[k]) || 
-            embree::any(sumWeights[k] != b.sumWeights[k]) ||
-            embree::any(sumAssignedSamples[k] != b.sumAssignedSamples[k]))
+        if (embree::any(chiSquareMCEstimates[k] != b.chiSquareMCEstimates[k]) || embree::any(splitMeans[k].x != b.splitMeans[k].x) ||
+            embree::any(splitMeans[k].y != b.splitMeans[k].y) || embree::any(splitWeightedSampleCovariances[k].x != b.splitWeightedSampleCovariances[k].x) ||
+            embree::any(splitWeightedSampleCovariances[k].y != b.splitWeightedSampleCovariances[k].y) ||
+            embree::any(splitWeightedSampleCovariances[k].z != b.splitWeightedSampleCovariances[k].z) || embree::any(numSamples[k] != b.numSamples[k]) ||
+            embree::any(sumWeights[k] != b.sumWeights[k]) || embree::any(sumAssignedSamples[k] != b.sumAssignedSamples[k]))
         {
             equal = false;
         }
-        
     }
 
     return equal;
 }
 
-template<class TVMMFactory>
+template <class TVMMFactory>
 Vector2 VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::ComponentSplitStatistics::getSplitMean(const size_t &idx) const
 {
     const div_t tmp = div(idx, static_cast<int>(VMM::VectorSize));
     return Vector2(splitMeans[tmp.quot].x[tmp.rem], splitMeans[tmp.quot].y[tmp.rem]);
 }
 
-template<class TVMMFactory>
+template <class TVMMFactory>
 Vector3 VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::ComponentSplitStatistics::getSplitCovariance(const size_t &idx) const
 {
     const div_t tmp = div(idx, static_cast<int>(VMM::VectorSize));
-    Vector3 covariance(splitWeightedSampleCovariances[tmp.quot].x[tmp.rem], splitWeightedSampleCovariances[tmp.quot].y[tmp.rem], splitWeightedSampleCovariances[tmp.quot].z[tmp.rem]);
+    Vector3 covariance(splitWeightedSampleCovariances[tmp.quot].x[tmp.rem], splitWeightedSampleCovariances[tmp.quot].y[tmp.rem],
+                       splitWeightedSampleCovariances[tmp.quot].z[tmp.rem]);
     covariance /= sumWeights[tmp.quot][tmp.rem];
     return covariance;
 }
 
-template<class TVMMFactory>
-void VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::ComponentSplitStatistics::mergeComponentStats(const size_t &idxI, const size_t &idxJ, const float &weightI, const Vector3 &meanDirectionI, const float &weightJ, const Vector3 &meanDirectionJ, const float &weightK, const Vector3 &meanDirectionK)
+template <class TVMMFactory>
+void VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::ComponentSplitStatistics::mergeComponentStats(const size_t &idxI, const size_t &idxJ, const float &weightI,
+                                                                                                          const Vector3 &meanDirectionI, const float &weightJ,
+                                                                                                          const Vector3 &meanDirectionJ, const float &weightK,
+                                                                                                          const Vector3 &meanDirectionK)
 {
     // TODO: check if numSamples or sumWeights are zero for one of the merge components
-    //std::cout << "mergeComponentStats: " << "\tidxI: " << idxI << "\tidxJ: " << idxJ << "\tweightI: " << weightI << "\tmeanDirectionI: " << meanDirectionI<< "\tweightJ: " << weightJ << "\tmeanDirectionJ: " << meanDirectionJ<< "\tweightK: " << weightK << "\tmeanDirectionK: " << meanDirectionK << std::endl;
+    // std::cout << "mergeComponentStats: " << "\tidxI: " << idxI << "\tidxJ: " << idxJ << "\tweightI: " << weightI << "\tmeanDirectionI: " << meanDirectionI<< "\tweightJ: " <<
+    // weightJ << "\tmeanDirectionJ: " << meanDirectionJ<< "\tweightK: " << weightK << "\tmeanDirectionK: " << meanDirectionK << std::endl;
 
     // EM algorithms for Gaussian mixtures with split-and-merge operation
     const div_t tmpI = div(idxI, static_cast<int>(VMM::VectorSize));
     const div_t tmpJ = div(idxJ, static_cast<int>(VMM::VectorSize));
 
-    const div_t tmpL = div( numComponents-1, VMM::VectorSize);
+    const div_t tmpL = div(numComponents - 1, VMM::VectorSize);
 
-    auto transformK = embree::frame( meanDirectionK );
+    auto transformK = embree::frame(meanDirectionK);
     auto inv_transformK = transformK.inverse();
 #ifdef OPENPGL_ZERO_MEAN
     Vector3 meanDirectionI3D = meanDirectionI;
     Vector3 meanDirectionJ3D = meanDirectionJ;
 #else
-    auto transformI = embree::frame( meanDirectionI );
-    auto transformJ = embree::frame( meanDirectionJ );
+    auto transformI = embree::frame(meanDirectionI);
+    auto transformJ = embree::frame(meanDirectionJ);
     Vector2 meanDirection2DI = Vector2(splitMeans[tmpI.quot].x[tmpI.rem], splitMeans[tmpI.quot].y[tmpI.rem]);
     Vector2 meanDirection2DJ = Vector2(splitMeans[tmpJ.quot].x[tmpJ.rem], splitMeans[tmpJ.quot].y[tmpJ.rem]);
 
@@ -1013,8 +1028,8 @@ void VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::ComponentSplitStatis
 
 #endif
 
-    Vector2 meanDirection2DItoK = Map3DTo2D<Vector3, Vector2, float> (inv_transformK * meanDirectionI3D);
-    Vector2 meanDirection2DJtoK = Map3DTo2D<Vector3, Vector2, float> (inv_transformK * meanDirectionJ3D);
+    Vector2 meanDirection2DItoK = Map3DTo2D<Vector3, Vector2, float>(inv_transformK * meanDirectionI3D);
+    Vector2 meanDirection2DJtoK = Map3DTo2D<Vector3, Vector2, float>(inv_transformK * meanDirectionJ3D);
 
     const float inv_weightK = (weightK > 0.f) ? embree::rcp(weightK) : 1.f;
 
@@ -1022,12 +1037,17 @@ void VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::ComponentSplitStatis
     const float sumWeightsJ = sumWeights[tmpJ.quot][tmpJ.rem];
     const float sumWeightsK = sumWeightsI + sumWeightsJ;
 
-    //std::cout << "\tsumWeightsI: " << sumWeightsI << "\tsumWeightsJ: " << sumWeightsJ << "\tsumWeightsK: " << sumWeightsK << std::endl;
-    //std::cout << "\tnumSamplesI: " << numSamples[tmpI.quot][tmpI.rem] << "\tsumWeightsJ: " << numSamples[tmpJ.quot][tmpJ.rem] << std::endl;
+    // std::cout << "\tsumWeightsI: " << sumWeightsI << "\tsumWeightsJ: " << sumWeightsJ << "\tsumWeightsK: " << sumWeightsK << std::endl;
+    // std::cout << "\tnumSamplesI: " << numSamples[tmpI.quot][tmpI.rem] << "\tsumWeightsJ: " << numSamples[tmpJ.quot][tmpJ.rem] << std::endl;
 
-
-    const Vector3 covarianceI = (sumWeightsI > 0.f) ? Vector3(splitWeightedSampleCovariances[tmpI.quot].x[tmpI.rem], splitWeightedSampleCovariances[tmpI.quot].y[tmpI.rem], splitWeightedSampleCovariances[tmpI.quot].z[tmpI.rem]) * embree::rcp(sumWeightsI) : Vector3(0.f);
-    const Vector3 covarianceJ = (sumWeightsJ > 0.f) ? Vector3(splitWeightedSampleCovariances[tmpJ.quot].x[tmpJ.rem], splitWeightedSampleCovariances[tmpJ.quot].y[tmpJ.rem], splitWeightedSampleCovariances[tmpJ.quot].z[tmpJ.rem]) * embree::rcp(sumWeightsJ) : Vector3(0.f);
+    const Vector3 covarianceI = (sumWeightsI > 0.f) ? Vector3(splitWeightedSampleCovariances[tmpI.quot].x[tmpI.rem], splitWeightedSampleCovariances[tmpI.quot].y[tmpI.rem],
+                                                              splitWeightedSampleCovariances[tmpI.quot].z[tmpI.rem]) *
+                                                          embree::rcp(sumWeightsI)
+                                                    : Vector3(0.f);
+    const Vector3 covarianceJ = (sumWeightsJ > 0.f) ? Vector3(splitWeightedSampleCovariances[tmpJ.quot].x[tmpJ.rem], splitWeightedSampleCovariances[tmpJ.quot].y[tmpJ.rem],
+                                                              splitWeightedSampleCovariances[tmpJ.quot].z[tmpJ.rem]) *
+                                                          embree::rcp(sumWeightsJ)
+                                                    : Vector3(0.f);
 
 #ifdef OPENPGL_ZERO_MEAN
     const Vector2 meanDirectionK2D(0.f);
@@ -1039,7 +1059,7 @@ void VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::ComponentSplitStatis
     Vector3 covarianceK = (weightI * covarianceI + weightI * meanII + weightJ * covarianceJ + weightJ * meanJJ);
     covarianceK *= inv_weightK;
 #ifndef OPENPGL_ZERO_MEAN
-    Vector3 meanKK = Vector3(meanDirectionK2D.x*meanDirectionK2D.x, meanDirectionK2D.y*meanDirectionK2D.y, meanDirectionK2D.x*meanDirectionK2D.y);
+    Vector3 meanKK = Vector3(meanDirectionK2D.x * meanDirectionK2D.x, meanDirectionK2D.y * meanDirectionK2D.y, meanDirectionK2D.x * meanDirectionK2D.y);
     covarianceK -= meanKK;
 #endif
     const Vector3 sampleCovarianceK = covarianceK * sumWeightsK;
@@ -1094,8 +1114,9 @@ void VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::ComponentSplitStatis
     numComponents--;
 }
 
-template<class TVMMFactory>
-std::vector<typename VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::SplitCandidate > VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::ComponentSplitStatistics::getSplitCandidates() const
+template <class TVMMFactory>
+std::vector<typename VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::SplitCandidate>
+VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::ComponentSplitStatistics::getSplitCandidates() const
 {
     std::vector<SplitCandidate> splitCandidates;
     for (size_t k = 0; k < numComponents; k++)
@@ -1107,19 +1128,21 @@ std::vector<typename VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::Spli
         splitCandidates.push_back(sc);
     }
 
-    std::sort(splitCandidates.begin(), splitCandidates.end(), [](SplitCandidate a, SplitCandidate b) {return a > b; });
+    std::sort(splitCandidates.begin(), splitCandidates.end(), [](SplitCandidate a, SplitCandidate b) {
+        return a > b;
+    });
     return splitCandidates;
 }
 
-template<class TVMMFactory>
+template <class TVMMFactory>
 void VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::ComponentSplitStatistics::clear(const size_t &_numComponents)
 {
     const embree::vfloat<VMM::VectorSize> zeros(0.f);
 
     this->numComponents = _numComponents;
-    const int cnt = (this->numComponents + VMM::VectorSize-1) / VMM::VectorSize;
+    const int cnt = (this->numComponents + VMM::VectorSize - 1) / VMM::VectorSize;
 
-    for (size_t k =0; k < cnt; k++)
+    for (size_t k = 0; k < cnt; k++)
     {
         chiSquareMCEstimates[k] = zeros;
         splitWeightedSampleCovariances[k].x = zeros;
@@ -1133,17 +1156,14 @@ void VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::ComponentSplitStatis
         sumWeights[k] = zeros;
         sumAssignedSamples[k] = zeros;
     }
-
 }
 
-
-template<class TVMMFactory>
+template <class TVMMFactory>
 void VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::ComponentSplitStatistics::decay(const float &alpha)
 {
+    const int cnt = (this->numComponents + VMM::VectorSize - 1) / VMM::VectorSize;
 
-    const int cnt = (this->numComponents + VMM::VectorSize-1) / VMM::VectorSize;
-
-    for (size_t k =0; k < cnt; k++)
+    for (size_t k = 0; k < cnt; k++)
     {
         splitWeightedSampleCovariances[k].x *= alpha;
         splitWeightedSampleCovariances[k].y *= alpha;
@@ -1153,10 +1173,9 @@ void VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::ComponentSplitStatis
         sumWeights[k] *= alpha;
         sumAssignedSamples[k] *= alpha;
     }
-
 }
 
-template<class TVMMFactory>
+template <class TVMMFactory>
 size_t VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::ComponentSplitStatistics::getHighestChiSquareIdx() const
 {
     size_t maxIdx = 0;
@@ -1173,25 +1192,25 @@ size_t VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::ComponentSplitStat
     return maxIdx;
 }
 
-template<class TVMMFactory>
+template <class TVMMFactory>
 void VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::ComponentSplitStatistics::clearAll()
 {
     this->clear(VMM::MaxComponents);
 }
 
-template<class TVMMFactory>
+template <class TVMMFactory>
 float VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::ComponentSplitStatistics::getChiSquareEst(const size_t &idx) const
 {
     const div_t tmp = div(idx, static_cast<int>(VMM::VectorSize));
     return chiSquareMCEstimates[tmp.quot][tmp.rem];
 }
 
-template<class TVMMFactory>
+template <class TVMMFactory>
 float VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::ComponentSplitStatistics::getSumChiSquareEst() const
 {
     float sumChiSquareEst = 0.0f;
 
-    for ( int k = 0; k < numComponents; k++)
+    for (int k = 0; k < numComponents; k++)
     {
         const div_t tmp = div(k, static_cast<int>(VMM::VectorSize));
         sumChiSquareEst += chiSquareMCEstimates[tmp.quot][tmp.rem];
@@ -1199,24 +1218,27 @@ float VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::ComponentSplitStati
     return sumChiSquareEst;
 }
 
-template<class TVMMFactory>
+template <class TVMMFactory>
 std::string VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::ComponentSplitStatistics::toString() const
 {
     std::stringstream ss;
     ss << "ComponentSplitStatistics:" << std::endl;
     ss << "numComponents: " << numComponents << std::endl;
     float sumChiSquareEst = 0.0f;
-    //for ( int k = 0; k < numComponents; k++)
-    for ( int k = 0; k < VMM::MaxComponents; k++)
+    // for ( int k = 0; k < numComponents; k++)
+    for (int k = 0; k < VMM::MaxComponents; k++)
     {
         const div_t tmp = div(k, static_cast<int>(VMM::VectorSize));
         ss << "\t stats[" << k << "]: " << "chiSquareEst: " << chiSquareMCEstimates[tmp.quot][tmp.rem];
         ss << std::endl;
-        ss << "\t" << "mean: ["  << splitMeans[tmp.quot].x[tmp.rem] << ",\t" << splitMeans[tmp.quot].y[tmp.rem] << "]";
-        ss << "\t samplevar: [" << splitWeightedSampleCovariances[tmp.quot].x[tmp.rem] << ",\t" << splitWeightedSampleCovariances[tmp.quot].y[tmp.rem]<< ",\t" << splitWeightedSampleCovariances[tmp.quot].z[tmp.rem] << "]";
-        if(sumWeights[tmp.quot][tmp.rem] > 0.f)
+        ss << "\t" << "mean: [" << splitMeans[tmp.quot].x[tmp.rem] << ",\t" << splitMeans[tmp.quot].y[tmp.rem] << "]";
+        ss << "\t samplevar: [" << splitWeightedSampleCovariances[tmp.quot].x[tmp.rem] << ",\t" << splitWeightedSampleCovariances[tmp.quot].y[tmp.rem] << ",\t"
+           << splitWeightedSampleCovariances[tmp.quot].z[tmp.rem] << "]";
+        if (sumWeights[tmp.quot][tmp.rem] > 0.f)
         {
-            ss << "\t covar: [" << splitWeightedSampleCovariances[tmp.quot].x[tmp.rem] / sumWeights[tmp.quot][tmp.rem] << ",\t" << splitWeightedSampleCovariances[tmp.quot].y[tmp.rem]  / sumWeights[tmp.quot][tmp.rem]<< ",\t" << splitWeightedSampleCovariances[tmp.quot].z[tmp.rem]  / sumWeights[tmp.quot][tmp.rem] << "]";
+            ss << "\t covar: [" << splitWeightedSampleCovariances[tmp.quot].x[tmp.rem] / sumWeights[tmp.quot][tmp.rem] << ",\t"
+               << splitWeightedSampleCovariances[tmp.quot].y[tmp.rem] / sumWeights[tmp.quot][tmp.rem] << ",\t"
+               << splitWeightedSampleCovariances[tmp.quot].z[tmp.rem] / sumWeights[tmp.quot][tmp.rem] << "]";
         }
         else
         {
@@ -1224,7 +1246,8 @@ std::string VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::ComponentSpli
         }
         ss << std::endl;
 
-        ss << "\t" << "numSamples: " << numSamples[tmp.quot][tmp.rem] << "\t sumWeights: " << sumWeights[tmp.quot][tmp.rem] << "\t sumAssignedSamples: " << sumAssignedSamples[tmp.quot][tmp.rem];
+        ss << "\t" << "numSamples: " << numSamples[tmp.quot][tmp.rem] << "\t sumWeights: " << sumWeights[tmp.quot][tmp.rem]
+           << "\t sumAssignedSamples: " << sumAssignedSamples[tmp.quot][tmp.rem];
         ss << std::endl;
 
         sumChiSquareEst += chiSquareMCEstimates[tmp.quot][tmp.rem];
@@ -1233,4 +1256,4 @@ std::string VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::ComponentSpli
     return ss.str();
 }
 
-}
+}  // namespace openpgl

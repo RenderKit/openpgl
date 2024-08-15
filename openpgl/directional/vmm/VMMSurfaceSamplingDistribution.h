@@ -3,21 +3,21 @@
 
 #pragma once
 
-#include "../ISurfaceSamplingDistribution.h"
-
 #include <array>
+
+#include "../ISurfaceSamplingDistribution.h"
 
 namespace openpgl
 {
 
-template<class TVMMDistribution, bool UseParallaxCompensation>
-struct __aligned(TVMMDistribution::VectorSize*4) VMMSurfaceSamplingDistribution: public ISurfaceSamplingDistribution
+template <class TVMMDistribution, bool UseParallaxCompensation>
+struct __aligned(TVMMDistribution::VectorSize * 4) VMMSurfaceSamplingDistribution : public ISurfaceSamplingDistribution
 {
-    OPENPGL_ALIGNED_STRUCT_(TVMMDistribution::VectorSize*4)
+    OPENPGL_ALIGNED_STRUCT_(TVMMDistribution::VectorSize * 4)
 
-    VMMSurfaceSamplingDistribution() {};
+    VMMSurfaceSamplingDistribution(){};
     ~VMMSurfaceSamplingDistribution() override = default;
-    
+
     typedef std::integral_constant<size_t, 2> MaxNumProductDistributions;
 
     /// the region's Li distribution with applied parallax-compensation
@@ -28,17 +28,17 @@ struct __aligned(TVMMDistribution::VectorSize*4) VMMSurfaceSamplingDistribution:
     /// distribution sampling weights, sum up to 1.0f
     std::array<float, MaxNumProductDistributions::value> m_weights;
     /// when 0 use the non-product distribution instead
-    uint32_t m_numDistributions {0};
+    uint32_t m_numDistributions{0};
     /// guiding cosine/BSDF product integral (= irradiance/flux, for cosine)
-    float m_productIntegral {0.f};
+    float m_productIntegral{0.f};
 
-    const IRegion* m_region {nullptr};
+    const IRegion *m_region{nullptr};
 
-    inline void init(const void* distribution, Point3 samplePosition) override
+    inline void init(const void *distribution, Point3 samplePosition) override
     {
-        m_liDistribution = *(const TVMMDistribution*)distribution;
+        m_liDistribution = *(const TVMMDistribution *)distribution;
         // prespare sampling distribution
-        if(UseParallaxCompensation)
+        if (UseParallaxCompensation)
         {
             const Point3 pivotPosition = this->m_liDistribution._pivotPosition;
             this->m_liDistribution.performRelativeParallaxShift(pivotPosition - samplePosition);
@@ -49,11 +49,11 @@ struct __aligned(TVMMDistribution::VectorSize*4) VMMSurfaceSamplingDistribution:
         this->m_productIntegral = 1.0f;
     }
 
-    inline void applyCosineProduct(const Vector3& normal) override
+    inline void applyCosineProduct(const Vector3 &normal) override
     {
         const float cosine_kappa = 2.18853f;
-        const float cosine_normalization = 2.18853f/(2.0f*M_PI_F*(1.0f-std::exp(-2.0f * 2.18853f)));
-        if(this->m_numDistributions > 0)
+        const float cosine_normalization = 2.18853f / (2.0f * M_PI_F * (1.0f - std::exp(-2.0f * 2.18853f)));
+        if (this->m_numDistributions > 0)
         {
             this->m_productIntegral = this->m_distributions[0].product(1.0f, normal, cosine_kappa, cosine_normalization);
         }
@@ -68,11 +68,11 @@ struct __aligned(TVMMDistribution::VectorSize*4) VMMSurfaceSamplingDistribution:
     {
         OPENPGL_ASSERT(m_numDistributions > 0);
 
-        float weight {0.0f};
-        uint32_t i=0;
-        for (; i<m_numDistributions-1; ++i)
+        float weight{0.0f};
+        uint32_t i = 0;
+        for (; i < m_numDistributions - 1; ++i)
         {
-            const float nextWeight = weight+m_weights[i];
+            const float nextWeight = weight + m_weights[i];
 
             if (nextWeight > sample.x)
                 break;
@@ -80,7 +80,7 @@ struct __aligned(TVMMDistribution::VectorSize*4) VMMSurfaceSamplingDistribution:
             weight = nextWeight;
         }
 
-        Vector3 dir = m_distributions[i].sample(openpgl::Vector2{(sample.x-weight)/m_weights[i], sample.y});
+        Vector3 dir = m_distributions[i].sample(openpgl::Vector2{(sample.x - weight) / m_weights[i], sample.y});
 
         return Vector3(dir[0], dir[1], dir[2]);
     }
@@ -89,9 +89,9 @@ struct __aligned(TVMMDistribution::VectorSize*4) VMMSurfaceSamplingDistribution:
     {
         OPENPGL_ASSERT(m_numDistributions > 0);
 
-        float pdf {0.0f};
-        for (uint32_t i=0; i<m_numDistributions; ++i)
-            pdf += m_weights[i]*m_distributions[i].pdf(dir);
+        float pdf{0.0f};
+        for (uint32_t i = 0; i < m_numDistributions; ++i)
+            pdf += m_weights[i] * m_distributions[i].pdf(dir);
 
         return pdf;
     }
@@ -138,24 +138,23 @@ struct __aligned(TVMMDistribution::VectorSize*4) VMMSurfaceSamplingDistribution:
     {
         std::ostringstream oss;
         oss << "GuidingData [\n";
-        for (uint32_t i=0; i<m_numDistributions; ++i)
+        for (uint32_t i = 0; i < m_numDistributions; ++i)
         {
-            oss << '[' << i << "]: " << m_distributions[i].toString() << '\n'
-                << "weight: " << m_weights[i] << '\n';
+            oss << '[' << i << "]: " << m_distributions[i].toString() << '\n' << "weight: " << m_weights[i] << '\n';
         }
-        oss << "product: " << m_productIntegral << '\n'
-            << ']';
+        oss << "product: " << m_productIntegral << '\n' << ']';
         return oss.str();
     }
 
-    inline const IRegion* getRegion() const override {
+    inline const IRegion *getRegion() const override
+    {
         return m_region;
     }
 
-    inline void setRegion(const IRegion* region) override {
+    inline void setRegion(const IRegion *region) override
+    {
         m_region = region;
     }
-
 };
 
-}
+}  // namespace openpgl

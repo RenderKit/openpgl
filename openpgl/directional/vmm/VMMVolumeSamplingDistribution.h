@@ -9,12 +9,11 @@
 namespace openpgl
 {
 
-template<class TVMMDistribution, bool UseParallaxCompensation>
-struct __aligned(TVMMDistribution::VectorSize*4) VMMVolumeSamplingDistribution: public IVolumeSamplingDistribution
+template <class TVMMDistribution, bool UseParallaxCompensation>
+struct __aligned(TVMMDistribution::VectorSize * 4) VMMVolumeSamplingDistribution : public IVolumeSamplingDistribution
 {
-    
-    OPENPGL_ALIGNED_STRUCT_(TVMMDistribution::VectorSize*4)
-    VMMVolumeSamplingDistribution(): IVolumeSamplingDistribution(){};
+    OPENPGL_ALIGNED_STRUCT_(TVMMDistribution::VectorSize * 4)
+    VMMVolumeSamplingDistribution() : IVolumeSamplingDistribution(){};
     ~VMMVolumeSamplingDistribution() override = default;
 
     typedef std::integral_constant<size_t, OPENPGL_VMM_NUM_PHASE_COMP> MaxNumProductDistributions;
@@ -27,20 +26,20 @@ struct __aligned(TVMMDistribution::VectorSize*4) VMMVolumeSamplingDistribution: 
     /// distribution sampling weights, sum up to 1.0f
     std::array<float, MaxNumProductDistributions::value> m_weights;
     /// when 0 use the non-product distribution instead
-    uint32_t m_numDistributions {0};
+    uint32_t m_numDistributions{0};
     /// guiding cosine/BSDF product integral (= irradiance/flux, for cosine)
-    float m_productIntegral {0.f};
+    float m_productIntegral{0.f};
 
-    const IRegion* m_region {nullptr};
+    const IRegion *m_region{nullptr};
 
-    inline void init(const void* distribution, Point3 samplePosition) override
+    inline void init(const void *distribution, Point3 samplePosition) override
     {
-        m_liDistribution = *(TVMMDistribution*)distribution;
+        m_liDistribution = *(TVMMDistribution *)distribution;
 
-        //m_liDistribution.uniformInit(0.0);
+        // m_liDistribution.uniformInit(0.0);
 
         // prespare sampling distribution
-        if(UseParallaxCompensation)
+        if (UseParallaxCompensation)
         {
             const Point3 pivotPosition = this->m_liDistribution._pivotPosition;
             this->m_liDistribution.performRelativeParallaxShift(pivotPosition - samplePosition);
@@ -51,30 +50,30 @@ struct __aligned(TVMMDistribution::VectorSize*4) VMMVolumeSamplingDistribution: 
         this->m_productIntegral = 1.0f;
     }
 
-    inline void applySingleLobeHenyeyGreensteinProduct(const Vector3& dir, const float meanCosine) override
+    inline void applySingleLobeHenyeyGreensteinProduct(const Vector3 &dir, const float meanCosine) override
     {
-        float sumWeights = 0.f;        
-        const VMMPhaseFunctionRepresentation pfRep =VMMSingleLobeHenyeyGreensteinOracle::getPhaseFunctionRepresentation(meanCosine);
+        float sumWeights = 0.f;
+        const VMMPhaseFunctionRepresentation pfRep = VMMSingleLobeHenyeyGreensteinOracle::getPhaseFunctionRepresentation(meanCosine);
 
-        for (int i=0; i < pfRep.K; i++)
+        for (int i = 0; i < pfRep.K; i++)
         {
             this->m_distributions[i] = m_liDistribution;
-            const Vector3 outDir = meanCosine * pfRep.meanCosines[i] > 0.f ? dir: -dir;
-            /*     
+            const Vector3 outDir = meanCosine * pfRep.meanCosines[i] > 0.f ? dir : -dir;
+            /*
             const float absMeanCosine = std::fabs(pfRep.meanCosines[i]);
             float kappa = MeanCosineToKappa< float >(absMeanCosine);
             kappa = kappa<= 1e-4f ? 0.0f: kappa;
             this->m_weights[i] = this->m_distributions[i].product(pfRep.weights[i], outDir, kappa);
-            */            
+            */
             this->m_weights[i] = this->m_distributions[i].product(pfRep.weights[i], outDir, pfRep.kappas[i], pfRep.normalizations[i]);
             sumWeights += this->m_weights[i];
         }
 
-        for (int i=0; i< pfRep.K; i++)
+        for (int i = 0; i < pfRep.K; i++)
         {
-            this->m_weights[i] /=sumWeights;
+            this->m_weights[i] /= sumWeights;
         }
-        
+
         this->m_numDistributions = pfRep.K;
         this->m_productIntegral = sumWeights;
     }
@@ -88,11 +87,11 @@ struct __aligned(TVMMDistribution::VectorSize*4) VMMVolumeSamplingDistribution: 
     {
         OPENPGL_ASSERT(m_numDistributions > 0);
 
-        float weight {0.0f};
-        uint32_t i=0;
-        for (; i<m_numDistributions-1; ++i)
+        float weight{0.0f};
+        uint32_t i = 0;
+        for (; i < m_numDistributions - 1; ++i)
         {
-            const float nextWeight = weight+m_weights[i];
+            const float nextWeight = weight + m_weights[i];
 
             if (nextWeight > sample.x)
                 break;
@@ -100,7 +99,7 @@ struct __aligned(TVMMDistribution::VectorSize*4) VMMVolumeSamplingDistribution: 
             weight = nextWeight;
         }
 
-        Vector3 dir = m_distributions[i].sample(openpgl::Vector2{(sample.x-weight)/m_weights[i], sample.y});
+        Vector3 dir = m_distributions[i].sample(openpgl::Vector2{(sample.x - weight) / m_weights[i], sample.y});
 
         return Vector3(dir[0], dir[1], dir[2]);
     }
@@ -109,9 +108,9 @@ struct __aligned(TVMMDistribution::VectorSize*4) VMMVolumeSamplingDistribution: 
     {
         OPENPGL_ASSERT(m_numDistributions > 0);
 
-        float pdf {0.0f};
-        for (uint32_t i=0; i<m_numDistributions; ++i)
-            pdf += m_weights[i]*m_distributions[i].pdf(dir);
+        float pdf{0.0f};
+        for (uint32_t i = 0; i < m_numDistributions; ++i)
+            pdf += m_weights[i] * m_distributions[i].pdf(dir);
 
         return pdf;
     }
@@ -140,12 +139,12 @@ struct __aligned(TVMMDistribution::VectorSize*4) VMMVolumeSamplingDistribution: 
 
     inline Vector3 inScatteredRadiance(const Vector3 dir, const float meanCosine, const bool directLightMIS) const override
     {
-        const VMMPhaseFunctionRepresentation pfRep =VMMSingleLobeHenyeyGreensteinOracle::getPhaseFunctionRepresentation(meanCosine);
+        const VMMPhaseFunctionRepresentation pfRep = VMMSingleLobeHenyeyGreensteinOracle::getPhaseFunctionRepresentation(meanCosine);
 
         Vector3 inscatteredRad(0.f);
-        for (int i=0; i < pfRep.K; i++)
+        for (int i = 0; i < pfRep.K; i++)
         {
-            const Vector3 outDir = meanCosine * pfRep.meanCosines[i] > 0.f ? dir: -dir;
+            const Vector3 outDir = meanCosine * pfRep.meanCosines[i] > 0.f ? dir : -dir;
             inscatteredRad += pfRep.weights[i] * m_liDistribution.inscatteredRadiance(outDir, pfRep.meanCosines[i], directLightMIS);
         }
         return inscatteredRad;
@@ -154,7 +153,7 @@ struct __aligned(TVMMDistribution::VectorSize*4) VMMVolumeSamplingDistribution: 
     inline Vector3 fluence(const bool directLightMIS) const override
     {
         return m_liDistribution.fluence(directLightMIS);
-    } 
+    }
 #endif
 
     inline bool validate() const override
@@ -171,23 +170,23 @@ struct __aligned(TVMMDistribution::VectorSize*4) VMMVolumeSamplingDistribution: 
     {
         std::ostringstream oss;
         oss << "GuidingData [\n";
-        for (uint32_t i=0; i<m_numDistributions; ++i)
+        for (uint32_t i = 0; i < m_numDistributions; ++i)
         {
-            oss << '[' << i << "]: " << m_distributions[i].toString() << '\n'
-                << "weight: " << m_weights[i] << '\n';
+            oss << '[' << i << "]: " << m_distributions[i].toString() << '\n' << "weight: " << m_weights[i] << '\n';
         }
-        oss << "product: " << m_productIntegral << '\n'
-            << ']';
+        oss << "product: " << m_productIntegral << '\n' << ']';
         return oss.str();
     }
 
-    inline const IRegion* getRegion() const override {
+    inline const IRegion *getRegion() const override
+    {
         return m_region;
     }
 
-    inline void setRegion(const IRegion* region) override {
+    inline void setRegion(const IRegion *region) override
+    {
         m_region = region;
     }
 };
 
-}
+}  // namespace openpgl

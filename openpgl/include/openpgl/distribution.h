@@ -3,30 +3,27 @@
 
 #pragma once
 
-
 #include "common.h"
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
-
 #ifdef __cplusplus
-struct Region;
+    struct Region;
 #else
 typedef ManagedObject Region;
 #endif
 
 #ifdef __cplusplus
-struct Distribution;
+    struct Distribution;
 #else
 typedef ManagedObject Distribution;
 #endif
 
-
-
-typedef Distribution *PGLDistribution;
-typedef Region *PGLRegion;
+    typedef Distribution *PGLDistribution;
+    typedef Region *PGLRegion;
 
 #ifdef __cplusplus
 }  // extern "C"

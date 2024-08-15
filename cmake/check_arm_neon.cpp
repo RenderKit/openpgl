@@ -9,5 +9,5 @@
 
 int main()
 {
-  return vaddvq_s32(vdupq_n_s32(1));
+    return vaddvq_s32(vdupq_n_s32(1));
 }

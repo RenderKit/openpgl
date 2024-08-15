@@ -13,11 +13,11 @@ namespace openpgl
 namespace cpp
 {
 /**
- * @brief The PathSegmentStorage is a utility class to help generating SampleData during 
+ * @brief The PathSegmentStorage is a utility class to help generating SampleData during
  * the path/random walk generation process. For the construction of a path/walk each new PathSegment
- * is stored the PathSegmentStorage. When the walk is finished or terminated the -radiance- SampleData is 
- * generated using a back propagation process. The resulting samples can then be passed to the global SampleDataStorage. 
- * 
+ * is stored the PathSegmentStorage. When the walk is finished or terminated the -radiance- SampleData is
+ * generated using a back propagation process. The resulting samples can then be passed to the global SampleDataStorage.
+ *
  */
 
 struct PathSegmentStorage
@@ -25,11 +25,11 @@ struct PathSegmentStorage
     PathSegmentStorage(bool trackZeroValueSamples = false);
     ~PathSegmentStorage();
 
-    PathSegmentStorage(const PathSegmentStorage&) = delete;
+    PathSegmentStorage(const PathSegmentStorage &) = delete;
 
     /**
-     * @brief Reserves memory for a given number PathSegments. 
-     * 
+     * @brief Reserves memory for a given number PathSegments.
+     *
      * @param size The maximum number of path segments (i.e., max path length)
      */
     void Reserve(size_t size);
@@ -39,7 +39,7 @@ struct PathSegmentStorage
 
     /**
      * @brief  Generates and internally stores -radiance- samples from the the collected path segments.
-     * 
+     *
      * @param useNEEMiWeights If the direct illumination should be multiplied with the mis weights for NEE.
      * @param guideDirectLight If the gererated samples should include direct illumination.
      * @param rrAffectsDirectContribution If the Russian roulette probability needs to be integrated into the direct illumination.
@@ -49,54 +49,54 @@ struct PathSegmentStorage
 
     /**
      * @brief Calculates the color estimate of the random walk/path from the path segments.
-     * 
-     * This function is mainly used for debug purposes to validate if the path segments stored in the 
+     *
+     * This function is mainly used for debug purposes to validate if the path segments stored in the
      * PathSegmentStorage cover/represent the behavior of the used renderer (e.g., path tracer).
-     * Ideally the output for each radom walk should match the pixel value added to the framebuffer.   
-     * 
+     * Ideally the output for each radom walk should match the pixel value added to the framebuffer.
+     *
      * @param rrAffectsDirectContribution If the direct contribution of a segment needs to be weighted with the RR probability.
-     * @return pgl_vec3f The RGB pixel value estimate for the random walk. 
+     * @return pgl_vec3f The RGB pixel value estimate for the random walk.
      */
     pgl_vec3f CalculatePixelEstimate(const bool rrAffectsDirectContribution) const;
 
     /**
      * @brief Returns a pointer to the samples generated from the path segments.
-     * 
+     *
      * @param nSamples The size of the array of the returned pointer.
      * @return const SampleData* The pointer to the sample data array.
      */
-    const SampleData* GetSamples(size_t &nSamples);
+    const SampleData *GetSamples(size_t &nSamples);
 
     /**
      * @brief Returns a pointer to the zero value samples generated from the path segments.
-     * 
+     *
      * @param nSamples The size of the array of the returned pointer.
      * @return const SampleData* The pointer to the sample data array.
      */
-    const ZeroValueSampleData* GetZeroValueSamples(size_t &nSamples);
+    const ZeroValueSampleData *GetZeroValueSamples(size_t &nSamples);
 
     /**
-     * @brief Adds a new PathSegment to the end of the path segment list and returns a pointer to it.  
-     * 
-     * If the number of PathSegments exceeds the number of reserved elements a nullptr is returned. 
-     * 
+     * @brief Adds a new PathSegment to the end of the path segment list and returns a pointer to it.
+     *
+     * If the number of PathSegments exceeds the number of reserved elements a nullptr is returned.
+     *
      * @return PathSegment* The pointer to the -currently- last segment of the storage.
      */
-    PathSegment* NextSegment();
+    PathSegment *NextSegment();
 
     /**
      * @brief Adds a PathSegment at the end of the storage.
-     * 
-     * If the storage has already reached its limit the segment is not added to the list. 
-     * 
-     * @param segment 
+     *
+     * If the storage has already reached its limit the segment is not added to the list.
+     *
+     * @param segment
      */
-    void AddSegment(const PathSegment& segment);
+    void AddSegment(const PathSegment &segment);
 
     /**
      * @brief Adds a SampleData to the sample list.
-     * 
-     * @param sample 
+     *
+     * @param sample
      */
     void AddSample(SampleData sample);
 
@@ -104,7 +104,7 @@ struct PathSegmentStorage
      * @brief Sets the max. distance for a generated SampleData
      * (i.e., the distance used when hitting an environment map).
      * If not set the default value is 1e6f.
-     * @param maxDistance 
+     * @param maxDistance
      */
     void SetMaxDistance(const float maxDistance);
 
@@ -116,23 +116,23 @@ struct PathSegmentStorage
 
     /**
      * @brief Gets the number of stored path segments.
-     * 
+     *
      * @return int number of stored path segments.
      */
     int GetNumSegments() const;
 
     /**
-     * @brief Gets the number of samples generated from the path 
+     * @brief Gets the number of samples generated from the path
      * segments and the ones added explicitly by the user.
-     * 
+     *
      * @return int number of generated or added samples.
      */
     int GetNumSamples() const;
 
     /**
-     * @brief Gets the number of zero value samples generated 
+     * @brief Gets the number of zero value samples generated
      * from the path segments.
-     * 
+     *
      * @return int number of generated or added samples.
      */
     int GetNumZeroValueSamples() const;
@@ -155,10 +155,10 @@ struct PathSegmentStorage
      */
     bool ValidateSamples() const;
 
-    void PropagateSamples(SampleStorage* sampleStorage, const bool guideDirectLight = false, const bool useNEEMiWeights = false, const bool rrAffectsDirectContribution = true);
+    void PropagateSamples(SampleStorage *sampleStorage, const bool guideDirectLight = false, const bool useNEEMiWeights = false, const bool rrAffectsDirectContribution = true);
 
-    private:
-        PGLPathSegmentStorage m_pathSegmentStorageHandle{nullptr};
+   private:
+    PGLPathSegmentStorage m_pathSegmentStorageHandle{nullptr};
 };
 
 ////////////////////////////////////////////////////////////
@@ -166,7 +166,7 @@ struct PathSegmentStorage
 ////////////////////////////////////////////////////////////
 
 OPENPGL_INLINE PathSegmentStorage::PathSegmentStorage(bool trackZeroValueSamples)
-{ 
+{
     m_pathSegmentStorageHandle = pglNewPathSegmentStorage(trackZeroValueSamples);
 }
 
@@ -201,12 +201,11 @@ OPENPGL_INLINE pgl_vec3f PathSegmentStorage::CalculatePixelEstimate(const bool r
     return pglPathSegmentStorageCalculatePixelEstimate(m_pathSegmentStorageHandle, rrAffectsDirectContribution);
 }
 
-OPENPGL_INLINE const SampleData* PathSegmentStorage::GetSamples(size_t &nSamples)
+OPENPGL_INLINE const SampleData *PathSegmentStorage::GetSamples(size_t &nSamples)
 {
     OPENPGL_ASSERT(m_pathSegmentStorageHandle);
     return pglPathSegmentStorageGetSamples(m_pathSegmentStorageHandle, nSamples);
 }
-
 
 OPENPGL_INLINE void PathSegmentStorage::AddSample(SampleData sample)
 {
@@ -214,13 +213,13 @@ OPENPGL_INLINE void PathSegmentStorage::AddSample(SampleData sample)
     pglPathSegmentStorageAddSample(m_pathSegmentStorageHandle, sample);
 }
 
-OPENPGL_INLINE PathSegment* PathSegmentStorage::NextSegment()
+OPENPGL_INLINE PathSegment *PathSegmentStorage::NextSegment()
 {
     OPENPGL_ASSERT(m_pathSegmentStorageHandle);
     return pglPathSegmentStorageNextSegment(m_pathSegmentStorageHandle);
 }
 
-OPENPGL_INLINE void PathSegmentStorage::AddSegment(const PathSegment& segment)
+OPENPGL_INLINE void PathSegmentStorage::AddSegment(const PathSegment &segment)
 {
     OPENPGL_ASSERT(m_pathSegmentStorageHandle);
     pglPathSegmentStorageAddSegment(m_pathSegmentStorageHandle, segment);
@@ -238,7 +237,7 @@ OPENPGL_INLINE float PathSegmentStorage::GetMaxDistance() const
     return pglPathSegmentGetMaxDistance(m_pathSegmentStorageHandle);
 }
 
-OPENPGL_INLINE int PathSegmentStorage::GetNumSegments() const 
+OPENPGL_INLINE int PathSegmentStorage::GetNumSegments() const
 {
     OPENPGL_ASSERT(m_pathSegmentStorageHandle);
     return pglPathSegmentGetNumSegments(m_pathSegmentStorageHandle);
@@ -256,30 +255,31 @@ OPENPGL_INLINE int PathSegmentStorage::GetNumZeroValueSamples() const
     return pglPathSegmentGetNumZeroValueSamples(m_pathSegmentStorageHandle);
 }
 
-OPENPGL_INLINE const ZeroValueSampleData* PathSegmentStorage::GetZeroValueSamples(size_t &nSamples)
+OPENPGL_INLINE const ZeroValueSampleData *PathSegmentStorage::GetZeroValueSamples(size_t &nSamples)
 {
     OPENPGL_ASSERT(m_pathSegmentStorageHandle);
     return pglPathSegmentStorageGetZeroValueSamples(m_pathSegmentStorageHandle, nSamples);
 }
 
 OPENPGL_INLINE bool PathSegmentStorage::Validate() const
-{ 
+{
     return ValidateSegments() && ValidateSamples();
 }
 
 OPENPGL_INLINE bool PathSegmentStorage::ValidateSegments() const
-{ 
+{
     OPENPGL_ASSERT(m_pathSegmentStorageHandle);
     return pglPathSegmentStorageValidateSegments(m_pathSegmentStorageHandle);
 }
 
 OPENPGL_INLINE bool PathSegmentStorage::ValidateSamples() const
-{ 
+{
     OPENPGL_ASSERT(m_pathSegmentStorageHandle);
     return pglPathSegmentStorageValidateSamples(m_pathSegmentStorageHandle);
 }
 
-OPENPGL_INLINE void PathSegmentStorage::PropagateSamples(SampleStorage* sampleStorage, const bool guideDirectLight, const bool useNEEMiWeights, const bool rrAffectsDirectContribution)
+OPENPGL_INLINE void PathSegmentStorage::PropagateSamples(SampleStorage *sampleStorage, const bool guideDirectLight, const bool useNEEMiWeights,
+                                                         const bool rrAffectsDirectContribution)
 {
     OPENPGL_ASSERT(m_pathSegmentStorageHandle);
     OPENPGL_ASSERT(sampleStorage);
@@ -287,6 +287,5 @@ OPENPGL_INLINE void PathSegmentStorage::PropagateSamples(SampleStorage* sampleSt
     return pglPathSegmentStoragePropagateSamples(m_pathSegmentStorageHandle, sampleStorage->m_sampleStorageHandle, guideDirectLight, useNEEMiWeights, rrAffectsDirectContribution);
 }
 
-
-}
-}
+}  // namespace cpp
+}  // namespace openpgl

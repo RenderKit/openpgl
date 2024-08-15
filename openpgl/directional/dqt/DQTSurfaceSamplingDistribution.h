@@ -6,31 +6,36 @@
 namespace openpgl
 {
 
-template<class TDirectionalQuadtree>
-struct DQTSurfaceSamplingDistribution: public ISurfaceSamplingDistribution {
-    DQTSurfaceSamplingDistribution()
-    {};
+template <class TDirectionalQuadtree>
+struct DQTSurfaceSamplingDistribution : public ISurfaceSamplingDistribution
+{
+    DQTSurfaceSamplingDistribution(){};
 
-    virtual ~DQTSurfaceSamplingDistribution() override {};
+    virtual ~DQTSurfaceSamplingDistribution() override{};
 
-    virtual void init(const void* distribution, Point3 samplePosition) override {
-        this->distribution = *(TDirectionalQuadtree*)distribution;
+    virtual void init(const void *distribution, Point3 samplePosition) override
+    {
+        this->distribution = *(TDirectionalQuadtree *)distribution;
     };
 
-    inline void applyCosineProduct(const Vector3& normal) override {
+    inline void applyCosineProduct(const Vector3 &normal) override
+    {
         // not supported by quadtree
         return;
     };
 
-    inline bool supportsApplyCosineProduct() const override {
+    inline bool supportsApplyCosineProduct() const override
+    {
         return false;
     }
 
-    inline Vector3 sample(const Point2 sample) const override {
+    inline Vector3 sample(const Point2 sample) const override
+    {
         return distribution.sample(sample);
     };
 
-    inline float pdf(const Vector3 dir) const override {
+    inline float pdf(const Vector3 dir) const override
+    {
         return distribution.pdf(dir);
     };
 
@@ -39,7 +44,8 @@ struct DQTSurfaceSamplingDistribution: public ISurfaceSamplingDistribution {
         return distribution.samplePdf(sample, dir);
     }
 
-    inline float pdfLi(const Vector3 dir) const override {
+    inline float pdfLi(const Vector3 dir) const override
+    {
         return distribution.pdf(dir);
     };
 #ifdef OPENPGL_RADIANCE_CACHES
@@ -53,35 +59,37 @@ struct DQTSurfaceSamplingDistribution: public ISurfaceSamplingDistribution {
         return Vector3(0.f, 0.f, 0.f);
     }
 
-
     inline Vector3 outgoingRadiance(const Vector3 dir) const override
     {
         return m_region->getOutgoingRadiance(dir);
     }
 #endif
 
-    inline bool validate() const override {
+    inline bool validate() const override
+    {
         return distribution.isValid();
     };
 
-    inline void clear() override {
-    };
+    inline void clear() override {};
 
-    std::string toString() const override {
+    std::string toString() const override
+    {
         return "";
     };
 
-    const IRegion* getRegion() const override {
+    const IRegion *getRegion() const override
+    {
         return m_region;
     }
 
-    void setRegion(const IRegion* region) override {
+    void setRegion(const IRegion *region) override
+    {
         m_region = region;
     }
 
-private:
+   private:
     TDirectionalQuadtree distribution;
-    const IRegion* m_region {nullptr};
+    const IRegion *m_region{nullptr};
 };
 
-}
+}  // namespace openpgl

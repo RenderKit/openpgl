@@ -12,14 +12,15 @@ namespace cpp
 /**
  * @brief The Distribution class represents the approximation of the directional guiding distribution.
  * E.g., this distribution can represent the incident radiance field, its product with a BSDF or phase function,
- * or another target distribution.   
- * 
+ * or another target distribution.
+ *
  */
 struct Distribution
 {
     Distribution(PGLDistribution distributionHandle);
-    private:
-        PGLDistribution m_distributionHandle{nullptr};
+
+   private:
+    PGLDistribution m_distributionHandle{nullptr};
 };
 
 ////////////////////////////////////////////////////////////
@@ -30,5 +31,5 @@ OPENPGL_INLINE Distribution::Distribution(PGLDistribution distributionHandle)
 {
     m_distributionHandle = distributionHandle;
 }
-}
-}
+}  // namespace cpp
+}  // namespace openpgl

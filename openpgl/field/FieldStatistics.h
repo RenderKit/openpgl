@@ -3,34 +3,36 @@
 
 #pragma once
 
+#include <sstream>
+#include <string>
+
+#include "../directional/DirectionalDistributionStatistics.h"
 #include "../openpgl_common.h"
 #include "../spatial/kdtree/KDTreeStatistics.h"
-#include "../directional/DirectionalDistributionStatistics.h"
-
-#include <string>
-#include <sstream>
 
 namespace openpgl
 {
 
-struct FieldStatistics{
+struct FieldStatistics
+{
     using SpatialStatistics = KDTreeStatistics;
 
-    size_t numCacheRegions {0};
-    size_t numCacheRegionsReserved {0};
-    size_t sizePerCacheRegions {0};
-    size_t sizeAllCacheRegionsUsed {0};
-    size_t sizeAllCacheRegionsReserved {0};
+    size_t numCacheRegions{0};
+    size_t numCacheRegionsReserved{0};
+    size_t sizePerCacheRegions{0};
+    size_t sizeAllCacheRegionsUsed{0};
+    size_t sizeAllCacheRegionsReserved{0};
 
-    float timeLastUpdate {0.f};
-    float timeLastUpdateCopySamples {0.f};
-    float timeLastUpdateSpatialStructureUpdate {0.f};
-    float timeLastUpdateDirectionalDistriubtionUpdate {0.f};
+    float timeLastUpdate{0.f};
+    float timeLastUpdateCopySamples{0.f};
+    float timeLastUpdateSpatialStructureUpdate{0.f};
+    float timeLastUpdateDirectionalDistriubtionUpdate{0.f};
 
     SpatialStatistics spatialStructureStatistics;
     DirectionalDistributionStatistics directionalDistributionStatistics;
 
-    std::string headerCSVString() const{
+    std::string headerCSVString() const
+    {
         const std::string separator = " , ";
         std::stringstream ss;
         ss << "FieldStatistics:" << separator;
@@ -51,15 +53,16 @@ struct FieldStatistics{
         return ss.str();
     }
 
-    std::string toCSVString() const{
+    std::string toCSVString() const
+    {
         const std::string separator = " , ";
         std::stringstream ss;
         ss << " " << separator;
         ss << numCacheRegions << separator;
         ss << numCacheRegionsReserved << separator;
         ss << sizePerCacheRegions << separator;
-        ss << float(sizeAllCacheRegionsUsed) / 1024  / 1024 << separator;
-        ss << float(sizeAllCacheRegionsReserved) / 1024  / 1024 << separator;
+        ss << float(sizeAllCacheRegionsUsed) / 1024 / 1024 << separator;
+        ss << float(sizeAllCacheRegionsReserved) / 1024 / 1024 << separator;
 
         ss << timeLastUpdate << separator;
         ss << timeLastUpdateCopySamples << separator;
@@ -72,16 +75,17 @@ struct FieldStatistics{
         return ss.str();
     }
 
-    std::string toString() const{
+    std::string toString() const
+    {
         const std::string tab = "\t";
         std::stringstream ss;
         ss << "FieldStatistics:" << std::endl;
         ss << tab << "numCacheRegions = " << numCacheRegions << std::endl;
         ss << tab << "numCacheRegionsReserved = " << numCacheRegionsReserved << std::endl;
         ss << tab << "sizePerCacheRegions = " << sizePerCacheRegions << " bs" << std::endl;
-        ss << tab << "sizeAllCacheRegionsUsed = " << float(sizeAllCacheRegionsUsed) / 1024  / 1024 << " Mbs" << std::endl;
+        ss << tab << "sizeAllCacheRegionsUsed = " << float(sizeAllCacheRegionsUsed) / 1024 / 1024 << " Mbs" << std::endl;
         ss << tab << "sizeAllCacheRegionsReserved = " << float(sizeAllCacheRegionsReserved) / 1024 / 1024 << " Mbs" << std::endl;
-        
+
         ss << tab << "timeUpdate = " << timeLastUpdate << " ms" << std::endl;
         ss << tab << "timeCopySamples = " << timeLastUpdateCopySamples << " ms" << std::endl;
         ss << tab << "timeSpatialStructureUpdate = " << timeLastUpdateSpatialStructureUpdate << " ms" << std::endl;
@@ -94,4 +98,4 @@ struct FieldStatistics{
     }
 };
 
-}
+}  // namespace openpgl

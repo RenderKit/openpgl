@@ -7,14 +7,14 @@
 
 namespace openpgl
 {
-    namespace cpp
-    {
-        /**
-         * @brief 
-         * 
-         */
-        typedef PGLSampleData SampleData;
+namespace cpp
+{
+/**
+ * @brief
+ *
+ */
+typedef PGLSampleData SampleData;
 
-        typedef PGLZeroValueSampleData ZeroValueSampleData;
-    }
-}
+typedef PGLZeroValueSampleData ZeroValueSampleData;
+}  // namespace cpp
+}  // namespace openpgl

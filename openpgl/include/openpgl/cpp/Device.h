@@ -3,12 +3,11 @@
 
 #pragma once
 
-#include "../openpgl.h"
-
-#include "Field.h"
-
-#include <string>
 #include <stdexcept>
+#include <string>
+
+#include "../openpgl.h"
+#include "Field.h"
 
 namespace openpgl
 {
@@ -24,22 +23,23 @@ struct Device
 {
     /**
      * @brief Creates a new Device object.
-     * 
+     *
      * Creates a new Device object. The object can be optimized
-     * for different compute architechtures. On the CPU the device can be 
+     * for different compute architechtures. On the CPU the device can be
      * optimized for different SIMD architechtures (e.g., SSE4, AVX, or AVX-512)
-     * 
+     *
      * @param deviceType The device optimization type.
      */
     Device(PGL_DEVICE_TYPE deviceType, size_t numThreads = 0);
 
     ~Device();
 
-    Device(const Device&) = delete;
+    Device(const Device &) = delete;
 
     friend struct openpgl::cpp::Field;
-    private:
-        PGLDevice m_deviceHandle {nullptr};
+
+   private:
+    PGLDevice m_deviceHandle{nullptr};
 };
 
 ////////////////////////////////////////////////////////////
@@ -58,5 +58,5 @@ OPENPGL_INLINE Device::~Device()
     m_deviceHandle = nullptr;
 }
 
-} // cpp
-} // openpgl
+}  // namespace cpp
+}  // namespace openpgl
