@@ -8,7 +8,7 @@ below.
 -------------------------------------------------------------
 
 Intel(R) Threading Building Blocks comes with its own third party
-licenses located in the third-party-programs-TBB.txt file.
+licenses located in the third-party-programs-oneTBB.txt file.
 
 2. GLFW
 -------------------------------------------------------------
