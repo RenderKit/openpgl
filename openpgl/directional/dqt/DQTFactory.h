@@ -180,7 +180,9 @@ class DirectionalQuadtreeFactory
                                const SampleStatistics &sampleStatistics) const
     {}
 
-    void updateVolumeScatterProbability(Distribution &dist, Statistics &stats, const SampleData *samples, const size_t numSamples, const bool varianceBased) const {}
+    void updateVolumeScatterProbability(Distribution &dist, Statistics &stats, const SampleData *samples, const size_t numSamples, const ZeroValueSampleData *zeroValueSamples,
+                                        const size_t numZeroValueSamples, const bool varianceBased) const
+    {}
 
     void fit(Distribution &dist, Statistics &stats, const SampleData *samples, const size_t numSamples, const Configuration &cfg, FittingStatistics &fitStats)
     {

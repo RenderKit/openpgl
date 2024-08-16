@@ -77,7 +77,7 @@ struct PGLZeroValueSampleData
     pgl_direction directionOut;
 #endif
     /// if the position is inside a volume
-    bool volume;
+    uint32_t flags;
 };
 
 /**

@@ -474,9 +474,10 @@ struct Field
                                                                    regionStorage.second.m_is_end - regionStorage.second.m_is_begin);
 #endif
 #ifdef OPENPGL_VSP_GUIDING
-                        m_distributionFactory.updateVolumeScatterProbability(regionStorage.first.distribution, regionStorage.first.trainingStatistics,
-                                                                             samples.data() + regionStorage.second.m_begin,
-                                                                             regionStorage.second.m_end - regionStorage.second.m_begin, m_vspVarianceBased);
+                        m_distributionFactory.updateVolumeScatterProbability(
+                            regionStorage.first.distribution, regionStorage.first.trainingStatistics, samples.data() + regionStorage.second.m_begin,
+                            regionStorage.second.m_end - regionStorage.second.m_begin, zeroValueSamples.data() + regionStorage.second.m_is_begin,
+                            regionStorage.second.m_is_end - regionStorage.second.m_is_begin, m_vspVarianceBased);
 #endif
                         // TODO: we should move setting the pivot to the factory
                         regionStorage.first.distribution._pivotPosition = sampleMean;
@@ -575,9 +576,10 @@ struct Field
                                                                    regionStorage.second.m_is_end - regionStorage.second.m_is_begin);
 #endif
 #ifdef OPENPGL_VSP_GUIDING
-                        m_distributionFactory.updateVolumeScatterProbability(regionStorage.first.distribution, regionStorage.first.trainingStatistics,
-                                                                             samples.data() + regionStorage.second.m_begin,
-                                                                             regionStorage.second.m_end - regionStorage.second.m_begin, m_vspVarianceBased);
+                        m_distributionFactory.updateVolumeScatterProbability(
+                            regionStorage.first.distribution, regionStorage.first.trainingStatistics, samples.data() + regionStorage.second.m_begin,
+                            regionStorage.second.m_end - regionStorage.second.m_begin, zeroValueSamples.data() + regionStorage.second.m_is_begin,
+                            regionStorage.second.m_is_end - regionStorage.second.m_is_begin, m_vspVarianceBased);
 #endif
                         regionStorage.first.valid = regionStorage.first.isValid();
 #ifdef OPENPGL_DEBUG_MODE
