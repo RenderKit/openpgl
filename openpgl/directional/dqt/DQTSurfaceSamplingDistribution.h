@@ -88,7 +88,7 @@ struct DQTSurfaceSamplingDistribution : public ISurfaceSamplingDistribution
     }
 
 #ifdef OPENPGL_VSP_GUIDING
-    float volumeScatterProbability(Vector3 dir, bool contributionBased) const override
+    float volumeScatterProbability(Vector3 dir) const override
     {
         return 0.f;
     }

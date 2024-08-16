@@ -52,8 +52,7 @@ typedef ManagedObject SurfaceSamplingDistribution;
 #endif
 
 #ifdef OPENPGL_VSP_GUIDING
-    OPENPGL_CORE_INTERFACE float pglSurfaceSamplingDistributionVolumeScatterProbability(PGLSurfaceSamplingDistribution surfaceSamplingDistribution, pgl_vec3f direction,
-                                                                                        bool contributionBased);
+    OPENPGL_CORE_INTERFACE float pglSurfaceSamplingDistributionVolumeScatterProbability(PGLSurfaceSamplingDistribution surfaceSamplingDistribution, pgl_vec3f direction);
 #endif
 
 #ifdef __cplusplus

@@ -55,8 +55,7 @@ typedef ManagedObject VolumeSamplingDistribution;
 #endif
 
 #ifdef OPENPGL_VSP_GUIDING
-    OPENPGL_CORE_INTERFACE float pglVolumeSamplingDistributionVolumeScatterProbability(PGLVolumeSamplingDistribution VolumeSamplingDistribution, pgl_vec3f direction,
-                                                                                       bool contributionBased);
+    OPENPGL_CORE_INTERFACE float pglVolumeSamplingDistributionVolumeScatterProbability(PGLVolumeSamplingDistribution VolumeSamplingDistribution, pgl_vec3f direction);
 #endif
 #ifdef __cplusplus
 }  // extern "C"

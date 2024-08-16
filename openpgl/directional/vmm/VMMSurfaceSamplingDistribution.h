@@ -157,9 +157,9 @@ struct __aligned(TVMMDistribution::VectorSize * 4) VMMSurfaceSamplingDistributio
     }
 
 #ifdef OPENPGL_VSP_GUIDING
-    float volumeScatterProbability(Vector3 dir, bool contributionBased) const override
+    float volumeScatterProbability(Vector3 dir) const override
     {
-        return m_liDistribution.volumeScatterProbability(dir, contributionBased);
+        return m_liDistribution.volumeScatterProbability(dir);
     }
 #endif
 };

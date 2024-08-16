@@ -60,6 +60,8 @@ struct FieldConfig
      */
     void SetUseKnnIsLookup(const bool useKnnIsLookup);
 
+    void SetVarianceBasedVSP(const bool varianceBasedVSP);
+
     /**
      * @brief For debugging and benchmarking the update of the spatial structure this function can disable
      * the training of the directional distribution during the update iterations.
@@ -103,6 +105,13 @@ OPENPGL_INLINE void FieldConfig::SetUseKnnIsLookup(const bool useKnnIsLookup)
 {
     reinterpret_cast<PGLKDTreeArguments *>(m_args.spatialSturctureArguments)->isKnnLookup = useKnnIsLookup;
 }
+
+#ifdef OPENPGL_VSP_GUIDING
+OPENPGL_INLINE void FieldConfig::SetVarianceBasedVSP(const bool varianceBasedVSP)
+{
+    m_args.varianceBasedVSP = varianceBasedVSP;
+}
+#endif
 
 }  // namespace cpp
 }  // namespace openpgl
