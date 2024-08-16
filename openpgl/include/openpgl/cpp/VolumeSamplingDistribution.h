@@ -164,7 +164,9 @@ struct VolumeSamplingDistribution
     pgl_vec3f Fluence(const bool directLightMIS) const;
 #endif
 
+#ifdef OPENPGL_VSP_GUIDING
     float VolumeScatterProbability(pgl_vec3f &direction, bool contributionBased) const;
+#endif
     ///////////////////////////////////////
     /// Future plans
     ///////////////////////////////////////
@@ -309,11 +311,13 @@ OPENPGL_INLINE pgl_vec3f VolumeSamplingDistribution::Fluence(const bool directLi
 }
 #endif
 
+#ifdef OPENPGL_VSP_GUIDING
 OPENPGL_INLINE float VolumeSamplingDistribution::VolumeScatterProbability(pgl_vec3f &direction, bool contributionBased) const
 {
     OPENPGL_ASSERT(m_volumeSamplingDistributionHandle);
     return pglVolumeSamplingDistributionVolumeScatterProbability(m_volumeSamplingDistributionHandle, direction, contributionBased);
 }
+#endif
 
 }  // namespace cpp
 }  // namespace openpgl
