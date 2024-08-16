@@ -57,7 +57,9 @@ struct ISurfaceSamplingDistribution
 
     virtual const IRegion *getRegion() const = 0;
 
+#ifdef OPENPGL_VSP_GUIDING
     virtual float volumeScatterProbability(Vector3 dir, bool contributionBased) const = 0;
+#endif
 
    protected:
     // const IRegion* m_region {nullptr};
