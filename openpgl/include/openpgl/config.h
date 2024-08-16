@@ -124,6 +124,9 @@ extern "C"
         void *directionalDistributionArguments;
         // for debugging
         bool deterministic{false};
+#ifdef OPENPGL_VSP_GUIDING
+        bool varianceBasedVSP{false};
+#endif
         PGLDebugArguments debugArguments;
     };
 

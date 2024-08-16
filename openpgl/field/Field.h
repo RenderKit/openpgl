@@ -54,6 +54,9 @@ struct Field
         bool useStochasticNNLookUp{false};
         bool useISNNLookUp{false};
         bool deterministic{false};
+#ifdef OPENPGL_VSP_GUIDING
+        bool varianceBasedVSP{false};
+#endif
         float decayOnSpatialSplit{0.25f};
 
         std::string toString() const;
@@ -80,7 +83,9 @@ struct Field
         m_useStochasticNNLookUp = settings.settings.useStochasticNNLookUp;
         m_useISNNLookUp = settings.settings.useISNNLookUp;
         m_spatialSubdivBuilderSettings = settings.settings.spatialSubdivBuilderSettings;
-
+#ifdef OPENPGL_VSP_GUIDING
+        m_vspVarianceBased = settings.settings.varianceBasedVSP;
+#endif
         m_distributionFactorySettings = settings.distributionFactorySettings;
         samples_.reserve(1e6);
     }
@@ -272,6 +277,9 @@ struct Field
         os.write(reinterpret_cast<const char *>(&m_iteration), sizeof(m_iteration));
         os.write(reinterpret_cast<const char *>(&m_totalSPP), sizeof(m_totalSPP));
         os.write(reinterpret_cast<const char *>(&m_deterministic), sizeof(m_deterministic));
+#ifdef OPENPGL_VSP_GUIDING
+        os.write(reinterpret_cast<const char *>(&m_vspVarianceBased), sizeof(m_vspVarianceBased));
+#endif
         os.write(reinterpret_cast<const char *>(&m_fitRegions), sizeof(m_fitRegions));
         os.write(reinterpret_cast<const char *>(&m_isSceneBoundsSet), sizeof(m_isSceneBoundsSet));
         os.write(reinterpret_cast<const char *>(&m_sceneBounds), sizeof(m_sceneBounds));
@@ -304,6 +312,9 @@ struct Field
         is.read(reinterpret_cast<char *>(&m_iteration), sizeof(m_iteration));
         is.read(reinterpret_cast<char *>(&m_totalSPP), sizeof(m_totalSPP));
         is.read(reinterpret_cast<char *>(&m_deterministic), sizeof(m_deterministic));
+#ifdef OPENPGL_VSP_GUIDING
+        is.read(reinterpret_cast<char *>(&m_vspVarianceBased), sizeof(m_vspVarianceBased));
+#endif
         is.read(reinterpret_cast<char *>(&m_fitRegions), sizeof(m_fitRegions));
         is.read(reinterpret_cast<char *>(&m_isSceneBoundsSet), sizeof(m_isSceneBoundsSet));
         is.read(reinterpret_cast<char *>(&m_sceneBounds), sizeof(m_sceneBounds));
@@ -465,7 +476,7 @@ struct Field
 #ifdef OPENPGL_VSP_GUIDING
                         m_distributionFactory.updateVolumeScatterProbability(regionStorage.first.distribution, regionStorage.first.trainingStatistics,
                                                                              samples.data() + regionStorage.second.m_begin,
-                                                                             regionStorage.second.m_end - regionStorage.second.m_begin);
+                                                                             regionStorage.second.m_end - regionStorage.second.m_begin, m_vspVarianceBased);
 #endif
                         // TODO: we should move setting the pivot to the factory
                         regionStorage.first.distribution._pivotPosition = sampleMean;
@@ -566,7 +577,7 @@ struct Field
 #ifdef OPENPGL_VSP_GUIDING
                         m_distributionFactory.updateVolumeScatterProbability(regionStorage.first.distribution, regionStorage.first.trainingStatistics,
                                                                              samples.data() + regionStorage.second.m_begin,
-                                                                             regionStorage.second.m_end - regionStorage.second.m_begin);
+                                                                             regionStorage.second.m_end - regionStorage.second.m_begin, m_vspVarianceBased);
 #endif
                         regionStorage.first.valid = regionStorage.first.isValid();
 #ifdef OPENPGL_DEBUG_MODE
@@ -743,6 +754,10 @@ struct Field
     bool m_fitRegions{true};
     // if the fitting process should be deterministic (i.e, samples are sorted before training)
     bool m_deterministic{false};
+
+#ifdef OPENPGL_VSP_GUIDING
+    bool m_vspVarianceBased{false};
+#endif
 
     bool m_isSceneBoundsSet{false};
     BBox m_sceneBounds;

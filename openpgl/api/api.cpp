@@ -610,11 +610,10 @@ extern "C" OPENPGL_DLLEXPORT uint32_t pglSurfaceSamplingDistributionGetId(PGLSur
 }
 
 #ifdef OPENPGL_VSP_GUIDING
-extern "C" OPENPGL_DLLEXPORT float pglSurfaceSamplingDistributionVolumeScatterProbability(PGLSurfaceSamplingDistribution surfaceSamplingDistribution, pgl_vec3f direction,
-                                                                                          bool contributionBased)
+extern "C" OPENPGL_DLLEXPORT float pglSurfaceSamplingDistributionVolumeScatterProbability(PGLSurfaceSamplingDistribution surfaceSamplingDistribution, pgl_vec3f direction)
 {
     ISurfaceSamplingDistribution *gSurfaceSamplingDistribution = (ISurfaceSamplingDistribution *)surfaceSamplingDistribution;
-    return gSurfaceSamplingDistribution->volumeScatterProbability(openpgl::Vector3(direction.x, direction.y, direction.z), contributionBased);
+    return gSurfaceSamplingDistribution->volumeScatterProbability(openpgl::Vector3(direction.x, direction.y, direction.z));
 }
 #endif
 
@@ -717,11 +716,10 @@ extern "C" OPENPGL_DLLEXPORT uint32_t pglVolumeSamplingDistributionGetId(PGLVolu
 }
 
 #ifdef OPENPGL_VSP_GUIDING
-extern "C" OPENPGL_DLLEXPORT float pglVolumeSamplingDistributionVolumeScatterProbability(PGLVolumeSamplingDistribution volumeSamplingDistribution, pgl_vec3f direction,
-                                                                                         bool contributionBased)
+extern "C" OPENPGL_DLLEXPORT float pglVolumeSamplingDistributionVolumeScatterProbability(PGLVolumeSamplingDistribution volumeSamplingDistribution, pgl_vec3f direction)
 {
     IVolumeSamplingDistribution *gVolumeSamplingDistribution = (IVolumeSamplingDistribution *)volumeSamplingDistribution;
-    return gVolumeSamplingDistribution->volumeScatterProbability(openpgl::Vector3(direction.x, direction.y, direction.z), contributionBased);
+    return gVolumeSamplingDistribution->volumeScatterProbability(openpgl::Vector3(direction.x, direction.y, direction.z));
 }
 #endif
 

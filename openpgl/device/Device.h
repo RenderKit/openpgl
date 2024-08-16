@@ -99,6 +99,9 @@ struct Device : public IDevice
             typename GuidingField::Settings gFieldSettings;
             gFieldSettings.settings.decayOnSpatialSplit = 0.25f;
             gFieldSettings.settings.deterministic = args.deterministic;
+#ifdef OPENPGL_VSP_GUIDING
+            gFieldSettings.settings.varianceBasedVSP = args.varianceBasedVSP;
+#endif
             gFieldSettings.debugSettings.fitRegions = args.debugArguments.fitRegions;
 
             PGLKDTreeArguments *spatialSturctureArguments = (PGLKDTreeArguments *)args.spatialSturctureArguments;
@@ -148,6 +151,9 @@ struct Device : public IDevice
             typename GuidingField::Settings gFieldSettings;
             gFieldSettings.settings.decayOnSpatialSplit = 0.25f;
             gFieldSettings.settings.deterministic = args.deterministic;
+#ifdef OPENPGL_VSP_GUIDING
+            gFieldSettings.settings.varianceBasedVSP = args.varianceBasedVSP;
+#endif
             gFieldSettings.debugSettings.fitRegions = args.debugArguments.fitRegions;
 
             PGLKDTreeArguments *spatialSturctureArguments = (PGLKDTreeArguments *)args.spatialSturctureArguments;
@@ -197,6 +203,9 @@ struct Device : public IDevice
             typename GuidingField::Settings gFieldSettings;
             gFieldSettings.settings.decayOnSpatialSplit = 0.25f;
             gFieldSettings.settings.deterministic = args.deterministic;
+#ifdef OPENPGL_VSP_GUIDING
+            gFieldSettings.settings.varianceBasedVSP = args.varianceBasedVSP;
+#endif
             gFieldSettings.debugSettings.fitRegions = args.debugArguments.fitRegions;
 
             PGLKDTreeArguments *spatialSturctureArguments = (PGLKDTreeArguments *)args.spatialSturctureArguments;
