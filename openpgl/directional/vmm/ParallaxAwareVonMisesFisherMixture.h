@@ -422,7 +422,6 @@ void ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents, UseParallaxCompe
         const float volumeScatterFirstMomentProbability0 = _volumeScatterProbabilityWeights[tmpIdx0.quot][tmpIdx0.rem];
         const float volumeScatterFirstMomentProbability1 = _volumeScatterProbabilityWeights[tmpIdx1.quot][tmpIdx1.rem];
 
-
         float newVolumeFirstMomentScatterProbability = weight0 * volumeScatterFirstMomentProbability0 + weight1 * volumeScatterFirstMomentProbability1;
         newVolumeFirstMomentScatterProbability /= (weight0 + weight1);
         _volumeScatterProbabilityWeights[tmpIdx0.quot][tmpIdx0.rem] = newVolumeFirstMomentScatterProbability;

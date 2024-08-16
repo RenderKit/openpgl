@@ -104,7 +104,7 @@ struct SampleDataStorage
 
     inline void addZeroValueSample(const ZeroValueSampleData &sample)
     {
-        if (sample.volume)
+        if (isInsideVolume(sample))
         {
             m_volumeContainer.zeroValueSamples.push_back(sample);
         }

@@ -192,6 +192,16 @@ inline bool ZeroValueSampleDataLess(const PGLZeroValueSampleData &compA, const P
                     )))));
 }
 
+inline bool isInsideVolume(const PGLZeroValueSampleData &zvsd)
+{
+    return (zvsd.flags & EInsideVolume);
+}
+
+inline bool isNextEventVolume(const PGLZeroValueSampleData &zvsd)
+{
+    return (zvsd.flags & ENextEventVolume);
+}
+
 inline SampleData *LoadSampleData(const std::string fileName, size_t &numData)
 {
     std::ifstream file;

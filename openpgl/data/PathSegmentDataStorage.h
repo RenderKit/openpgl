@@ -403,7 +403,7 @@ struct PathSegmentDataStorage
                     pglDirection = {dirOut[0], dirOut[1], dirOut[2]};
                     isd.directionOut = pglDirection;
 #endif
-                    isd.volume = insideVolume;
+                    isd.flags = flags;
 #if defined(OPENPGL_PATHSEGMENT_STORAGE_USE_ARRAY)
                     if (m_zero_value_sample_idx + 1 <= m_max_zero_value_sample_size)
                     {
