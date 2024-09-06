@@ -127,6 +127,22 @@ struct Field
     /// Checks if the spatial structure and directional distribution of this Field are similar to the ones stored in another Field.
     bool operator==(const Field &b) const;
 
+    size_t GetNumSurfaceCaches() const;
+
+    size_t GetNumVolumeCaches() const;
+
+    pgl_vec3f GetSurfaceCachePosition(size_t idx) const;
+
+    pgl_vec3f GetVolumeCachePosition(size_t idx) const;
+
+    pgl_box3f GetSurfaceCacheSampleBounds(size_t idx) const;
+
+    pgl_box3f GetVolumeCacheSampleBounds(size_t idx) const;
+
+    pgl_cacheInfo GetSurfaceCacheInfo(size_t idx) const;
+
+    pgl_cacheInfo GetVolumeCacheInfo(size_t idx) const;
+
     friend struct openpgl::cpp::SurfaceSamplingDistribution;
     friend struct openpgl::cpp::VolumeSamplingDistribution;
 
@@ -234,6 +250,54 @@ OPENPGL_INLINE FieldStatistics Field::GetVolumeStatistics() const
     OPENPGL_ASSERT(m_fieldHandle);
     PGLFieldStatistics fieldStats = pglFieldGetVolumeStatistics(m_fieldHandle);
     return FieldStatistics(fieldStats);
+}
+
+OPENPGL_INLINE size_t Field::GetNumSurfaceCaches() const
+{
+    OPENPGL_ASSERT(m_fieldHandle);
+    return pglFieldGetNumSurfaceCaches(m_fieldHandle);
+}
+
+OPENPGL_INLINE size_t Field::GetNumVolumeCaches() const
+{
+    OPENPGL_ASSERT(m_fieldHandle);
+    return pglFieldGetNumVolumeCaches(m_fieldHandle);
+}
+
+OPENPGL_INLINE pgl_vec3f Field::GetSurfaceCachePosition(size_t idx) const
+{
+    OPENPGL_ASSERT(m_fieldHandle);
+    return pglFieldGetSurfaceCachePosition(m_fieldHandle, idx);
+}
+
+OPENPGL_INLINE pgl_vec3f Field::GetVolumeCachePosition(size_t idx) const
+{
+    OPENPGL_ASSERT(m_fieldHandle);
+    return pglFieldGetVolumeCachePosition(m_fieldHandle, idx);
+}
+
+OPENPGL_INLINE pgl_box3f Field::GetSurfaceCacheSampleBounds(size_t idx) const
+{
+    OPENPGL_ASSERT(m_fieldHandle);
+    return pglFieldGetSurfaceCacheSampleBounds(m_fieldHandle, idx);
+}
+
+OPENPGL_INLINE pgl_box3f Field::GetVolumeCacheSampleBounds(size_t idx) const
+{
+    OPENPGL_ASSERT(m_fieldHandle);
+    return pglFieldGetVolumeCacheSampleBounds(m_fieldHandle, idx);
+}
+
+OPENPGL_INLINE pgl_cacheInfo Field::GetSurfaceCacheInfo(size_t idx) const
+{
+    OPENPGL_ASSERT(m_fieldHandle);
+    return pglFieldGetSurfaceCacheInfo(m_fieldHandle, idx);
+}
+
+OPENPGL_INLINE pgl_cacheInfo Field::GetVolumeCacheInfo(size_t idx) const
+{
+    OPENPGL_ASSERT(m_fieldHandle);
+    return pglFieldGetVolumeCacheInfo(m_fieldHandle, idx);
 }
 
 }  // namespace cpp

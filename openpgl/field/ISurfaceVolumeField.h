@@ -57,5 +57,21 @@ struct ISurfaceVolumeField
     virtual FieldStatistics *getSurfaceStatistics() const = 0;
 
     virtual FieldStatistics *getVolumeStatistics() const = 0;
+
+    virtual size_t getNumSurfaceCaches() const = 0;
+
+    virtual size_t getNumVolumeCaches() const = 0;
+
+    virtual Vector3 getSurfaceCachePosition(size_t idx) const = 0;
+
+    virtual Vector3 getVolumeCachePosition(size_t idx) const = 0;
+
+    virtual BBox getSurfaceCacheSampleBounds(size_t idx) const = 0;
+
+    virtual BBox getVolumeCacheSampleBounds(size_t idx) const = 0;
+
+    virtual CacheInfo getSurfaceCacheInfo(size_t idx) const = 0;
+
+    virtual CacheInfo getVolumeCacheInfo(size_t idx) const = 0;
 };
 }  // namespace openpgl

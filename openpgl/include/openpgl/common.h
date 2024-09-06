@@ -289,3 +289,12 @@ struct pgl_spectrum
 #else
 typedef pgl_vec3f pgl_spectrum;
 #endif
+
+typedef struct
+{
+    pgl_box3f cacheBounds;
+    pgl_box3f sampleBounds;
+    pgl_vec3f sampleMean;
+    pgl_vec3f distributionPivot;
+    pgl_vec3f sampleVariance;
+} pgl_cacheInfo;

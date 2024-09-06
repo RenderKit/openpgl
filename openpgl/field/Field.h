@@ -707,6 +707,49 @@ struct Field
         return stats;
     }
 
+    size_t getNumCaches() const
+    {
+        return m_regionStorageContainer.size();
+    }
+
+    Vector3 getCachePosition(size_t idx) const
+    {
+        // std::cout << m_distributionFactorySettings.toString()<<std::endl;
+        Vector3 cPos;
+        if (idx < m_regionStorageContainer.size())
+        {
+            cPos = m_regionStorageContainer[idx].first.distribution._pivotPosition;
+        }
+        return cPos;
+    }
+
+    BBox getCacheSampleBounds(size_t idx) const
+    {
+        // std::cout << m_distributionFactorySettings.toString()<<std::endl;
+        BBox cBBox;
+        if (idx < m_regionStorageContainer.size())
+        {
+            // cBBox = m_regionStorageContainer[idx].first.sampleStatistics.sampleBounds;
+            cBBox = m_regionStorageContainer[idx].first.regionBounds;
+        }
+        return cBBox;
+    }
+
+    CacheInfo getCacheInfo(size_t idx) const
+    {
+        CacheInfo ci;
+        if (idx < m_regionStorageContainer.size())
+        {
+            // cBBox = m_regionStorageContainer[idx].first.sampleStatistics.sampleBounds;
+            ci.cacheBounds = m_regionStorageContainer[idx].first.regionBounds;
+            ci.sampleBounds = m_regionStorageContainer[idx].first.sampleStatistics.sampleBounds;
+            ci.sampleMean = m_regionStorageContainer[idx].first.sampleStatistics.getMean();
+            ci.sampleVariance = m_regionStorageContainer[idx].first.sampleStatistics.getVariance();
+            ci.distributionPivot = m_regionStorageContainer[idx].first.distribution._pivotPosition;
+        }
+        return ci;
+    }
+
    private:
     bool m_isSurface{true};
 

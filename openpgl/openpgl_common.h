@@ -269,6 +269,15 @@ typedef embree::Vec3<int64_t> Vector3i;
 typedef embree::BBox<Vector3> BBox;
 typedef embree::BBox<Vector3i> BBoxi;
 
+struct CacheInfo
+{
+    BBox cacheBounds;
+    BBox sampleBounds;
+    Point3 sampleMean;
+    Point3 distributionPivot;
+    Vector3 sampleVariance;
+};
+
 inline float dot(Vector2 &a, Vector2 &b)
 {
     return embree::dot(a, b);

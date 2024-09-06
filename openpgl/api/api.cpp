@@ -257,6 +257,88 @@ extern "C" OPENPGL_DLLEXPORT PGLFieldStatistics pglFieldGetVolumeStatistics(PGLF
     return (PGLFieldStatistics)gField->getVolumeStatistics();
 }
 
+extern "C" OPENPGL_DLLEXPORT size_t pglFieldGetNumSurfaceCaches(PGLField field)
+{
+    const auto *gField = (const IGuidingField *)field;
+    return gField->getNumSurfaceCaches();
+}
+
+extern "C" OPENPGL_DLLEXPORT size_t pglFieldGetNumVolumeCaches(PGLField field)
+{
+    const auto *gField = (const IGuidingField *)field;
+    return gField->getNumVolumeCaches();
+}
+
+extern "C" OPENPGL_DLLEXPORT pgl_vec3f pglFieldGetSurfaceCachePosition(PGLField field, size_t idx)
+{
+    const auto *gField = (const IGuidingField *)field;
+    Vector3 cPos = gField->getSurfaceCachePosition(idx);
+    pgl_vec3f pglCPos;
+    pglVec3f(pglCPos, cPos[0], cPos[1], cPos[2]);
+    return pglCPos;
+}
+
+extern "C" OPENPGL_DLLEXPORT pgl_vec3f pglFieldGetVolumeCachePosition(PGLField field, size_t idx)
+{
+    const auto *gField = (const IGuidingField *)field;
+    Vector3 cPos = gField->getVolumeCachePosition(idx);
+    pgl_vec3f pglCPos;
+    pglVec3f(pglCPos, cPos[0], cPos[1], cPos[2]);
+    return pglCPos;
+}
+
+extern "C" OPENPGL_DLLEXPORT pgl_box3f pglFieldGetSurfaceCacheSampleBounds(PGLField field, size_t idx)
+{
+    const auto *gField = (const IGuidingField *)field;
+    BBox csBounds = gField->getSurfaceCacheSampleBounds(idx);
+    pgl_box3f pglBBox;
+    pglVec3f(pglBBox.lower, csBounds.lower[0], csBounds.lower[1], csBounds.lower[2]);
+    pglVec3f(pglBBox.upper, csBounds.upper[0], csBounds.upper[1], csBounds.upper[2]);
+    return pglBBox;
+}
+
+extern "C" OPENPGL_DLLEXPORT pgl_box3f pglFieldGetVolumeCacheSampleBounds(PGLField field, size_t idx)
+{
+    const auto *gField = (const IGuidingField *)field;
+    BBox csBounds = gField->getVolumeCacheSampleBounds(idx);
+    pgl_box3f pglBBox;
+    pglVec3f(pglBBox.lower, csBounds.lower[0], csBounds.lower[1], csBounds.lower[2]);
+    pglVec3f(pglBBox.upper, csBounds.upper[0], csBounds.upper[1], csBounds.upper[2]);
+    return pglBBox;
+}
+
+extern "C" OPENPGL_DLLEXPORT pgl_cacheInfo pglFieldGetSurfaceCacheInfo(PGLField field, size_t idx)
+{
+    const auto *gField = (const IGuidingField *)field;
+    CacheInfo ci = gField->getSurfaceCacheInfo(idx);
+    pgl_cacheInfo pglCI;
+    pglVec3f(pglCI.cacheBounds.lower, ci.cacheBounds.lower[0], ci.cacheBounds.lower[1], ci.cacheBounds.lower[2]);
+    pglVec3f(pglCI.cacheBounds.upper, ci.cacheBounds.upper[0], ci.cacheBounds.upper[1], ci.cacheBounds.upper[2]);
+    pglVec3f(pglCI.sampleBounds.lower, ci.sampleBounds.lower[0], ci.sampleBounds.lower[1], ci.sampleBounds.lower[2]);
+    pglVec3f(pglCI.sampleBounds.upper, ci.sampleBounds.upper[0], ci.sampleBounds.upper[1], ci.sampleBounds.upper[2]);
+
+    pglVec3f(pglCI.sampleMean, ci.sampleMean[0], ci.sampleMean[1], ci.sampleMean[2]);
+    pglVec3f(pglCI.distributionPivot, ci.distributionPivot[0], ci.distributionPivot[1], ci.distributionPivot[2]);
+    pglVec3f(pglCI.sampleVariance, ci.sampleVariance[0], ci.sampleVariance[1], ci.sampleVariance[2]);
+    return pglCI;
+}
+
+extern "C" OPENPGL_DLLEXPORT pgl_cacheInfo pglFieldGetVolumeCacheInfo(PGLField field, size_t idx)
+{
+    const auto *gField = (const IGuidingField *)field;
+    CacheInfo ci = gField->getVolumeCacheInfo(idx);
+    pgl_cacheInfo pglCI;
+    pglVec3f(pglCI.cacheBounds.lower, ci.cacheBounds.lower[0], ci.cacheBounds.lower[1], ci.cacheBounds.lower[2]);
+    pglVec3f(pglCI.cacheBounds.upper, ci.cacheBounds.upper[0], ci.cacheBounds.upper[1], ci.cacheBounds.upper[2]);
+    pglVec3f(pglCI.sampleBounds.lower, ci.sampleBounds.lower[0], ci.sampleBounds.lower[1], ci.sampleBounds.lower[2]);
+    pglVec3f(pglCI.sampleBounds.upper, ci.sampleBounds.upper[0], ci.sampleBounds.upper[1], ci.sampleBounds.upper[2]);
+
+    pglVec3f(pglCI.sampleMean, ci.sampleMean[0], ci.sampleMean[1], ci.sampleMean[2]);
+    pglVec3f(pglCI.distributionPivot, ci.distributionPivot[0], ci.distributionPivot[1], ci.distributionPivot[2]);
+    pglVec3f(pglCI.sampleVariance, ci.sampleVariance[0], ci.sampleVariance[1], ci.sampleVariance[2]);
+    return pglCI;
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // SampleStorage //////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////

@@ -251,6 +251,46 @@ struct SurfaceVolumeField : public ISurfaceVolumeField
         return stats;
     }
 
+    size_t getNumSurfaceCaches() const
+    {
+        return m_surfaceField.getNumCaches();
+    }
+
+    size_t getNumVolumeCaches() const
+    {
+        return m_volumeField.getNumCaches();
+    }
+
+    Vector3 getSurfaceCachePosition(size_t idx) const
+    {
+        return m_surfaceField.getCachePosition(idx);
+    }
+
+    Vector3 getVolumeCachePosition(size_t idx) const
+    {
+        return m_volumeField.getCachePosition(idx);
+    }
+
+    BBox getSurfaceCacheSampleBounds(size_t idx) const
+    {
+        return m_surfaceField.getCacheSampleBounds(idx);
+    }
+
+    BBox getVolumeCacheSampleBounds(size_t idx) const
+    {
+        return m_volumeField.getCacheSampleBounds(idx);
+    }
+
+    CacheInfo getSurfaceCacheInfo(size_t idx) const
+    {
+        return m_surfaceField.getCacheInfo(idx);
+    }
+
+    CacheInfo getVolumeCacheInfo(size_t idx) const
+    {
+        return m_volumeField.getCacheInfo(idx);
+    }
+
    private:
     size_t m_iteration{0};
     size_t m_totalSPP{0};

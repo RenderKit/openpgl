@@ -68,6 +68,22 @@ typedef ManagedObject Field;
 
     OPENPGL_CORE_INTERFACE PGLFieldStatistics pglFieldGetVolumeStatistics(PGLField field);
 
+    OPENPGL_CORE_INTERFACE size_t pglFieldGetNumSurfaceCaches(PGLField field);
+
+    OPENPGL_CORE_INTERFACE size_t pglFieldGetNumVolumeCaches(PGLField field);
+
+    OPENPGL_CORE_INTERFACE pgl_vec3f pglFieldGetSurfaceCachePosition(PGLField field, size_t idx);
+
+    OPENPGL_CORE_INTERFACE pgl_vec3f pglFieldGetVolumeCachePosition(PGLField field, size_t idx);
+
+    OPENPGL_CORE_INTERFACE pgl_box3f pglFieldGetSurfaceCacheSampleBounds(PGLField field, size_t idx);
+
+    OPENPGL_CORE_INTERFACE pgl_box3f pglFieldGetVolumeCacheSampleBounds(PGLField field, size_t idx);
+
+    OPENPGL_CORE_INTERFACE pgl_cacheInfo pglFieldGetSurfaceCacheInfo(PGLField field, size_t idx);
+
+    OPENPGL_CORE_INTERFACE pgl_cacheInfo pglFieldGetVolumeCacheInfo(PGLField field, size_t idx);
+
 #ifdef __cplusplus
 }  // extern "C"
 #endif
