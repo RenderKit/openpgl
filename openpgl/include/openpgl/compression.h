@@ -116,7 +116,7 @@ inline pgl_vec3f dequantize_direction(const uint32_t word)
         pgl_vec2f b = {std::abs(n.y), std::abs(n.x)};
         n = {(1.f - b.x) * signNotZero.x, (1.f - b.y) * signNotZero.y};
     }
-    return normalize({n.x, n.y, 1.0f - nl1});
+    return pglNormalize({n.x, n.y, 1.0f - nl1});
 
     ////////////////////////////////////////////////////////////////////////
 }

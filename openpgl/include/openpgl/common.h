@@ -199,7 +199,7 @@ inline void pglBox3f(pgl_box3f &box, const float lx, const float ly, const float
     pglVec3f(box.upper, ux, uy, uz);
 }
 
-inline pgl_vec3f normalize(pgl_vec3f n)
+inline pgl_vec3f pglNormalize(pgl_vec3f n)
 {
     const float f = 1.f / std::sqrt(n.x * n.x + n.y * n.y + n.z * n.z);
     return {n.x * f, n.y * f, n.z * f};
