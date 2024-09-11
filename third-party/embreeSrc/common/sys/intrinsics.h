@@ -91,7 +91,7 @@ namespace embree
   
 #if defined(__X86_64__) || defined (__aarch64__)
   __forceinline size_t bsf(size_t v) {
-#if defined(__AVX2__) 
+#if defined(__AVX2__) && !defined(__aarch64__)
     return _tzcnt_u64(v);
 #else
     unsigned long r = 0; _BitScanForward64(&r,v); return r;
@@ -140,7 +140,7 @@ namespace embree
   
 #if defined(__X86_64__) || defined (__aarch64__)
   __forceinline size_t bsr(size_t v) {
-#if defined(__AVX2__) 
+#if defined(__AVX2__) && !defined(__aarch64__)
     return 63 -_lzcnt_u64(v);
 #else
     unsigned long r = 0; _BitScanReverse64(&r, v); return r;

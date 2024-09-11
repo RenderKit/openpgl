@@ -336,6 +336,14 @@ FORCE_INLINE void _sse2neon_smp_mb(void)
  * argument "a" of mm_shuffle_ps that will be places in fp1 of result.
  * fp0 is the same for fp0 of result.
  */
+#if defined(__aarch64__)
+#define _MN_SHUFFLE(fp3,fp2,fp1,fp0) ( (uint8x16_t){ (((fp3)*4)+0), (((fp3)*4)+1), (((fp3)*4)+2), (((fp3)*4)+3),  (((fp2)*4)+0), (((fp2)*4)+1), (((fp2)*4)+\
+2), (((fp2)*4)+3),  (((fp1)*4)+0), (((fp1)*4)+1), (((fp1)*4)+2), (((fp1)*4)+3),  (((fp0)*4)+0), (((fp0)*4)+1), (((fp0)*4)+2), (((fp0)*4)+3) } )
+#define _MF_SHUFFLE(fp3,fp2,fp1,fp0) ( (uint8x16_t){ (((fp3)*4)+0), (((fp3)*4)+1), (((fp3)*4)+2), (((fp3)*4)+3),  (((fp2)*4)+0), (((fp2)*4)+1), (((fp2)*4)+\
+2), (((fp2)*4)+3),  (((fp1)*4)+16+0), (((fp1)*4)+16+1), (((fp1)*4)+16+2), (((fp1)*4)+16+3),  (((fp0)*4)+16+0), (((fp0)*4)+16+1), (((fp0)*4)+16+2), (((fp0)*\
+4)+16+3) } )
+#endif
+
 #define _MM_SHUFFLE(fp3, fp2, fp1, fp0) \
     (((fp3) << 6) | ((fp2) << 4) | ((fp1) << 2) | ((fp0)))
 
@@ -2822,7 +2830,7 @@ FORCE_INLINE void _mm_stream_pi(__m64 *p, __m64 a)
 FORCE_INLINE void _mm_stream_ps(float *p, __m128 a)
 {
 #if __has_builtin(__builtin_nontemporal_store)
-    __builtin_nontemporal_store(a, (float32x4_t *) p);
+    __builtin_nontemporal_store(reinterpret_cast<float32x4_t>(a), (float32x4_t *) p);
 #else
     vst1q_f32(p, vreinterpretq_f32_m128(a));
 #endif
@@ -5660,7 +5668,7 @@ FORCE_INLINE void _mm_storeu_si32(void *p, __m128i a)
 FORCE_INLINE void _mm_stream_pd(double *p, __m128d a)
 {
 #if __has_builtin(__builtin_nontemporal_store)
-    __builtin_nontemporal_store(a, (__m128d *) p);
+    __builtin_nontemporal_store(reinterpret_cast<float32x4_t>(a), (float32x4_t *) p);
 #elif defined(__aarch64__) || defined(_M_ARM64)
     vst1q_f64(p, vreinterpretq_f64_m128d(a));
 #else
@@ -6809,14 +6817,14 @@ FORCE_INLINE __m64 _mm_sign_pi8(__m64 _a, __m64 _b)
     _sse2neon_define2(                                                  \
         __m128i, a, b,                                                  \
         const uint16_t _mask[8] =                                       \
-            _sse2neon_init(((imm) & (1 << 0)) ? (uint16_t) -1 : 0x0,    \
-                           ((imm) & (1 << 1)) ? (uint16_t) -1 : 0x0,    \
-                           ((imm) & (1 << 2)) ? (uint16_t) -1 : 0x0,    \
-                           ((imm) & (1 << 3)) ? (uint16_t) -1 : 0x0,    \
-                           ((imm) & (1 << 4)) ? (uint16_t) -1 : 0x0,    \
-                           ((imm) & (1 << 5)) ? (uint16_t) -1 : 0x0,    \
-                           ((imm) & (1 << 6)) ? (uint16_t) -1 : 0x0,    \
-                           ((imm) & (1 << 7)) ? (uint16_t) -1 : 0x0);   \
+            _sse2neon_init(((imm) & (1 << 0)) ? (uint16_t)0xffff : (uint16_t)0x0000,    \
+                           ((imm) & (1 << 1)) ? (uint16_t)0xffff : (uint16_t)0x0000,    \
+                           ((imm) & (1 << 2)) ? (uint16_t)0xffff : (uint16_t)0x0000,    \
+                           ((imm) & (1 << 3)) ? (uint16_t)0xffff : (uint16_t)0x0000,    \
+                           ((imm) & (1 << 4)) ? (uint16_t)0xffff : (uint16_t)0x0000,    \
+                           ((imm) & (1 << 5)) ? (uint16_t)0xffff : (uint16_t)0x0000,    \
+                           ((imm) & (1 << 6)) ? (uint16_t)0xffff : (uint16_t)0x0000,    \
+                           ((imm) & (1 << 7)) ? (uint16_t)0xffff : (uint16_t)0x0000);   \
         uint16x8_t _mask_vec = vld1q_u16(_mask);                        \
         uint16x8_t __a = vreinterpretq_u16_m128i(_a);                   \
         uint16x8_t __b = vreinterpretq_u16_m128i(_b); _sse2neon_return( \
