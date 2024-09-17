@@ -64,6 +64,10 @@ struct Denoiser
         oidnScalarFilter.commit();
     }
 
+    Denoiser(const Denoiser& denoiser) = delete;
+
+    Denoiser & operator=(const Denoiser&) = delete;
+
     void denoise(pgl_vec3f *rgb, pgl_vec3f *n, pgl_vec3f *albedo, pgl_vec3f *result)
     {
         const std::size_t numPixels = m_resolution.x * m_resolution.y;

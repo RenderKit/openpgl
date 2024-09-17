@@ -128,6 +128,9 @@ struct ContainerInternal
     using value_type = Type;
 
     ContainerInternal() = default;
+
+    ContainerInternal(const ContainerInternal& cont) = delete;
+
     ~ContainerInternal()
     {
         delete[] m_data;
