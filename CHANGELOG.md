@@ -1,6 +1,16 @@
 Version History
 ===============
 
+## Open PGL 0.7.0
+
+- New Features:
+    - ``
+- Api changes:
+
+- Optimizations:
+
+- Bugfixes:
+
 ## Open PGL 0.6.0
 
 - Api changes:
