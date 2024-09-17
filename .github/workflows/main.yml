@@ -107,6 +107,25 @@ jobs:
         set CC=icx.exe
         Powershell.exe -ExecutionPolicy RemoteSigned -File scripts\build_win.ps1 Ninja -DTBB_VERSION=2021.1.1 -DTBB_HASH="" -DBUILD_TOOLS=ON          
 
+  #build-windows-arm64-msvc:
+  #  secrets: inherit
+  #  uses: intel-innersource/libraries.devops.renderkit.workflows/.github/workflows/windows.yml@main
+  #  with:
+  #    runs-on: '["Windows", "ARM64"]'
+  #    cmd: |
+  #        scripts/build.bat "Visual Studio 17 2022" "v143" '"-A ARM64"' '"-DBUILD_TBB_FROM_SOURCE=ON"'  '"-DDOWNLOAD_ISPC=OFF"' '"-DBUILD_OIDN=OFF"'
+
+  build-windows-arm64-llvm:
+    secrets: inherit
+    uses: intel-innersource/libraries.devops.renderkit.workflows/.github/workflows/windows.yml@main
+    with:
+      runs-on: '["Windows", "ARM64"]'
+      shell: cmd
+      cmd: |
+        call "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvarsarm64.bat"
+        set CXX=clang-cl.exe
+        set CC=clang-cl.exe
+        Powershell.exe -ExecutionPolicy RemoteSigned -File scripts\build_win.ps1 Ninja -DBUILD_TBB_FROM_SOURCE=ON -DBUILD_TBB_FROM_SOURCE=ON -DBUILD_TBB_FROM_SOURCE=ON -DDOWNLOAD_ISPC=ON -DBUILD_OIDN=ON
 
   ### Build MacOS Jobs ###
 
