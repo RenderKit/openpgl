@@ -1,55 +1,11 @@
-// pbrt is Copyright(c) 1998-2020 Matt Pharr, Wenzel Jakob, and Greg Humphreys.
-// The pbrt source code is licensed under the Apache License, Version 2.0.
-// SPDX: Apache-2.0
-
-/*
-TODO:
-- how to do float4, fancy packing tricks?
-  flat int:32;
-  float float:32
-  struct Foo { int a, b; float c, d; };
-  would be nice to load as a big float4...
-
-- mechanism to not store fields that are easily recomputed...
-  maybe the answer is to just do that--recompute only when needed--in the
-  original struct!
-*/
-
-#include <assert.h>
-#include <ctype.h>
-#include <stdio.h>
-#include <string.h>
+// Copyright 2024 Intel Corporation
+// SPDX-License-Identifier: Apache-2.0
 
 #include <filesystem>
 #include <fstream>
-#include <functional>
 #include <iostream>
-#include <map>
-#include <set>
 #include <string>
-#include <utility>
 #include <vector>
-
-int line = 1;
-
-#ifdef __GNUG__
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wformat-security"
-#endif  // __GNUG__
-
-const char *filename;
-
-template <typename... Args>
-static void error(const char *fmt, Args... args)
-{
-    fprintf(stderr, "%s:%d: ", filename, line);
-    fprintf(stderr, fmt, std::forward<Args>(args)...);
-    exit(1);
-}
-
-#ifdef __GNUG__
-#pragma GCC diagnostic pop
-#endif  // __GNUG__
 
 enum ShaderType
 {
@@ -165,7 +121,10 @@ void printShaders(const std::vector<std::string> &shaderFiles)
 int main(int argc, char *argv[])
 {
     if (argc != 2 && argc != 3 && argc != 4)
-        error("usage: sc <optinal>.vs <optinal>.gs <optinal>.fs\n");
+    {
+        std::cerr << "usage: sc <optinal>.vs <optinal>.gs <optinal>.fs" << std::endl;
+        exit(1);
+    }
 
     std::vector<std::string> shaderFiles;
     for (int i = 1; i < argc; i++)
