@@ -8,11 +8,13 @@
 #include <sstream>
 
 #include "../FileManager.h"
+#include "shaders/cachesBBoxes_sc.h"
+#include "shaders/caches_sc.h"
 
 GuidingFieldView::GuidingFieldView(Data *data) : View(data)
 {
-    m_shader.init(FileManager::read("caches.vs"), FileManager::read("caches.gs"), FileManager::read("caches.fs"));
-    m_shaderBBoxes.init(FileManager::read("cachesBBoxes.vs"), FileManager::read("cachesBBoxes.gs"), FileManager::read("cachesBBoxes.fs"));
+    m_shader.init(caches_vs, caches_gs, caches_fs);
+    m_shaderBBoxes.init(cachesBBoxes_vs, cachesBBoxes_gs, cachesBBoxes_fs);
 
     m_cacheColor = glm::vec3(1.0, .0, .50);
     m_cacheBoundsColor = glm::vec3(1.0, .50, .0);

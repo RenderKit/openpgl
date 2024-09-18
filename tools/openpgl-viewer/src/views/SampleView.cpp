@@ -8,12 +8,13 @@
 #include <sstream>
 
 #include "../FileManager.h"
+#include "shaders/samples_sc.h"
 
 SampleView::SampleView(Data *data) : View(data)
 {
     m_pointSize = 1.5f;
     m_pointColor = glm::vec3(.0, .50, .50);
-    m_shader.init(FileManager::read("samples.vs"), FileManager::read("samples.fs"));
+    m_shader.init(samples_vs, samples_fs);
 }
 
 void SampleView::loadSampleData()

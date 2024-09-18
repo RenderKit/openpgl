@@ -15,6 +15,8 @@
 #include <sstream>
 
 #include "../FileManager.h"
+#include "shaders/coloredsamples_sc.h"
+#include "shaders/sampledistribution_sc.h"
 
 inline glm::vec3 sphericalDirectionZUP(const float &theta, const float &phi)
 {
@@ -58,8 +60,8 @@ SamplingDistributionView::SamplingDistributionView(Data *data, SamplingDistribut
 
 void SamplingDistributionView::init(SamplingDistributionType type)
 {
-    m_frameBufferShader.init(FileManager::read("sampledistribution.vs"), FileManager::read("sampledistribution.fs"));
-    m_shader.init(FileManager::read("coloredsamples.vs"), FileManager::read("coloredsamples.fs"));
+    m_frameBufferShader.init(sampledistribution_vs, sampledistribution_fs);
+    m_shader.init(coloredsamples_vs, coloredsamples_fs);
     m_distributionType = type;
     m_pdfImg = new glm::vec3[m_imgWidth * m_imgHeight];
 #ifdef OPENPGL_RADIANCE_CACHES

@@ -8,10 +8,11 @@
 #include <string>
 
 #include "FileManager.h"
+#include "shaders/framebuffer_sc.h"
 
 void FrameBuffer::init(float width, float height)
 {
-    m_frameBufferShader.init(FileManager::read("framebuffer.vs"), FileManager::read("framebuffer.fs"));
+    m_frameBufferShader.init(framebuffer_vs, framebuffer_fs);
 
     m_width = width;
     m_height = height;
