@@ -5,3 +5,5 @@ install*
 doxygen
 .vscode
 doc/tmp/*
+
+imgui.ini
