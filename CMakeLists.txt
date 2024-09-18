@@ -47,6 +47,7 @@ ENDIF()
 option(OPENPGL_BUILD_STATIC "Build OpenPGL as static library." OFF)
 
 option(OPENPGL_BUILD_TOOLS "Build tool applications." OFF)
+option(OPENPGL_BUILD_VIEWER "Build viewer applications." OFF)
 option(OPENPGL_BUILD_CHECK_TOOL "Build check tool application." OFF)
 
 try_compile(COMPILER_SUPPORTS_ARM_NEON "${CMAKE_BINARY_DIR}" "${PROJECT_SOURCE_DIR}/cmake/check_arm_neon.cpp")

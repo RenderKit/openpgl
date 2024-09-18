@@ -6,3 +6,7 @@ if(OPENPGL_BUILD_TOOLS)
     add_subdirectory(openpgl_debug)
     add_subdirectory(openpgl_bench)
 endif()
+
+if(OPENPGL_BUILD_VIEWER)
+    add_subdirectory(openpgl-viewer)
+endif()
