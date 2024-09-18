@@ -1,14 +1,14 @@
 #pragma once
 
 #include <fstream>
-#include <string>
-#include <sstream>
 #include <iostream>
+#include <sstream>
+#include <string>
 
 class FileManager
 {
-public:
-	FileManager();
-	~FileManager();
-	static std::string read(const std::string& filename);
+   public:
+    FileManager();
+    ~FileManager();
+    static std::string read(const std::string &filename);
 };

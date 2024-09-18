@@ -1,24 +1,24 @@
+#include <imgui.h>
+
+#include <glm/vec2.hpp>
+#include <string>
+#include <vector>
+
 #include "data/Data.h"
 #include "math/Camera.h"
 #include "views/View.h"
 
-#include <imgui.h>
-#include <glm/vec2.hpp>
-
-#include <string>
-#include <vector>
-
 struct GLFWwindow;
 
-struct Application{
-
-protected:
+struct Application
+{
+   protected:
     Application();
 
-    static Application* appPtr;
-public:
+    static Application *appPtr;
 
-    static Application* GetInstance();
+   public:
+    static Application *GetInstance();
 
     void loadScene(std::string sceneFile);
 
@@ -26,34 +26,33 @@ public:
 
     void drawUI();
 
-    void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods);
+    void mouseButtonCallback(GLFWwindow *window, int button, int action, int mods);
 
-    void mouseCallback(GLFWwindow* window, double xposIn, double yposIn);
+    void mouseCallback(GLFWwindow *window, double xposIn, double yposIn);
 
-    void scrollCallback(GLFWwindow* window, double xoffset, double yoffset);
+    void scrollCallback(GLFWwindow *window, double xoffset, double yoffset);
 
-private:
+   private:
     void processInput(GLFWwindow *window);
 
     void setStyle();
 
-private:
-
-    GLFWwindow* m_window;
+   private:
+    GLFWwindow *m_window;
 
     Data m_data;
-    Camera* m_camera;
+    Camera *m_camera;
 
-    std::vector<View*> m_views;
+    std::vector<View *> m_views;
 
     bool m_firstMouse = true;
-    float m_lastX =  0.f;
-    float m_lastY =  0.f;
+    float m_lastX = 0.f;
+    float m_lastY = 0.f;
 
-    float m_deltaTime = 0.0f;	// time between current frame and last frame
-    float m_lastFrame = 0.0f; 
+    float m_deltaTime = 0.0f;  // time between current frame and last frame
+    float m_lastFrame = 0.0f;
 
-    bool m_loadScenePressed = false;  
+    bool m_loadScenePressed = false;
 
     bool m_mouseDragOngoing = false;
     bool m_needToHandleRightPress = false;
@@ -61,9 +60,9 @@ private:
     ImVec2 m_viewportPanelSize;
     ImVec2 m_viewportMinRegion;
     ImVec2 m_viewportMaxRegion;
-    ImVec2 m_viewportOffset;  
+    ImVec2 m_viewportOffset;
 
     glm::vec2 m_mXY;
 
-    std::string m_lastFilePath {"."};
+    std::string m_lastFilePath{"."};
 };

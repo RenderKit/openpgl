@@ -1,31 +1,34 @@
 #pragma once
-#include "../GLShader.h"
-#include "View.h"
-
-#include <string>
-#include <vector>
 #include <openpgl/cpp/OpenPGL.h>
 
-#include "../math/AABB.h"
 #include <glm/vec3.hpp>
+#include <string>
+#include <vector>
+
+#include "../GLShader.h"
 #include "../data/Data.h"
+#include "../math/AABB.h"
 #include "../math/Camera.h"
+#include "View.h"
 
-class GuidingFieldView: public View {
-
-public:
-    GuidingFieldView(Data* data);
+class GuidingFieldView : public View
+{
+   public:
+    GuidingFieldView(Data *data);
 
     void loadField();
-    void dataUpdated() override {loadField();};
+    void dataUpdated() override
+    {
+        loadField();
+    };
     void drawViewport() override;
 
     void drawUI() override;
 
-public:
+   public:
     Shader m_shader;
     Shader m_shaderBBoxes;
-    openpgl::cpp::Field* m_field;
+    openpgl::cpp::Field *m_field;
 
     std::vector<glm::vec3> m_cachePositions;
     std::vector<unsigned int> m_cacheIndices;
@@ -39,12 +42,12 @@ public:
     std::vector<glm::vec3> m_cacheVarianceBoundsLowers;
     std::vector<glm::vec3> m_cacheVarianceBoundsUppers;
 
-    //AABB m_sampleBounds;
-    bool m_drawCachePositions {false};
-    bool m_drawCacheBounds {false};
-    bool m_drawSampleBounds {false};
-    bool m_drawVarianceBounds {true};
-    
+    // AABB m_sampleBounds;
+    bool m_drawCachePositions{false};
+    bool m_drawCacheBounds{false};
+    bool m_drawSampleBounds{false};
+    bool m_drawVarianceBounds{true};
+
     glm::vec3 m_cacheColor;
     glm::vec3 m_cacheBoundsColor;
     glm::vec3 m_sampleBoundsColor;
@@ -61,7 +64,6 @@ public:
     unsigned int vboSampleBBPositions;
     unsigned int vboSampleBBLowers;
     unsigned int vboSampleBBUppers;
-
 
     unsigned int vaoVarianceBB;
     unsigned int vboVarianceBBPositions;

@@ -1,12 +1,12 @@
 #pragma once
 
+#include <imgui.h>
+
 #include "GLShader.h"
 #include "data/Data.h"
 
-#include <imgui.h>
-
-struct FrameBuffer {
-
+struct FrameBuffer
+{
     FrameBuffer() = default;
 
     void init(float width, float height);
@@ -18,7 +18,8 @@ struct FrameBuffer {
 
     void draw();
     void clear();
-    public:
+
+   public:
     unsigned int m_fbo;
     unsigned int m_rbo;
 

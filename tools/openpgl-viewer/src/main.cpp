@@ -1,9 +1,10 @@
-#include "Application.h"
 #include <string>
 
-int main(int argc, char** argv) {
+#include "Application.h"
 
-    Application* app = Application::GetInstance();
+int main(int argc, char **argv)
+{
+    Application *app = Application::GetInstance();
 
     if (argc == 2)
     {
@@ -12,5 +13,4 @@ int main(int argc, char** argv) {
     }
 
     return app->run();
-
 }

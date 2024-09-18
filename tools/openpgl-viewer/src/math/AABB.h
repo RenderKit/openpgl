@@ -1,12 +1,13 @@
 #pragma once
 
-#include <glm/vec3.hpp>
 #include <algorithm>
+#include <glm/vec3.hpp>
 #include <limits>
 
-struct AABB{
-
-    AABB(){
+struct AABB
+{
+    AABB()
+    {
         min = glm::vec3(std::numeric_limits<float>::max());
         max = glm::vec3(std::numeric_limits<float>::min());
     }
@@ -14,8 +15,9 @@ struct AABB{
     glm::vec3 min;
     glm::vec3 max;
 
-    glm::vec3 getExtend() const {
-        return max-min;
+    glm::vec3 getExtend() const
+    {
+        return max - min;
     }
 
     void extend(const glm::vec3 v)
@@ -28,5 +30,4 @@ struct AABB{
         max[1] = std::max(max[1], v[1]);
         max[2] = std::max(max[2], v[2]);
     }
-
 };

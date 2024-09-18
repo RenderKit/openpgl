@@ -2,14 +2,16 @@
 
 #include "GLShader.h"
 
-struct PickBuffer {
-
-    struct PixelInfo {
+struct PickBuffer
+{
+    struct PixelInfo
+    {
         float ObjectID;
         float DrawID;
         float PrimID;
 
-        PixelInfo()     {
+        PixelInfo()
+        {
             ObjectID = 0.0f;
             DrawID = 0.0f;
             PrimID = 0.0f;
@@ -25,7 +27,7 @@ struct PickBuffer {
 
     PixelInfo readPixel(unsigned int x, unsigned int y);
 
-public:
+   public:
     unsigned int m_fbo;
     unsigned int m_rbo;
 
@@ -34,5 +36,4 @@ public:
 
     float m_width;
     float m_height;
-
 };
