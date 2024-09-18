@@ -7,6 +7,11 @@
 #include <nlohmann/json.hpp>
 using json = nlohmann::json;
 
+std::string get_path(std::string filename)
+{
+    return filename.substr(0, filename.find_last_of("/\\"));
+}
+
 void Data::init()
 {
     m_device = new openpgl::cpp::Device(PGL_DEVICE_TYPE_CPU_4);
@@ -16,7 +21,12 @@ void Data::load(std::string filename)
 {
     std::ifstream f(filename);
     json data = json::parse(f);
-    std::string rootDir = data["root"];
+    std::string rootDir = "";
+    if(data.contains("root"))
+        rootDir = data["root"];
+    else {
+        rootDir = get_path(filename);
+    }
     std::string cameraFile = data["camera"];
     std::string fieldFile = data["field"];
     std::string samplesFile = data["samples"];
