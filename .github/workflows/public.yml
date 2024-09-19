@@ -22,7 +22,7 @@ jobs:
     steps:
       - name: Install packages (rocky 8)
         run: |
-          yum -y install gcc-c++ clang tar git-lfs make tbb-devel 
+          yum -y install gcc-c++ clang tar git-lfs make tbb-devel python3
           yum -y install cmake
       - name: Checkout Repository
         uses: actions/checkout@v4
