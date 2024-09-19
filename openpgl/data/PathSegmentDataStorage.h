@@ -16,10 +16,7 @@ namespace openpgl
 {
 struct PathSegmentDataStorage
 {
-    PathSegmentDataStorage(bool trackZeroValueSamples = false)
-    {
-        m_track_zero_value_samples = trackZeroValueSamples;
-    }
+    PathSegmentDataStorage() {}
 
     PathSegmentDataStorage(const PathSegmentDataStorage &) = delete;
 
@@ -50,7 +47,12 @@ struct PathSegmentDataStorage
     int m_sample_idx = {-1};
     int m_max_sample_size = {0};
 
+#ifdef OPENPGL_RADIANCE_CACHES
+    bool m_track_zero_value_samples{true};
+#else
     bool m_track_zero_value_samples{false};
+#endif
+
     ZeroValueSampleData *m_zeroValueSampleStorage{nullptr};
     int m_zero_value_sample_idx = {-1};
     int m_max_zero_value_sample_size = {0};

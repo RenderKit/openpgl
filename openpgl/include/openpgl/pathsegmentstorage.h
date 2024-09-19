@@ -32,7 +32,7 @@ typedef ManagedObject Region;
 
     typedef PGLPathSegmentData *PGLPathSegment;
 
-    OPENPGL_CORE_INTERFACE PGLPathSegmentStorage pglNewPathSegmentStorage(bool trackZeroValueSamples);
+    OPENPGL_CORE_INTERFACE PGLPathSegmentStorage pglNewPathSegmentStorage();
 
     OPENPGL_CORE_INTERFACE void pglReleasePathSegmentStorage(PGLPathSegmentStorage pathSegmentStorage);
 

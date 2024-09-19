@@ -406,9 +406,9 @@ extern "C" OPENPGL_DLLEXPORT bool pglSampleStorageCompare(PGLSampleStorage sampl
 // PathSegmentStorage /////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
-extern "C" OPENPGL_DLLEXPORT PGLPathSegmentStorage pglNewPathSegmentStorage(bool trackZeroValueSamples) OPENPGL_CATCH_BEGIN
+extern "C" OPENPGL_DLLEXPORT PGLPathSegmentStorage pglNewPathSegmentStorage() OPENPGL_CATCH_BEGIN
 {
-    openpgl::PathSegmentDataStorage *pathSegmentStorage = new openpgl::PathSegmentDataStorage(trackZeroValueSamples);
+    openpgl::PathSegmentDataStorage *pathSegmentStorage = new openpgl::PathSegmentDataStorage();
     return (PGLPathSegmentStorage)pathSegmentStorage;
 }
 OPENPGL_CATCH_END(nullptr)

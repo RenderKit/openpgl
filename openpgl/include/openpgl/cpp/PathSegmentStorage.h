@@ -22,7 +22,7 @@ namespace cpp
 
 struct PathSegmentStorage
 {
-    PathSegmentStorage(bool trackZeroValueSamples = false);
+    PathSegmentStorage();
     ~PathSegmentStorage();
 
     PathSegmentStorage(const PathSegmentStorage &) = delete;
@@ -165,9 +165,9 @@ struct PathSegmentStorage
 /// Implementation
 ////////////////////////////////////////////////////////////
 
-OPENPGL_INLINE PathSegmentStorage::PathSegmentStorage(bool trackZeroValueSamples)
+OPENPGL_INLINE PathSegmentStorage::PathSegmentStorage()
 {
-    m_pathSegmentStorageHandle = pglNewPathSegmentStorage(trackZeroValueSamples);
+    m_pathSegmentStorageHandle = pglNewPathSegmentStorage();
 }
 
 OPENPGL_INLINE PathSegmentStorage::~PathSegmentStorage()
