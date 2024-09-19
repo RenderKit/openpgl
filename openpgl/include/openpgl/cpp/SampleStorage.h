@@ -99,10 +99,10 @@ struct SampleStorage
     size_t GetSizeVolume() const;
 
     /// Returns the number of zero value surface samples currently stored inside the storage container.
-    size_t GetSizeInvalidSurface() const;
+    size_t GetSizeZeroValueSurface() const;
 
     /// Returns the number of zero value volume samples currently stored inside the storage container.
-    size_t GetSizeInvalidVolume() const;
+    size_t GetSizeZeroValueVolume() const;
 
     /**
      * @brief Returns a volume sample from the surface sample storage.
@@ -222,16 +222,16 @@ OPENPGL_INLINE size_t SampleStorage::GetSizeVolume() const
     return pglSampleStorageGetSizeVolume(m_sampleStorageHandle);
 }
 
-OPENPGL_INLINE size_t SampleStorage::GetSizeInvalidSurface() const
+OPENPGL_INLINE size_t SampleStorage::GetSizeZeroValueSurface() const
 {
     OPENPGL_ASSERT(m_sampleStorageHandle);
-    return pglSampleStorageGetSizeInvalidSurface(m_sampleStorageHandle);
+    return pglSampleStorageGetSizeZeroValueSurface(m_sampleStorageHandle);
 }
 
-OPENPGL_INLINE size_t SampleStorage::GetSizeInvalidVolume() const
+OPENPGL_INLINE size_t SampleStorage::GetSizeZeroValueVolume() const
 {
     OPENPGL_ASSERT(m_sampleStorageHandle);
-    return pglSampleStorageGetSizeInvalidVolume(m_sampleStorageHandle);
+    return pglSampleStorageGetSizeZeroValueVolume(m_sampleStorageHandle);
 }
 
 OPENPGL_INLINE SampleData SampleStorage::GetSampleSurface(const int idx) const

@@ -59,9 +59,9 @@ typedef ManagedObject Region;
 
     OPENPGL_CORE_INTERFACE size_t pglSampleStorageGetSizeVolume(PGLSampleStorage sampleStorage);
 
-    OPENPGL_CORE_INTERFACE size_t pglSampleStorageGetSizeInvalidSurface(PGLSampleStorage sampleStorage);
+    OPENPGL_CORE_INTERFACE size_t pglSampleStorageGetSizeZeroValueSurface(PGLSampleStorage sampleStorage);
 
-    OPENPGL_CORE_INTERFACE size_t pglSampleStorageGetSizeInvalidVolume(PGLSampleStorage sampleStorage);
+    OPENPGL_CORE_INTERFACE size_t pglSampleStorageGetSizeZeroValueVolume(PGLSampleStorage sampleStorage);
 
     OPENPGL_CORE_INTERFACE PGLSampleData pglSampleStorageGetSampleSurface(PGLSampleStorage sampleStorage, const int idx);
 

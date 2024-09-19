@@ -365,13 +365,13 @@ extern "C" OPENPGL_DLLEXPORT size_t pglSampleStorageGetSizeVolume(PGLSampleStora
     return gSampleStorage->sizeVolume();
 }
 
-extern "C" OPENPGL_DLLEXPORT size_t pglSampleStorageGetSizeInvalidSurface(PGLSampleStorage sampleStorage)
+extern "C" OPENPGL_DLLEXPORT size_t pglSampleStorageGetSizeZeroValueSurface(PGLSampleStorage sampleStorage)
 {
     auto *gSampleStorage = (openpgl::SampleDataStorage *)sampleStorage;
     return gSampleStorage->sizeInvalidSurface();
 }
 
-extern "C" OPENPGL_DLLEXPORT size_t pglSampleStorageGetSizeInvalidVolume(PGLSampleStorage sampleStorage)
+extern "C" OPENPGL_DLLEXPORT size_t pglSampleStorageGetSizeZeroValueVolume(PGLSampleStorage sampleStorage)
 {
     auto *gSampleStorage = (openpgl::SampleDataStorage *)sampleStorage;
     return gSampleStorage->sizeInvalidVolume();
