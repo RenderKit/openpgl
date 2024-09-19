@@ -62,11 +62,6 @@ endmacro()
 ## Superbuild options.
 ## ======================================================================== ##
 
-option(INSTALL_IN_SEPARATE_DIRECTORIES
-  "Install libraries into their own directories under CMAKE_INSTALL_PREFIX"
-  OFF
-)
-
 option(BUILD_DEPENDENCIES_ONLY
   "Do not build Open PGL itself, only its dependencies" 
   OFF
@@ -120,8 +115,11 @@ if (BUILD_TBB)
   include(dep_tbb)
 endif()
 
+option(BUILD_OIDN "Build OpenImageDenoise as a part of the superbuild." ON)
+option(BUILD_OIDN_FROM_SOURCE "Build OpenImageDenoise or use pre-built version?" ON)
 option(DOWNLOAD_ISPC "Download ISPC or use the one found in the system environment?" ON)
-if (DOWNLOAD_ISPC)
+
+if (DOWNLOAD_ISPC AND BUILD_OIDN_FROM_SOURCE)
   set(ISPC_VERSION "1.24.0" CACHE STRING "Which version of ISPC to download?")
   mark_as_advanced(CLEAR ISPC_VERSION)
   if (ISPC_VERSION STREQUAL "1.24.0")
@@ -144,11 +142,9 @@ if (DOWNLOAD_ISPC)
   include(dep_ispc)
 endif()
 
-option(BUILD_OIDN "Build OpenImageDenoise as a part of the superbuild." ON)
 if (BUILD_OIDN)
   set(OIDN_VERSION "2.3.0" CACHE STRING "Which version of OpenImageDenoise to build?")
   mark_as_advanced(CLEAR OIDN_VERSION)
-  option(BUILD_OIDN_FROM_SOURCE "Build OpenImageDenoise or use pre-built version?" ON)
   mark_as_advanced(CLEAR BUILD_OIDN_FROM_SOURCE)
   if (OIDN_VERSION STREQUAL "2.3.0")
     if (BUILD_OIDN_FROM_SOURCE)
@@ -177,9 +173,6 @@ endif()
 set(COMPONENT_NAME openpgl)
 
 set(COMPONENT_PATH ${INSTALL_DIR_ABSOLUTE})
-if (INSTALL_IN_SEPARATE_DIRECTORIES)
-  set(COMPONENT_PATH ${INSTALL_DIR_ABSOLUTE}/${COMPONENT_NAME})
-endif()
 
 if (NOT BUILD_DEPENDENCIES_ONLY)
 
