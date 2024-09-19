@@ -45,9 +45,9 @@ struct ImageSpaceGuidingBuffer
             filteredSecondMoment = new pgl_vec3f[numPixels];
         }
 
-        Buffers(const Buffers& buffer) = delete;
+        Buffers(const Buffers &buffer) = delete;
 
-        Buffers & operator=(const Buffers&) = delete;
+        Buffers &operator=(const Buffers &) = delete;
 
         ~Buffers()
         {
@@ -105,9 +105,9 @@ struct ImageSpaceGuidingBuffer
         m_ready = false;
     }
 
-    ImageSpaceGuidingBuffer(const ImageSpaceGuidingBuffer& isgbuffer) = delete;
+    ImageSpaceGuidingBuffer(const ImageSpaceGuidingBuffer &isgbuffer) = delete;
 
-    ImageSpaceGuidingBuffer & operator=(const ImageSpaceGuidingBuffer&) = delete;
+    ImageSpaceGuidingBuffer &operator=(const ImageSpaceGuidingBuffer &) = delete;
 
     ImageSpaceGuidingBuffer(const std::string &fileName)
     {
@@ -492,7 +492,7 @@ struct ImageSpaceGuidingBuffer
    private:
     bool m_ready{false};
     bool m_useSecondMoment{false};
-    pgl_point2i m_resolution {0, 0};
+    pgl_point2i m_resolution{0, 0};
     Denoiser *m_denoiser{nullptr};
 
     Buffers *m_contributionEstimateBuffers{nullptr};

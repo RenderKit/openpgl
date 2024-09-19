@@ -129,7 +129,7 @@ struct ContainerInternal
 
     ContainerInternal() = default;
 
-    ContainerInternal(const ContainerInternal& cont) = delete;
+    ContainerInternal(const ContainerInternal &cont) = delete;
 
     ~ContainerInternal()
     {
