@@ -1,0 +1,24 @@
+## Open PGL 0.7.0
+
+- New (Experimental) Features:
+    - Radiance Caching:
+    - Guided/Adjoint-driven Russian Roulette:
+        - Stochastical path termination does not only imp
+        - `openpgl::cpp::util::StandardThroughputBasedRussianRoulette` `openpgl::cpp::util::GuidedRussianRoulette` and  `#include <openpgl/cpp/RussianRoulette.h>`
+    - Image-space guiding buffer:
+        - `openpgl::cpp::util::ImageSpaceGuidingBuffer` `#include <openpgl/cpp/ImageSpaceGuidingBuffer.h>` `OPENPGL_EF_IMAGE_SPACE_GUIDING_BUFFER`
+- Api changes:
+    - `SampleData`
+        - New flag enum `EDirectLight` 
+    - `pgl_direction` `SampleData`
+    - `pgl_spectrum` `SampleData`
+    - `ZeroValueSampleData`
+    - `SampleStorage`
+        - `AddZeroValueSample` and `AddZeroValueSamples`
+        - `GetSizeZeroValueSurface` and `GetSizeZeroValueVolume`
+- Optimizations:
+    - Compression for spectral and directional:
+        - `OPENPGL_DIRECTION_COMPRESSION`
+        - `OPENPGL_RADIANCE_COMPRESSION`
+- Bugfixes:
+    - Numerical accuaracy problem 

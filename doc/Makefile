@@ -11,7 +11,7 @@ ifneq "$(PDOK)" "1"
 endif
 
 all: doc
-doc: ../README.md
+doc: ../README.md ../CHANGELOG.md
 
 .PHONY: all doc clean
 
@@ -28,7 +28,7 @@ tmp/links.md: links.md
 tmp/images_web.md: images.md
 	sed -e "s@: @: https://openpgl.github.io/@" $< > $@
 
-changelog.md:
+changelog.md: ../CHANGELOG.md
 	ln -s ../CHANGELOG.md $@
 
 ## ----------------------------------------------------------------------------
@@ -43,7 +43,10 @@ tmpdir:
 ## Markdown
 ## ----------------------------------------------------------------------------
 
-../README.md: tmp/readme_head.md overview.md examples.md disclaimer.md changelog.md support.md bib.md compilation.md tmp/including.md api.md related_projects.md
+../CHANGELOG.md: changelog_header.md changelog_latest.md changelog_previous.md
+	$(PANDOC) $+ -t gfm > $@
+
+../README.md: tmp/readme_head.md overview.md examples.md disclaimer.md changelog_latest_header.md changelog_latest.md support.md bib.md compilation.md tmp/including.md api.md related_projects.md
 	$(PANDOC) $+ -t gfm > $@
 
 ## ----------------------------------------------------------------------------
@@ -51,4 +54,4 @@ tmpdir:
 ## ----------------------------------------------------------------------------
 
 clean:
-	rm -rf tmp changelog.md __pycache__
+	rm -rf tmp changelog.md __pycache__ ../CHANGELOG.md
