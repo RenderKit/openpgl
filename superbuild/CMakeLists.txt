@@ -62,10 +62,16 @@ endmacro()
 ## Superbuild options.
 ## ======================================================================== ##
 
-option(BUILD_DEPENDENCIES_ONLY
-  "Do not build Open PGL itself, only its dependencies" 
-  OFF
-)
+option(BUILD_DEPENDENCIES_ONLY "Do not build Open PGL itself, only its dependencies" OFF)
+option(BUILD_STATIC "Building Open PGL as a static library"  OFF)
+option(BUILD_TOOLS "Building Open PGL tools as well"  OFF)
+
+option(BUILD_TBB "Build Intel Threading Building Blocks or search in environment?" ON)
+option(BUILD_TBB_FROM_SOURCE "Build Intel Threading Building Blocks from source?" OFF)
+
+option(BUILD_OIDN "Build OpenImageDenoise as a part of the superbuild." ON)
+option(BUILD_OIDN_FROM_SOURCE "Build OpenImageDenoise or use pre-built version?" ON)
+option(DOWNLOAD_ISPC "Download ISPC or use the one found in the system environment?" ON)
 
 ## ======================================================================== ##
 ## Build dependencies.
@@ -78,8 +84,7 @@ option(BUILD_DEPENDENCIES_ONLY
 ## variables to select different versions.
 ## ======================================================================== ##
 
-option(BUILD_TBB "Build Intel Threading Building Blocks or search in environment?" ON)
-option(BUILD_TBB_FROM_SOURCE "Build Intel Threading Building Blocks from source?" OFF)
+
 if (BUILD_TBB)
   set(TBB_VERSION "2021.13.0" CACHE STRING "TBB version to download")
   if (BUILD_TBB_FROM_SOURCE)
@@ -114,10 +119,6 @@ if (BUILD_TBB)
   set(TBB_HASH "${_TBB_HASH}" CACHE STRING "SHA256 hash of the TBB archive.")
   include(dep_tbb)
 endif()
-
-option(BUILD_OIDN "Build OpenImageDenoise as a part of the superbuild." ON)
-option(BUILD_OIDN_FROM_SOURCE "Build OpenImageDenoise or use pre-built version?" ON)
-option(DOWNLOAD_ISPC "Download ISPC or use the one found in the system environment?" ON)
 
 if (DOWNLOAD_ISPC AND BUILD_OIDN_FROM_SOURCE)
   set(ISPC_VERSION "1.24.0" CACHE STRING "Which version of ISPC to download?")
