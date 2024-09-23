@@ -105,7 +105,7 @@ struct SampleStorage
     size_t GetSizeZeroValueVolume() const;
 
     /**
-     * @brief Returns a volume sample from the surface sample storage.
+     * @brief Returns a surface sample from the sample storage.
      *
      * @param idx
      * @return SampleData
@@ -113,12 +113,28 @@ struct SampleStorage
     SampleData GetSampleSurface(const int idx) const;
 
     /**
-     * @brief Returns a volume sample from the volume sample storage.
+     * @brief Returns a volume sample from the sample storage.
      *
      * @param idx
      * @return SampleData
      */
     SampleData GetSampleVolume(const int idx) const;
+
+    /**
+     * @brief Returns a zero value surface sample from the sample storage.
+     *
+     * @param idx
+     * @return ZeroValueSampleData
+     */
+    ZeroValueSampleData GetZeroValueSampleSurface(const int idx) const;
+
+    /**
+     * @brief Returns a zero value volume sample from the sample storage.
+     *
+     * @param idx
+     * @return ZeroValueSampleData
+     */
+    ZeroValueSampleData GetZeroValueSampleVolume(const int idx) const;
 
     /// Checks if the samples (SampleData) stored in the SampleStorage are valid (i.e., all attributes are in valid ranges).
     bool Validate() const;
@@ -244,6 +260,18 @@ OPENPGL_INLINE SampleData SampleStorage::GetSampleVolume(const int idx) const
 {
     OPENPGL_ASSERT(m_sampleStorageHandle);
     return pglSampleStorageGetSampleVolume(m_sampleStorageHandle, idx);
+}
+
+OPENPGL_INLINE ZeroValueSampleData SampleStorage::GetZeroValueSampleSurface(const int idx) const
+{
+    OPENPGL_ASSERT(m_sampleStorageHandle);
+    return pglSampleStorageGetZeroValueSampleSurface(m_sampleStorageHandle, idx);
+}
+
+OPENPGL_INLINE ZeroValueSampleData SampleStorage::GetZeroValueSampleVolume(const int idx) const
+{
+    OPENPGL_ASSERT(m_sampleStorageHandle);
+    return pglSampleStorageGetZeroValueSampleVolume(m_sampleStorageHandle, idx);
 }
 
 OPENPGL_INLINE bool SampleStorage::Validate() const

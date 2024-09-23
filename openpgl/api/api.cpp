@@ -389,6 +389,18 @@ extern "C" OPENPGL_DLLEXPORT PGLSampleData pglSampleStorageGetSampleVolume(PGLSa
     return gSampleStorage->getSampleVolume(idx);
 }
 
+extern "C" OPENPGL_DLLEXPORT PGLZeroValueSampleData pglSampleStorageGetZeroValueSampleSurface(PGLSampleStorage sampleStorage, const int idx)
+{
+    auto *gSampleStorage = (openpgl::SampleDataStorage *)sampleStorage;
+    return gSampleStorage->getZeroValueSampleSurface(idx);
+}
+
+extern "C" OPENPGL_DLLEXPORT PGLZeroValueSampleData pglSampleStorageGetZeroValueSampleVolume(PGLSampleStorage sampleStorage, const int idx)
+{
+    auto *gSampleStorage = (openpgl::SampleDataStorage *)sampleStorage;
+    return gSampleStorage->getZeroValueSampleVolume(idx);
+}
+
 extern "C" OPENPGL_DLLEXPORT bool pglSampleStorageValidate(PGLSampleStorage sampleStorage)
 {
     auto *gSampleStorage = (openpgl::SampleDataStorage *)sampleStorage;
