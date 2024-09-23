@@ -2,7 +2,7 @@ Building Open PGL from source
 =============================
 
 The latest Open PGL sources are always available at the [Open PGL GitHub
-repository](http://github.com/openpathguidinglibrary/openpgl). The default `main` branch
+repository](https://github.com/RenderKit/openpgl). The default `main` branch
 should always point to the latest tested bugfix release.
 
 Prerequisites
@@ -13,7 +13,7 @@ building Open PGL you need the following prerequisites:
 
 -   You can clone the latest Open PGL sources via:
 
-        git clone https://github.com/openpathguidinglibrary/openpgl.git
+        git clone https://github.com/RenderKit/openpgl.git
 
 -   To build Open PGL you need [CMake](http://www.cmake.org), any form of C++11 compiler (we recommend using GCC, but also support Clang and MSVC), and standard Linux development tools.
 
@@ -35,10 +35,10 @@ directory including all dependencies.
 Run with:
 
 ```bash
-mkdir build
-cd build
-cmake ../superbuild
-cmake  --build .
+    mkdir build
+    cd build
+    cmake ../superbuild
+    cmake  --build .
 ```
 
 The resulting `install` directory (or the one set with `CMAKE_INSTALL_PREFIX`)
@@ -55,7 +55,7 @@ CMake options to note (all have sensible defaults):
 - `BUILD_TBB_FROM_SOURCE`: Specifies whether TBB should be built from source or the releases on GitHub should be used. This must be ON
    when compiling for ARM (default `OFF`).
 - `BUILD_OIDN`: Builds or downloads Intel's Open Image Denoise (OIDN) (default `ON`).
-- `BUILD_OIDN_FROM_SOURCE`: Builds OIDN from source. This must be ON when compiling for ARM. (default `OFF`).
+- `BUILD_OIDN_FROM_SOURCE`: Builds OIDN from source. This must be ON when compiling for ARM. (default `ON`).
 - `DOWNLOAD_ISPC`: Downloads Intel's ISPC compiler which is needed to build OIDN (default `ON` when building OIDN from source).
 
 For the full set of options, run `ccmake [<PGL_ROOT>/superbuild]`.
@@ -69,14 +69,14 @@ CMake is easy:
 Create a build directory, and go into it:
 
 ```bash
-        mkdir build
-        cd build
+    mkdir build
+    cd build
 ```
 
 Configure the Open PGL build using:
 
 ```bash
-        cmake -DCMAKE_INSTALL_PREFIX=[openpgl_install] ..
+    cmake -DCMAKE_INSTALL_PREFIX=[openpgl_install] ..
 ```
 
 -  CMake options to note (all have sensible defaults):
@@ -112,6 +112,6 @@ Configure the Open PGL build using:
 Build and install Open PGL using:
 
 ```bash
-        cmake build
-        cmake install
+    cmake build
+    cmake install
 ```
