@@ -261,7 +261,9 @@ struct PathSegmentDataStorage
                 }
 
                 bool directLightSample = false;
+#ifdef OPENPGL_RADIANCE_CACHES
                 float misWeight = 1.f;
+#endif
                 // evalaute the incident radiance the incident
                 openpgl::Vector3 throughput{1.0f};
                 openpgl::Vector3 contribution{0.0f};
@@ -310,7 +312,9 @@ struct PathSegmentDataStorage
                                 else
                                 {
                                     contribution += clampedThroughput * nextPathSegment.miWeight * directContribution;
+#ifdef OPENPGL_RADIANCE_CACHES
                                     misWeight = nextPathSegment.miWeight;
+#endif
                                     OPENPGL_ASSERT(embree::isvalid(contribution));
                                     OPENPGL_ASSERT(contribution[0] >= 0.f && contribution[1] >= 0.f && contribution[2] >= 0.f);
                                 }

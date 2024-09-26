@@ -2,7 +2,7 @@
 
 - New (**Experimental**) Features:
     - Radiance Caching (RC):
-        - If RC is enabled, the guiding structure (i.e., `Field`) learns an approximation of multiple radiance quantities (in linear RGB) ,such as outgoing and incoming radiance, irradiance, fluence, and in-scattered radiance. These quantities can be queried using the `SurfaceSamplingDistribution` and `VolumeSamplingDistribution` classes.
+        - If RC is enabled, the guiding structure (i.e., `Field`) learns an approximation of multiple radiance quantities (in linear RGB), such as outgoing and incoming radiance, irradiance, fluence, and in-scattered radiance. These quantities can be queried using the `SurfaceSamplingDistribution` and `VolumeSamplingDistribution` classes.
         RC support can be enabled using the `OPENPGL_EF_RADIANCE_CACHES` CMake option. **Note:** Since the RC quantities are Monte-Carlo estimates, zero-value samples (`ZeroValueSampleData`) that are generated during rendering/training have to be passed/stored in the `SampleStorage` as well. 
     - Guided/Adjoint-driven Russian Roulette (GRR):
         - The information stored in radiance caches can be used to optimize stochastic path termination decisions (a.k.a. Russian roulette) to avoid a significant increase in variance (i.e., noise) caused by early terminations, which can occur when using standard throughput-based RR strategies.

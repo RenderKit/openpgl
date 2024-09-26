@@ -6,8 +6,8 @@
 
   - Radiance Caching (RC):
     - If RC is enabled, the guiding structure (i.e., `Field`) learns an
-      approximation of multiple radiance quantities (in linear RGB)
-      ,such as outgoing and incoming radiance, irradiance, fluence, and
+      approximation of multiple radiance quantities (in linear RGB),
+      such as outgoing and incoming radiance, irradiance, fluence, and
       in-scattered radiance. These quantities can be queried using the
       `SurfaceSamplingDistribution` and `VolumeSamplingDistribution`
       classes. RC support can be enabled using the

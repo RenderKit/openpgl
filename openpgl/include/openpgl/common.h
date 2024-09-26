@@ -267,8 +267,9 @@ struct pgl_spectrum
     uint32_t spectrum;
 #ifdef __cplusplus
     pgl_spectrum() {}
-    pgl_spectrum(const float r, const float g, const float b) {
-        spectrum = vec3f2rgbe({r,g,b});
+    pgl_spectrum(const float r, const float g, const float b)
+    {
+        spectrum = vec3f2rgbe({r, g, b});
     }
     pgl_spectrum(const pgl_vec3f rgb)
     {
