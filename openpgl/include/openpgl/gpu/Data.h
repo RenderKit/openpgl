@@ -3,6 +3,9 @@
 #ifndef OPENPGL_BUILD
 #include <openpgl/defines.h>
 #endif
+
+#include "Common.h"
+
 #define OPENPGL_GPU_HISTOGRAM_RESOLUTION 8
 #define OPENPGL_GPU_HISTOGRAM_SIZE OPENPGL_GPU_HISTOGRAM_RESOLUTION *OPENPGL_GPU_HISTOGRAM_RESOLUTION
 
@@ -49,11 +52,28 @@ struct FieldData
 #endif
 };
 
+struct SurfaceSamplingDistributionData
+{
+    OPENPGL_GPU_CALLABLE SurfaceSamplingDistributionData() = default;
+    const void *m_field{nullptr};
+    pgl_point3f m_pos{0.f, 0.f, 0.f};
+    int m_idx{-1};
+};
+
 struct VMMPhaseFunctionRepresentationData
 {
     float g = 0.f;
     float meanCosines[4]{0.f, 0.f, 0.f, 0.f};
     float weights[4]{1.f / 4.f, 1.f / 4.f, 1.f / 4.f, 1.f / 4.f};
+};
+
+struct VolumeSamplingDistributionData
+{
+    OPENPGL_GPU_CALLABLE VolumeSamplingDistributionData() = default;
+    const void *m_field{nullptr};
+    pgl_point3f m_pos{0.f, 0.f, 0.f};
+    int m_idx{-1};
+    VMMPhaseFunctionRepresentationData m_phaseRep;
 };
 
 #if defined(OPENPGL_EF_RADIANCE_CACHES) || defined(OPENPGL_RADIANCE_CACHES)

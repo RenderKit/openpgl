@@ -414,7 +414,9 @@ struct SurfaceVolumeField : public ISurfaceVolumeField
         if (numSurfaceDistriubtion > 0)
         {
             openpgl::gpu::FlatVMM<32> *outSurf = new openpgl::gpu::FlatVMM<32>[numSurfaceDistriubtion];
+#if defined(OPENPGL_EF_RADIANCE_CACHES)
             openpgl::gpu::OutgoingRadianceHistogramData *outRadianceHistSurf = new openpgl::gpu::OutgoingRadianceHistogramData[numSurfaceDistriubtion];
+#endif
 
             for (int i = 0; i < numSurfaceDistriubtion; i++)
             {
@@ -493,7 +495,9 @@ struct SurfaceVolumeField : public ISurfaceVolumeField
         if (numVolumeDistriubtion > 0)
         {
             openpgl::gpu::FlatVMM<32> *outVol = new openpgl::gpu::FlatVMM<32>[numVolumeDistriubtion];
+#if defined(OPENPGL_EF_RADIANCE_CACHES)
             openpgl::gpu::OutgoingRadianceHistogramData *outRadianceHistVol = new openpgl::gpu::OutgoingRadianceHistogramData[numVolumeDistriubtion];
+#endif
             for (int i = 0; i < numVolumeDistriubtion; i++)
             {
                 auto &dist = m_volumeField.m_regionStorageContainer[i].first.distribution;

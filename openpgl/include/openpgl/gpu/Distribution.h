@@ -1,21 +1,13 @@
-#ifndef OPENPGL_DISTRIBUTION_GPU_H
-#define OPENPGL_DISTRIBUTION_GPU_H
-
-#include "Common.h"
-#include "Data.h"
-namespace openpgl
-{
-namespace gpu
-{
 #if defined(OPENPGL_GPU_SYCL)
-namespace sycl
-{
-#elif defined(OPENPGL_GPU_CUDA)
-namespace cuda
-{
-#else
-namespace cpu
-{
+//#define expf(x) ::sycl::native::exp(((float)(x)))
+#if defined(OPENPGL_GPU_SYCL)
+#ifdef expf
+    #undef expf
+#endif
+#ifdef logf
+    #undef logf
+#endif
+#endif
 #endif
 
 OPENPGL_GPU_CALLABLE inline Vector3 sphericalDirection(const float &cosTheta, const float &sinTheta, const float &cosPhi, const float &sinPhi)
@@ -377,9 +369,3 @@ struct ParallaxAwareVonMisesFisherMixture : public FlatVMM<maxComponents>
     }
 #endif
 };
-
-}  // sycl/cuda/cpu
-}  // namespace gpu
-}  // namespace openpgl
-
-#endif  // OPENPGL_DISTRIBUTION_GPU_H

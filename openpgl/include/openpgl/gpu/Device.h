@@ -4,11 +4,33 @@
 #if defined(OPENPGL_GPU_SYCL_SUPPORT)
 #include <sycl/sycl.hpp>
 #endif
+
+#if defined(OPENPGL_GPU_CUDA_SUPPORT)
+#include <cuda_runtime.h>
+
+#define cudaErrchk(ans) { cudaAssert((ans), __FILE__, __LINE__); }
+inline void cudaAssert(cudaError_t code, const char *file, int line, bool abort=false)
+{
+   if (code != cudaSuccess) 
+   {
+      fprintf(stderr,"cudaAssert: %s %s %d\n", cudaGetErrorString(code), file, line);
+      if (abort) exit(code);
+   }
+}
+
+inline void checkCudaError() {
+    cudaError_t error = cudaGetLastError();
+    if (error != cudaSuccess) {
+        std::cout << " CUDAError " << std::endl;
+    }
+}
+
+#endif
+
 namespace openpgl
 {
 namespace gpu
 {
-
 struct Device
 {
     enum DeviceTypes
@@ -24,9 +46,13 @@ struct Device
 
     DeviceTypes m_deviceType{EDeviceType_CPU};
 #if defined(OPENPGL_GPU_SYCL_SUPPORT)
-    sycl::queue q;
+    ::sycl::queue* q;
 #endif
-    Device(DeviceTypes dt) : m_deviceType(dt) {}
+    Device(DeviceTypes dt, void* ptr = nullptr) : m_deviceType(dt) {
+#if defined(OPENPGL_GPU_SYCL_SUPPORT)
+    q = reinterpret_cast<::sycl::queue*>(ptr);
+#endif        
+    }
 
     ~Device() {}
 
@@ -41,7 +67,7 @@ struct Device
 #if defined(OPENPGL_GPU_SYCL_SUPPORT)
             case EDeviceType_SYCL:
             {
-                q.wait();
+                q->wait();
                 break;
             }
 #endif
@@ -72,7 +98,7 @@ struct Device
 #if defined(OPENPGL_GPU_SYCL_SUPPORT)
             case EDeviceType_SYCL:
             {
-                return sycl::malloc_shared<T>(numElements, q);
+                return ::sycl::malloc_shared<T>(numElements, *q);
                 break;
             }
 #endif
@@ -80,7 +106,8 @@ struct Device
             case EDeviceType_CUDA:
             {
                 void *devPtr;
-                cudaMalloc(&devPtr, numElements * sizeof(T));
+                cudaErrchk(cudaMalloc(&devPtr, numElements * sizeof(T)));
+                checkCudaError();
                 return (T *)devPtr;
                 break;
             }
@@ -106,15 +133,15 @@ struct Device
 #if defined(OPENPGL_GPU_SYCL_SUPPORT)
             case EDeviceType_SYCL:
             {
-            sycl:
-                free(ptr, q);
+                ::sycl::free(ptr, *q);
                 break;
             }
 #endif
 #if defined(OPENPGL_GPU_CUDA_SUPPORT)
             case EDeviceType_CUDA:
             {
-                cudaFree(ptr);
+                cudaErrchk(cudaFree(ptr));
+                checkCudaError();
                 break;
             }
 #endif
@@ -139,14 +166,15 @@ struct Device
 #if defined(OPENPGL_GPU_SYCL_SUPPORT)
             case EDeviceType_SYCL:
             {
-                q.memcpy(devicePtr, hostPtr, numElements * sizeof(T));
+                q->memcpy(devicePtr, hostPtr, numElements * sizeof(T));
                 break;
             }
 #endif
 #if defined(OPENPGL_GPU_CUDA_SUPPORT)
             case EDeviceType_CUDA:
             {
-                cudaMemcpy(devicePtr, hostPtr, numElements * sizeof(T), cudaMemcpyHostToDevice);
+                cudaErrchk(cudaMemcpy(devicePtr, hostPtr, numElements * sizeof(T), cudaMemcpyHostToDevice));
+                checkCudaError();
                 break;
             }
 #endif
@@ -171,14 +199,15 @@ struct Device
 #if defined(OPENPGL_GPU_SYCL_SUPPORT)
             case EDeviceType_SYCL:
             {
-                q.memcpy(hostPtr, devicePtr, numElements * sizeof(T));
+                q->memcpy(hostPtr, devicePtr, numElements * sizeof(T));
                 break;
             }
 #endif
 #if defined(OPENPGL_GPU_CUDA_SUPPORT)
             case EDeviceType_CUDA:
             {
-                cudaMemcpy(hostPtr, devicePtr, numElements * sizeof(T), cudaMemcpyDeviceToHost);
+                cudaErrchk(cudaMemcpy(hostPtr, devicePtr, numElements * sizeof(T), cudaMemcpyDeviceToHost));
+                checkCudaError();
                 break;
             }
 #endif
