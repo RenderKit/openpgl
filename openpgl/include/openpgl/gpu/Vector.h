@@ -4,7 +4,12 @@ OPENPGL_GPU_CALLABLE inline void pgl_sincosf(float x, float *sin, float *cos)
 #ifdef SYCL_LANGUAGE_VERSION
     *sin = ::sycl::sincos(x, cos);
 #else
+#if defined(WIN32)
+    *sin = sinf(x);
+    *cos = cosf(x);
+#else
     sincosf(x, sin, cos);
+#endif
 #endif
 }
 

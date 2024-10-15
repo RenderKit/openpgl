@@ -10,6 +10,10 @@
 #endif
 #endif
 
+#ifndef M_PIf
+#define M_PIf 3.14159265358979323846264338327950288f
+#endif
+
 OPENPGL_GPU_CALLABLE inline Vector3 sphericalDirection(const float &cosTheta, const float &sinTheta, const float &cosPhi, const float &sinPhi)
 {
     return Vector3(sinTheta * cosPhi, sinTheta * sinPhi, cosTheta);
