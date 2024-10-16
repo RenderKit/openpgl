@@ -334,6 +334,57 @@ struct FieldGPU : public FieldData
         */
     }
 
+    void Release(openpgl::gpu::Device *device) {
+        if (m_numSurfaceTreeLets > 0 && m_surfaceTreeLets != nullptr)
+        {
+            device->freeArray<KDTreeLet>((KDTreeLet*)m_surfaceTreeLets);
+        }
+        m_numSurfaceTreeLets = 0;
+        m_surfaceTreeLets = nullptr;
+
+        if (m_numPhaseFunctionRepresentations > 0 && m_phaseFunctionRepresentations != nullptr)
+        {
+            device->freeArray<VMMPhaseFunctionRepresentationData>((VMMPhaseFunctionRepresentationData*)m_phaseFunctionRepresentations);
+        }
+        m_numPhaseFunctionRepresentations = 0;
+        m_phaseFunctionRepresentations = nullptr;
+
+        if (m_numSurfaceDistributions > 0 && m_surfaceDistributions != nullptr)
+        {
+            device->freeArray<Distribution>((Distribution*)m_surfaceDistributions);
+#ifdef OPENPGL_EF_RADIANCE_CACHES
+            device->freeArray<OutgoingRadianceHistogramData>((OutgoingRadianceHistogramData*)m_surfaceOutgoingRadianceHistogram);
+#endif
+        }
+
+        m_numSurfaceDistributions = 0;
+        m_surfaceDistributions = nullptr;
+#ifdef OPENPGL_EF_RADIANCE_CACHES
+        m_surfaceOutgoingRadianceHistogram = nullptr;
+#endif
+
+        if (m_numVolumeTreeLets > 0 && m_volumeTreeLets != nullptr)
+        {
+            device->freeArray<KDTreeLet>((KDTreeLet*)m_volumeTreeLets);
+        }
+
+        m_numVolumeTreeLets = 0;
+        m_volumeTreeLets = nullptr;
+
+        if (m_numVolumeDistributions > 0 && m_volumeDistributions != nullptr)
+        {
+            device->freeArray<Distribution>((Distribution*)m_volumeDistributions);
+#ifdef OPENPGL_EF_RADIANCE_CACHES
+            device->freeArray<OutgoingRadianceHistogramData>((OutgoingRadianceHistogramData*)m_volumeOutgoingRadianceHistogram);
+#endif
+        }
+        m_numVolumeDistributions = 0;
+#ifdef OPENPGL_EF_RADIANCE_CACHES
+        m_volumeOutgoingRadianceHistogram = nullptr;
+#endif
+        m_volumeDistributions = nullptr;
+    }
+
     OPENPGL_GPU_CALLABLE uint32_t getDataIdxAtPos(const float *pos, const KDTreeLet *treeLets) const
     {
 #ifdef USE_TREELETS
