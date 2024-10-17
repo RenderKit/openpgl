@@ -296,6 +296,7 @@ struct FieldGPU : public FieldData
         {
             m_volumeDistributions = nullptr;
         }
+        device->wait();
         field->ReleaseFieldGPU(&fieldData, device);
 
         /*
