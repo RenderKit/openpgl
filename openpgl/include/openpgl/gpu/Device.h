@@ -67,7 +67,11 @@ struct Device
 #if defined(OPENPGL_GPU_SYCL_SUPPORT)
             case EDeviceType_SYCL:
             {
-                q->wait();
+                try {
+                    q->wait();
+                } catch (::sycl::exception const &e) {
+                    std::cout << "Caught sync SYCL exception: " << e.what() << "\n";
+                }
                 break;
             }
 #endif
@@ -88,6 +92,7 @@ struct Device
     template <class T>
     T *mallocArray(size_t numElements)
     {
+        T* ptr = nullptr;
         switch (m_deviceType)
         {
             case EDeviceType_CPU:
@@ -98,7 +103,13 @@ struct Device
 #if defined(OPENPGL_GPU_SYCL_SUPPORT)
             case EDeviceType_SYCL:
             {
-                return ::sycl::malloc_shared<T>(numElements, *q);
+                try{
+                    ptr =  ::sycl::malloc_shared<T>(numElements, *q);
+                } catch (::sycl::exception const &e) {
+                    std::cout << "Caught sync SYCL exception: " << e.what() << "\n";
+                    ptr =nullptr;
+                }
+                return ptr;
                 break;
             }
 #endif
@@ -133,7 +144,11 @@ struct Device
 #if defined(OPENPGL_GPU_SYCL_SUPPORT)
             case EDeviceType_SYCL:
             {
-                ::sycl::free(ptr, *q);
+                try {
+                    ::sycl::free(ptr, *q);
+                } catch (::sycl::exception const &e) {
+                    std::cout << "Caught sync SYCL exception: " << e.what() << "\n";
+                }
                 break;
             }
 #endif
@@ -166,7 +181,11 @@ struct Device
 #if defined(OPENPGL_GPU_SYCL_SUPPORT)
             case EDeviceType_SYCL:
             {
-                q->memcpy(devicePtr, hostPtr, numElements * sizeof(T));
+                try{
+                    q->memcpy(devicePtr, hostPtr, numElements * sizeof(T));
+                } catch (::sycl::exception const &e) {
+                    std::cout << "Caught sync SYCL exception: " << e.what() << "\n";
+                }
                 break;
             }
 #endif
@@ -199,7 +218,11 @@ struct Device
 #if defined(OPENPGL_GPU_SYCL_SUPPORT)
             case EDeviceType_SYCL:
             {
-                q->memcpy(hostPtr, devicePtr, numElements * sizeof(T));
+                try{
+                    q->memcpy(hostPtr, devicePtr, numElements * sizeof(T));
+                } catch (::sycl::exception const &e) {
+                    std::cout << "Caught sync SYCL exception: " << e.what() << "\n";
+                }
                 break;
             }
 #endif
