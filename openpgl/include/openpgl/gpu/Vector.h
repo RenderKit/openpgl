@@ -47,6 +47,9 @@ union Vector2
 {
     float2 vec;
     float data[2];
+
+    OPENPGL_GPU_CALLABLE Vector2() = default;
+
     OPENPGL_GPU_CALLABLE Vector2(float x, float y)
     {
         vec = {x, y};
@@ -129,6 +132,9 @@ union Vector3
 {
     float3 vec;
     float data[3];
+
+    OPENPGL_GPU_CALLABLE Vector3() = default;
+
     OPENPGL_GPU_CALLABLE Vector3(float x, float y, float z)
     {
         vec = {x, y, z};
@@ -241,4 +247,5 @@ OPENPGL_GPU_CALLABLE inline Vector3 cross(const Vector3 &a, const Vector3 &b)
 
 typedef Vector2 Point2;
 typedef Vector3 Point3;
+typedef Vector3 Normal3;
 #endif
