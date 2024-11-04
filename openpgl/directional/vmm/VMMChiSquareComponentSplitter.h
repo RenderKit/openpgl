@@ -495,16 +495,23 @@ void VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::UpdateSplitStatistic
                 // partialValuePDF /= vmm._weights[k] * mcEstimate;
                 // std::cout << "\tweights: " << vmm._weights[k] << "\t assign: " << softAssign.assignments[k] << "\t pdf: " << softAssign.pdf << std::endl;
                 // std::cout << "\tpvPDF: " << partialValuePDF << "\t vmfPDF: " << vmfPDF << std::endl;
-
-                embree::vfloat<VMM::VectorSize> chiSquareEst = value * value * vmfPDF;
-                chiSquareEst /= mcEstimate * mcEstimate * softAssign.pdf * softAssign.pdf;
+                const embree::vfloat<VMM::VectorSize> valueTmp = value / (mcEstimate * softAssign.pdf);
+                OPENPGL_ASSERT(embree::all(embree::isvalid(valueTmp * valueTmp)));
+                embree::vfloat<VMM::VectorSize> chiSquareEst = valueTmp * valueTmp * vmfPDF;
+                //embree::vfloat<VMM::VectorSize> chiSquareEst = value * value * vmfPDF;
+                //OPENPGL_ASSERT(embree::all(embree::isvalid(chiSquareEst)));
+                //chiSquareEst /= mcEstimate * mcEstimate * softAssign.pdf * softAssign.pdf;
+                OPENPGL_ASSERT(embree::all(embree::isvalid(chiSquareEst)));
                 // chiSquareEst *= chiSquareEst;
                 chiSquareEst -= 2.0f * partialValuePDF;
+                OPENPGL_ASSERT(embree::all(embree::isvalid(chiSquareEst)));
                 chiSquareEst += vmfPDF;
+                OPENPGL_ASSERT(embree::all(embree::isvalid(chiSquareEst)));
                 chiSquareEst /= samplePDF;
+                OPENPGL_ASSERT(embree::all(embree::isvalid(chiSquareEst)));
 
                 chiSquareEst = select(softAssign.assignments[k] > 0.f, chiSquareEst, zeros);
-
+                OPENPGL_ASSERT(embree::all(embree::isvalid(chiSquareEst)));
                 splitStats.sumAssignedSamples[k] += softAssign.assignments[k];
                 // incremental updated of the MC chiSquare estimate
                 splitStats.numSamples[k] += 1.0f;
@@ -540,6 +547,7 @@ void VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::UpdateSplitStatistic
                 OPENPGL_ASSERT(embree::all(embree::isvalid(splitStats.splitWeightedSampleCovariances[k].x)));
                 OPENPGL_ASSERT(embree::all(embree::isvalid(splitStats.splitWeightedSampleCovariances[k].y)));
                 OPENPGL_ASSERT(embree::all(embree::isvalid(splitStats.splitWeightedSampleCovariances[k].z)));
+                OPENPGL_ASSERT(embree::all(embree::isvalid(splitStats.chiSquareMCEstimates[k])));
                 // splitStats.sumWeights[k] += assignedWeight;
             }
             // validDataCount++;
