@@ -18,6 +18,8 @@ namespace sycl
 #define OPENPGL_GPU_SYCL
 #include "Common.h"
 #include "Vector.h"
+#include "PathSegmentStorage.h"
+//#include "SampleDataStorage.h"
 #include "Distribution.h"
 #include "Code.h"
 #undef OPENPGL_GPU_SYCL
@@ -29,6 +31,8 @@ namespace cuda
 #define OPENPGL_GPU_CUDA
 #include "Common.h"
 #include "Vector.h"
+#include "PathSegmentStorage.h"
+//#include "SampleDataStorage.h"
 #include "Distribution.h"
 #include "Code.h"
 #undef OPENPGL_GPU_CUDA
@@ -39,6 +43,8 @@ namespace cpu
 #define OPENPGL_GPU_CPU
 #include "Common.h"
 #include "Vector.h"    
+#include "PathSegmentStorage.h"
+//#include "SampleDataStorage.h"
 #include "Distribution.h"
 #include "Code.h"
 #undef OPENPGL_GPU_CPU
