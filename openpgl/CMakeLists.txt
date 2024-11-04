@@ -1,6 +1,26 @@
 ## Copyright 2009-2020 Intel Corporation
 ## SPDX-License-Identifier: Apache-2.0
 
+add_executable (soac ./cmd/soac.cpp)
+add_executable (openpgl::soac ALIAS soac)
+set_target_properties (soac PROPERTIES OUTPUT_NAME soac)
+
+add_custom_command (OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/include/openpgl/gpu/PathSegmentStorage_soa.h
+    COMMAND soac ${CMAKE_CURRENT_SOURCE_DIR}/soa/PathSegmentStorage.soa > ${CMAKE_CURRENT_BINARY_DIR}/include/openpgl/gpu/PathSegmentStorage_soa.h
+    DEPENDS soac ${CMAKE_CURRENT_SOURCE_DIR}/soa/PathSegmentStorage.soa)
+set (OPENPGL_SOA_GENERATED ${OPENPGL_SOA_GENERATED} ${CMAKE_CURRENT_BINARY_DIR}/include/openpgl/gpu/PathSegmentStorage_soa.h)
+
+add_custom_command (OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/include/openpgl/gpu/SampleDataStorage_soa.h
+    COMMAND soac ${CMAKE_CURRENT_SOURCE_DIR}/soa/SampleDataStorage_flat.soa > ${CMAKE_CURRENT_BINARY_DIR}/include/openpgl/gpu/SampleDataStorage_soa.h
+    DEPENDS soac ${CMAKE_CURRENT_SOURCE_DIR}/soa/SampleDataStorage_flat.soa)
+set (OPENPGL_SOA_GENERATED ${OPENPGL_SOA_GENERATED} ${CMAKE_CURRENT_BINARY_DIR}/include/openpgl/gpu/SampleDataStorage_soa.h)
+
+message("OPENPGL_SOA_GENERATED = ${OPENPGL_SOA_GENERATED}")
+
+add_custom_target (openpgl_soa_generated DEPENDS ${OPENPGL_SOA_GENERATED})
+
+#set_property (TARGET soac PROPERTY FOLDER "cmd")
+
 
 set(DEVICE_SRC)
 if(OPENPGL_ISA_SSE4 OR OPENPGL_ISA_NEON)
@@ -39,8 +59,11 @@ else()
 add_library(${PROJECT_NAME} SHARED
   ${OPENPGL_SRC}
 )
+
 target_compile_definitions(${PROJECT_NAME} PRIVATE BUILD_SHARED)
 endif()
+
+add_dependencies(${PROJECT_NAME} openpgl_soa_generated)
 
 if(OPENPGL_EF_RADIANCE_CACHES)
 target_compile_definitions(${PROJECT_NAME} PRIVATE OPENPGL_RADIANCE_CACHES)
@@ -258,3 +281,8 @@ install(FILES ${CMAKE_CURRENT_BINARY_DIR}/include/${PROJECT_NAME}/version.h
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/include/${PROJECT_NAME}/defines.h
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}
 )
+
+install(FILES ${OPENPGL_SOA_GENERATED}
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}/gpu/
+)
+

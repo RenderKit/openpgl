@@ -1,0 +1,31 @@
+flat uint32_t;
+flat int;
+flat float;
+flat bool;
+
+flat Vector3;
+flat Point3;
+flat Normal3;
+
+soa PathSegment {
+    bool isDelta;
+    bool volumeScatter;
+    Point3 position;
+    Normal3 normal;
+    Vector3 scatterWeight;
+    Vector3 directionIn;
+    float pdfDirectionIn;
+    Vector3 directionOut;
+    Vector3 transmittanceWeight;
+    Vector3 directContribution;
+    Vector3 scatteredContribution;
+    float miWeight;
+    float rrProbability;
+    float eta;
+    float roughness;
+};
+
+soa PathSegmentStorage {
+    PathSegment segments[10+1];
+    uint32_t curDepth;
+};

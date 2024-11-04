@@ -1,0 +1,44 @@
+flat uint;
+flat int;
+flat Float;
+flat bool;
+
+flat Point2f;
+flat Point2i;
+flat Point3f;
+flat Vector3f;
+flat Normal3f;
+
+flat SampleData;
+
+flat ZeroValueSampleData;
+
+soa SampleDataStorage{
+    SampleData samples[10+1];
+    uint nSamples;
+    ZeroValueSampleData zvSamples[10+1];
+    uint nZVSamples;
+};
+
+soa PathSegment {
+    bool isDelta;
+    bool volumeScatter;
+    Point3f position;
+    Normal3f normal;
+    Vector3f scatterWeight;
+    Vector3f directionIn;
+    Float pdfDirectionIn;
+    Vector3f directionOut;
+    Vector3f transmittanceWeight;
+    Vector3f directContribution;
+    Vector3f scatteredContribution;
+    Float miWeight;
+    Float rrProbability;
+    Float eta;
+    Float roughness;
+};
+
+soa PathSegmentStorage {
+    PathSegment segments[10+1];
+    uint curDepth;
+};
