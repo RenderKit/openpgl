@@ -90,7 +90,7 @@ struct Device
     }
 
     template <class T>
-    T *mallocArray(size_t numElements)
+    T *mallocArray(size_t numElements, bool shared = false)
     {
         T* ptr = nullptr;
         switch (m_deviceType)
@@ -117,7 +117,11 @@ struct Device
             case EDeviceType_CUDA:
             {
                 void *devPtr;
-                cudaErrchk(cudaMalloc(&devPtr, numElements * sizeof(T)));
+                if(!shared) {
+                    cudaErrchk(cudaMalloc(&devPtr, numElements * sizeof(T)));
+                } else {
+                    cudaErrchk(cudaMallocManaged(&devPtr, numElements * sizeof(T)));
+                }
                 checkCudaError();
                 return (T *)devPtr;
                 break;
