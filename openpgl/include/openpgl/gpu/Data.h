@@ -31,6 +31,7 @@ struct FlatVMM
 
 struct FieldData
 {
+    bool m_ready;
     int m_numSurfaceTreeLets;
     int m_numVolumeTreeLets;
 

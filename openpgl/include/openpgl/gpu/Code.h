@@ -183,6 +183,7 @@ struct FieldGPU : public FieldData
     OPENPGL_GPU_CALLABLE FieldGPU() = default;
 
     OPENPGL_GPU_CALLABLE FieldGPU(const FieldGPU& field){
+        this->m_ready = field.m_ready;
         this->m_numSurfaceTreeLets = field.m_numSurfaceTreeLets;
         this->m_numVolumeTreeLets = field.m_numVolumeTreeLets;
 
@@ -206,6 +207,7 @@ struct FieldGPU : public FieldData
 
     FieldGPU(openpgl::gpu::Device *device)
     {
+        this->m_ready = false;
         this->m_numSurfaceTreeLets = 0;
         this->m_numVolumeTreeLets = 0;
 
@@ -299,6 +301,10 @@ struct FieldGPU : public FieldData
         device->wait();
         field->ReleaseFieldGPU(&fieldData, device);
 
+        if ((m_numSurfaceTreeLets > 0 && m_numSurfaceDistributions > 0) || (m_numVolumeTreeLets > 0 && m_numVolumeDistributions > 0))
+            this->m_ready = true;
+        else 
+            this->m_ready = false;
         /*
         int numSurfaceNodes = field->GetNumSurfaceKDNodes();
         if(numSurfaceNodes > 0) {
@@ -452,6 +458,8 @@ struct FieldGPU : public FieldData
 
     OPENPGL_GPU_CALLABLE void Reset() {}
 
+    OPENPGL_GPU_CALLABLE bool IsReady() const {return m_ready;}
+
     // #ifdef USE_TREELETS
     /* Need to disable these direct initializations to pass through the std::is_trivially_default_constructible_v test. If not the following error is throughen:
      *  error: static assertion failed due to requirement 'std::is_trivially_default_constructible_v<const openpgl_gpu::FieldGPU>': Type T must be trivially default constructable
@@ -483,6 +491,8 @@ struct SurfaceSamplingDistribution : public SurfaceSamplingDistributionData
 
     OPENPGL_GPU_CALLABLE bool Init(const FieldGPU *field, const pgl_point3f &pos, float &sample1D)
     {
+        if(!field->IsReady())
+            return false;
         m_pos = pos;
         m_field = field;
         float _pos[3] = {pos.x, pos.y, pos.z};
@@ -580,6 +590,8 @@ struct VolumeSamplingDistribution : public VolumeSamplingDistributionData
 
     OPENPGL_GPU_CALLABLE bool Init(const FieldGPU *field, const pgl_point3f &pos, float &sample1D)
     {
+        if(!field->IsReady())
+            return false;
         m_pos = pos;
         m_field = field;
         float _pos[3] = {pos.x, pos.y, pos.z};
