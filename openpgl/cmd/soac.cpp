@@ -321,7 +321,7 @@ int main(int argc, char *argv[]) {
 
         // Constructor
         printf("    SOA() = default;\n");
-        printf("    SOA(int n, openpgl::gpu::Device *device) : nAlloc(n) {\n");
+        printf("    SOA(int n, openpgl::gpu::Device *_device, bool _managed = false) : nAlloc(n), managed(_managed), device(_device) {\n");
         for (const auto &member : soa.members) {
             for (int i = 0; i < member.names.size(); ++i) {
                 std::string name = member.names[i];
@@ -330,7 +330,7 @@ int main(int argc, char *argv[]) {
                            member.arraySizes[i].c_str());
                     if (isFlatType(member.type) || member.numPointers > 0)
                         printf(
-                            "            this->%s[i] = device->mallocArray<%s>(n);\n",
+                            "            this->%s[i] = device->mallocArray<%s>(n, managed);\n",
                             name.c_str(), member.GetType().c_str());
                     else {
                         assert(member.isConst == false && member.numPointers == 0);
@@ -339,7 +339,7 @@ int main(int argc, char *argv[]) {
                     }
                 } else {
                     if (isFlatType(member.type) || member.numPointers > 0)
-                        printf("        this->%s = device->mallocArray<%s>(n);\n",
+                        printf("        this->%s = device->mallocArray<%s>(n, managed);\n",
                                name.c_str(), member.GetType().c_str());
                     else
                         printf("        this->%s = SOA<%s>(n, device);\n", name.c_str(),
@@ -347,6 +347,7 @@ int main(int argc, char *argv[]) {
                 }
             }
         }
+        printf("        device->wait();\n");
         printf("    }\n");
         /**************************************************************/
 		/*                  Modified to support resizing              */
@@ -388,6 +389,9 @@ int main(int argc, char *argv[]) {
 		/**************************************************************/
         printf("    SOA &operator=(const SOA& s) {\n");
         printf("        nAlloc = s.nAlloc;\n");
+        printf("        device = s.device;\n");
+        printf("        managed = s.managed;\n");
+        
         for (const auto &member : soa.members) {
             for (int i = 0; i < member.names.size(); ++i) {
                 std::string name = member.names[i];
@@ -487,6 +491,9 @@ int main(int argc, char *argv[]) {
 
         // Member definitions
         printf("    int nAlloc;\n");
+        printf("    bool managed;\n");
+        printf("    openpgl::gpu::Device * /*OPENPGL_RESTRICT*/ device;\n");
+        
         for (const auto &member : soa.members) {
             for (int i = 0; i < member.names.size(); ++i) {
                 std::string name = member.names[i];

@@ -1,6 +1,6 @@
-flat uint;
+flat uint32_t;
 flat int;
-flat Float;
+flat float;
 flat bool;
 
 flat Point2f;
@@ -10,7 +10,7 @@ flat Vector3f;
 flat Normal3f;
 
 soa SampleData {
-    uint flags;
+    uint32_t flags;
     Point3f position;
     Vector3f direction;
     Float weight;
@@ -26,7 +26,7 @@ soa ZeroValueSampleData{
 
 soa SampleDataStorage{
     SampleData samples[10+1];
-    uint nSamples;
+    uint32_t nSamples;
     ZeroValueSampleData zvSamples[10+1];
-    uint nZVSamples;
+    uint32_t nZVSamples;
 };

@@ -8,6 +8,16 @@
 #include "Device.h"
 #include "Data.h"
 
+#if !defined(__CUDACC__)
+#include <tbb/parallel_for.h>
+#else
+//#include <tbb/parallel_for.h>
+#include <omp.h>
+#endif
+
+#include <fstream>
+#include <chrono>
+
 namespace openpgl
 {
 namespace gpu
@@ -18,8 +28,8 @@ namespace sycl
 #define OPENPGL_GPU_SYCL
 #include "Common.h"
 #include "Vector.h"
+#include "SampleDataStorage.h"
 #include "PathSegmentStorage.h"
-//#include "SampleDataStorage.h"
 #include "Distribution.h"
 #include "Code.h"
 #undef OPENPGL_GPU_SYCL
@@ -31,8 +41,8 @@ namespace cuda
 #define OPENPGL_GPU_CUDA
 #include "Common.h"
 #include "Vector.h"
+#include "SampleDataStorage.h"
 #include "PathSegmentStorage.h"
-//#include "SampleDataStorage.h"
 #include "Distribution.h"
 #include "Code.h"
 #undef OPENPGL_GPU_CUDA
@@ -42,9 +52,9 @@ namespace cpu
 {
 #define OPENPGL_GPU_CPU
 #include "Common.h"
-#include "Vector.h"    
+#include "Vector.h"
+#include "SampleDataStorage.h"
 #include "PathSegmentStorage.h"
-//#include "SampleDataStorage.h"
 #include "Distribution.h"
 #include "Code.h"
 #undef OPENPGL_GPU_CPU
