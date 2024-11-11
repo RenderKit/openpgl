@@ -87,17 +87,12 @@ public:
             throw std::runtime_error("error: couldn't open file");
         std::istream is(&fb);
         
-        uint32_t n;
-        bool managed;
-        
-        is.read(reinterpret_cast<char *>(&n), sizeof(n));
-        is.read(reinterpret_cast<char *>(&managed), sizeof(bool));
-
-        new (this) SOA<SampleDataStorage>(n, device, managed);
+        this->deserialize(is, device);
+        fb.close();
 
         if(!this->managed) {
-            host_samples = new SampleData[(10+1)*n];
-            host_nSamples = new uint32_t[n];
+            host_samples = new SampleData[(10+1)*this->nAlloc];
+            host_nSamples = new uint32_t[this->nAlloc];
             //host_zvSamples = new ZeroValueSampleData[(10+1)*n];
             //host_nZVSamples = new uint32_t[n];
         } else {
@@ -106,46 +101,19 @@ public:
             //host_zvSamples = nullptr;
             //host_nZVSamples = nullptr;
         }
-
-        SampleData* stored_samples = new SampleData[(10+1)*n];
-        uint32_t* stored_nSamples = new uint32_t[n];
-        ZeroValueSampleData* stored_zvSamples = new ZeroValueSampleData[(10+1)*n];
-        uint32_t* stored_nZVSamples = new uint32_t[n];
-    
-        is.read(reinterpret_cast<char *>(stored_samples), sizeof(SampleData) * (n * (10+1)));
-        is.read(reinterpret_cast<char *>(stored_nSamples), sizeof(uint32_t) * n);
-        is.read(reinterpret_cast<char *>(stored_zvSamples), sizeof(ZeroValueSampleData) * (n * (10+1)));
-        is.read(reinterpret_cast<char *>(stored_nZVSamples), sizeof(uint32_t) * n);
-
-
-        device->memcpyArrayToGPU<uint32_t>(nSamples, stored_nSamples, n);
-        device->memcpyArrayToGPU<uint32_t>(nZVSamples, stored_nZVSamples, n);
-        for (int i=0; i < 10+1; i++) {
-            device->memcpyArrayToGPU<SampleData>(samples[i], &(stored_samples[i*n]), n);
-            device->memcpyArrayToGPU<ZeroValueSampleData>(zvSamples[i], &(stored_zvSamples[i*n]), n);
-        }
-        device->wait();
-
-        fb.close();
-
-        delete[] stored_samples;
-        delete[] stored_nSamples;
-        delete[] stored_zvSamples;
-        delete[] stored_nZVSamples;
     }
 
+/*
     ~SampleDataStorageBuffer()
     {
-        /*
         if(!this->managed) {
             delete[] host_samples;
             delete[] host_nSamples;
             delete[] host_zvSamples;
             delete[] host_nZVSamples;
         }
-        */
     }
-    
+*/    
     SampleDataStorageBuffer &operator=(const SampleDataStorageBuffer& s){
         //SOA<SampleDataStorage>::operator(s);
         SOA<SampleDataStorage>::operator=(s);
@@ -197,37 +165,8 @@ public:
         if (!fb.is_open())
             throw std::runtime_error("error: couldn't open file!");
         std::ostream os(&fb);
-        
-        uint32_t n = this->nAlloc;
-        
-        os.write(reinterpret_cast<const char *>(&n), sizeof(n));
-        os.write(reinterpret_cast<const char *>(&managed), sizeof(bool));
-
-        SampleData* stored_samples = new SampleData[(10+1)*n];
-        uint32_t* stored_nSamples = new uint32_t[n];
-        ZeroValueSampleData* stored_zvSamples = new ZeroValueSampleData[(10+1)*n];
-        uint32_t* stored_nZVSamples = new uint32_t[n];
-
-        device->wait();
-        device->memcpyArrayFromGPU<uint32_t>(nSamples, stored_nSamples, n);
-        device->memcpyArrayFromGPU<uint32_t>(nZVSamples, stored_nZVSamples, n);
-        for (int i=0; i < 10+1; i++) {
-            device->memcpyArrayFromGPU<SampleData>(samples[i], &(stored_samples[i*n]), n);
-            device->memcpyArrayFromGPU<ZeroValueSampleData>(zvSamples[i], &(stored_zvSamples[i*n]), n);
-        }
-        device->wait();
-
-        os.write(reinterpret_cast<const char *>(stored_samples), sizeof(SampleData) * (n * (10+1)));
-        os.write(reinterpret_cast<const char *>(stored_nSamples), sizeof(uint32_t) * n);
-        os.write(reinterpret_cast<const char *>(stored_zvSamples), sizeof(ZeroValueSampleData) * (n * (10+1)));
-        os.write(reinterpret_cast<const char *>(stored_nZVSamples), sizeof(uint32_t) * n);
-
+        this->serialize(os);
         fb.close();
-
-        delete[] stored_samples;
-        delete[] stored_nSamples;
-        delete[] stored_zvSamples;
-        delete[] stored_nZVSamples;
     }
 
 

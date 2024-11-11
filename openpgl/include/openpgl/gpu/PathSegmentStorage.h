@@ -41,40 +41,20 @@ public:
         if (!fb.is_open())
             throw std::runtime_error("error: couldn't open file");
         std::istream is(&fb);
-        
-        uint32_t n;
-        bool managed;
-        
-        is.read(reinterpret_cast<char *>(&n), sizeof(n));
-        is.read(reinterpret_cast<char *>(&managed), sizeof(bool));
-
-        new (this) SOA<PathSegmentStorage>(n, device, managed);
-
-        SampleData* stored_samples = new SampleData[(10+1)*n];
-        uint32_t* stored_nSamples = new uint32_t[n];
-        ZeroValueSampleData* stored_zvSamples = new ZeroValueSampleData[(10+1)*n];
-        uint32_t* stored_nZVSamples = new uint32_t[n];
-    
-        is.read(reinterpret_cast<char *>(stored_samples), sizeof(SampleData) * (n * (10+1)));
-        is.read(reinterpret_cast<char *>(stored_nSamples), sizeof(uint32_t) * n);
-        is.read(reinterpret_cast<char *>(stored_zvSamples), sizeof(ZeroValueSampleData) * (n * (10+1)));
-        is.read(reinterpret_cast<char *>(stored_nZVSamples), sizeof(uint32_t) * n);
-
-
-        device->memcpyArrayToGPU<uint32_t>(nSamples, stored_nSamples, n);
-        device->memcpyArrayToGPU<uint32_t>(nZVSamples, stored_nZVSamples, n);
-        for (int i=0; i < 10+1; i++) {
-            device->memcpyArrayToGPU<SampleData>(samples[i], &(stored_samples[i*n]), n);
-            device->memcpyArrayToGPU<ZeroValueSampleData>(zvSamples[i], &(stored_zvSamples[i*n]), n);
-        }
-        device->wait();
-
+        this->deserialize(is, device);
         fb.close();
+    }
 
-        delete[] stored_samples;
-        delete[] stored_nSamples;
-        delete[] stored_zvSamples;
-        delete[] stored_nZVSamples;
+
+
+    void Store(std::string fileName) const {
+        std::filebuf fb;
+        fb.open(fileName, std::ios::out | std::ios::binary);
+        if (!fb.is_open())
+            throw std::runtime_error("error: couldn't open file!");
+        std::ostream os(&fb);
+        this->serialize(os);
+        fb.close();
     }
 
     OPENPGL_GPU_CALLABLE
@@ -119,5 +99,15 @@ public:
     OPENPGL_GPU_CALLABLE
     void Reset(const int pixelIndex) {
         curDepth[pixelIndex] = 0;
+    }
+
+    void PrepareSampleData(SampleDataStorageBuffer& sampleDataStorageBuffer) {
+
+        CUDA_CHECK(cudaDeviceSynchronize());
+        uint32_t maxQueueSize = this->nAlloc; 
+        ParallelFor("PrepareSampleData", maxQueueSize, OPENPGL_CPU_GPU_LAMBDA(int pixelIndex) {
+                PropagateSamples(pixelIndex, &sampleDataStorageBuffer);
+            }
+        );
     }
 };
