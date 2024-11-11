@@ -72,6 +72,7 @@ struct OptionalString {
 struct Member {
     std::string type;
     bool isConst = false;
+    bool isSOA = false;
     int numPointers = 0;
 
     std::string GetType() const {
@@ -82,6 +83,10 @@ struct Member {
         for (int i = 0; i < numPointers; ++i)
             s += "*";
         return s;
+    }
+
+    bool IsSOA() const {
+        return isSOA;
     }
 
     std::vector<std::string> names;
@@ -258,6 +263,7 @@ int main(int argc, char *argv[]) {
                     tok = getToken(false);
                     member.type = (std::string)tok;
                 }
+                member.isSOA = soaTypeExists(member.type);
                 while (true) {
                     tok = getToken(false);
                     if (tok == "*")
@@ -349,6 +355,40 @@ int main(int argc, char *argv[]) {
         }
         printf("        device->wait();\n");
         printf("    }\n");
+
+        printf("    void Release() {\n");
+        //printf("        std::cout << \"SOA()\" << std::endl;\n");
+        printf("        if (device) {\n");
+        printf("            device->wait();\n");
+        for (const auto &member : soa.members) {
+            for (int i = 0; i < member.names.size(); ++i) {
+                std::string name = member.names[i];
+                if (!member.arraySizes[i].empty()) {
+                    printf("            for (int i = 0; i < %s; ++i) {\n",
+                           member.arraySizes[i].c_str());
+                    if (isFlatType(member.type) || member.numPointers > 0)
+                        printf(
+                            "                device->freeArray<%s>(this->%s[i]);\n",
+                            member.GetType().c_str(), name.c_str());
+                    else {
+                        printf(
+                            "                this->%s[i].Release();\n", name.c_str());
+                    }
+                    printf("            }\n");
+                } else {
+                    if (isFlatType(member.type) || member.numPointers > 0)
+                        printf("            device->freeArray<%s>(this->%s);\n",
+                               member.GetType().c_str(), name.c_str());
+                    else
+                        printf(
+                            "                this->%s.Release();\n", name.c_str());
+                }
+            }
+        }
+        printf("            device->wait();\n");
+        printf("        }\n");
+        printf("    }\n");
+
         /**************************************************************/
 		/*                  Modified to support resizing              */
 		/**************************************************************/
@@ -408,6 +448,99 @@ int main(int argc, char *argv[]) {
         printf("        return *this;\n");
         printf("    }\n");
 
+        printf("    void serialize(std::ostream &os) const{\n");
+        printf("        uint32_t n = this->nAlloc;\n");
+        printf("        os.write(reinterpret_cast<const char *>(&n), sizeof(n));\n");
+        printf("        os.write(reinterpret_cast<const char *>(&managed), sizeof(bool));\n");
+
+        for (const auto &member : soa.members) {
+            for (int i = 0; i < member.names.size(); ++i) {
+                std::string name = member.names[i];
+                printf("// %s is soa = %d\n", name.c_str(), (int)member.IsSOA());
+                if (!member.arraySizes[i].empty()) {
+                    if(!member.IsSOA()) {
+                        printf("        %s* tmp_%s = new %s[(%s) * n];\n",member.GetType().c_str(), name.c_str(), member.GetType().c_str(), member.arraySizes[i].c_str());
+                        printf("        for (int i = 0; i < %s; ++i) {\n",
+                            member.arraySizes[i].c_str());
+                    
+                        printf("            device->memcpyArrayFromGPU<%s>(%s[i], &(tmp_%s[i*n]), n);\n", member.GetType().c_str(), name.c_str(), name.c_str());
+                        printf("        }\n");
+                        printf("        device->wait();\n");
+                        printf("        os.write(reinterpret_cast<const char *>(tmp_%s), sizeof(%s) * ((%s)*n));\n", name.c_str(), member.GetType().c_str(), member.arraySizes[i].c_str());
+                        printf("        delete[] tmp_%s;\n", name.c_str());
+                    } else {
+                        printf("        for (int i = 0; i < %s; ++i) {\n",
+                            member.arraySizes[i].c_str());
+                        printf("            %s[i].serialize(os);\n", name.c_str());
+                        printf("        }\n");
+                    }
+                } else {
+                    if(!member.IsSOA()) {
+                        printf("        %s* tmp_%s = new %s[n];\n", member.GetType().c_str(), name.c_str(), member.GetType().c_str());
+                        printf("        device->memcpyArrayFromGPU<%s>(%s, tmp_%s, n);\n", member.GetType().c_str(), name.c_str(), name.c_str());
+                        printf("        device->wait();\n");
+                        printf("        os.write(reinterpret_cast<const char *>(tmp_%s), sizeof(%s) * n);\n", name.c_str(), member.GetType().c_str());
+                        printf("        delete[] tmp_%s;\n", name.c_str());
+                    } else {
+                        printf("        %s.serialize(os);\n", name.c_str());
+                    }
+                }
+                
+                printf("\n");
+            }
+        }        
+        printf("        device->wait();\n");
+        printf("    }\n");
+        printf("\n");
+
+        printf("    void deserialize(std::istream &is, openpgl::gpu::Device *_device) {\n");
+        printf("        uint32_t n;\n");
+        printf("        bool managed;\n");
+        printf("        is.read(reinterpret_cast<char *>(&n), sizeof(n));\n");
+        printf("        is.read(reinterpret_cast<char *>(&managed), sizeof(bool));\n");
+
+        printf("        new (this) SOA<%s>(n, _device, managed);\n", soa.type.c_str());
+
+        for (const auto &member : soa.members) {
+            for (int i = 0; i < member.names.size(); ++i) {
+                std::string name = member.names[i];
+                printf("// %s is soa = %d\n", name.c_str(), (int)member.IsSOA());
+                if (!member.arraySizes[i].empty()) {
+                    if(!member.IsSOA()) {
+                        printf("        %s* tmp_%s = new %s[(%s) * n];\n",member.GetType().c_str(), name.c_str(), member.GetType().c_str(), member.arraySizes[i].c_str());
+                        printf("        is.read(reinterpret_cast<char *>(tmp_%s), sizeof(%s) * ((%s)*n));\n", name.c_str(), member.GetType().c_str(), member.arraySizes[i].c_str());
+                        printf("        for (int i = 0; i < %s; ++i) {\n",
+                            member.arraySizes[i].c_str());
+                    
+                        printf("            device->memcpyArrayToGPU<%s>(%s[i], &(tmp_%s[i*n]), n);\n", member.GetType().c_str(), name.c_str(), name.c_str());
+                        printf("        }\n");
+                        printf("        device->wait();\n");
+                        printf("        delete[] tmp_%s;\n", name.c_str());
+                } else {
+                        printf("        for (int i = 0; i < %s; ++i) {\n",
+                            member.arraySizes[i].c_str());
+                        printf("            %s[i].Release();\n", name.c_str());
+                        printf("            %s[i].deserialize(is, device);\n", name.c_str());
+                        printf("        }\n");
+                    }
+                } else {
+                    if(!member.IsSOA()) {
+                        printf("        %s* tmp_%s = new %s[n];\n", member.GetType().c_str(), name.c_str(), member.GetType().c_str());
+                        printf("        is.read(reinterpret_cast<char *>(tmp_%s), sizeof(%s) * n);\n", name.c_str(), member.GetType().c_str());
+                        printf("        device->memcpyArrayToGPU<%s>(%s, tmp_%s, n);\n", member.GetType().c_str(), name.c_str(), name.c_str());
+                        printf("        delete[] tmp_%s;\n", name.c_str());
+                    } else {
+                        printf("        %s.Release();\n", name.c_str());
+                        printf("        %s.deserialize(is, device);\n", name.c_str());
+                    }
+                }
+                
+                printf("\n");
+            }
+        }        
+        printf("        device->wait();\n");
+        printf("    }\n");
+        printf("\n");
         // operator[] madness...
         printf("    struct GetSetIndirector {\n");
         if (!soa.templateType.empty()) {
@@ -489,10 +622,11 @@ int main(int argc, char *argv[]) {
         printf("    }\n");
         printf("\n");
 
+
         // Member definitions
         printf("    int nAlloc;\n");
         printf("    bool managed;\n");
-        printf("    openpgl::gpu::Device * /*OPENPGL_RESTRICT*/ device;\n");
+        printf("    openpgl::gpu::Device * /*OPENPGL_RESTRICT*/ device {nullptr};\n");
         
         for (const auto &member : soa.members) {
             for (int i = 0; i < member.names.size(); ++i) {
@@ -507,7 +641,7 @@ int main(int argc, char *argv[]) {
                                member.arraySizes[i].c_str());
                 } else {
                     if (isFlatType(member.type) || member.numPointers > 0)
-                        printf("    %s * /*OPENPGL_RESTRICT*/ %s;\n", member.GetType().c_str(),
+                        printf("    %s * /*OPENPGL_RESTRICT*/ %s {nullptr};\n", member.GetType().c_str(),
                                name.c_str());
                     else
                         printf("    SOA<%s> %s;\n", member.type.c_str(), name.c_str());

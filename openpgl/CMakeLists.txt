@@ -1,7 +1,31 @@
 ## Copyright 2009-2020 Intel Corporation
 ## SPDX-License-Identifier: Apache-2.0
 
+########################################
+# restrict
+
+include (CheckCXXSourceCompiles)
+
+check_cxx_source_compiles (
+"int * __restrict__ ptr;
+int main() { }"
+HAVE_PRE_POST_BAR_RESTRICT)
+
+check_cxx_source_compiles (
+"int * __restrict ptr;
+int main() { }"
+HAVE_PRE_BAR_RESTRICT)
+
+if (HAVE_PRE_POST_BAR_RESTRICT)
+  list (APPEND OPENPGL_DEFINITIONS "OPENPGL_RESTRICT=__restrict__")
+elseif (HAVE_PRE_BAR_RESTRICT)
+  list (APPEND OPENPGL_DEFINITIONS "OPENPGL_RESTRICT=__restrict")
+else ()
+  list (APPEND OPENPGL_DEFINITIONS "OPENPGL_RESTRICT")
+endif ()
+
 add_executable (soac ./cmd/soac.cpp)
+target_compile_definitions(soac PRIVATE ${OPENPGL_DEFINITIONS})
 add_executable (openpgl::soac ALIAS soac)
 set_target_properties (soac PROPERTIES OUTPUT_NAME soac)
 
