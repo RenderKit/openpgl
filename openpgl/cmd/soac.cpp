@@ -593,18 +593,18 @@ int main(int argc, char *argv[]) {
 
         printf("    OPENPGL_GPU_CALLABLE\n");
         printf("    GetSetIndirector operator[](int i) {\n");
-        printf("        DCHECK_LT(i, nAlloc);\n");
+        //printf("        DCHECK_LT(i, nAlloc);\n");
         printf("        return GetSetIndirector{this, i};\n");
         printf("    }\n");
         printf("    OPENPGL_GPU_CALLABLE\n");
         if (!soa.templateType.empty()) {
             printf("    %s<%s> operator[](int i) const {\n", soa.type.c_str(),
                    soa.templateType.c_str());
-            printf("        DCHECK_LT(i, nAlloc);\n");
+            //printf("        DCHECK_LT(i, nAlloc);\n");
             printf("        %s<%s> r;\n", soa.type.c_str(), soa.templateType.c_str());
         } else {
             printf("    %s operator[](int i) const {\n", soa.type.c_str());
-            printf("        DCHECK_LT(i, nAlloc);\n");
+            //printf("        DCHECK_LT(i, nAlloc);\n");
             printf("        %s r;\n", soa.type.c_str());
         }
         for (const auto &member : soa.members)

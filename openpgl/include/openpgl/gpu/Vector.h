@@ -35,10 +35,11 @@ inline OPENPGL_GPU_CALLABLE float rsqrt(float v)
 }
 
 #if defined(OPENPGL_GPU_SYCL)
-typedef ::sycl::float2 Vector2;
-typedef ::sycl::float3 Vector3;
-typedef ::sycl::float2 Point2;
-typedef ::sycl::float3 Point3;
+typedef ::sycl::mfloat2 Vector2;
+typedef ::sycl::mfloat3 Vector3;
+typedef ::sycl::mfloat2 Point2;
+typedef ::sycl::mfloat3 Point3;
+typedef ::sycl::mfloat3 Normal3;
 using namespace sycl;
 
 #else  // defined(OPENPGL_GPU_CUDA)

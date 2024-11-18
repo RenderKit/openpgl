@@ -2,6 +2,8 @@
 #include "../cpp/SampleData.h"
 
 
+#define USE_RAW_SAMPLE_DATA
+
 class Timer
 {
    private:
@@ -30,6 +32,8 @@ class Timer
     time_point start;
 };
 
+#ifndef USE_RAW_SAMPLE_DATA
+
 struct SampleData{
     uint32_t flags;
     Point3 position;
@@ -44,6 +48,13 @@ struct ZeroValueSampleData{
     Point3 position;
     Vector3 direction;
 };
+
+#else
+
+using SampleData = openpgl::cpp::SampleData;
+using ZeroValueSampleData = openpgl::cpp::ZeroValueSampleData;
+
+#endif
 
 struct SampleDataStorage{
     SampleData samples[10+1];
@@ -126,7 +137,7 @@ public:
     }
     
     OPENPGL_GPU_CALLABLE
-    void AddSampleData(const int pixelIndex, const Point3& position, const Vector3& direction, const float pdf, const float distance, const Vector3 contribution, const bool volume)
+    void AddSampleData(const int pixelIndex, const Point3& position, const Vector3& direction, const float pdf, const float distance, const Vector3 contribution, const bool volume) const
     {
         uint32_t nSample = nSamples[pixelIndex];
         //if(nSample < 10) 
@@ -134,7 +145,11 @@ public:
             uint32_t idx = nSample;
             uint32_t flags = 0;
             flags = volume ? flags | openpgl::cpp::SampleData::Flags::EInsideVolume : flags;
+#ifndef USE_RAW_SAMPLE_DATA
             SampleData sd = {flags, position, direction, ((contribution[0] + contribution[1] + contribution[2]) / 3.f)/pdf, pdf, distance};
+#else
+            SampleData sd = {{position[0], position[1], position[2]}, {direction[0], direction[1], direction[2]}, ((contribution[0] + contribution[1] + contribution[2]) / 3.f)/pdf, pdf, distance, flags};
+#endif
             samples[idx][pixelIndex] = sd;
             nSamples[pixelIndex] = nSample + 1;
             
@@ -142,19 +157,23 @@ public:
     }
 
     OPENPGL_GPU_CALLABLE
-    void AddZeroValueSampleData(const int pixelIndex, const Point3& position, const Vector3& direction, const bool volume){
+    void AddZeroValueSampleData(const int pixelIndex, const Point3& position, const Vector3& direction, const bool volume) const {
         uint32_t nZVSample = nZVSamples[pixelIndex];
         //if(nZVSample < 10) 
         {
             uint32_t idx = nZVSample;
+#ifndef USE_RAW_SAMPLE_DATA
             ZeroValueSampleData zvSD = {volume, position, direction};
+#else
+            ZeroValueSampleData zvSD = {{position[0], position[1], position[2]}, {direction[0], direction[1], direction[2]}, volume};
+#endif
             zvSamples[idx][pixelIndex] = zvSD;
             nZVSamples[pixelIndex] = nZVSample + 1;
         }
     }
 
     OPENPGL_GPU_CALLABLE
-    void Reset(const int pixelIndex) {
+    inline void Reset(const int pixelIndex) const {
         nSamples[pixelIndex] = 0;
         nZVSamples[pixelIndex] = 0;
     }
@@ -206,10 +225,12 @@ public:
             for (size_t pixelIndex = 0; pixelIndex < maxQueueSize; pixelIndex++) {
 #endif
                 uint32_t nSamples = !managed ? host_nSamples[pixelIndex] : this->nSamples[pixelIndex];
-
+                //if (nSamples > 0)
+                //    std::cout << "nSamples = " << nSamples << std::endl;
                 for (int n = 0; n < nSamples; n++) {
                     uint32_t idx = (n*maxQueueSize) + pixelIndex;
                     SampleData sd = !managed ? host_samples[idx] : this->samples[n][pixelIndex];
+#ifndef USE_RAW_SAMPLE_DATA
                     openpgl::cpp::SampleData pg_sd;
                     pg_sd.position = {sd.position[0], sd.position[1], sd.position[2]};
                     pg_sd.direction ={sd.direction[0], sd.direction[1], sd.direction[2]};
@@ -217,7 +238,11 @@ public:
                     pg_sd.pdf = sd.pdf;
                     pg_sd.distance = sd.distance;
                     pg_sd.flags = sd.flags;
+                    
                     sampleStorage.AddSample(pg_sd);
+#else
+                    sampleStorage.AddSample(sd);
+#endif
                 }
 /*
                 uint32_t nZeroValueSamples = !managed ? host_nZVSamples[pixelIndex] : this->nZVSamples[pixelIndex];
@@ -240,5 +265,16 @@ public:
         }
 #endif
         std::cout << std::endl << "CollectSampleData: time(sec) = " << timerPropagate.elapsed() * 1e-6 << std::endl;
+    }
+
+    void Reset() {
+#if defined(OPENPGL_GPU_CUDA)
+        CUDA_CHECK(cudaDeviceSynchronize());
+#endif
+        uint32_t maxQueueSize = this->nAlloc;
+        ParallelFor(device, "Reset", maxQueueSize, OPENPGL_CPU_GPU_LAMBDA(int pixelIndex) {
+                Reset(pixelIndex);
+            }
+        );
     }
 };

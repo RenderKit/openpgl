@@ -45,11 +45,21 @@
 #define OPENPGL_GPU_CALLABLE
 #endif
 
-#define OPENPGL_CPU_GPU_LAMBDA(...) [=] OPENPGL_GPU_CALLABLE(__VA_ARGS__) mutable
+#if defined(OPENPGL_GPU_SYCL)
+#ifdef OPENPGL_CPU_GPU_LAMBDA
+#undef OPENPGL_CPU_GPU_LAMBDA
+#endif
+#define OPENPGL_CPU_GPU_LAMBDA(...) [=, *this ] OPENPGL_GPU_CALLABLE(__VA_ARGS__)
+#else
+#ifdef OPENPGL_CPU_GPU_LAMBDA
+#undef OPENPGL_CPU_GPU_LAMBDA
+#endif
+#define OPENPGL_CPU_GPU_LAMBDA(...) [=, *this ] OPENPGL_GPU_CALLABLE(__VA_ARGS__) mutable
+#endif
 
 #if defined(OPENPGL_GPU_CUDA)
 template <typename F>
-inline int MyGetBlockSize(const char *description, F kernel) {
+inline int CUDAGetBlockSize(const char *description, F kernel) {
     // Note: this isn't reentrant, but that's fine for our purposes...
     static std::map<std::type_index, int> kernelBlockSizes;
 
@@ -70,7 +80,10 @@ inline int MyGetBlockSize(const char *description, F kernel) {
 
 // GPU Launch Function Declarations
 template <typename F>
-void ParallelFor(const char *description, int nItems, F &&func);
+void ParallelFor(openpgl::gpu::Device* device, const char *description, int nItems, F &&func);
+
+template <typename F>
+void GPUParallelFor(const char *description, int nItems, F func);
 
 #ifdef __NVCC__
 template <typename F>
@@ -82,17 +95,50 @@ __global__ void Kernel(F func, int nItems) {
 }
 
 template <typename F>
-void ParallelFor(const char *description, int nItems, F &&func) {
+void ParallelFor(openpgl::gpu::Device* device, const char *description, int nItems, F &&func) {
+    GPUParallelFor(description, nItems, func);
+}
+template <typename F>
+void GPUParallelFor(const char *description, int nItems, F func) {
     auto kernel = &Kernel<F>;
-    int blockSize = MyGetBlockSize(description, kernel);
+    int blockSize = CUDAGetBlockSize(description, kernel);
     int gridSize = (nItems + blockSize - 1) / blockSize;
-    //std::cout << "gridSize = " << gridSize << "\t blockSize = " << blockSize << std::endl;
     kernel<<<gridSize, blockSize>>>(func, nItems);
 }
 #endif
+#elif defined(OPENPGL_GPU_SYCL)
+template <typename F>
+void GPUParallelFor(openpgl::gpu::Device* device, const char *description, int nItems, F func) {
+    device->q->parallel_for(::sycl::range<1>(nItems), [=](::sycl::id<1> i) {
+        int idx = i.get(0);
+        func(idx);
+    });
+}
+
+template <typename F>
+void ParallelFor(openpgl::gpu::Device* device, const char *description, int nItems, F &&func) {
+    GPUParallelFor(device, description, nItems, func);
+}
 #endif
 #if defined(OPENPGL_GPU_CPU)
+
+//#ifndef __NVCC__
+//#include <tbb/parallel_for.h>
+//#endif
+
 template <typename F>
-void ParallelFor(const char *description, int nItems, F &&func) {
+void CPUParallelFor(openpgl::gpu::Device* device, const char *description, int nItems, F func) {
+#ifndef __NVCC__
+    tbb::parallel_for(tbb::blocked_range<int>(0, nItems), [&](tbb::blocked_range<int> r) {
+        for (size_t idx = r.begin(); idx < r.end(); idx++){
+            func(idx);
+        }
+    });
+#endif
+}
+
+template <typename F>
+void ParallelFor(openpgl::gpu::Device* device, const char *description, int nItems, F &&func) {
+    CPUParallelFor(device, description, nItems, func);
 }
 #endif

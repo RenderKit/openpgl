@@ -18,6 +18,8 @@
 #include <fstream>
 #include <chrono>
 
+#include <typeindex>
+
 namespace openpgl
 {
 namespace gpu

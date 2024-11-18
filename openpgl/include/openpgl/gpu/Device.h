@@ -25,6 +25,12 @@ inline void checkCudaError() {
     }
 }
 
+#define CUDA_CHECK(EXPR)                                        \
+    if (EXPR != cudaSuccess) {                                  \
+        cudaError_t error = cudaGetLastError();                 \
+        std::cout << "CUDA error: "<< cudaGetErrorString(error) << std::endl; \
+    } else /* eat semicolon */
+
 #endif
 
 namespace openpgl
@@ -47,10 +53,15 @@ struct Device
     DeviceTypes m_deviceType{EDeviceType_CPU};
 #if defined(OPENPGL_GPU_SYCL_SUPPORT)
     ::sycl::queue* q;
+    ::sycl::queue _q;
 #endif
     Device(DeviceTypes dt, void* ptr = nullptr) : m_deviceType(dt) {
 #if defined(OPENPGL_GPU_SYCL_SUPPORT)
-    q = reinterpret_cast<::sycl::queue*>(ptr);
+    if (ptr) {
+        q = reinterpret_cast<::sycl::queue*>(ptr);
+    } else {
+        q = &_q;
+    }
 #endif        
     }
 
@@ -78,7 +89,7 @@ struct Device
 #if defined(OPENPGL_GPU_CUDA_SUPPORT)
             case EDeviceType_CUDA:
             {
-                cudaDeviceSynchronize();
+                CUDA_CHECK(cudaDeviceSynchronize());
                 break;
             }
 #endif
@@ -104,7 +115,11 @@ struct Device
             case EDeviceType_SYCL:
             {
                 try{
-                    ptr =  ::sycl::malloc_shared<T>(numElements, *q);
+                    if(shared) {
+                        ptr =  ::sycl::malloc_shared<T>(numElements, *q);
+                    } else {
+                        ptr =  ::sycl::malloc_device<T>(numElements, *q);
+                    }
                 } catch (::sycl::exception const &e) {
                     std::cout << "Caught sync SYCL exception: " << e.what() << "\n";
                     ptr =nullptr;

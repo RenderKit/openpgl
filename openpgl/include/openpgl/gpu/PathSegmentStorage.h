@@ -58,9 +58,9 @@ public:
     }
 
     OPENPGL_GPU_CALLABLE
-    void PropagateSamples(const int pixelIndex, SampleDataStorageBuffer* sampleDataStorageBuffer) {
+    void PropagateSamples(const int pixelIndex, const SampleDataStorageBuffer* sampleDataStorageBuffer) const {
         uint32_t depth = curDepth[pixelIndex];
-        Vector3 contrbution(0.f, 0.f , 0.f);
+        Vector3 contribution(0.f, 0.f , 0.f);
 
         Vector3 scatterWeights[10+1];
         Point3 positions[10+1];
@@ -80,33 +80,44 @@ public:
         for (int n = depth-2; n >= 0; n--) {
 
             float distance = 1e6f;
-            contrbution += contributions[n+1];
-            //contrbution += contributions[n+1];
-            if (contrbution[0] > 0.f || contrbution[1] > 0.f || contrbution[2] > 0.f) {
-                sampleDataStorageBuffer->AddSampleData(pixelIndex, positions[n], directions[n], pdfs[n], distance, contrbution, false);
+            contribution += contributions[n+1];
+            if (contribution[0] > 0.f || contribution[1] > 0.f || contribution[2] > 0.f) {
+                sampleDataStorageBuffer->AddSampleData(pixelIndex, positions[n], directions[n], pdfs[n], distance, contribution, false);
             }
             //else 
             //{
-            ////} else if (contrbution[0] == -1.f){
+            ////} else if (contribution[0] == -1.f){
             //    sampleDataStorageBuffer.AddZeroValueSampleData(pixelIndex, pos, direction, false);
             //}
-            contrbution[0] *= scatterWeights[n][0];
-            contrbution[1] *= scatterWeights[n][1];
-            contrbution[2] *= scatterWeights[n][2];
+            contribution[0] *= scatterWeights[n][0];
+            contribution[1] *= scatterWeights[n][1];
+            contribution[2] *= scatterWeights[n][2];
         }
     }
 
     OPENPGL_GPU_CALLABLE
-    void Reset(const int pixelIndex) {
+    void Reset(const int pixelIndex) const {
         curDepth[pixelIndex] = 0;
     }
 
     void PrepareSampleData(SampleDataStorageBuffer& sampleDataStorageBuffer) {
-
+#if defined(OPENPGL_GPU_CUDA)
         CUDA_CHECK(cudaDeviceSynchronize());
+#endif
         uint32_t maxQueueSize = this->nAlloc; 
-        ParallelFor("PrepareSampleData", maxQueueSize, OPENPGL_CPU_GPU_LAMBDA(int pixelIndex) {
+        ParallelFor(device, "PrepareSampleData", maxQueueSize, OPENPGL_CPU_GPU_LAMBDA(int pixelIndex) {
                 PropagateSamples(pixelIndex, &sampleDataStorageBuffer);
+            }
+        );
+    }
+
+    void Reset() {
+#if defined(OPENPGL_GPU_CUDA)
+        CUDA_CHECK(cudaDeviceSynchronize());
+#endif
+        uint32_t maxQueueSize = this->nAlloc; 
+        ParallelFor(device, "Reset", maxQueueSize, OPENPGL_CPU_GPU_LAMBDA(int pixelIndex) {
+                Reset(pixelIndex);
             }
         );
     }
