@@ -83,7 +83,7 @@ template <typename F>
 void ParallelFor(openpgl::gpu::Device* device, const char *description, int nItems, F &&func);
 
 template <typename F>
-void GPUParallelFor(const char *description, int nItems, F func);
+void CUDAParallelFor(const char *description, int nItems, F func);
 
 #ifdef __NVCC__
 template <typename F>
@@ -96,10 +96,10 @@ __global__ void Kernel(F func, int nItems) {
 
 template <typename F>
 void ParallelFor(openpgl::gpu::Device* device, const char *description, int nItems, F &&func) {
-    GPUParallelFor(description, nItems, func);
+    CUDAParallelFor(description, nItems, func);
 }
 template <typename F>
-void GPUParallelFor(const char *description, int nItems, F func) {
+void CUDAParallelFor(const char *description, int nItems, F func) {
     auto kernel = &Kernel<F>;
     int blockSize = CUDAGetBlockSize(description, kernel);
     int gridSize = (nItems + blockSize - 1) / blockSize;
@@ -108,7 +108,7 @@ void GPUParallelFor(const char *description, int nItems, F func) {
 #endif
 #elif defined(OPENPGL_GPU_SYCL)
 template <typename F>
-void GPUParallelFor(openpgl::gpu::Device* device, const char *description, int nItems, F func) {
+void SYCLParallelFor(openpgl::gpu::Device* device, const char *description, int nItems, F func) {
     device->q->parallel_for(::sycl::range<1>(nItems), [=](::sycl::id<1> i) {
         int idx = i.get(0);
         func(idx);
@@ -117,7 +117,7 @@ void GPUParallelFor(openpgl::gpu::Device* device, const char *description, int n
 
 template <typename F>
 void ParallelFor(openpgl::gpu::Device* device, const char *description, int nItems, F &&func) {
-    GPUParallelFor(device, description, nItems, func);
+    SYCLParallelFor(device, description, nItems, func);
 }
 #endif
 #if defined(OPENPGL_GPU_CPU)
