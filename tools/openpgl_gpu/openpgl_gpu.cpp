@@ -6,9 +6,12 @@
 // #endif
 
 #include <openpgl/cpp/OpenPGL.h>
+
+#if !defined(__CUDACC__)
 #include <tbb/global_control.h>
 #include <tbb/info.h>
 #include <tbb/parallel_for.h>
+#endif
 
 #include <algorithm>
 #include <cmath>
@@ -20,23 +23,14 @@
 #include <string>
 #include <vector>
 
-// #if defined(OPENPGL_GPU_SYCL)
-//     #include <sycl/sycl.hpp>
-// #endif
-#if defined(OPENPGL_GPU_SYCL_SUPPORT)
-#define OPENPGL_GPU_SYCL
 #include <openpgl/gpu/Device.h>
 #include <openpgl/gpu/OpenPGLGPU.h>
+
+#if defined(OPENPGL_GPU_SYCL_SUPPORT)
 #define OPENPGLGPU openpgl::gpu::sycl
 #elif defined(OPENPGL_GPU_CUDA_SUPPORT)
-#define OPENPGL_GPU_CUDA
-#include <openpgl/gpu/Device.h>
-#include <openpgl/gpu/OpenPGLGPU.h>
 #define OPENPGLGPU openpgl::gpu::cuda
 #else
-#define OPENPGL_GPU_CPU
-#include <openpgl/gpu/Device.h>
-#include <openpgl/gpu/OpenPGLGPU.h>
 #define OPENPGLGPU openpgl::gpu::cpu
 #endif
 #include <string>
@@ -47,17 +41,18 @@
 // Please include your own zlib-compatible API header before
 // including `tinyexr.h` when you disable `TINYEXR_USE_MINIZ`
 #define TINYEXR_USE_MINIZ 0
+//#define TINYEXR_USE_NANOZLIB 1
 #include "zlib.h"
 // Or, if your project uses `stb_image[_write].h`, use their
 // zlib implementation:
 // #define TINYEXR_USE_STB_ZLIB 1
 #define TINYEXR_IMPLEMENTATION
-#include "tinyexr.h"
+#include <tinyexr/tinyexr.h>
 
 // Setting up a device global variable for the Guiding Field
-#if defined(OPENPGL_GPU_CUDA) && defined(__CUDACC__)
+#if defined(OPENPGL_GPU_CUDA_SUPPORT) && defined(__CUDACC__)
 __device__ __constant__ OPENPGLGPU::FieldGPU global_device_field;
-#elif defined(OPENPGL_GPU_SYCL)
+#elif defined(OPENPGL_GPU_SYCL_SUPPORT)
 #include <sycl/sycl.hpp>
 sycl::ext::oneapi::experimental::device_global<const OPENPGLGPU::FieldGPU> global_device_field;
 #else
@@ -65,7 +60,7 @@ openpgl::gpu::cpu::FieldGPU global_device_field;
 #endif
 
 // The CUDA function for running the test
-#if defined(OPENPGL_GPU_CUDA) && defined(__CUDACC__)
+#if defined(OPENPGL_GPU_CUDA_SUPPORT) && defined(__CUDACC__)
 __global__ void test(/*openpgl_gpu::FieldGPU field, openpgl_gpu::FieldGPU::Distribution* device_distributions,*/ pgl_vec3f *device_positionsSurface, int *device_ids,
                      pgl_vec2f *device_random_samples, pgl_vec3f *device_random_directions, float *device_pdfs, int nSurfaceSamples)
 {
@@ -96,6 +91,7 @@ enum BenchType
 {
     HELP = 0,
     BENCH_LOOKUP_ID,
+    BENCH_SAMPLE_DATA_GEN,
     NONE
 };
 
@@ -125,6 +121,8 @@ struct BenchParams
     std::string field_file_name{""};
     std::string position_exr_file_name;
     std::string id_exr_file_name;
+    std::string path_segment_storage_file_name {""};
+    bool managed_gpu_memory {false};
     // std::string out_file_name {""};
 
     unsigned int num_threads{0};
@@ -162,7 +160,13 @@ struct BenchParams
                     valid = false;
                 }
                 break;
-
+            case BENCH_SAMPLE_DATA_GEN:
+                if (path_segment_storage_file_name == "" || !file_exists(path_segment_storage_file_name))
+                {
+                    std::cout << "ERROR: PathSegmentStorage file not set or does not exists: " << path_segment_storage_file_name << std::endl;
+                    valid = false;
+                }
+                break;
             case NONE:
                 valid = false;
                 break;
@@ -199,10 +203,13 @@ bool parseCommandLine(std::list<std::string> &args, BenchParams &benchParams)
                 {
                     benchParams.type = BenchType::BENCH_LOOKUP_ID;
                 }
+                else if (str_type == "benchSampleDataGen") {
+                    benchParams.type = BenchType::BENCH_SAMPLE_DATA_GEN;
+                }
                 else
                 {
                     std::cout << "ERROR: Unknown type: " << str_type << std::endl;
-                    std::cout << "       Valid types are: [benchLookUpId] " << std::endl;
+                    std::cout << "       Valid types are: [benchLookUpId | benchSampleDataGen] " << std::endl;
                     return false;
                 }
             }
@@ -293,6 +300,20 @@ bool parseCommandLine(std::list<std::string> &args, BenchParams &benchParams)
                 return false;
             }
         }
+        else if (arg == "-pathSegmentStorage")
+        {
+            // collectSamples = false;
+            ++it;
+            if (it != args.end())
+            {
+                const std::string str_field = *it;
+                benchParams.path_segment_storage_file_name = str_field;
+            }
+            else
+            {
+                return false;
+            }
+        }
         ++it;
     }
     return true;
@@ -300,7 +321,7 @@ bool parseCommandLine(std::list<std::string> &args, BenchParams &benchParams)
 
 void print_help()
 {
-    std::cout << "usage openpgl_gpu -type <benchLookUpId> [<options>]" << std::endl;
+    std::cout << "usage openpgl_gpu -type <benchLookUpId | benchSampleDataGen> [<options>]" << std::endl;
     std::cout << std::endl;
     std::cout << "type options:" << std::endl;
     std::cout << "  " << "benchLookUpId    " << "\t" << "Measures the average time of an initialization of a SurfaceSamplingDistribution" << std::endl;
@@ -322,6 +343,62 @@ void print_help()
     std::cout << std::endl;
 }
 
+
+void bench_sample_data_gen(BenchParams &benchParams)
+{
+#if defined(OPENPGL_GPU_SYCL_SUPPORT)
+    openpgl::gpu::Device deviceGPU(openpgl::gpu::Device::EDeviceType_SYCL);
+#elif defined(OPENPGL_GPU_CUDA_SUPPORT)
+    openpgl::gpu::Device deviceGPU(openpgl::gpu::Device::EDeviceType_CUDA);
+#else
+    openpgl::gpu::Device deviceGPU(openpgl::gpu::Device::EDeviceType_CPU);
+#endif
+
+    OPENPGLGPU::PathSegmentStorageBuffer pathSegmentStorageBuffer(benchParams.path_segment_storage_file_name, &deviceGPU);
+    OPENPGLGPU::SampleDataStorageBuffer sampleDataStorageBuffer(pathSegmentStorageBuffer.nAlloc,  &deviceGPU, false);
+    //OPENPGLGPU::SampleDataStorageBuffer sampleDataStorageBuffer("/home/sherholz/Develop-OpenPGL/pbrt-v4/src/ext/openpgl/install-Debug/bin/test.sdsb",  &deviceGPU);
+
+
+    openpgl::cpp::SampleStorage sampleStorage;
+    std::cout << "pathSegmentStorageBuffer.nAlloc = "<< pathSegmentStorageBuffer.nAlloc << std::endl; 
+    sampleStorage.Reserve(pathSegmentStorageBuffer.nAlloc * 11, 0);
+
+    deviceGPU.wait();
+    int repetitions = 10;
+    float totalTimeElapsed = 0.f;
+    for (int i=0; i< repetitions;i++)
+    {
+        sampleDataStorageBuffer.Reset();
+        deviceGPU.wait();
+        Timer timerPrepareSampleData;
+        timerPrepareSampleData.reset();
+        
+        pathSegmentStorageBuffer.PrepareSampleData(sampleDataStorageBuffer);
+        deviceGPU.wait();
+        totalTimeElapsed += timerPrepareSampleData.elapsed();
+        
+    }
+    std::cout << std::endl << "PrepareSampleData: time(sec) = " << (totalTimeElapsed * 1e-6) / float(repetitions) << std::endl;
+/* */
+    totalTimeElapsed = 0.f;
+    for (int i=0; i< repetitions;i++)
+    {
+        sampleStorage.Clear();
+        deviceGPU.wait();
+        Timer timerCollectSampleData;
+        timerCollectSampleData.reset();
+        sampleDataStorageBuffer.CollectSampleData(sampleStorage);
+        deviceGPU.wait();
+        totalTimeElapsed += timerCollectSampleData.elapsed();
+        std::cout << std::endl << "CollectSampleData: time(sec) = " << timerCollectSampleData.elapsed() * 1e-6 << std::endl;
+        std::cout << std::endl << "SampleStorage: numSurfaceSamples = " << sampleStorage.GetSizeSurface() << "\t numZeroSurfaceSamples = " << sampleStorage.GetSizeInvalidSurface() << " \t numVolumeSamples = " << sampleStorage.GetSizeVolume() << "\t numZeroVolumeSamples = " << sampleStorage.GetSizeInvalidVolume()  << std::endl;
+
+    }
+/* */
+    pathSegmentStorageBuffer.Release();
+    sampleDataStorageBuffer.Release();
+}
+
 void bench_lookup_id(BenchParams &benchParams)
 {
     std::uniform_real_distribution<float> distU(0.f, 1.f);
@@ -332,9 +409,12 @@ void bench_lookup_id(BenchParams &benchParams)
     {
         num_threads = nThreads;
     }
+#if !defined(__CUDACC__)
     tbb::global_control global_limit(tbb::global_control::max_allowed_parallelism, num_threads);
     std::cout << "num_threads = " << num_threads << std::endl;
-
+#else
+    num_threads = 1;
+#endif
     openpgl::cpp::Device device(PGL_DEVICE_TYPE_CPU_4);
     openpgl::cpp::Field field(&device, benchParams.field_file_name);
 
@@ -361,9 +441,9 @@ void bench_lookup_id(BenchParams &benchParams)
     std::cout << "Field::Validate: " << field.Validate() << std::endl;
 
     int nSurfaceSamples = width * height;
-#if defined(OPENPGL_GPU_SYCL)
+#if defined(OPENPGL_GPU_SYCL_SUPPORT)
     openpgl::gpu::Device deviceGPU(openpgl::gpu::Device::EDeviceType_SYCL);
-#elif defined(OPENPGL_GPU_CUDA)
+#elif defined(OPENPGL_GPU_CUDA_SUPPORT)
     openpgl::gpu::Device deviceGPU(openpgl::gpu::Device::EDeviceType_CUDA);
 #else
     openpgl::gpu::Device deviceGPU(openpgl::gpu::Device::EDeviceType_CPU);
@@ -413,10 +493,10 @@ void bench_lookup_id(BenchParams &benchParams)
     std::cout << "Copying data to GPU\n";
     OPENPGLGPU::FieldGPU device_field(&deviceGPU, &field);
     std::cout << "Executing on GPU\n";
-#if defined(OPENPGL_GPU_SYCL) || defined(OPENPGL_GPU_CPU)
-#if defined(OPENPGL_GPU_SYCL)
-    deviceGPU.q.copy(&device_field, global_device_field).wait();
-    deviceGPU.q.submit([&](sycl::handler &h) {
+#if !defined(OPENPGL_GPU_CUDA_SUPPORT)
+#if defined(OPENPGL_GPU_SYCL_SUPPORT)
+    deviceGPU.q->copy(&device_field, global_device_field).wait();
+    deviceGPU.q->submit([&](sycl::handler &h) {
         h.parallel_for(sycl::range<1>(nSurfaceSamples), [=](sycl::id<1> i) {
             int idx = i.get(0);
 #else
@@ -428,7 +508,7 @@ void bench_lookup_id(BenchParams &benchParams)
 #endif
             // for (int j = 0; j< 1000000; j++)
             {
-#if defined(OPENPGL_GPU_SYCL)
+#if defined(OPENPGL_GPU_SYCL_SUPPORT)
                 idx = (i.get(0) + 512) % nSurfaceSamples;
 #else
                 idx = (n + 512) % nSurfaceSamples;
@@ -443,7 +523,7 @@ void bench_lookup_id(BenchParams &benchParams)
                 */
                 float sample = -1.f;
                 OPENPGLGPU::SurfaceSamplingDistribution ssd;
-#if defined(OPENPGL_GPU_SYCL)
+#if defined(OPENPGL_GPU_SYCL_SUPPORT)
                 ssd.Init(&global_device_field.get(), device_positionsSurface[idx], sample);
 #else
                 ssd.Init(&global_device_field, device_positionsSurface[idx], sample);
@@ -453,17 +533,17 @@ void bench_lookup_id(BenchParams &benchParams)
                 device_pdfs[idx] = ssd.SamplePDF(device_random_samples[idx], direction);
                 device_random_directions[idx] = direction;
             }
-#if defined(OPENPGL_GPU_SYCL)
+#if defined(OPENPGL_GPU_SYCL_SUPPORT)
         });
     });
 #else
         }
     });
 #endif
-#elif defined(OPENPGL_GPU_CUDA) && defined(__CUDACC__)
+#elif defined(OPENPGL_GPU_CUDA_SUPPORT) && defined(__CUDACC__)
     cudaMemcpyToSymbol(global_device_field, &device_field, sizeof(OPENPGLGPU::FieldGPU), 0, cudaMemcpyHostToDevice);
     deviceGPU.wait();
-    test<<<1 + nSurfaceSamples / 256, 256> > >(/*device_field, device_distributions, */ device_positionsSurface, device_ids, device_random_samples, device_random_directions,
+    test<<<1 + nSurfaceSamples / 256, 256>>>(/*device_field, device_distributions, */ device_positionsSurface, device_ids, device_random_samples, device_random_directions,
                                                device_pdfs, nSurfaceSamples);
 #endif
     deviceGPU.wait();
@@ -481,9 +561,13 @@ void bench_lookup_id(BenchParams &benchParams)
 #if 1
     std::cout << "Executing on CPU\n";
     int step = nSurfaceSamples / num_threads;
+#if !defined(__CUDACC__)
     tbb::parallel_for(tbb::blocked_range<int>(0, num_threads), [&](tbb::blocked_range<int> r) {
         for (int n = r.begin(); n < r.end(); ++n)
         {
+#else 
+    int n = 0;
+#endif
             openpgl::cpp::SurfaceSamplingDistribution ssd(&field);
             int tStep = n * step;
             for (int i = 0; i < nSurfaceSamples; i++)
@@ -495,8 +579,10 @@ void bench_lookup_id(BenchParams &benchParams)
                 random_directions[idx] = ssd.Sample(random_samples[idx]);
                 pdfs[idx] = ssd.PDF(random_directions[idx]);
             }
+#if !defined(__CUDACC__)
         }
     });
+#endif
 #endif
     std::cout << "done\n";
 
@@ -606,7 +692,9 @@ int main(int argc, char *argv[])
             case BENCH_LOOKUP_ID:
                 bench_lookup_id(benchParams);
                 break;
-
+            case BENCH_SAMPLE_DATA_GEN:
+                bench_sample_data_gen(benchParams);
+                break;
             default:
                 print_help();
                 break;

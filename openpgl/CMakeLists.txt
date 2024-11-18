@@ -29,6 +29,8 @@ target_compile_definitions(soac PRIVATE ${OPENPGL_DEFINITIONS})
 add_executable (openpgl::soac ALIAS soac)
 set_target_properties (soac PROPERTIES OUTPUT_NAME soac)
 
+file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/include/openpgl/gpu)
+
 add_custom_command (OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/include/openpgl/gpu/PathSegmentStorage_soa.h
     COMMAND soac ${CMAKE_CURRENT_SOURCE_DIR}/soa/PathSegmentStorage.soa > ${CMAKE_CURRENT_BINARY_DIR}/include/openpgl/gpu/PathSegmentStorage_soa.h
     DEPENDS soac ${CMAKE_CURRENT_SOURCE_DIR}/soa/PathSegmentStorage.soa)

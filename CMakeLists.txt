@@ -57,6 +57,8 @@ OPTION(OPENPGL_EF_IMAGE_SPACE_GUIDING_BUFFER "Enables experimental feature Image
 OPTION(OPENPGL_DIRECTION_COMPRESSION "Using 32-Bit compression to represent directions." OFF)
 OPTION(OPENPGL_RADIANCE_COMPRESSION "Using RGBE 32-Bit compression to represent radiance data (linear RGB)." OFF)
 
+option(OPENPGL_SYCL_SUPPORT "Build OpenPGL with SYCL support." OFF)
+
 if(COMPILER_SUPPORTS_ARM_NEON)
   option(OPENPGL_ISA_NEON "Build with support for NEON." ON)
   option(OPENPGL_ISA_NEON2X "Build with support for NEON double pumped." ON)
