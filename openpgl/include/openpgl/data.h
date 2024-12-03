@@ -165,7 +165,7 @@ struct PGLImageSpaceSample
     void SetSurfaceEvent(bool isSurfaceEvent)
     {
         if (isSurfaceEvent)
-            flags ^= EVolumeEvent;
+            flags &= ~EVolumeEvent;
         else
             flags |= EVolumeEvent;
     }
@@ -173,8 +173,30 @@ struct PGLImageSpaceSample
     /// @brief If the samples originates from a surface event.
     bool IsSurfaceEvent() const
     {
-        return flags ^ EVolumeEvent;
+        return !(flags & EVolumeEvent);
     }
+#endif
+};
+
+enum PGLContributionTypes {
+    EFirstMoment = 0,
+    ESecondMoment,
+};
+
+enum PGLVSPTypes
+{
+    EContribution = 0,
+    EVariance,
+};
+
+struct PGLImageSpaceGuidingBufferConfig {
+    pgl_point2i resolution {0, 0};
+    bool contributionEstimate {true};
+    PGLContributionTypes contributionType {PGLContributionTypes::EFirstMoment};
+    //float maxContributionValue {FLT_MAX}; //TODO
+#if defined(OPENPGL_VSP_GUIDING)
+    bool vspEstimate {false};
+    PGLVSPTypes vspType {PGLVSPTypes::EContribution};
 #endif
 };
 

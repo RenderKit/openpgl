@@ -178,6 +178,16 @@ inline void pglVec3fMultiply(pgl_vec3f &veca, const pgl_vec3f &vecb)
     veca.z *= vecb.z;
 }
 
+inline float pglVec3fMax(const pgl_vec3f &vec)
+{
+    return std::max(vec.x, std::max(vec.y, vec.z));
+}
+
+inline float pglVec3fMin(const pgl_vec3f &vec)
+{
+    return std::min(vec.x, std::min(vec.y, vec.z));
+}
+
 inline void pglVec2f(pgl_vec2f &vec, const float x, const float y)
 {
     vec.x = x;
