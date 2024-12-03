@@ -25,6 +25,57 @@ namespace util
  */
 struct ImageSpaceGuidingBuffer
 {
+    struct Config {
+        
+        Config(Point2i resolution) {
+            data.resolution = {resolution.x, resolution.y};
+        }
+
+        void EnableContributionEstimate(const bool contributionEstimate)
+        {
+            data.contributionEstimate = contributionEstimate;
+        }
+        
+        bool ContributionEstimate() const {
+            return data.contributionEstimate;
+        }
+
+        Point2i GetResolution() const {
+            return {data.resolution.x, data.resolution.y};
+        }
+
+        void SetContributionType(PGLContributionTypes type) {
+            data.contributionType = type;
+        }
+
+        PGLContributionTypes GetContributionType() {
+            return data.contributionType;
+        }
+
+#if defined(OPENPGL_VSP_GUIDING)
+        void EnableVolumeScatterProbabilityEstimate(const bool vspEstimate)
+        {
+            data.vspEstimate = vspEstimate;
+        }
+        
+        bool VolumeScatterProbabilityEstimate() const {
+            return data.vspEstimate;
+        }
+
+        void SetVolumeScatterProbabilityType(PGLVSPTypes type) {
+            data.vspType = type;
+        }
+
+        PGLVSPTypes GetVolumeScatterProbabilityType() {
+            return data.vspType;
+        }
+#endif
+    friend struct ImageSpaceGuidingBuffer;
+    private:
+        PGLImageSpaceGuidingBufferConfig data;
+    };
+    
+    
     typedef PGLImageSpaceSample Sample;
 
     /**
@@ -32,7 +83,7 @@ struct ImageSpaceGuidingBuffer
      *
      * @param resolution The size/reslution of the image buffer
      */
-    ImageSpaceGuidingBuffer(const Point2i resolution);
+    ImageSpaceGuidingBuffer(const Config cfg);
 
     /**
      * Creates/Loads an ImageSpaceGuidingBuffer from  multi-channel EXR file.
@@ -71,7 +122,11 @@ struct ImageSpaceGuidingBuffer
      *
      * This quantity is usefull guided/adjoint-driven Russina roulette decisions.
      */
-    Vector3f GetPixelContributionEstimate(const Point2i pixel) const;
+    Vector3f GetContributionEstimate(const Point2i pixel) const;
+
+#if defined(OPENPGL_VSP_GUIDING)
+    float GetVolumeScatterProbabilityEstimate(const Point2i pixel) const;
+#endif
 
     /**
      * @brief If the image-space guiding buffer is ready and can be used.
@@ -92,9 +147,9 @@ struct ImageSpaceGuidingBuffer
 /// Implementation
 ////////////////////////////////////////////////////////////
 
-OPENPGL_INLINE ImageSpaceGuidingBuffer::ImageSpaceGuidingBuffer(const Point2i resolution)
+OPENPGL_INLINE ImageSpaceGuidingBuffer::ImageSpaceGuidingBuffer(const Config cfg)
 {
-    m_imageSpaceGuidingBufferHandle = pglFieldNewImageSpaceGuidingBuffer(resolution);
+    m_imageSpaceGuidingBufferHandle = pglFieldNewImageSpaceGuidingBuffer(cfg.data);
 }
 
 OPENPGL_INLINE ImageSpaceGuidingBuffer::ImageSpaceGuidingBuffer(const std::string &fileName)
@@ -128,11 +183,19 @@ OPENPGL_INLINE void ImageSpaceGuidingBuffer::Store(const std::string &fileName) 
     pglImageSpaceGuidingBufferStore(m_imageSpaceGuidingBufferHandle, fileName.c_str());
 }
 
-OPENPGL_INLINE Vector3f ImageSpaceGuidingBuffer::GetPixelContributionEstimate(const Point2i pixel) const
+OPENPGL_INLINE Vector3f ImageSpaceGuidingBuffer::GetContributionEstimate(const Point2i pixel) const
 {
     OPENPGL_ASSERT(m_imageSpaceGuidingBufferHandle);
-    return pglImageSpaceGuidingBufferGetPixelContributionEstimate(m_imageSpaceGuidingBufferHandle, pixel);
+    return pglImageSpaceGuidingBufferGetContributionEstimate(m_imageSpaceGuidingBufferHandle, pixel);
 }
+
+#if defined(OPENPGL_VSP_GUIDING)
+OPENPGL_INLINE float ImageSpaceGuidingBuffer::GetVolumeScatterProbabilityEstimate(const Point2i pixel) const
+{
+    OPENPGL_ASSERT(m_imageSpaceGuidingBufferHandle);
+    return pglImageSpaceGuidingBufferGetVolumeScatterProbabilityEstimate(m_imageSpaceGuidingBufferHandle, pixel);
+}
+#endif
 
 OPENPGL_INLINE bool ImageSpaceGuidingBuffer::IsReady() const
 {

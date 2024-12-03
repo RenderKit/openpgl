@@ -883,9 +883,9 @@ extern "C" OPENPGL_DLLEXPORT void pglReleaseString(PGLString str)
 // ImageSpaceGuidingBuffer  ///////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
-extern "C" OPENPGL_DLLEXPORT PGLImageSpaceGuidingBuffer pglFieldNewImageSpaceGuidingBuffer(const pgl_point2i resolution)
+extern "C" OPENPGL_DLLEXPORT PGLImageSpaceGuidingBuffer pglFieldNewImageSpaceGuidingBuffer(const PGLImageSpaceGuidingBufferConfig cfg)
 {
-    return (PGLImageSpaceGuidingBuffer) new openpgl::ImageSpaceGuidingBuffer(resolution, false);
+    return (PGLImageSpaceGuidingBuffer) new openpgl::ImageSpaceGuidingBuffer(cfg);
 }
 
 extern "C" OPENPGL_DLLEXPORT PGLImageSpaceGuidingBuffer pglFieldNewImageSpaceGuidingBufferFromFile(const char *fileName)
@@ -917,11 +917,19 @@ extern "C" OPENPGL_DLLEXPORT void pglImageSpaceGuidingBufferStore(PGLImageSpaceG
     gImageSpaceGuidingBuffer->store(fileName);
 }
 
-extern "C" OPENPGL_DLLEXPORT pgl_vec3f pglImageSpaceGuidingBufferGetPixelContributionEstimate(PGLImageSpaceGuidingBuffer imageSpaceGuidingBuffer, const pgl_point2i pixel)
+extern "C" OPENPGL_DLLEXPORT pgl_vec3f pglImageSpaceGuidingBufferGetContributionEstimate(PGLImageSpaceGuidingBuffer imageSpaceGuidingBuffer, const pgl_point2i pixel)
 {
     auto *gImageSpaceGuidingBuffer = (openpgl::ImageSpaceGuidingBuffer *)imageSpaceGuidingBuffer;
     return gImageSpaceGuidingBuffer->getContributionEstimate(pixel);
 }
+
+#if defined(OPENPGL_VSP_GUIDING)
+extern "C" OPENPGL_DLLEXPORT float pglImageSpaceGuidingBufferGetVolumeScatterProbabilityEstimate(PGLImageSpaceGuidingBuffer imageSpaceGuidingBuffer, const pgl_point2i pixel)
+{
+    auto *gImageSpaceGuidingBuffer = (openpgl::ImageSpaceGuidingBuffer *)imageSpaceGuidingBuffer;
+    return gImageSpaceGuidingBuffer->getVolumeScatterProbabilityEstimate(pixel);
+}
+#endif
 
 extern "C" OPENPGL_DLLEXPORT bool pglImageSpaceGuidingBufferIsReady(PGLImageSpaceGuidingBuffer imageSpaceGuidingBuffer)
 {
