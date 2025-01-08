@@ -19,8 +19,8 @@ namespace util
  * @brief The ImageSpaceGuidingBuffer class calculates image-space guiding information from pixel samples.
  *
  * The class collects and stores the Monte-Carlo random work pixels samples generated during rendering.
- * The information gathered by these samples is then used, duting the @ref Update step to calculate/estimate
- * image-space guiding information (e.g., pixel contribtuion estimates for guided/adjoint-driven RR).
+ * The information gathered by these samples is then used, during the @ref Update step to calculate/estimate
+ * image-space guiding information (e.g., pixel contribution estimates for guided/adjoint-driven RR).
  *
  */
 struct ImageSpaceGuidingBuffer
