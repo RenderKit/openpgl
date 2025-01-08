@@ -41,7 +41,7 @@ typedef ::sycl::mfloat2 Point2;
 typedef ::sycl::mfloat3 Point3;
 typedef ::sycl::mfloat3 Normal3;
 using namespace sycl;
-
+#define sqrtf ::sycl::native::sqrt
 #else  // defined(OPENPGL_GPU_CUDA)
 
 union Vector2
