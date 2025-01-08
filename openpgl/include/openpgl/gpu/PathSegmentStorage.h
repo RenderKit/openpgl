@@ -18,8 +18,12 @@ struct PathSegment{
     float roughness;
 };
 
+enum {
+    EPathSegmentStorageDepth = 11,
+};
+
 struct PathSegmentStorage{
-    PathSegment segments[10+1];
+    PathSegment segments[EPathSegmentStorageDepth];
     uint32_t curDepth;
 };
 
@@ -29,8 +33,10 @@ struct PathSegmentStorage{
 struct PathSegmentStorageBuffer: public SOA<PathSegmentStorage> {
 
 public:
+
+    uint32_t max_depth;
     PathSegmentStorageBuffer() = default;
-    PathSegmentStorageBuffer(int n, openpgl::gpu::Device *device) : SOA<PathSegmentStorage>(n, device){
+    PathSegmentStorageBuffer(int n, openpgl::gpu::Device *device) : SOA<PathSegmentStorage>(n, device), max_depth(EPathSegmentStorageDepth){
         //std::cout << "PathSegmentStorage(int n, openpgl::gpu::Device *device)" << std::endl;
     }
 
@@ -62,11 +68,13 @@ public:
         uint32_t depth = curDepth[pixelIndex];
         Vector3 contribution(0.f, 0.f , 0.f);
 
-        Vector3 scatterWeights[10+1];
-        Point3 positions[10+1];
-        Vector3 directions[10+1];
-        float pdfs[10+1];
-        Vector3 contributions[10+1];
+        Vector3 scatterWeights[EPathSegmentStorageDepth];
+        Point3 positions[EPathSegmentStorageDepth];
+        Vector3 directions[EPathSegmentStorageDepth];
+        float pdfs[EPathSegmentStorageDepth];
+        Vector3 contributions[EPathSegmentStorageDepth];
+        float roughensses[EPathSegmentStorageDepth];
+        bool isDeltas[EPathSegmentStorageDepth];
 
         for (int n = 0; n < depth; n++) {
             scatterWeights[n] = segments[n].scatterWeight[pixelIndex];
@@ -75,13 +83,19 @@ public:
             pdfs[n] = segments[n].pdfDirectionIn[pixelIndex];
             contributions[n] = segments[n].scatteredContribution[pixelIndex];
             contributions[n] += segments[n].directContribution[pixelIndex];
+            roughensses[n] = segments[n].roughness[pixelIndex];
+            isDeltas[n] = segments[n].isDelta[pixelIndex];
         }
 
         for (int n = depth-2; n >= 0; n--) {
-
-            float distance = 1e6f;
+            Vector3 dist;
+            dist[0] = positions[n+1][0] - positions[n][0];
+            dist[1] = positions[n+1][1] - positions[n][1];
+            dist[2] = positions[n+1][2] - positions[n][2];
+            float distance = length(dist);
+            distance = 1e6f;
             contribution += contributions[n+1];
-            if (contribution[0] > 0.f || contribution[1] > 0.f || contribution[2] > 0.f) {
+            if ((contribution[0] > 0.f || contribution[1] > 0.f || contribution[2] > 0.f) && (!isDeltas[n]) && roughensses[n] > 0.1f) {
                 sampleDataStorageBuffer->AddSampleData(pixelIndex, positions[n], directions[n], pdfs[n], distance, contribution, false);
             }
             //else 

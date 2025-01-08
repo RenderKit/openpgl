@@ -14,8 +14,8 @@ flat SampleData;
 flat ZeroValueSampleData;
 
 soa SampleDataStorage{
-    SampleData samples[10+1];
+    SampleData samples[ESampleDataStorageDepth];
     uint32_t nSamples;
-    ZeroValueSampleData zvSamples[10+1];
+    ZeroValueSampleData zvSamples[ESampleDataStorageDepth];
     uint32_t nZVSamples;
 };

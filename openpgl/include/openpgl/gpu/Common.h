@@ -82,9 +82,6 @@ inline int CUDAGetBlockSize(const char *description, F kernel) {
 template <typename F>
 void ParallelFor(openpgl::gpu::Device* device, const char *description, int nItems, F &&func);
 
-template <typename F>
-void CUDAParallelFor(const char *description, int nItems, F func);
-
 #ifdef __NVCC__
 template <typename F>
 __global__ void Kernel(F func, int nItems) {
@@ -105,6 +102,12 @@ void CUDAParallelFor(const char *description, int nItems, F func) {
     int gridSize = (nItems + blockSize - 1) / blockSize;
     kernel<<<gridSize, blockSize>>>(func, nItems);
 }
+#else
+template <typename F>
+void ParallelFor(openpgl::gpu::Device* device, const char *description, int nItems, F &&func) {
+    //CUDAParallelFor(description, nItems, func);
+}
+
 #endif
 #elif defined(OPENPGL_GPU_SYCL)
 template <typename F>

@@ -26,6 +26,6 @@ soa PathSegment {
 };
 
 soa PathSegmentStorage {
-    PathSegment segments[10+1];
+    PathSegment segments[ESampleDataStorageDepth];
     uint32_t curDepth;
 };

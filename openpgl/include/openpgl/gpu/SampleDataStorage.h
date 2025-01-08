@@ -56,10 +56,15 @@ using ZeroValueSampleData = openpgl::cpp::ZeroValueSampleData;
 
 #endif
 
+enum {
+    ESampleDataStorageDepth = 11,
+};
+
 struct SampleDataStorage{
-    SampleData samples[10+1];
+
+    SampleData samples[ESampleDataStorageDepth];
     uint32_t nSamples;
-    ZeroValueSampleData zvSamples[10+1];
+    ZeroValueSampleData zvSamples[ESampleDataStorageDepth];
     uint32_t nZVSamples;
 };
 
@@ -67,19 +72,20 @@ struct SampleDataStorage{
 
 struct SampleDataStorageBuffer: public SOA<SampleDataStorage> {
 private:
-    SampleData* host_samples {nullptr};
-    uint32_t* host_nSamples {nullptr};
+    SampleData* host_samples;
+    uint32_t* host_nSamples;
     //ZeroValueSampleData* host_zvSamples {nullptr};
     //uint32_t* host_nZVSamples {nullptr};
 public:
+    uint32_t max_depth;
     SampleDataStorageBuffer() = default;
-    SampleDataStorageBuffer(int n, openpgl::gpu::Device *device, bool managed = false) : SOA<SampleDataStorage>(n, device, managed) 
+    SampleDataStorageBuffer(int n, openpgl::gpu::Device *device, bool managed = false) : SOA<SampleDataStorage>(n, device, managed), max_depth(ESampleDataStorageDepth) 
     {
         /* */
         if(!this->managed) {
-            host_samples = new SampleData[(10+1)*n];
+            host_samples = new SampleData[(ESampleDataStorageDepth)*n];
             host_nSamples = new uint32_t[n];
-            //host_zvSamples = new ZeroValueSampleData[(10+1)*n];
+            //host_zvSamples = new ZeroValueSampleData[(ESampleDataStorageDepth)*n];
             //host_nZVSamples = new uint32_t[n];
         } else {
             host_samples = nullptr;
@@ -102,9 +108,9 @@ public:
         fb.close();
 
         if(!this->managed) {
-            host_samples = new SampleData[(10+1)*this->nAlloc];
+            host_samples = new SampleData[(ESampleDataStorageDepth)*this->nAlloc];
             host_nSamples = new uint32_t[this->nAlloc];
-            //host_zvSamples = new ZeroValueSampleData[(10+1)*n];
+            //host_zvSamples = new ZeroValueSampleData[(ESampleDataStorageDepth)*n];
             //host_nZVSamples = new uint32_t[n];
         } else {
             host_samples = nullptr;
@@ -198,7 +204,7 @@ public:
             //device->wait();
             //device->memcpyArrayFromGPU<uint32_t>(nZVSamples, host_nZVSamples, maxQueueSize);
             //device->wait();
-            for (size_t i = 0; i < 10+1; i++) {
+            for (size_t i = 0; i < ESampleDataStorageDepth; i++) {
                 uint32_t idx = i*maxQueueSize;
                 device->memcpyArrayFromGPU<SampleData>(samples[i], &(host_samples[idx]), maxQueueSize);
                 //device->wait();

@@ -626,7 +626,7 @@ int main(int argc, char *argv[]) {
         // Member definitions
         printf("    int nAlloc;\n");
         printf("    bool managed;\n");
-        printf("    openpgl::gpu::Device * /*OPENPGL_RESTRICT*/ device {nullptr};\n");
+        printf("    openpgl::gpu::Device * /*OPENPGL_RESTRICT*/ device; //{nullptr};\n");
         
         for (const auto &member : soa.members) {
             for (int i = 0; i < member.names.size(); ++i) {
@@ -641,7 +641,7 @@ int main(int argc, char *argv[]) {
                                member.arraySizes[i].c_str());
                 } else {
                     if (isFlatType(member.type) || member.numPointers > 0)
-                        printf("    %s * /*OPENPGL_RESTRICT*/ %s {nullptr};\n", member.GetType().c_str(),
+                        printf("    %s * /*OPENPGL_RESTRICT*/ %s; //{nullptr};\n", member.GetType().c_str(),
                                name.c_str());
                     else
                         printf("    SOA<%s> %s;\n", member.type.c_str(), name.c_str());
