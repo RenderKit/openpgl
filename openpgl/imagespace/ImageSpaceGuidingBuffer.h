@@ -25,7 +25,6 @@
 #define TINYEXR_IMPLEMENTATION
 #include <tinyexr/tinyexr.h>
 
-//#define VSP_DENOISE_AFTER_PRODUCT
 #define VSP_USE_PVOL_EST
 
 namespace openpgl
@@ -148,8 +147,8 @@ struct ImageSpaceGuidingBuffer
             m_cfg.contributionEstimate = false;
             m_cfg.contributionType = PGLContributionTypes::EFirstMoment;
 #if defined(OPENPGL_VSP_GUIDING)
-            m_cfg.contributionEstimate = false;
-            m_cfg.contributionType = PGLContributionTypes::EFirstMoment;
+            m_cfg.vspEstimate = false;
+            m_cfg.vspType = PGLVSPTypes::EContribution;
 #endif
             for (int i = 0; i < layer_names.size(); i++) {
                 std::string layerName = layer_names[i];
@@ -165,7 +164,7 @@ struct ImageSpaceGuidingBuffer
                 {
                     m_cfg.vspEstimate = true;
                     if(layerName == "surfContrib2nd") {
-                        m_cfg.vspType = PGLVSPTypes::EContribution;
+                        m_cfg.vspType = PGLVSPTypes::EVariance;
                     }
                 }
 #endif
@@ -651,22 +650,12 @@ struct ImageSpaceGuidingBuffer
                     const float volumeSampleCount = m_volumeContributionEstimateBuffers->spp[pIdx];
                     const float pVolEst = volumeSampleCount / (surfaceSampleCount + volumeSampleCount);
                     m_pVolBuffer[pIdx] = pVolEst;
-#ifdef VSP_DENOISE_AFTER_PRODUCT
-                    m_surfaceContributionEstimateBuffers->scaledContribution[pIdx] = m_surfaceContributionEstimateBuffers->contribution[pIdx] * (1 - pVolEst);
-                    m_volumeContributionEstimateBuffers->scaledContribution[pIdx] = m_volumeContributionEstimateBuffers->contribution[pIdx] * pVolEst;
-#endif
                 }
             });
  
             m_denoiser->denoise(m_pVolBuffer, m_filteredPVolBuffer);
-
-#ifndef VSP_DENOISE_AFTER_PRODUCT
             m_denoiser->denoise(m_surfaceContributionEstimateBuffers->contribution, m_surfaceContributionEstimateBuffers->normal, m_surfaceContributionEstimateBuffers->albedo, m_surfaceContributionEstimateBuffers->filteredContribution);
             m_denoiser->denoise(m_volumeContributionEstimateBuffers->contribution, m_volumeContributionEstimateBuffers->normal, m_volumeContributionEstimateBuffers->albedo, m_volumeContributionEstimateBuffers->filteredContribution);
-#else
-            m_denoiser->denoise(m_surfaceContributionEstimateBuffers->scaledContribution, m_surfaceContributionEstimateBuffers->normal, m_surfaceContributionEstimateBuffers->albedo, m_surfaceContributionEstimateBuffers->filteredScaledContribution);
-            m_denoiser->denoise(m_volumeContributionEstimateBuffers->scaledContribution, m_volumeContributionEstimateBuffers->normal, m_volumeContributionEstimateBuffers->albedo, m_volumeContributionEstimateBuffers->filteredScaledContribution);
-#endif
 
 #ifdef USE_EMBREE_PARALLEL
             embree::parallel_for(0, (int)numPixels, 1, [&](const embree::range<unsigned> &r) {
@@ -691,7 +680,6 @@ struct ImageSpaceGuidingBuffer
                 // with pVolEst and not pVolEst°2
 
                 pgl_vec3f surfaceContribution, volumeContribution;
-#ifndef VSP_DENOISE_AFTER_PRODUCT
                 if (m_cfg.vspType == PGLVSPTypes::EContribution) {
                     surfaceContribution = (1.f - pVolEst) * m_surfaceContributionEstimateBuffers->filteredContribution[pIdx];
                     volumeContribution = pVolEst * m_volumeContributionEstimateBuffers->filteredContribution[pIdx];
@@ -705,21 +693,6 @@ struct ImageSpaceGuidingBuffer
                     volumeContribution.y = m_volumeContributionEstimateBuffers->filteredContribution[pIdx].y > 0.f ? pVolEst * std::sqrt(m_volumeContributionEstimateBuffers->filteredContribution[pIdx].y) : 0.f;
                     volumeContribution.z = m_volumeContributionEstimateBuffers->filteredContribution[pIdx].z > 0.f ? pVolEst * std::sqrt(m_volumeContributionEstimateBuffers->filteredContribution[pIdx].z) : 0.f;
                 }
-#else
-                if (m_cfg.vspType == PGLVSPTypes::EContribution) {
-                    surfaceContribution = m_surfaceContributionEstimateBuffers->filteredScaledContribution[pIdx];
-                    volumeContribution = m_volumeContributionEstimateBuffers->filteredScaledContribution[pIdx];
-                }
-                else {
-                    surfaceContribution.x = std::sqrt(m_surfaceContributionEstimateBuffers->filteredScaledContribution[pIdx].x);
-                    surfaceContribution.y = std::sqrt(m_surfaceContributionEstimateBuffers->filteredScaledContribution[pIdx].y);
-                    surfaceContribution.z = std::sqrt(m_surfaceContributionEstimateBuffers->filteredScaledContribution[pIdx].z);
-
-                    volumeContribution.x = std::sqrt(m_volumeContributionEstimateBuffers->filteredScaledContribution[pIdx].x);
-                    volumeContribution.y = std::sqrt(m_volumeContributionEstimateBuffers->filteredScaledContribution[pIdx].y);
-                    volumeContribution.z = std::sqrt(m_volumeContributionEstimateBuffers->filteredScaledContribution[pIdx].z);
-                }
-#endif
 
 #endif
                 pgl_vec3f contribution = surfaceContribution + volumeContribution;
@@ -730,7 +703,7 @@ struct ImageSpaceGuidingBuffer
               }
             });                        
         }
-#endif
+
         m_ready = true;
     }
 
@@ -757,7 +730,6 @@ struct ImageSpaceGuidingBuffer
                 // calculating the alpha simulating we added zero samples for each volume sample as well 
                 float alpha = 1.f / (m_surfaceContributionEstimateBuffers->spp[pixelIdx] + m_volumeContributionEstimateBuffers->spp[pixelIdx]);
 #endif
-                pgl_vec3f quantity = m_cfg.vspType == EVariance ? sample.contribution * sample.contribution : sample.contribution;
                 m_surfaceContributionEstimateBuffers->contribution[pixelIdx] = (1.f - alpha) * m_surfaceContributionEstimateBuffers->contribution[pixelIdx] + alpha * quantity;
                 m_surfaceContributionEstimateBuffers->albedo[pixelIdx] = (1.f - alpha) * m_surfaceContributionEstimateBuffers->albedo[pixelIdx] + alpha * sample.albedo;
                 m_surfaceContributionEstimateBuffers->normal[pixelIdx] = (1.f - alpha) * m_surfaceContributionEstimateBuffers->normal[pixelIdx] + alpha * sample.normal;
