@@ -278,7 +278,7 @@ void VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::PerformSplitting(VMM
         // std::cout << "suffStatistics: " << suffStatistics.toString() << std::endl;
         if (doPartialRefit)
         {
-            vmmFactory.partialUpdateMixture(vmm, mask, suffStatistics, data, numData, factoryCfg, vmmFitStats);
+            vmmFactory.partialUpdateMixture(vmm, mask, suffStatistics, true, data, numData, factoryCfg, vmmFitStats);
             // std::cout << "vmmpartialUpdate: " << vmm.toString() << std::endl;
             splitItr++;
         }
@@ -301,7 +301,6 @@ void VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::PerformRecursiveSpli
 {
     PartialFittingMask mask;
     ComponentSplitStatistics splitStatistics;
-    SufficientStatistics tempSuffStatistics = suffStatistics;
 
     // bool stopSplitting = false;
     // size_t splitItr = 0;
@@ -330,14 +329,14 @@ void VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::PerformRecursiveSpli
             if (splitComps[k].chiSquareEst > splitThreshold && vmm._numComponents < VMM::MaxComponents)
             {
 #ifndef OPENPGL_USE_THREE_SPLIT
-                bool splitSucess = SplitComponent(vmm, splitStatistics, tempSuffStatistics, splitComps[k].componentIndex);
+                bool splitSucess = SplitComponent(vmm, splitStatistics, suffStatistics, splitComps[k].componentIndex);
                 if (splitSucess)
                 {
                     mask.setToTrue(splitComps[k].componentIndex);
                     mask.setToTrue(vmm._numComponents - 1);
                 }
 #else
-                bool splitSucess = SplitComponentIntoThree(vmm, splitStatistics, tempSuffStatistics, splitComps[k].componentIndex);
+                bool splitSucess = SplitComponentIntoThree(vmm, splitStatistics, suffStatistics, splitComps[k].componentIndex);
                 if (splitSucess)
                 {
                     mask.setToTrue(splitComps[k].componentIndex);
@@ -357,11 +356,7 @@ void VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::PerformRecursiveSpli
         }
         if (numSplits > 0)
         {
-            tempSuffStatistics.clear(vmm._numComponents);
-            vmmFactory.partialUpdateMixture(vmm, mask, tempSuffStatistics, data, numData, factoryCfg, vmmFitStats);
-            // std::cout << "tempSuffStatistics" << std::endl << tempSuffStatistics.toString() << std::endl;
-            suffStatistics.setNumComponents(vmm._numComponents);
-            suffStatistics.maskedReplace(mask, tempSuffStatistics);
+            vmmFactory.partialUpdateMixture(vmm, mask, suffStatistics, false, data, numData, factoryCfg, vmmFitStats);
         }
         // std::cout << "vmmpartialUpdate: " << vmm.toString() << std::endl;
         // splitItr++;

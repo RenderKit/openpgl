@@ -407,11 +407,7 @@ void AdaptiveSplitAndMergeFactory<TVMMDistribution>::update(VMM &vmm, Statistics
 
             if (totalSplitCount > 0 && cfg.partialReFit && numSamples >= cfg.minSamplesForPartialRefitting)
             {
-                typename WeightedEMFactory::SufficientStatistics tempSuffStatistics = stats.sufficientStatistics;
-                tempSuffStatistics.clear(vmm._numComponents);
-                factory.partialUpdateMixture(vmm, mask, tempSuffStatistics, samples, numSamples, cfg.weightedEMCfg, wemFitStats);
-                stats.sufficientStatistics.setNumComponents(vmm._numComponents);
-                stats.sufficientStatistics.maskedReplace(mask, tempSuffStatistics);
+                factory.partialUpdateMixture(vmm, mask, stats.sufficientStatistics, false, samples, numSamples, cfg.weightedEMCfg, wemFitStats);
                 // update number of components for the splitStats to
                 // account for additionaly added componetes based on not covered samples.
                 stats.splittingStatistics.setNumComponents(vmm._numComponents);
