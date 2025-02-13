@@ -794,6 +794,10 @@ extern "C" OPENPGL_DLLEXPORT void pglFieldArgumentsSetDefaults(PGLFieldArguments
             fieldArguments.directionalDistributionType = PGL_DIRECTIONAL_DISTRIBUTION_PARALLAX_AWARE_VMM;
             fieldArguments.directionalDistributionArguments = new PGLVMMFactoryArguments(maxSamplesPerLeaf);
             break;
+        case PGL_DIRECTIONAL_DISTRIBUTION_TYPE::PGL_DIRECTIONAL_DISTRIBUTION_PARALLAX_AWARE_VMM_V2:
+            fieldArguments.directionalDistributionType = PGL_DIRECTIONAL_DISTRIBUTION_PARALLAX_AWARE_VMM_V2;
+            fieldArguments.directionalDistributionArguments = new PGLVMMFactoryArguments(maxSamplesPerLeaf);
+            break;
         case PGL_DIRECTIONAL_DISTRIBUTION_TYPE::PGL_DIRECTIONAL_DISTRIBUTION_QUADTREE:
             fieldArguments.directionalDistributionType = PGL_DIRECTIONAL_DISTRIBUTION_QUADTREE;
             fieldArguments.directionalDistributionArguments = new PGLDQTFactoryArguments();
