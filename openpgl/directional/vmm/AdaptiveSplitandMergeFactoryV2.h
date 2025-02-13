@@ -11,24 +11,24 @@
 #include "../../openpgl_common.h"
 #include "ParallaxAwareVonMisesFisherWeightedEMFactory.h"
 #include "VMMChiSquareComponentMerger.h"
-#include "VMMChiSquareComponentSplitter.h"
+#include "VMMChiSquareComponentSplitterV2.h"
 
 namespace openpgl
 {
 
 template <class TVMMDistribution>
-struct AdaptiveSplitAndMergeFactory
+struct AdaptiveSplitAndMergeFactoryV2
 {
    public:
     const static PGL_DIRECTIONAL_DISTRIBUTION_TYPE DIRECTIONAL_DISTRIBUTION_TYPE =
-        TVMMDistribution::ParallaxCompensation ? PGL_DIRECTIONAL_DISTRIBUTION_PARALLAX_AWARE_VMM : PGL_DIRECTIONAL_DISTRIBUTION_VMM;
+        TVMMDistribution::ParallaxCompensation ? PGL_DIRECTIONAL_DISTRIBUTION_PARALLAX_AWARE_VMM_V2 : PGL_DIRECTIONAL_DISTRIBUTION_VMM_V2;
 
     typedef TVMMDistribution Distribution;
     typedef TVMMDistribution VMM;
 
     // typedef WeightedEMVonMisesFisherFactory<VMM> WeightedEMFactory;
     typedef ParallaxAwareVonMisesFisherWeightedEMFactory<VMM> WeightedEMFactory;
-    typedef VonMisesFisherChiSquareComponentSplitter<WeightedEMFactory> Splitter;
+    typedef VonMisesFisherChiSquareComponentSplitterV2<WeightedEMFactory> Splitter;
     typedef VonMisesFisherChiSquareComponentMerger<WeightedEMFactory, Splitter> Merger;
 
     struct Configuration
@@ -126,7 +126,7 @@ struct AdaptiveSplitAndMergeFactory
     {
         std::ostringstream oss;
         WeightedEMFactory vmmFactory;
-        oss << "AdaptiveSplitAndMergeFactory[\n";
+        oss << "AdaptiveSplitAndMergeFactoryV2[\n";
         oss << "  VMMFactory: " << vmmFactory.toString() << '\n';
         oss << ']';
 
@@ -135,7 +135,7 @@ struct AdaptiveSplitAndMergeFactory
 };
 
 template <class TVMMDistribution>
-void AdaptiveSplitAndMergeFactory<TVMMDistribution>::Statistics::serialize(std::ostream &stream) const
+void AdaptiveSplitAndMergeFactoryV2<TVMMDistribution>::Statistics::serialize(std::ostream &stream) const
 {
     sufficientStatistics.serialize(stream);
     splittingStatistics.serialize(stream);
@@ -146,7 +146,7 @@ void AdaptiveSplitAndMergeFactory<TVMMDistribution>::Statistics::serialize(std::
 }
 
 template <class TVMMDistribution>
-void AdaptiveSplitAndMergeFactory<TVMMDistribution>::Statistics::deserialize(std::istream &stream)
+void AdaptiveSplitAndMergeFactoryV2<TVMMDistribution>::Statistics::deserialize(std::istream &stream)
 {
     sufficientStatistics.deserialize(stream);
     splittingStatistics.deserialize(stream);
@@ -157,14 +157,14 @@ void AdaptiveSplitAndMergeFactory<TVMMDistribution>::Statistics::deserialize(std
 }
 
 template <class TVMMDistribution>
-void AdaptiveSplitAndMergeFactory<TVMMDistribution>::Statistics::decay(const float &alpha)
+void AdaptiveSplitAndMergeFactoryV2<TVMMDistribution>::Statistics::decay(const float &alpha)
 {
     sufficientStatistics.decay(alpha);
     splittingStatistics.decay(alpha);
 }
 
 template <class TVMMDistribution>
-bool AdaptiveSplitAndMergeFactory<TVMMDistribution>::Statistics::isValid() const
+bool AdaptiveSplitAndMergeFactoryV2<TVMMDistribution>::Statistics::isValid() const
 {
     bool valid = true;
     valid = valid && sufficientStatistics.isValid();
@@ -180,7 +180,7 @@ bool AdaptiveSplitAndMergeFactory<TVMMDistribution>::Statistics::isValid() const
 }
 
 template <class TVMMDistribution>
-std::string AdaptiveSplitAndMergeFactory<TVMMDistribution>::Statistics::toString() const
+std::string AdaptiveSplitAndMergeFactoryV2<TVMMDistribution>::Statistics::toString() const
 {
     std::stringstream ss;
     ss << "Statistics:" << std::endl;
@@ -192,7 +192,7 @@ std::string AdaptiveSplitAndMergeFactory<TVMMDistribution>::Statistics::toString
 }
 
 template <class TVMMDistribution>
-std::string AdaptiveSplitAndMergeFactory<TVMMDistribution>::FittingStatistics::toString() const
+std::string AdaptiveSplitAndMergeFactoryV2<TVMMDistribution>::FittingStatistics::toString() const
 {
     std::stringstream ss;
     ss << "FittingStatistics:" << std::endl;
@@ -206,7 +206,7 @@ std::string AdaptiveSplitAndMergeFactory<TVMMDistribution>::FittingStatistics::t
 }
 
 template <class TVMMDistribution>
-void AdaptiveSplitAndMergeFactory<TVMMDistribution>::Statistics::clear(const size_t &_numComponents)
+void AdaptiveSplitAndMergeFactoryV2<TVMMDistribution>::Statistics::clear(const size_t &_numComponents)
 {
     sufficientStatistics.clear(_numComponents);
     splittingStatistics.clear(_numComponents);
@@ -217,13 +217,13 @@ void AdaptiveSplitAndMergeFactory<TVMMDistribution>::Statistics::clear(const siz
 }
 
 template <class TVMMDistribution>
-void AdaptiveSplitAndMergeFactory<TVMMDistribution>::Statistics::clearAll()
+void AdaptiveSplitAndMergeFactoryV2<TVMMDistribution>::Statistics::clearAll()
 {
     clear(VMM::MaxComponents);
 }
 
 template <class TVMMDistribution>
-bool AdaptiveSplitAndMergeFactory<TVMMDistribution>::Statistics::operator==(const Statistics &b) const
+bool AdaptiveSplitAndMergeFactoryV2<TVMMDistribution>::Statistics::operator==(const Statistics &b) const
 {
     bool equal = true;
     if (numSamplesAfterLastSplit != b.numSamplesAfterLastSplit || numSamplesAfterLastMerge != b.numSamplesAfterLastMerge)
@@ -239,7 +239,7 @@ bool AdaptiveSplitAndMergeFactory<TVMMDistribution>::Statistics::operator==(cons
 }
 
 template <class TVMMDistribution>
-void AdaptiveSplitAndMergeFactory<TVMMDistribution>::Configuration::serialize(std::ostream &stream) const
+void AdaptiveSplitAndMergeFactoryV2<TVMMDistribution>::Configuration::serialize(std::ostream &stream) const
 {
     weightedEMCfg.serialize(stream);
 
@@ -255,7 +255,7 @@ void AdaptiveSplitAndMergeFactory<TVMMDistribution>::Configuration::serialize(st
 }
 
 template <class TVMMDistribution>
-void AdaptiveSplitAndMergeFactory<TVMMDistribution>::Configuration::deserialize(std::istream &stream)
+void AdaptiveSplitAndMergeFactoryV2<TVMMDistribution>::Configuration::deserialize(std::istream &stream)
 {
     weightedEMCfg.deserialize(stream);
 
@@ -271,7 +271,7 @@ void AdaptiveSplitAndMergeFactory<TVMMDistribution>::Configuration::deserialize(
 }
 
 template <class TVMMDistribution>
-std::string AdaptiveSplitAndMergeFactory<TVMMDistribution>::Configuration::toString() const
+std::string AdaptiveSplitAndMergeFactoryV2<TVMMDistribution>::Configuration::toString() const
 {
     std::stringstream ss;
     ss << "Configuration:" << std::endl;
@@ -288,7 +288,7 @@ std::string AdaptiveSplitAndMergeFactory<TVMMDistribution>::Configuration::toStr
 }
 
 template <class TVMMDistribution>
-void AdaptiveSplitAndMergeFactory<TVMMDistribution>::prepareSamples(SampleData *samples, const size_t numSamples, const SampleStatistics &sampleStatistics,
+void AdaptiveSplitAndMergeFactoryV2<TVMMDistribution>::prepareSamples(SampleData *samples, const size_t numSamples, const SampleStatistics &sampleStatistics,
                                                                     const Configuration &cfg) const
 {
     WeightedEMFactory factory = WeightedEMFactory();
@@ -296,7 +296,7 @@ void AdaptiveSplitAndMergeFactory<TVMMDistribution>::prepareSamples(SampleData *
 }
 
 template <class TVMMDistribution>
-void AdaptiveSplitAndMergeFactory<TVMMDistribution>::fit(VMM &vmm, Statistics &stats, const SampleData *samples, const size_t numSamples, const Configuration &cfg,
+void AdaptiveSplitAndMergeFactoryV2<TVMMDistribution>::fit(VMM &vmm, Statistics &stats, const SampleData *samples, const size_t numSamples, const Configuration &cfg,
                                                          FittingStatistics &fitStats) const
 {
     const size_t numComponents = cfg.weightedEMCfg.initK;
@@ -343,7 +343,7 @@ void AdaptiveSplitAndMergeFactory<TVMMDistribution>::fit(VMM &vmm, Statistics &s
 }
 
 template <class TVMMDistribution>
-void AdaptiveSplitAndMergeFactory<TVMMDistribution>::update(VMM &vmm, Statistics &stats, const SampleData *samples, const size_t numSamples, const Configuration &cfg,
+void AdaptiveSplitAndMergeFactoryV2<TVMMDistribution>::update(VMM &vmm, Statistics &stats, const SampleData *samples, const size_t numSamples, const Configuration &cfg,
                                                             FittingStatistics &fitStats) const
 {
     OPENPGL_ASSERT(vmm.isValid());
@@ -376,6 +376,7 @@ void AdaptiveSplitAndMergeFactory<TVMMDistribution>::update(VMM &vmm, Statistics
         stats.numSamplesAfterLastSplit += numSamples;
         stats.numSamplesAfterLastMerge += numSamples;
 
+
         Splitter splitter = Splitter();
         // OPENPGL_ASSERT(stats.splittingStatistics.isValid());
         splitter.UpdateSplitStatistics(vmm, stats.splittingStatistics, mcEstimate, samples, numSamples);
@@ -386,7 +387,7 @@ void AdaptiveSplitAndMergeFactory<TVMMDistribution>::update(VMM &vmm, Statistics
             typename WeightedEMFactory::PartialFittingMask mask;
             mask.resetToFalse();
 
-            std::vector<typename Splitter::SplitCandidate> splitComps = stats.splittingStatistics.getSplitCandidates();
+            std::vector<typename Splitter::SplitCandidate> splitComps = stats.splittingStatistics.getSplitCandidates(cfg.splittingThreshold);
             int totalSplitCount = 0;
             // const size_t numComp = vmm._numComponents;
             for (size_t k = 0; k < splitComps.size(); k++)
@@ -452,7 +453,7 @@ void AdaptiveSplitAndMergeFactory<TVMMDistribution>::update(VMM &vmm, Statistics
 }
 
 template <class TVMMDistribution>
-void AdaptiveSplitAndMergeFactory<TVMMDistribution>::updateFluenceEstimate(VMM &vmm, const SampleData *samples, const size_t numSamples, const size_t numZeroValueSamples,
+void AdaptiveSplitAndMergeFactoryV2<TVMMDistribution>::updateFluenceEstimate(VMM &vmm, const SampleData *samples, const size_t numSamples, const size_t numZeroValueSamples,
                                                                            const SampleStatistics &sampleStatistics) const
 {
     WeightedEMFactory factory = WeightedEMFactory();
