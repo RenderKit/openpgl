@@ -170,7 +170,7 @@ struct KDTreePartitionBuilder
 
 #ifdef USE_EMBREE_PARALLEL
     template <class DataType>
-    inline size_t pivotSplitSamples2(DataType *samples, const size_t begin, const size_t end, uint8_t splitDimension, float pivot) const
+    inline size_t pivotSplitSamplesParallel(DataType *samples, const size_t begin, const size_t end, uint8_t splitDimension, float pivot) const
     {
         auto isLeft = [&](const DataType &sample) {
             return Vector3(sample.position.x, sample.position.y, sample.position.z)[splitDimension] < pivot;
@@ -188,8 +188,8 @@ struct KDTreePartitionBuilder
         return center;
     }
 
-    inline size_t pivotSplitSamplesWithStats2(PGLSampleData *samples, const size_t begin, const size_t end, uint8_t splitDimension, float pivot, SampleStatistics &statsLeft,
-                                              SampleStatistics &statsRight) const
+    inline size_t pivotSplitSamplesWithStatsParallel(PGLSampleData *samples, const size_t begin, const size_t end, uint8_t splitDimension, float pivot, SampleStatistics &statsLeft,
+                                                     SampleStatistics &statsRight) const
     {
         auto isLeft = [&](const PGLSampleData &sample) {
             const Vector3 v(sample.position.x, sample.position.y, sample.position.z);
@@ -218,8 +218,8 @@ struct KDTreePartitionBuilder
         return center;
     }
 
-    inline size_t pivotSplitSamplesWithStats3(const BBox &bounds, PGLSampleData *samples, const size_t begin, const size_t end, uint8_t splitDimension, float pivot,
-                                              SampleStatistics &statsLeft, SampleStatistics &statsRight, bool parallel = true) const
+    inline size_t pivotSplitSamplesWithIntegerStatsParallel(const BBox &bounds, PGLSampleData *samples, const size_t begin, const size_t end, uint8_t splitDimension, float pivot,
+                                                            SampleStatistics &statsLeft, SampleStatistics &statsRight, bool parallel = true) const
     {
         auto isLeft = [&](const PGLSampleData &sample) {
             const Vector3 v(sample.position.x, sample.position.y, sample.position.z);
@@ -359,10 +359,11 @@ struct KDTreePartitionBuilder
             // splitStats = true;
 #ifdef USE_EMBREE_PARALLEL
 #ifndef USE_INTEGER_ARITHMETIC_STATS
-            rPivotItr = pivotSplitSamplesWithStats2(samples.data(), sampleRange.m_begin, sampleRange.m_end, splitDim, splitPos, sampleStatsLeftRight[0], sampleStatsLeftRight[1]);
+            rPivotItr =
+                pivotSplitSamplesWithStatsParallel(samples.data(), sampleRange.m_begin, sampleRange.m_end, splitDim, splitPos, sampleStatsLeftRight[0], sampleStatsLeftRight[1]);
 #else
-            rPivotItr = pivotSplitSamplesWithStats3(bounds, samples.data(), sampleRange.m_begin, sampleRange.m_end, splitDim, splitPos, sampleStatsLeftRight[0],
-                                                    sampleStatsLeftRight[1], parallel);
+            rPivotItr = pivotSplitSamplesWithIntegerStatsParallel(bounds, samples.data(), sampleRange.m_begin, sampleRange.m_end, splitDim, splitPos, sampleStatsLeftRight[0],
+                                                                  sampleStatsLeftRight[1], parallel);
 #endif
 #else
             rPivotItr = pivotSplitSamplesWithStats(begin, end, splitDim, splitPos, sampleStatsLeftRight[0], sampleStatsLeftRight[1]);
@@ -371,7 +372,7 @@ struct KDTreePartitionBuilder
         else
         {
 #ifdef USE_EMBREE_PARALLEL
-            rPivotItr = pivotSplitSamples2<typename TSamplesContainer::value_type>(samples.data(), sampleRange.m_begin, sampleRange.m_end, splitDim, splitPos);
+            rPivotItr = pivotSplitSamplesParallel<typename TSamplesContainer::value_type>(samples.data(), sampleRange.m_begin, sampleRange.m_end, splitDim, splitPos);
 #else
             rPivotItr = pivotSplitSamples<TSamplesContainer>(begin, end, splitDim, splitPos);
 #endif
@@ -438,7 +439,7 @@ struct KDTreePartitionBuilder
         auto begin = samples.begin() + sampleRange.m_begin, end = samples.begin() + sampleRange.m_end;
 #endif
 #ifdef USE_EMBREE_PARALLEL
-        rPivotItr = pivotSplitSamples2<typename TZeroValueSamplesContainer::value_type>(samples.data(), sampleRange.m_begin, sampleRange.m_end, splitDim, splitPos);
+        rPivotItr = pivotSplitSamplesParallel<typename TZeroValueSamplesContainer::value_type>(samples.data(), sampleRange.m_begin, sampleRange.m_end, splitDim, splitPos);
 #else
         rPivotItr = pivotSplitSamples<TZeroValueSamplesContainer>(begin, end, splitDim, splitPos);
 #endif
