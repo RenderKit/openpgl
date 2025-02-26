@@ -471,10 +471,20 @@ struct Field
 #endif
                         regionStorage.first.splitFlag = false;
                     }
+                    regionStorage.first.initialized = true;
+#ifdef DUMP_DISTRIBUTION_UPDATE_DATA
+                    // if(m_dumpUpdateDistributionData) {
+                    if (dumpCacheCellData)
+                    {
+                        std::cout << "DumpCacheCell: idx = " << dumpCacheCellIdx << "\t pos = " << m_dumpCacheCellPosition << std::endl;
+                        dump.Store(m_dumpCacheCellLocation + "/cacheCellData_itr_" + std::to_string(m_iteration) + ".dump");
+                    }
+#endif
                 }
                 else
                 {
-                    regionStorage.first.valid = false;
+                    regionStorage.first.valid = true;
+                    regionStorage.first.initialized = false;
                     regionStorage.first.splitFlag = false;
                 }
                 regionStorage.second.reset();
@@ -524,7 +534,7 @@ struct Field
                     if (m_fitRegions)
                     {
                         // TODO: we should move applying the paralax comp to the Distribution to the factory
-                        if (DirectionalDistribution::ParallaxCompensation == 1)
+                        if (regionStorage.first.initialized && DirectionalDistribution::ParallaxCompensation == 1)
                         {
                             regionStorage.first.trainingStatistics.sufficientStatistics.applyParallaxShift(regionStorage.first.distribution,
                                                                                                            regionStorage.first.distribution._pivotPosition - sampleMean);
@@ -535,8 +545,17 @@ struct Field
                         typename DirectionalDistributionFactory::FittingStatistics fittingStats;
                         m_distributionFactory.prepareSamples(samples.data() + regionStorage.second.m_begin, regionStorage.second.m_end - regionStorage.second.m_begin,
                                                              regionStorage.first.sampleStatistics, m_distributionFactorySettings);
-                        m_distributionFactory.update(regionStorage.first.distribution, regionStorage.first.trainingStatistics, samples.data() + regionStorage.second.m_begin,
-                                                     regionStorage.second.m_end - regionStorage.second.m_begin, m_distributionFactorySettings, fittingStats);
+                        if (regionStorage.first.initialized)
+                        {
+                            m_distributionFactory.update(regionStorage.first.distribution, regionStorage.first.trainingStatistics, samples.data() + regionStorage.second.m_begin,
+                                                         regionStorage.second.m_end - regionStorage.second.m_begin, m_distributionFactorySettings, fittingStats);
+                        }
+                        else
+                        {
+                            m_distributionFactory.fit(regionStorage.first.distribution, regionStorage.first.trainingStatistics, samples.data() + regionStorage.second.m_begin,
+                                                      regionStorage.second.m_end - regionStorage.second.m_begin, m_distributionFactorySettings, fittingStats);
+                            regionStorage.first.initialized = true;
+                        }
 #ifdef OPENPGL_RADIANCE_CACHES
                         m_distributionFactory.updateFluenceEstimate(regionStorage.first.distribution, samples.data() + regionStorage.second.m_begin,
                                                                     regionStorage.second.m_end - regionStorage.second.m_begin, regionStorage.first.numZeroValueSamples,

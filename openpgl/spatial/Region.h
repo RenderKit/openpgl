@@ -76,6 +76,7 @@ struct Region : public IRegion
     void serialize(std::ostream &stream) const
     {
         stream.write(reinterpret_cast<const char *>(&valid), sizeof(valid));
+        stream.write(reinterpret_cast<const char *>(&initialized), sizeof(initialized));
         distribution.serialize(stream);
         stream.write(reinterpret_cast<const char *>(&regionBounds), sizeof(regionBounds));
         trainingStatistics.serialize(stream);
@@ -90,6 +91,7 @@ struct Region : public IRegion
     void deserialize(std::istream &stream)
     {
         stream.read(reinterpret_cast<char *>(&valid), sizeof(valid));
+        stream.read(reinterpret_cast<char *>(&initialized), sizeof(initialized));
         distribution.deserialize(stream);
         stream.read(reinterpret_cast<char *>(&regionBounds), sizeof(regionBounds));
         trainingStatistics.deserialize(stream);
@@ -104,9 +106,12 @@ struct Region : public IRegion
     bool isValid() const
     {
         bool valid = true;
-        valid = valid && distribution.isValid();
-        valid = valid && trainingStatistics.isValid();
-        //            valid = valid && sampleStatistics.isValid();
+        if (initialized)
+        {
+            valid = valid && distribution.isValid();
+            valid = valid && trainingStatistics.isValid();
+            //            valid = valid && sampleStatistics.isValid();
+        }
         return valid;
     }
 
