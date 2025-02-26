@@ -18,5 +18,6 @@ struct IRegion
 #endif
    public:
     bool valid{true};
+    bool initialized{false};
 };
 }  // namespace openpgl

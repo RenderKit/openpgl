@@ -46,7 +46,7 @@ struct SurfaceVolumeField : public ISurfaceVolumeField
         TSurfaceSamplingDistribution *_surfaceSamplingDistribution = (TSurfaceSamplingDistribution *)surfaceSamplingDistribution;
         uint32_t id = -1;
         const RegionType *region = m_surfaceField.getRegion(position, sample1D, id);
-        if (!region || !region->valid)
+        if (!region || !region->valid || !region->initialized)
         {
             return false;
         }
@@ -67,7 +67,7 @@ struct SurfaceVolumeField : public ISurfaceVolumeField
         TVolumeSamplingDistribution *_volumeSamplingDistribution = (TVolumeSamplingDistribution *)volumeSamplingDistribution;
         uint32_t id = -1;
         const RegionType *region = m_volumeField.getRegion(position, sample1D, id);
-        if (!region || !region->valid)
+        if (!region || !region->valid || !region->initialized)
         {
             return false;
         }
