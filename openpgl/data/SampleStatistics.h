@@ -214,12 +214,17 @@ struct SampleStatistics
 };
 
 #define INTEGER_BINS 4096.f
+#define INTEGER_SAMPLE_STATS_BOUND_SCALE (1.0f + 2.f / INTEGER_BINS)
+
 struct IntegerSampleStatistics
 {
     Point3i mean{0};
     Vector3i variance{0};
     uint32_t numSamples{0};
-    BBoxi sampleBounds{openpgl::Vector3i(std::numeric_limits<int>::max()), openpgl::Vector3i(-std::numeric_limits<int>::max())};
+    // measured sample bound in the discretized integer domain
+    BBoxi intSampleBounds{openpgl::Vector3i(std::numeric_limits<int>::max()), openpgl::Vector3i(-std::numeric_limits<int>::max())};
+    // actual measured sample bound (float)
+    BBox sampleBounds{openpgl::Vector3(std::numeric_limits<float>::max()), openpgl::Vector3(std::numeric_limits<float>::min())};
     Vector3 sampleBoundsMin{0};
     Vector3 sampleBoundsMax{0};
     Vector3 sampleBoundsExtend{0};
@@ -234,7 +239,8 @@ struct IntegerSampleStatistics
         mean = Point3i(0);
         variance = Vector3i(0);
         numSamples = 0;
-        sampleBounds = BBoxi(openpgl::Vector3i(std::numeric_limits<int>::max()), openpgl::Vector3i(-std::numeric_limits<int>::max()));
+        intSampleBounds = BBoxi(openpgl::Vector3i(std::numeric_limits<int>::max()), openpgl::Vector3i(-std::numeric_limits<int>::max()));
+        sampleBounds = BBox(openpgl::Vector3(std::numeric_limits<float>::max()), openpgl::Vector3(std::numeric_limits<float>::min()));
         sampleBoundsMin = Vector3(0);
         sampleBoundsMax = Vector3(0);
         sampleBoundsExtend = Vector3(0);
@@ -251,10 +257,18 @@ struct IntegerSampleStatistics
         mean = Point3i(0);
         variance = Vector3i(0);
         numSamples = 0;
-        sampleBounds = BBoxi(openpgl::Vector3i(std::numeric_limits<int>::max()), openpgl::Vector3i(-std::numeric_limits<int>::max()));
-        sampleBoundsMin = bounds.lower;
-        sampleBoundsMax = bounds.upper;
-        sampleBoundsExtend = bounds.upper - bounds.lower;
+        intSampleBounds = BBoxi(openpgl::Vector3i(std::numeric_limits<int>::max()), openpgl::Vector3i(-std::numeric_limits<int>::max()));
+        sampleBounds = BBox(openpgl::Vector3(std::numeric_limits<float>::max()), openpgl::Vector3(std::numeric_limits<float>::min()));
+
+        // scaling the boundary of the samples to avoid discretization problems at the boundaries
+        BBox scaledBounds = bounds;
+        Vector3 center = scaledBounds.center();
+        scaledBounds.lower = center + INTEGER_SAMPLE_STATS_BOUND_SCALE * (scaledBounds.lower - center);
+        scaledBounds.upper = center + INTEGER_SAMPLE_STATS_BOUND_SCALE * (scaledBounds.upper - center);
+
+        sampleBoundsMin = scaledBounds.lower;
+        sampleBoundsMax = scaledBounds.upper;
+        sampleBoundsExtend = scaledBounds.upper - scaledBounds.lower;
         invSampleBoundsExtend = embree::rcp(sampleBoundsExtend);
 #ifdef INTERGER_V2
         sampleBoundsHalfExtend = sampleBoundsExtend * 0.5f;
@@ -269,7 +283,8 @@ struct IntegerSampleStatistics
         variance = Vector3i(0);
         numSamples = 0;
 
-        sampleBounds = BBoxi(openpgl::Vector3i(std::numeric_limits<int>::max()), openpgl::Vector3i(-std::numeric_limits<int>::max()));
+        intSampleBounds = BBoxi(openpgl::Vector3i(std::numeric_limits<int>::max()), openpgl::Vector3i(-std::numeric_limits<int>::max()));
+        sampleBounds = BBox(openpgl::Vector3(std::numeric_limits<float>::max()), openpgl::Vector3(std::numeric_limits<float>::min()));
         sampleBoundsMin = Vector3(0);
         sampleBoundsMax = Vector3(0);
         sampleBoundsExtend = Vector3(0);
@@ -296,7 +311,8 @@ struct IntegerSampleStatistics
         mean += iSample;
         variance += Vector3i(tmpVariance.x, tmpVariance.y, tmpVariance.z);
 
-        sampleBounds.extend(iSample);
+        intSampleBounds.extend(iSample);
+        sampleBounds.extend(Vector3(sample.x, sample.y, sample.z));
     }
 
     void merge(const IntegerSampleStatistics &b)
@@ -304,6 +320,7 @@ struct IntegerSampleStatistics
         mean += b.mean;
         variance += b.variance;
         numSamples += b.numSamples;
+        intSampleBounds.extend(b.intSampleBounds);
         sampleBounds.extend(b.sampleBounds);
     }
 
@@ -313,6 +330,7 @@ struct IntegerSampleStatistics
         stats.mean += b.mean;
         stats.variance += b.variance;
         stats.numSamples += b.numSamples;
+        stats.intSampleBounds.extend(b.intSampleBounds);
         stats.sampleBounds.extend(b.sampleBounds);
         return stats;
     }
@@ -336,29 +354,17 @@ struct IntegerSampleStatistics
             sampleMean += sampleBoundsMin;
             sampleVariance = sampleVariance * (sampleBoundsExtend * sampleBoundsExtend);
 #endif
-
             sampleStats.mean = sampleMean;
             sampleStats.numSamples = numSamples;
             sampleStats.sampleVariance = sampleVariance * float(numSamples);
-            Point3 sampleBoundLower = Point3(float(sampleBounds.lower.x) - 0.0f, float(sampleBounds.lower.y) - 0.0f, float(sampleBounds.lower.z) - 0.0f) / INTEGER_BINS;
-#ifdef INTERGER_V2
-            sampleBoundLower = sampleBoundLower * sampleBoundsHalfExtend;
-            sampleBoundLower = sampleBoundLower + sampleBoundsCenter;
-#else
-            sampleBoundLower = sampleBoundLower * sampleBoundsExtend;
-            sampleBoundLower = sampleBoundLower + sampleBoundsMin;
-#endif
 
-            Point3 sampleBoundUpper = Point3(float(sampleBounds.upper.x) + 0.0f, float(sampleBounds.upper.y) + 0.0f, float(sampleBounds.upper.z) + 0.0f) / INTEGER_BINS;
-#ifdef INTERGER_V2
-            sampleBoundUpper = sampleBoundUpper * sampleBoundsHalfExtend;
-            sampleBoundUpper = sampleBoundUpper + sampleBoundsCenter;
-#else
-            sampleBoundUpper = sampleBoundUpper * sampleBoundsExtend;
-            sampleBoundUpper = sampleBoundUpper + sampleBoundsMin;
-#endif
-            sampleStats.sampleBounds.lower = sampleBoundLower;
-            sampleStats.sampleBounds.upper = sampleBoundUpper;
+            // setting the variance to zero if the measured integer sample bound is zero
+            sampleStats.sampleVariance.x = intSampleBounds.upper.x - intSampleBounds.lower.x <= 0 ? 0.f : sampleStats.sampleVariance.x;
+            sampleStats.sampleVariance.y = intSampleBounds.upper.y - intSampleBounds.lower.y <= 0 ? 0.f : sampleStats.sampleVariance.y;
+            sampleStats.sampleVariance.z = intSampleBounds.upper.z - intSampleBounds.lower.z <= 0 ? 0.f : sampleStats.sampleVariance.z;
+
+            // using the real (float) measured sample bound and not a transformed version of the integer sample bound for accuracy reasons
+            sampleStats.sampleBounds = sampleBounds;
         }
         return sampleStats;
     }

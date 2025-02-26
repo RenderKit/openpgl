@@ -285,6 +285,8 @@ struct KDTreePartitionBuilder
         SampleStatistics sampleStatsLeftRight[2];
 
         BBox bondsLeftRight[2];
+        // sample bounds for the splitting of a leaf node
+        BBox tmpBounds = bounds;
 
         if (node.isLeaf())
         {
@@ -295,6 +297,8 @@ struct KDTreePartitionBuilder
                 SampleStatistics mergedSampleStats = regionAndRangeData.first.sampleStatistics;
                 mergedSampleStats.merge(sampleStats);
                 getSplitDimensionAndPosition(mergedSampleStats, splitDim, splitPos);
+                // update the sample bound to the measured sampled bound of the current and previous leaf node samples
+                tmpBounds = mergedSampleStats.sampleBounds;
 
                 // regionAndRangeData.first.onSplit();
                 auto regionAndRangeDataRight = regionAndRangeData;
@@ -344,7 +348,7 @@ struct KDTreePartitionBuilder
         sampleStatsLeftRight[0].clear();
         sampleStatsLeftRight[1].clear();
 
-        bondsLeftRight[0] = bondsLeftRight[1] = bounds;
+        bondsLeftRight[0] = bondsLeftRight[1] = tmpBounds;
         bondsLeftRight[0].upper[splitDim] = splitPos;
         bondsLeftRight[1].lower[splitDim] = splitPos;
 
@@ -362,7 +366,7 @@ struct KDTreePartitionBuilder
             rPivotItr =
                 pivotSplitSamplesWithStatsParallel(samples.data(), sampleRange.m_begin, sampleRange.m_end, splitDim, splitPos, sampleStatsLeftRight[0], sampleStatsLeftRight[1]);
 #else
-            rPivotItr = pivotSplitSamplesWithIntegerStatsParallel(bounds, samples.data(), sampleRange.m_begin, sampleRange.m_end, splitDim, splitPos, sampleStatsLeftRight[0],
+            rPivotItr = pivotSplitSamplesWithIntegerStatsParallel(tmpBounds, samples.data(), sampleRange.m_begin, sampleRange.m_end, splitDim, splitPos, sampleStatsLeftRight[0],
                                                                   sampleStatsLeftRight[1], parallel);
 #endif
 #else
