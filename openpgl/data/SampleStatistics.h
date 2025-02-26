@@ -5,8 +5,6 @@
 
 #include "../openpgl_common.h"
 
-#define INTERGER_V2
-
 namespace openpgl
 {
 struct SampleStatistics
@@ -39,15 +37,13 @@ struct SampleStatistics
         const Point3 oldMean = mean;
         mean += (sample - oldMean) * incWeight;
 
-        // mean += sample;
-        // const Point3 newMean = mean * incWeight;
         sampleVariance += ((sample - oldMean) * (sample - mean));
         sampleBounds.extend(sample);
     }
 
     inline Point3 getMean() const
     {
-        return mean;  //  / float(numSamples);
+        return mean;
     }
 
     inline Vector3 getVariance() const
@@ -169,8 +165,6 @@ struct SampleStatistics
         ss << "variance: " << variance[0] << ",\t" << variance[1] << ",\t" << variance[2] << std::endl;
         ss << "sampleBounds: [" << sampleBounds.lower[0] << ",\t" << sampleBounds.lower[1] << ",\t" << sampleBounds.lower[2] << "] \t [" << sampleBounds.upper[0] << ",\t"
            << sampleBounds.upper[1] << ",\t" << sampleBounds.upper[2] << "] " << std::endl;
-        // ss << "maxComponents: " << maxComponents << std::endl;
-        // ss << "maxComponents: " << maxComponents << std::endl;
         return ss.str();
     }
 
@@ -201,13 +195,6 @@ struct SampleStatistics
             sampleBounds.upper.y != b.sampleBounds.upper.y || sampleBounds.upper.z != b.sampleBounds.upper.z)
         {
             equal = false;
-            // std::cout << std::fixed;
-            // std::cout << std::setprecision(12);
-            // std::cout << "SampleStatistics: NOT-EQUAL" << std::endl;
-            // std::cout << "SampleStatisticsLeft:  numSamples = " << numSamples << "\t mean = " << mean.x << "\t" << mean.y << "\t" << mean.z << "\t sampleVariance = "<<
-            // sampleVariance.x << "\t" << sampleVariance.y << "\t" << sampleVariance.z << std::endl; std::cout << "SampleStatisticsRight: numSamples = " << b.numSamples << "\t
-            // mean = " << b.mean.x << "\t" << b.mean.y << "\t" << b.mean.z << "\t sampleVariance = "<< b.sampleVariance.x << "\t" << b.sampleVariance.y << "\t" <<
-            // b.sampleVariance.z << std::endl;
         }
         return equal;
     }
@@ -229,11 +216,11 @@ struct IntegerSampleStatistics
     Vector3 sampleBoundsMax{0};
     Vector3 sampleBoundsExtend{0};
     Vector3 invSampleBoundsExtend{0};
-#ifdef INTERGER_V2
+    // sample bound stats to center the collected samples before discretization
     Vector3 sampleBoundsCenter{0};
     Vector3 sampleBoundsHalfExtend{0};
     Vector3 invSampleBoundsHalfExtend{0};
-#endif
+
     IntegerSampleStatistics()
     {
         mean = Point3i(0);
@@ -245,11 +232,9 @@ struct IntegerSampleStatistics
         sampleBoundsMax = Vector3(0);
         sampleBoundsExtend = Vector3(0);
         invSampleBoundsExtend = Vector3(0);
-#ifdef INTERGER_V2
         sampleBoundsCenter = Vector3(0);
         sampleBoundsHalfExtend = Vector3(0);
         invSampleBoundsHalfExtend = Vector3(0);
-#endif
     }
 
     IntegerSampleStatistics(const BBox &bounds)
@@ -270,11 +255,9 @@ struct IntegerSampleStatistics
         sampleBoundsMax = scaledBounds.upper;
         sampleBoundsExtend = scaledBounds.upper - scaledBounds.lower;
         invSampleBoundsExtend = embree::rcp(sampleBoundsExtend);
-#ifdef INTERGER_V2
         sampleBoundsHalfExtend = sampleBoundsExtend * 0.5f;
         invSampleBoundsHalfExtend = embree::rcp(sampleBoundsHalfExtend);
         sampleBoundsCenter = sampleBoundsMin + sampleBoundsHalfExtend;
-#endif
     }
 
     void clear()
@@ -289,21 +272,15 @@ struct IntegerSampleStatistics
         sampleBoundsMax = Vector3(0);
         sampleBoundsExtend = Vector3(0);
         invSampleBoundsExtend = Vector3(0);
-#ifdef INTERGER_V2
         sampleBoundsCenter = Vector3(0);
         sampleBoundsHalfExtend = Vector3(0);
         invSampleBoundsHalfExtend = Vector3(0);
-#endif
     }
 
     inline void addSample(const Point3 sample)
     {
         numSamples++;
-#ifdef INTERGER_V2
-        Point3 tmpSample = ((sample - sampleBoundsCenter) * invSampleBoundsHalfExtend);  //* INTEGER_BINS;
-#else
-        Point3 tmpSample = ((sample - sampleBoundsMin) * invSampleBoundsExtend);  //* INTEGER_BINS;
-#endif
+        Point3 tmpSample = ((sample - sampleBoundsCenter) * invSampleBoundsHalfExtend);
         Vector3 tmpVariance = (tmpSample * tmpSample) * INTEGER_BINS;
         tmpSample *= INTEGER_BINS;
 
@@ -345,15 +322,11 @@ struct IntegerSampleStatistics
             Vector3 sampleVariance = (Vector3(variance.x, variance.y, variance.z) / (INTEGER_BINS)) * invNumSamples;
             sampleVariance -= sampleMean * sampleMean;
             sampleVariance = Vector3(std::fabs(sampleVariance.x), std::fabs(sampleVariance.y), std::fabs(sampleVariance.z));
-#ifdef INTERGER_V2
+
             sampleMean = sampleMean * sampleBoundsHalfExtend;
             sampleMean += sampleBoundsCenter;
             sampleVariance = sampleVariance * (sampleBoundsHalfExtend * sampleBoundsHalfExtend);
-#else
-            sampleMean = sampleMean * sampleBoundsExtend;
-            sampleMean += sampleBoundsMin;
-            sampleVariance = sampleVariance * (sampleBoundsExtend * sampleBoundsExtend);
-#endif
+
             sampleStats.mean = sampleMean;
             sampleStats.numSamples = numSamples;
             sampleStats.sampleVariance = sampleVariance * float(numSamples);
