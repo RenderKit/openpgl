@@ -473,6 +473,15 @@ struct Field
                         regionStorage.first.splitFlag = false;
                         regionStorage.first.initialized = true;
                     }
+                    regionStorage.first.initialized = true;
+#ifdef DUMP_DISTRIBUTION_UPDATE_DATA
+                    // if(m_dumpUpdateDistributionData) {
+                    if (dumpCacheCellData)
+                    {
+                        std::cout << "DumpCacheCell: idx = " << dumpCacheCellIdx << "\t pos = " << m_dumpCacheCellPosition << std::endl;
+                        dump.Store(m_dumpCacheCellLocation + "/cacheCellData_itr_" + std::to_string(m_iteration) + ".dump");
+                    }
+#endif
                 }
                 else
                 {
