@@ -31,6 +31,8 @@ struct AdaptiveSplitAndMergeFactoryV2
     typedef VonMisesFisherChiSquareComponentSplitterV2<WeightedEMFactory> Splitter;
     typedef VonMisesFisherChiSquareComponentMerger<WeightedEMFactory, Splitter> Merger;
 
+    typedef typename VonMisesFisherChiSquareComponentSplitterV2<WeightedEMFactory>::SplitCandidate SplitCandidate;
+
     struct Configuration
     {
         typename WeightedEMFactory::Configuration weightedEMCfg;
@@ -289,7 +291,7 @@ std::string AdaptiveSplitAndMergeFactoryV2<TVMMDistribution>::Configuration::toS
 
 template <class TVMMDistribution>
 void AdaptiveSplitAndMergeFactoryV2<TVMMDistribution>::prepareSamples(SampleData *samples, const size_t numSamples, const SampleStatistics &sampleStatistics,
-                                                                    const Configuration &cfg) const
+                                                                      const Configuration &cfg) const
 {
     WeightedEMFactory factory = WeightedEMFactory();
     factory.prepareSamples(samples, numSamples, sampleStatistics, cfg.weightedEMCfg);
@@ -297,7 +299,7 @@ void AdaptiveSplitAndMergeFactoryV2<TVMMDistribution>::prepareSamples(SampleData
 
 template <class TVMMDistribution>
 void AdaptiveSplitAndMergeFactoryV2<TVMMDistribution>::fit(VMM &vmm, Statistics &stats, const SampleData *samples, const size_t numSamples, const Configuration &cfg,
-                                                         FittingStatistics &fitStats) const
+                                                           FittingStatistics &fitStats) const
 {
     const size_t numComponents = cfg.weightedEMCfg.initK;
     stats.clear(numComponents);
@@ -342,9 +344,129 @@ void AdaptiveSplitAndMergeFactoryV2<TVMMDistribution>::fit(VMM &vmm, Statistics 
     OPENPGL_ASSERT(vmm.isValid());
 }
 
+#if 1
 template <class TVMMDistribution>
 void AdaptiveSplitAndMergeFactoryV2<TVMMDistribution>::update(VMM &vmm, Statistics &stats, const SampleData *samples, const size_t numSamples, const Configuration &cfg,
-                                                            FittingStatistics &fitStats) const
+                                                              FittingStatistics &fitStats) const
+{
+    OPENPGL_ASSERT(vmm.isValid());
+    OPENPGL_ASSERT(vmm.getNumComponents() == stats.getNumComponents());
+    OPENPGL_ASSERT(stats.isValid());
+
+    VMM vmmOld = vmm;
+
+    // first update the mixture
+    WeightedEMFactory factory = WeightedEMFactory();
+    typename WeightedEMFactory::FittingStatistics wemFitStats;
+    // stats.sufficientStatistics.clear(vmm._numComponents);
+    const size_t prevNumberOfComponents = vmm._numComponents;
+    factory.updateMixtureV2(vmm, stats.sufficientStatistics, samples, numSamples, cfg.weightedEMCfg, wemFitStats);
+    OPENPGL_ASSERT(vmm.isValid());
+    // check if the update step added a new component.
+    // This happnes if samples are not covered by any existing component
+    // and we need to extend the splittingStats.
+    if (prevNumberOfComponents < vmm._numComponents)
+    {
+        stats.splittingStatistics.setNumComponents(vmm._numComponents);
+    }
+    OPENPGL_ASSERT(stats.sufficientStatistics.isValid());
+
+    if (cfg.useSplitAndMerge)
+    {
+        float mcEstimate = stats.sufficientStatistics.getSumWeights() / stats.sufficientStatistics.getNumSamples();
+
+        fitStats.numSamples = numSamples;
+        fitStats.numUpdateWEMIterations = wemFitStats.numIterations;
+
+        stats.numSamplesAfterLastSplit += numSamples;
+        stats.numSamplesAfterLastMerge += numSamples;
+
+        OPENPGL_ASSERT(vmm._numComponents == stats.splittingStatistics.numComponents);
+        Splitter splitter = Splitter();
+        // OPENPGL_ASSERT(stats.splittingStatistics.isValid());
+        splitter.UpdateSplitStatistics(vmm, stats.splittingStatistics, mcEstimate, samples, numSamples);
+        OPENPGL_ASSERT(stats.splittingStatistics.isValid());
+// NEW
+        bool alreadySplitted[VMM::MaxComponents];
+        for (int i = 0; i < VMM::MaxComponents; i++)
+        {
+            alreadySplitted[i] = false;
+        }
+        // if(false){
+        // if (stats.numSamplesAfterLastSplit >= 1000/8)
+        {
+            bool split = true;
+            // Splitter splitter = Splitter();
+            while (split && vmm.getNumComponents() < VMM::MaxComponents)
+            {
+                OPENPGL_ASSERT(vmm._numComponents == stats.splittingStatistics.numComponents);
+                bool splitSuccess = false;
+                SplitCandidate splitCandidate = stats.splittingStatistics.getHighestValidChiSquareIdx(vmm, alreadySplitted, true);
+
+                //            float weightOld = vmmOld.getComponentWeight(splitIdx);
+                //            float weightNew = vmm.getComponentWeight(splitIdx);
+                //            std::cout<< "weightOld = " << weightOld << "\t weightNew = " << weightNew << "\t frac = " << (weightNew-weightOld) / weightNew << "\t frac2 = " <<
+                //            (weightNew-weightOld) / weightOld << std::endl;
+                if (splitCandidate.componentIndex < VMM::MaxComponents)
+                {
+                    // alreadySplitted[splitIdx] = true;
+                    // alreadySplitted[vmm.getNumComponents()] = true;
+                    float chi2Est = stats.splittingStatistics.getChiSquareEst(splitCandidate.componentIndex);
+                    // std::cout << "splitIdx = " << splitIdx << "\t splitIdx2 = " << vmm.getNumComponents() << "\t chi2Est = " << chi2Est << std::endl;
+                    if (chi2Est > cfg.splittingThreshold)
+                    {
+                        splitSuccess =
+                            splitter.SplitAndUpdate(vmm, mcEstimate, splitCandidate, stats.splittingStatistics, stats.sufficientStatistics, samples, numSamples, cfg.weightedEMCfg, true);
+                    }
+                    alreadySplitted[splitCandidate.componentIndex] = true;
+                    if (splitSuccess)
+                        alreadySplitted[vmm.getNumComponents()] = true;
+                    else
+                    {
+                        split = false;
+                    }
+                }
+                else
+                {
+                    split = false;
+                }
+                // split = false;
+                OPENPGL_ASSERT(vmm._numComponents == stats.splittingStatistics.numComponents);
+            }
+            stats.numSamplesAfterLastSplit = 0.0f;
+        }
+// OLD NEW    
+        OPENPGL_ASSERT(vmm.isValid());
+        OPENPGL_ASSERT(vmm.getNumComponents() == stats.getNumComponents());
+        OPENPGL_ASSERT(stats.isValid());
+
+        //if (stats.numSamplesAfterLastMerge >= cfg.minSamplesForMerging)
+        if (stats.numSamplesAfterLastMerge >= 1000 / 4)
+        {
+            Merger merger = Merger();
+            size_t numMerges = merger.PerformMerging(vmm, cfg.mergingThreshold, cfg.splittingThreshold, true, stats.sufficientStatistics, stats.splittingStatistics);
+            fitStats.numMerges = numMerges;
+            stats.numSamplesAfterLastMerge = 0.0f;
+
+            OPENPGL_ASSERT(vmm.isValid());
+            OPENPGL_ASSERT(vmm.getNumComponents() == stats.getNumComponents());
+            OPENPGL_ASSERT(stats.isValid());
+        }
+        OPENPGL_ASSERT(vmm._numComponents == stats.splittingStatistics.numComponents);
+        // fitStats.numSplits = totalSplitCount;
+    }
+    OPENPGL_ASSERT(vmm.isValid());
+    factory.updateComponentDistances(vmm, stats.sufficientStatistics, samples, numSamples);
+
+    OPENPGL_ASSERT(vmm.getNumComponents() == stats.sufficientStatistics.getNumComponents());
+    OPENPGL_ASSERT(vmm.isValid());
+    OPENPGL_ASSERT(stats.sufficientStatistics.isValid());
+}
+#else
+
+template <class TVMMDistribution>
+void AdaptiveSplitAndMergeFactoryV2<TVMMDistribution>::update(VMM &vmm, Statistics &stats, const SampleData *samples, const size_t numSamples, const Configuration &cfg,
+                                                              FittingStatistics &fitStats) const
 {
     OPENPGL_ASSERT(vmm.isValid());
     OPENPGL_ASSERT(vmm.getNumComponents() == stats.getNumComponents());
@@ -376,7 +498,6 @@ void AdaptiveSplitAndMergeFactoryV2<TVMMDistribution>::update(VMM &vmm, Statisti
         stats.numSamplesAfterLastSplit += numSamples;
         stats.numSamplesAfterLastMerge += numSamples;
 
-
         Splitter splitter = Splitter();
         // OPENPGL_ASSERT(stats.splittingStatistics.isValid());
         splitter.UpdateSplitStatistics(vmm, stats.splittingStatistics, mcEstimate, samples, numSamples);
@@ -387,7 +508,7 @@ void AdaptiveSplitAndMergeFactoryV2<TVMMDistribution>::update(VMM &vmm, Statisti
             typename WeightedEMFactory::PartialFittingMask mask;
             mask.resetToFalse();
 
-            std::vector<typename Splitter::SplitCandidate> splitComps = stats.splittingStatistics.getSplitCandidates(cfg.splittingThreshold);
+            std::vector<typename Splitter::SplitCandidate> splitComps = stats.splittingStatistics.getSplitCandidates(cfg.splittingThreshold, true);
             int totalSplitCount = 0;
             // const size_t numComp = vmm._numComponents;
             for (size_t k = 0; k < splitComps.size(); k++)
@@ -451,10 +572,11 @@ void AdaptiveSplitAndMergeFactoryV2<TVMMDistribution>::update(VMM &vmm, Statisti
     OPENPGL_ASSERT(vmm.isValid());
     OPENPGL_ASSERT(stats.sufficientStatistics.isValid());
 }
+#endif
 
 template <class TVMMDistribution>
 void AdaptiveSplitAndMergeFactoryV2<TVMMDistribution>::updateFluenceEstimate(VMM &vmm, const SampleData *samples, const size_t numSamples, const size_t numZeroValueSamples,
-                                                                           const SampleStatistics &sampleStatistics) const
+                                                                             const SampleStatistics &sampleStatistics) const
 {
     WeightedEMFactory factory = WeightedEMFactory();
     factory.updateFluenceEstimate(vmm, samples, numSamples, numZeroValueSamples, sampleStatistics);
