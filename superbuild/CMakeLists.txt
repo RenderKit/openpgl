@@ -85,7 +85,9 @@ option(DOWNLOAD_ISPC "Download ISPC or use the one found in the system environme
 ## variables to select different versions.
 ## ======================================================================== ##
 
-
+option(BUILD_TBB "Build Intel Threading Building Blocks or search in environment?" ON)
+option(BUILD_TBB_FROM_SOURCE "Build Intel Threading Building Blocks from source?" OFF)
+option(BUILD_TBB_SHARED "Build Intel Threading Building Blocks as shared library?" ON)
 if (BUILD_TBB)
   set(TBB_VERSION "2021.13.0" CACHE STRING "TBB version to download")
   if (BUILD_TBB_FROM_SOURCE)
