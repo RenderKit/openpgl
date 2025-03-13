@@ -90,7 +90,7 @@ struct VonMisesFisherChiSquareComponentSplitterV2
 
         size_t numComponents{0};
 
-        // sufficient stats
+        // sufficient stats for a single (firefly) component of the last update step
         embree::vfloat<VMM::VectorSize> weights[VMM::NumVectors];
         embree::Vec3<embree::vfloat<VMM::VectorSize> > weightedMeans[VMM::NumVectors];
 
@@ -103,7 +103,7 @@ struct VonMisesFisherChiSquareComponentSplitterV2
         float getSumChiSquareEst() const;
         size_t getHighestChiSquareIdx() const;
 
-        SplitCandidate getHighestValidChiSquareIdx(const VMM &vmm, const bool *alreadySplitted, const bool useConfidence) const;
+        SplitCandidate getHighestValidChiSquareIdx(const VMM &vmm, const VMM &previousVMM, const bool *alreadySplitted, const bool useConfidence) const;
 
         void mergeComponentStats(const size_t &idxI, const size_t &idxJ, const float &weightI, const Vector3 &meanDirectionI, const float &weightJ, const Vector3 &meanDirectionJ,
                                  const float &weightK, const Vector3 &meanDirectionK);
@@ -111,6 +111,8 @@ struct VonMisesFisherChiSquareComponentSplitterV2
         Vector2 getSplitMean(const size_t &idx) const;
 
         Vector3 getSplitCovariance(const size_t &idx) const;
+
+        SplitType getSplitType(const size_t &idx, const VMM &vmm, const VMM &previousVMM) const;
 
         std::vector<SplitCandidate> getSplitCandidates(const float splitThreshold, const bool useConfidence) const;
 
@@ -403,19 +405,9 @@ bool VonMisesFisherChiSquareComponentSplitterV2<TVMMFactory>::SplitAndUpdate(VMM
         mask.resetToFalse();
 #ifndef OPENPGL_USE_THREE_SPLIT
         size_t idx = candidate.componentIndex;
-        //bool fireFly = true;
         if (candidate.splitType == EFirefly)
         {
             splitSucess = SplitComponentFireFly(vmm, splitStatistics, suffStatistics, idx, factoryCfg);
-            // VMM vmmCheck = vmm;
-            // vmmFactory.weightedMaximumAPosteriorStepV2(vmmCheck, suffStatistics, factoryCfg);
-
-            // std::cout << "SplitVMM" << std::endl;
-            // std::cout << vmm.toString() << std::endl;
-
-            // std::cout << "SplitVMM2" << std::endl;
-            // std::cout << vmmCheck.toString() << std::endl;
-
             previousAsPriorMask.setToTrue(idx);
             previousAsPriorMask.setToFalse(vmm._numComponents - 1);
         }
@@ -424,6 +416,8 @@ bool VonMisesFisherChiSquareComponentSplitterV2<TVMMFactory>::SplitAndUpdate(VMM
             splitSucess = SplitComponent(vmm, splitStatistics, suffStatistics, idx);
             previousAsPriorMask.setToTrue(idx);
             previousAsPriorMask.setToTrue(vmm._numComponents - 1);
+            //previousAsPriorMask.setToFalse(idx);
+            //previousAsPriorMask.setToFalse(vmm._numComponents - 1);
         }
 
         mask.setToTrue(idx);
@@ -435,9 +429,7 @@ bool VonMisesFisherChiSquareComponentSplitterV2<TVMMFactory>::SplitAndUpdate(VMM
         mask.setToTrue(vmm._numComponents - 1);
 #endif
 
-        //        std::cout << "SplitComponent: idx = " << idx << "\t sucess = " << splitSucess << std::endl;
-        if (true && splitSucess /* && numData >= 1000/8*/)
-        // if(false)
+        if (true && splitSucess)
         {
             OPENPGL_ASSERT(vmm.isValid());
             vmmFactory.partialUpdateMixtureV2(vmm, mask, previousAsPriorMask, suffStatistics, data, numData, factoryCfg, vmmFitStats);
@@ -687,6 +679,7 @@ void VonMisesFisherChiSquareComponentSplitterV2<TVMMFactory>::UpdateSplitStatist
     const embree::vfloat<VMM::VectorSize> zeros(0.f);
     const int cnt = (splitStats.numComponents + VMM::VectorSize - 1) / VMM::VectorSize;
     // size_t validDataCount = 0.0f;
+
     for (size_t k = 0; k < cnt; k++)
     {
         splitStats.weights[k] = zeros;
@@ -922,6 +915,7 @@ bool VonMisesFisherChiSquareComponentSplitterV2<TVMMFactory>::SplitComponent(VMM
     ComponentSplitinfoV2 splitInfo;
     const div_t tmpK = div(idx, static_cast<int>(VMM::VectorSize));
 
+    // the number of samples that got assinged to the component that should be split
     float numAssignedSamples = splitStats.sumAssignedSamples[tmpK.quot][tmpK.rem];
 
     float inv_sumWeights = embree::rcp(splitStats.sumWeights[tmpK.quot][tmpK.rem]);
@@ -1031,10 +1025,27 @@ bool VonMisesFisherChiSquareComponentSplitterV2<TVMMFactory>::SplitComponent(VMM
 
     const div_t tmpI = tmpK;
     const div_t tmpJ = div(K, static_cast<int>(VMM::VectorSize));
-
+//    VMM vmmOrg = vmm;
     vmm.splitComponent(idx, K, newWeight0, newWeight1, meanDirection0, meanDirection1, newMeanCosine0, newMeanCosine1);
-    suffStats.splitComponentsStats(idx, K, meanDirection0, meanDirection1, newMeanCosine0, newMeanCosine1);
+/*
+    VMM vmmSplit = vmm;
+    VMM vmmMerge = vmmSplit;
+    vmmMerge.mergeComponents(idx, K);
+    std::cout << "VMMOrg:   " << std::endl <<  vmmOrg.toString() << std::endl;
+    std::cout << "vmmMerge: " << std::endl <<  vmmMerge.toString() << std::endl;
+    std::cout << "vmmSplit: " << std::endl <<  vmmSplit.toString() << std::endl;
 
+    SufficientStatistics suffStatsOrg = suffStats;
+*/
+    suffStats.splitComponentsStats(idx, K, meanDirection0, meanDirection1, newMeanCosine0, newMeanCosine1);
+/*    SufficientStatistics suffStatsSplit = suffStats;
+    SufficientStatistics suffStatsMerge = suffStatsSplit;
+    suffStatsMerge.mergeComponentStats(idx, K);
+
+    std::cout << "suffStatsOrg:   " << std::endl <<  suffStatsOrg.toString() << std::endl;
+    std::cout << "suffStatsMerge: " << std::endl <<  suffStatsMerge.toString() << std::endl;
+    std::cout << "suffStatsSplit: " << std::endl <<  suffStatsSplit.toString() << std::endl;
+*/
     // reseting the split statistics for the two new components
     splitStats.chiSquareMCEstimates[tmpI.quot][tmpI.rem] = 0.0f;
     splitStats.chiSquareMCEstimate2ndMoments[tmpI.quot][tmpI.rem] = 0.0f;
@@ -1524,6 +1535,33 @@ Vector3 VonMisesFisherChiSquareComponentSplitterV2<TVMMFactory>::ComponentSplitS
 }
 
 template <class TVMMFactory>
+typename VonMisesFisherChiSquareComponentSplitterV2<TVMMFactory>::SplitType VonMisesFisherChiSquareComponentSplitterV2<TVMMFactory>::ComponentSplitStatistics::getSplitType(const size_t &idx, const VMM &vmm, const VMM &previousVMM) const
+{
+    //const div_t tmp = div(idx, static_cast<int>(VMM::VectorSize));
+    //float frac = splitStats.weights[tmpK.quot][tmpK.rem] / (suffStats.sumOfWeightedStats[tmpK.quot][tmpK.rem] * suffStats.inv_norm);
+    SplitType splitType = EMultiModal;
+    float weightOld = previousVMM.getComponentWeight(idx);
+    float weightNew = vmm.getComponentWeight(idx);
+    float relativeChange = weightNew / weightOld;
+    //if (weightOld > 0.f && !embree::isvalid(relativeChange))
+    //    int i = 0;
+    //if (weightOld > 0.f)
+    std::cout << "getSplitType: relativeChange = " << relativeChange<< std::endl;
+    if (weightOld <= 0.f) {
+        std::cout << "getSplitType: relativeChange = " << relativeChange<< std::endl;
+    }
+    
+    if (weightOld > 0.f && relativeChange > 1.25f) {
+        splitType = EFirefly;
+    }
+
+    //TODO fix EMultiModal
+    //splitType = EFirefly;
+    return splitType;
+}
+
+
+template <class TVMMFactory>
 void VonMisesFisherChiSquareComponentSplitterV2<TVMMFactory>::ComponentSplitStatistics::mergeComponentStats(const size_t &idxI, const size_t &idxJ, const float &weightI,
                                                                                                             const Vector3 &meanDirectionI, const float &weightJ,
                                                                                                             const Vector3 &meanDirectionJ, const float &weightK,
@@ -1791,7 +1829,7 @@ size_t VonMisesFisherChiSquareComponentSplitterV2<TVMMFactory>::ComponentSplitSt
 }
 
 template <class TVMMFactory>
-typename VonMisesFisherChiSquareComponentSplitterV2<TVMMFactory>::SplitCandidate VonMisesFisherChiSquareComponentSplitterV2<TVMMFactory>::ComponentSplitStatistics::getHighestValidChiSquareIdx(const VMM &vmm, const bool *alreadySplitted, const bool useConfidence) const
+typename VonMisesFisherChiSquareComponentSplitterV2<TVMMFactory>::SplitCandidate VonMisesFisherChiSquareComponentSplitterV2<TVMMFactory>::ComponentSplitStatistics::getHighestValidChiSquareIdx(const VMM &vmm, const VMM &previousVMM, const bool *alreadySplitted, const bool useConfidence) const
 {
     SplitCandidate candidate;
     candidate.componentIndex = VMM::MaxComponents;
@@ -1816,8 +1854,10 @@ typename VonMisesFisherChiSquareComponentSplitterV2<TVMMFactory>::SplitCandidate
             maxChiSquareValue = chiSquareMCEstimates[tmp.quot][tmp.rem];
             candidate.chiSquareEst = maxChiSquareValue;
             candidate.componentIndex = k;
-            candidate.splitType = EFirefly;
         }
+    }
+    if(candidate.componentIndex < VMM::MaxComponents) {
+        candidate.splitType = getSplitType(candidate.componentIndex, vmm, previousVMM);
     }
     return candidate;
 }

@@ -399,9 +399,10 @@ void AdaptiveSplitAndMergeFactoryV2<TVMMDistribution>::update(VMM &vmm, Statisti
             // Splitter splitter = Splitter();
             while (split && vmm.getNumComponents() < VMM::MaxComponents)
             {
+                
                 OPENPGL_ASSERT(vmm._numComponents == stats.splittingStatistics.numComponents);
                 bool splitSuccess = false;
-                SplitCandidate splitCandidate = stats.splittingStatistics.getHighestValidChiSquareIdx(vmm, alreadySplitted, true);
+                SplitCandidate splitCandidate = stats.splittingStatistics.getHighestValidChiSquareIdx(vmm, vmmOld, alreadySplitted, true);
 
                 //            float weightOld = vmmOld.getComponentWeight(splitIdx);
                 //            float weightNew = vmm.getComponentWeight(splitIdx);
@@ -420,7 +421,7 @@ void AdaptiveSplitAndMergeFactoryV2<TVMMDistribution>::update(VMM &vmm, Statisti
                     }
                     alreadySplitted[splitCandidate.componentIndex] = true;
                     if (splitSuccess)
-                        alreadySplitted[vmm.getNumComponents()] = true;
+                        alreadySplitted[vmm.getNumComponents()-1] = true;
                     else
                     {
                         split = false;

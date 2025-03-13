@@ -1090,22 +1090,12 @@ void ParallaxAwareVonMisesFisherWeightedEMFactory<TVMMDistribution>::partialMerg
 {
     const embree::vfloat<VMM::VectorSize> zeros = 0.f;
 
-    // the sum of the current weights of the changed components
-    embree::vfloat<VMM::VectorSize> currentWeightsVec = 0.f;
-    // the sum of the previous weights of the unchanged components
-    embree::vfloat<VMM::VectorSize> previousWeightsVec = 0.f;
-    // the overall sum of all previous weights
-    embree::vfloat<VMM::VectorSize> sumPreviousWeightsVec = 0.f;
-    // embree::vfloat<VMM::VectorSize> sumCurrentWeightsVec = 0.f;
-
     embree::vfloat<VMM::VectorSize> sumPreviousPartialWeightsVec = 0.f;
     embree::vfloat<VMM::VectorSize> sumCurrentPartialWeightsVec = 0.f;
 
     const int cnt = (previousStats.numComponents + VMM::VectorSize - 1) / VMM::VectorSize;
     for (int k = 0; k < cnt; k++)
     {
-        sumPreviousWeightsVec += previousStats.sumOfWeightedStats[k];
-        // sumCurrentWeightsVec += currentStats.sumOfWeightedStats[k];
         if (usePreviousStatsAsPrior)
         {
             currentStats.sumOfWeightedDirections[k].x =
@@ -1120,8 +1110,8 @@ void ParallaxAwareVonMisesFisherWeightedEMFactory<TVMMDistribution>::partialMerg
             currentStats.sumOfDistanceWeightes[k] =
                 select(mask.mask[k], currentStats.sumOfDistanceWeightes[k] + previousStats.sumOfDistanceWeightes[k], previousStats.sumOfDistanceWeightes[k]);
 
-            currentWeightsVec += select(mask.mask[k], currentStats.sumOfWeightedStats[k], zeros);
-            previousWeightsVec += select(mask.mask[k], zeros, currentStats.sumOfWeightedStats[k]);
+            sumPreviousPartialWeightsVec += select(mask.mask[k], previousStats.sumOfWeightedStats[k], zeros);
+            sumCurrentPartialWeightsVec += select(mask.mask[k], currentStats.sumOfWeightedStats[k], zeros);
         }
         else
         {
@@ -1131,9 +1121,6 @@ void ParallaxAwareVonMisesFisherWeightedEMFactory<TVMMDistribution>::partialMerg
 
             currentStats.sumOfWeightedStats[k] = select(mask.mask[k], currentStats.sumOfWeightedStats[k], previousStats.sumOfWeightedStats[k]);
             currentStats.sumOfDistanceWeightes[k] = select(mask.mask[k], currentStats.sumOfDistanceWeightes[k], previousStats.sumOfDistanceWeightes[k]);
-
-            currentWeightsVec += select(mask.mask[k], currentStats.sumOfWeightedStats[k], zeros);
-            previousWeightsVec += select(mask.mask[k], zeros, currentStats.sumOfWeightedStats[k]);
 
             sumPreviousPartialWeightsVec += select(mask.mask[k], previousStats.sumOfWeightedStats[k], zeros);
             sumCurrentPartialWeightsVec += select(mask.mask[k], currentStats.sumOfWeightedStats[k], zeros);
@@ -1178,6 +1165,91 @@ void ParallaxAwareVonMisesFisherWeightedEMFactory<TVMMDistribution>::partialMerg
 /**
  *
  */
+#if 1
+template <class TVMMDistribution>
+void ParallaxAwareVonMisesFisherWeightedEMFactory<TVMMDistribution>::partialMergeSufficientStatisticsWithPriors(PartialFittingMask &mask, PartialFittingMask &previousAsPriorMask,
+                                                                                                                SufficientStatistics &currentStats,
+                                                                                                                const SufficientStatistics &previousStats) const
+{
+    const embree::vfloat<VMM::VectorSize> zeros = 0.f;
+
+    embree::vfloat<VMM::VectorSize> sumPreviousPartialWeightsVec = 0.f;
+    embree::vfloat<VMM::VectorSize> sumCurrentPartialWeightsVec = 0.f;
+
+    float decay = 1.f;
+
+    const int cnt = (previousStats.numComponents + VMM::VectorSize - 1) / VMM::VectorSize;
+    for (int k = 0; k < cnt; k++)
+    {
+        // First, check if the previous stats should be applied as prior to the current stats
+        currentStats.sumOfWeightedDirections[k].x =
+            select(previousAsPriorMask.mask[k], currentStats.sumOfWeightedDirections[k].x + previousStats.sumOfWeightedDirections[k].x * decay, currentStats.sumOfWeightedDirections[k].x);
+        currentStats.sumOfWeightedDirections[k].y =
+            select(previousAsPriorMask.mask[k], currentStats.sumOfWeightedDirections[k].y + previousStats.sumOfWeightedDirections[k].y * decay, currentStats.sumOfWeightedDirections[k].y);
+        currentStats.sumOfWeightedDirections[k].z =
+            select(previousAsPriorMask.mask[k], currentStats.sumOfWeightedDirections[k].z + previousStats.sumOfWeightedDirections[k].z * decay, currentStats.sumOfWeightedDirections[k].z);
+
+        currentStats.sumOfWeightedStats[k] =
+            select(previousAsPriorMask.mask[k], currentStats.sumOfWeightedStats[k] + previousStats.sumOfWeightedStats[k] * decay, currentStats.sumOfWeightedStats[k]);
+        currentStats.sumOfDistanceWeightes[k] = select(previousAsPriorMask.mask[k], previousStats.sumOfDistanceWeightes[k] * decay, zeros);
+
+        // Second, reset the partial stats which sould not be updated to the prvious stats
+        currentStats.sumOfWeightedDirections[k].x = select(mask.mask[k], currentStats.sumOfWeightedDirections[k].x, previousStats.sumOfWeightedDirections[k].x);
+        currentStats.sumOfWeightedDirections[k].y = select(mask.mask[k], currentStats.sumOfWeightedDirections[k].y, previousStats.sumOfWeightedDirections[k].y);
+        currentStats.sumOfWeightedDirections[k].z = select(mask.mask[k], currentStats.sumOfWeightedDirections[k].z, previousStats.sumOfWeightedDirections[k].z);
+
+        currentStats.sumOfWeightedStats[k] = select(mask.mask[k], currentStats.sumOfWeightedStats[k], previousStats.sumOfWeightedStats[k]);
+        currentStats.sumOfDistanceWeightes[k] = select(mask.mask[k], currentStats.sumOfDistanceWeightes[k], previousStats.sumOfDistanceWeightes[k]);
+
+        sumPreviousPartialWeightsVec += select(mask.mask[k], previousStats.sumOfWeightedStats[k], zeros);
+        sumCurrentPartialWeightsVec += select(mask.mask[k], currentStats.sumOfWeightedStats[k], zeros);
+    }
+
+    embree::vfloat<VMM::VectorSize> sumTmpVec = 0.f;
+    // calcualting the normalization factor for the weights of the updated components
+    float inv_currentWeights = 1.0f;
+    const float sumCurrentPartialWeights = embree::reduce_add(sumCurrentPartialWeightsVec);
+    if (sumCurrentPartialWeights > 0.f) {
+        inv_currentWeights = embree::reduce_add(sumPreviousPartialWeightsVec) / embree::reduce_add(sumCurrentPartialWeightsVec);
+        for (int k = 0; k < cnt; k++)
+        {
+            currentStats.sumOfWeightedStats[k] = select(mask.mask[k], currentStats.sumOfWeightedStats[k] * inv_currentWeights, currentStats.sumOfWeightedStats[k]);
+
+            currentStats.sumOfWeightedDirections[k].x = select(mask.mask[k], currentStats.sumOfWeightedDirections[k].x * inv_currentWeights, currentStats.sumOfWeightedDirections[k].x);
+            currentStats.sumOfWeightedDirections[k].y = select(mask.mask[k], currentStats.sumOfWeightedDirections[k].y * inv_currentWeights, currentStats.sumOfWeightedDirections[k].y);
+            currentStats.sumOfWeightedDirections[k].z = select(mask.mask[k], currentStats.sumOfWeightedDirections[k].z * inv_currentWeights, currentStats.sumOfWeightedDirections[k].z);
+            sumTmpVec += currentStats.sumOfWeightedStats[k];
+        }
+    }
+    OPENPGL_ASSERT(embree::isvalid(sumTmpVec));
+    float sumWTmp = embree::reduce_add(sumTmpVec);
+    // since only some partial components are updated
+    // the overall stats are the same as the previous stats
+    if (currentStats.normalized)
+    {
+        currentStats.sumWeights = previousStats.sumWeights;
+        currentStats.numSamples = sumWTmp;
+    }
+    else
+    {
+        currentStats.sumWeights = sumWTmp;
+        currentStats.numSamples = previousStats.numSamples;
+    }
+
+    currentStats.overallNumSamples = previousStats.overallNumSamples;
+
+    currentStats.norm = 1.f;
+    currentStats.inv_norm = 1.f;
+    if (currentStats.sumWeights > 0.f && currentStats.numSamples > 0.f) {
+        currentStats.norm = currentStats.numSamples / currentStats.sumWeights;
+        currentStats.inv_norm = currentStats.sumWeights / currentStats.numSamples;
+    }
+    //OPENPGL_ASSERT(currentStats.numSamples > 0.f);
+    //OPENPGL_ASSERT(currentStats.sumWeights > 0.f);
+    OPENPGL_ASSERT(embree::isvalid(currentStats.norm));
+    OPENPGL_ASSERT(embree::isvalid(currentStats.inv_norm ));
+}
+#else
 template <class TVMMDistribution>
 void ParallaxAwareVonMisesFisherWeightedEMFactory<TVMMDistribution>::partialMergeSufficientStatisticsWithPriors(PartialFittingMask &mask, PartialFittingMask &previousAsPriorMask,
                                                                                                                 SufficientStatistics &currentStats,
@@ -1257,7 +1329,7 @@ void ParallaxAwareVonMisesFisherWeightedEMFactory<TVMMDistribution>::partialMerg
     currentStats.norm = previousStats.norm;
     currentStats.inv_norm = previousStats.inv_norm;
 }
-
+#endif
 template <class TVMMDistribution>
 void ParallaxAwareVonMisesFisherWeightedEMFactory<TVMMDistribution>::partialUpdateMixture(VMM &vmm, PartialFittingMask &mask, SufficientStatistics &previousStats,
                                                                                           bool usePreviousStatsAsPrior, const SampleData *samples, const size_t numSamples,
