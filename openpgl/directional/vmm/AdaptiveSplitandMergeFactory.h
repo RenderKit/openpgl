@@ -380,7 +380,7 @@ void AdaptiveSplitAndMergeFactory<TVMMDistribution>::update(VMM &vmm, Statistics
         // OPENPGL_ASSERT(stats.splittingStatistics.isValid());
         splitter.UpdateSplitStatistics(vmm, stats.splittingStatistics, mcEstimate, samples, numSamples);
         OPENPGL_ASSERT(stats.splittingStatistics.isValid());
-
+        // OLD
         if (stats.numSamplesAfterLastSplit >= cfg.minSamplesForSplitting)
         {
             typename WeightedEMFactory::PartialFittingMask mask;
@@ -424,7 +424,7 @@ void AdaptiveSplitAndMergeFactory<TVMMDistribution>::update(VMM &vmm, Statistics
             std::cout << "update: totalSplitCount = " << totalSplitCount << "\t splitThreshold: " << cfg.splittingThreshold << std::endl;
 #endif
         }
-
+        // OLD
         OPENPGL_ASSERT(vmm.isValid());
         OPENPGL_ASSERT(vmm.getNumComponents() == stats.getNumComponents());
         OPENPGL_ASSERT(stats.isValid());
