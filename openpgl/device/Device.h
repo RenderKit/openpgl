@@ -92,7 +92,7 @@ struct Device : public IDevice
 
         if (args.spatialStructureType == PGL_SPATIAL_STRUCTURE_KDTREE && args.directionalDistributionType == PGL_DIRECTIONAL_DISTRIBUTION_PARALLAX_AWARE_VMM)
         {
-            std::cout << "PAVMM"<< std::endl;
+            std::cout << "PAVMM" << std::endl;
             using DirectionalDistributionFactory = AdaptiveSplitAndMergeFactory<ParallaxAwareVonMisesFisherMixture<VecSize, 32, true>>;
             using GuidingField = SurfaceVolumeField<VecSize, DirectionalDistributionFactory, KDTreePartitionBuilder,
                                                     VMMSurfaceSamplingDistribution<typename DirectionalDistributionFactory::Distribution, true>,
@@ -102,6 +102,10 @@ struct Device : public IDevice
             gFieldSettings.settings.decayOnSpatialSplit = 0.25f;
             gFieldSettings.settings.deterministic = args.deterministic;
             gFieldSettings.debugSettings.fitRegions = args.debugArguments.fitRegions;
+            gFieldSettings.debugSettings.dumpCacheCellData = args.debugArguments.dumpCacheCellData;
+            gFieldSettings.debugSettings.dumpCacheCellPosition = Point3(args.debugArguments.dumpCacheCellPosition.x, args.debugArguments.dumpCacheCellPosition.y, args.debugArguments.dumpCacheCellPosition.z);
+            gFieldSettings.debugSettings.dumpCacheCellLocation = args.debugArguments.dumpCacheCellLocation;
+            gFieldSettings.debugSettings.dumpUpdateDistributionData = args.debugArguments.dumpUpdateDistributionData;
 
             PGLKDTreeArguments *spatialSturctureArguments = (PGLKDTreeArguments *)args.spatialSturctureArguments;
             gFieldSettings.settings.useStochasticNNLookUp = spatialSturctureArguments->knnLookup;
@@ -142,7 +146,7 @@ struct Device : public IDevice
         }
         else if (args.spatialStructureType == PGL_SPATIAL_STRUCTURE_KDTREE && args.directionalDistributionType == PGL_DIRECTIONAL_DISTRIBUTION_PARALLAX_AWARE_VMM_V2)
         {
-            std::cout << "PAVMMV2"<< std::endl;
+            std::cout << "PAVMMV2" << std::endl;
             using DirectionalDistributionFactory = AdaptiveSplitAndMergeFactoryV2<ParallaxAwareVonMisesFisherMixture<VecSize, 32, true>>;
             using GuidingField = SurfaceVolumeField<VecSize, DirectionalDistributionFactory, KDTreePartitionBuilder,
                                                     VMMSurfaceSamplingDistribution<typename DirectionalDistributionFactory::Distribution, true>,
@@ -152,6 +156,9 @@ struct Device : public IDevice
             gFieldSettings.settings.decayOnSpatialSplit = 0.25f;
             gFieldSettings.settings.deterministic = args.deterministic;
             gFieldSettings.debugSettings.fitRegions = args.debugArguments.fitRegions;
+            gFieldSettings.debugSettings.dumpCacheCellData = args.debugArguments.dumpCacheCellData;
+            gFieldSettings.debugSettings.dumpCacheCellPosition = Point3(args.debugArguments.dumpCacheCellPosition.x, args.debugArguments.dumpCacheCellPosition.y, args.debugArguments.dumpCacheCellPosition.z);
+            gFieldSettings.debugSettings.dumpCacheCellLocation = args.debugArguments.dumpCacheCellLocation;
 
             PGLKDTreeArguments *spatialSturctureArguments = (PGLKDTreeArguments *)args.spatialSturctureArguments;
             gFieldSettings.settings.useStochasticNNLookUp = spatialSturctureArguments->knnLookup;
@@ -201,6 +208,9 @@ struct Device : public IDevice
             gFieldSettings.settings.decayOnSpatialSplit = 0.25f;
             gFieldSettings.settings.deterministic = args.deterministic;
             gFieldSettings.debugSettings.fitRegions = args.debugArguments.fitRegions;
+            gFieldSettings.debugSettings.dumpCacheCellData = args.debugArguments.dumpCacheCellData;
+            gFieldSettings.debugSettings.dumpCacheCellPosition = Point3(args.debugArguments.dumpCacheCellPosition.x, args.debugArguments.dumpCacheCellPosition.y, args.debugArguments.dumpCacheCellPosition.z);
+            gFieldSettings.debugSettings.dumpCacheCellLocation = args.debugArguments.dumpCacheCellLocation;
 
             PGLKDTreeArguments *spatialSturctureArguments = (PGLKDTreeArguments *)args.spatialSturctureArguments;
             gFieldSettings.settings.useStochasticNNLookUp = spatialSturctureArguments->knnLookup;
@@ -250,6 +260,9 @@ struct Device : public IDevice
             gFieldSettings.settings.decayOnSpatialSplit = 0.25f;
             gFieldSettings.settings.deterministic = args.deterministic;
             gFieldSettings.debugSettings.fitRegions = args.debugArguments.fitRegions;
+            gFieldSettings.debugSettings.dumpCacheCellData = args.debugArguments.dumpCacheCellData;
+            gFieldSettings.debugSettings.dumpCacheCellPosition = Point3(args.debugArguments.dumpCacheCellPosition.x, args.debugArguments.dumpCacheCellPosition.y, args.debugArguments.dumpCacheCellPosition.z);
+            gFieldSettings.debugSettings.dumpCacheCellLocation = args.debugArguments.dumpCacheCellLocation;
 
             PGLKDTreeArguments *spatialSturctureArguments = (PGLKDTreeArguments *)args.spatialSturctureArguments;
             gFieldSettings.settings.useStochasticNNLookUp = spatialSturctureArguments->knnLookup;
