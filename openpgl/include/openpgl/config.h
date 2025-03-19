@@ -114,6 +114,11 @@ extern "C"
     struct PGLDebugArguments
     {
         bool fitRegions{true};
+        bool dumpUpdateDistributionData{false};
+
+        bool dumpCacheCellData{false};
+        pgl_point3f dumpCacheCellPosition;
+        char dumpCacheCellLocation[512];
     };
 
     struct PGLFieldArguments

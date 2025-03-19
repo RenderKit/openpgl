@@ -19,6 +19,7 @@ enum DebugType
     COMPARE_SAMPLES,
     COMPARE_FIELDS,
     UPDATE_COMPARE_FIELDS,
+    DUMP_UPDATE,
     NONE
 };
 
@@ -30,11 +31,13 @@ inline bool file_exists(const std::string &file_name)
 
 struct DebugParams
 {
-    DebugType type{NONE};
+    DebugType type{HELP};
     std::string field_file_name{""};
     std::string field_file_name_comp{""};
+    std::string field_file_name_out{""};
     std::string samples_file_name{""};
     std::string samples_file_name_comp{""};
+    std::string dump_file_name{""};
     std::string obj_out_file_name{""};
 
     PGL_DEVICE_TYPE device_type{PGL_DEVICE_TYPE_NONE};
@@ -148,6 +151,23 @@ struct DebugParams
                     valid = false;
                 }
                 break;
+            case DUMP_UPDATE:
+                if (field_file_name == "" || !file_exists(field_file_name))
+                {
+                    std::cout << "ERROR: Field file not set or does not exists: " << field_file_name << std::endl;
+                    valid = false;
+                }
+                if (dump_file_name == "" || !file_exists(dump_file_name))
+                {
+                    std::cout << "ERROR: dump file not set or does not exists: " << dump_file_name << std::endl;
+                    valid = false;
+                }
+                if (device_type == PGL_DEVICE_TYPE_NONE)
+                {
+                    std::cout << "ERROR: Device type not set." << std::endl;
+                    valid = false;
+                }
+                break;
             case NONE:
                 valid = false;
                 break;
@@ -203,6 +223,10 @@ bool parseCommandLine(std::list<std::string> &args, DebugParams &debugParams)
                 else if (str_type == "updateCompareFields")
                 {
                     debugParams.type = DebugType::UPDATE_COMPARE_FIELDS;
+                }
+                else if (str_type == "dumpUpdate")
+                {
+                    debugParams.type = DebugType::DUMP_UPDATE;
                 }
                 else
                 {
@@ -294,6 +318,33 @@ bool parseCommandLine(std::list<std::string> &args, DebugParams &debugParams)
                 return false;
             }
         }
+        else if (arg == "-fieldOut")
+        {
+            std::cout << "fieldOut" << std::endl;
+            ++it;
+            if (it != args.end())
+            {
+                const std::string str_samples = *it;
+                debugParams.field_file_name_out = str_samples;
+            }
+            else
+            {
+                return false;
+            }
+        }
+        else if (arg == "-dump")
+        {
+            ++it;
+            if (it != args.end())
+            {
+                const std::string str_samples = *it;
+                debugParams.dump_file_name = str_samples;
+            }
+            else
+            {
+                return false;
+            }
+        }
         else if (arg == "-out")
         {
             ++it;
@@ -357,7 +408,7 @@ void print_help()
 
 void update_field(DebugParams &debugParams)
 {
-    openpgl::cpp::Device device(debugParams.device_type);
+    openpgl::cpp::Device device(debugParams.device_type, 1);
     openpgl::cpp::Field field(&device, debugParams.field_file_name);
     openpgl::cpp::SampleStorage sampleStorage(debugParams.samples_file_name);
 
@@ -373,6 +424,12 @@ void update_field(DebugParams &debugParams)
     std::cout << "Validate Updated Field:" << std::endl;
     bool fieldUpdatedValid = field.Validate();
     std::cout << "  updated field: is " << (fieldUpdatedValid ? "valid" : "NOT valid") << std::endl;
+
+    if (debugParams.field_file_name_out != "")
+    {
+        std::cout << "stroe field: " << debugParams.field_file_name_out << std::endl;
+        field.Store(debugParams.field_file_name_out);
+    }
 }
 
 void validate_field(DebugParams &debugParams)
@@ -453,6 +510,18 @@ void update_compare_fields(DebugParams &debugParams)
     std::cout << "Compare Fields:" << std::endl;
     bool equal = (field.operator==(fieldComp));
     std::cout << "  Fields are: " << (equal ? "EQUAL" : "NOT-EQUAL") << std::endl;
+}
+
+void dump_update(DebugParams &debugParams)
+{
+    openpgl::cpp::Device device(debugParams.device_type);
+    openpgl::cpp::Field field(&device, debugParams.field_file_name);
+
+    std::cout << "Validate Field:" << std::endl;
+    bool fieldValid = field.Validate();
+    std::cout << "  -field: " << debugParams.field_file_name << " is " << (fieldValid ? "valid" : "NOT valid") << std::endl;
+
+    field.RunUpdateDump(debugParams.dump_file_name, true);
 }
 
 void export_samples(DebugParams &debugParams)
@@ -560,6 +629,9 @@ int main(int argc, char *argv[])
                 break;
             case UPDATE_COMPARE_FIELDS:
                 update_compare_fields(debugParams);
+                break;
+            case DUMP_UPDATE:
+                dump_update(debugParams);
                 break;
             default:
                 print_help();

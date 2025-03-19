@@ -257,6 +257,24 @@ extern "C" OPENPGL_DLLEXPORT PGLFieldStatistics pglFieldGetVolumeStatistics(PGLF
     return (PGLFieldStatistics)gField->getVolumeStatistics();
 }
 
+extern "C" OPENPGL_DLLEXPORT PGLRange pglFieldGetSurfaceSampleRange(PGLField field, size_t id)
+{
+    const auto *gField = (const IGuidingField *)field;
+    return gField->getSurfaceSampleRange(id);
+}
+
+extern "C" OPENPGL_DLLEXPORT PGLRange pglFieldGetVolumeSampleRange(PGLField field, size_t id)
+{
+    const auto *gField = (const IGuidingField *)field;
+    return gField->getVolumeSampleRange(id);
+}
+
+extern "C" OPENPGL_DLLEXPORT void pglFieldRunUpdateDump(PGLField field, const char *updateDumpFileName, bool surface)
+{
+    const auto *gField = (const IGuidingField *)field;
+    gField->runUpdateDump(updateDumpFileName, surface);
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // SampleStorage //////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
@@ -786,7 +804,7 @@ extern "C" OPENPGL_DLLEXPORT void pglFieldArgumentsSetDefaults(PGLFieldArguments
 
     fieldArguments.deterministic = deterministic;
     fieldArguments.debugArguments.fitRegions = true;
-
+    fieldArguments.debugArguments.dumpUpdateDistributionData = false;
     switch (directionalType)
     {
         default:
