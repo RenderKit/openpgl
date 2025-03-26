@@ -246,8 +246,8 @@ std::string ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents, UseParall
     ss << "---------------------- " << std::endl;
     ss << "numComponents: " << this->_numComponents << std::endl;
     float sumWeights = 0.0f;
-    for ( int k = 0; k < this->_numComponents; k++)
-    //for (int k = 0; k < maxComponents; k++)
+    for (int k = 0; k < this->_numComponents; k++)
+    // for (int k = 0; k < maxComponents; k++)
     {
         const div_t tmp = div(k, static_cast<int>(VecSize));
         ss << "vmm[" << k << "]: " << "weight: " << this->_weights[tmp.quot][tmp.rem];
