@@ -54,7 +54,7 @@ struct SurfaceVolumeField : public ISurfaceVolumeField
         _surfaceSamplingDistribution->init(distribution, position);
         _surfaceSamplingDistribution->setId(id);
         _surfaceSamplingDistribution->setRegion(region);
-        //std::cout << region->trainingStatistics.toString() << std::endl; 
+        // std::cout << region->trainingStatistics.toString() << std::endl;
         return true;
     }
 
