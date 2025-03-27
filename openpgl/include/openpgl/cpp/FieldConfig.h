@@ -3,8 +3,9 @@
 
 #pragma once
 
-#include "../openpgl.h"
 #include <cstring>
+
+#include "../openpgl.h"
 namespace openpgl
 {
 namespace cpp
@@ -110,16 +111,19 @@ OPENPGL_INLINE void FieldConfig::SetUseKnnIsLookup(const bool useKnnIsLookup)
     reinterpret_cast<PGLKDTreeArguments *>(m_args.spatialSturctureArguments)->isKnnLookup = useKnnIsLookup;
 }
 
-OPENPGL_INLINE void FieldConfig::SetDebugDumpCacheCellData(const bool dumpCacheCellData) {
+OPENPGL_INLINE void FieldConfig::SetDebugDumpCacheCellData(const bool dumpCacheCellData)
+{
     m_args.debugArguments.dumpCacheCellData = dumpCacheCellData;
 }
 
-OPENPGL_INLINE void FieldConfig::SetDebugDumpCacheCellPosition(const pgl_point3f &dumpCacheCellPosition) {
+OPENPGL_INLINE void FieldConfig::SetDebugDumpCacheCellPosition(const pgl_point3f &dumpCacheCellPosition)
+{
     m_args.debugArguments.dumpCacheCellPosition = dumpCacheCellPosition;
 }
 
-OPENPGL_INLINE void FieldConfig::SetDebugDumpCacheCellLocation(const std::string &dumpCacheCellLocation) {
-    strcpy(m_args.debugArguments.dumpCacheCellLocation, dumpCacheCellLocation.c_str()); 
+OPENPGL_INLINE void FieldConfig::SetDebugDumpCacheCellLocation(const std::string &dumpCacheCellLocation)
+{
+    strcpy(m_args.debugArguments.dumpCacheCellLocation, dumpCacheCellLocation.c_str());
 }
 
 }  // namespace cpp

@@ -186,17 +186,21 @@ std::string AdaptiveSplitAndMergeFactoryV2<TVMMDistribution>::Statistics::toStri
 {
     std::stringstream ss;
     ss << "Statistics:" << std::endl;
-    //ss << "\tsufficientStatistics:" << sufficientStatistics.toString() << std::endl;
-    //ss << "\tsplittingStatistics:" << splittingStatistics.toString() << std::endl;
-    //ss << "\tnumSamplesAfterLastSplit = " << numSamplesAfterLastSplit << std::endl;
-    //ss << "\tnumSamplesAfterLastMerge = " << numSamplesAfterLastMerge << std::endl;
-    
+    // ss << "\tsufficientStatistics:" << sufficientStatistics.toString() << std::endl;
+    // ss << "\tsplittingStatistics:" << splittingStatistics.toString() << std::endl;
+    // ss << "\tnumSamplesAfterLastSplit = " << numSamplesAfterLastSplit << std::endl;
+    // ss << "\tnumSamplesAfterLastMerge = " << numSamplesAfterLastMerge << std::endl;
+
     for (int ii = 0; ii < splittingStatistics.numComponents; ii++)
     {
         std::cout << "weightsEst0 = " << splittingStatistics.getWeightsEst(ii) << "\t weightsEst2nd0 = " << splittingStatistics.getWeights2ndMomentEst(ii);
-        std::cout << "\t var = " << sqrt(std::abs(splittingStatistics.getWeights2ndMomentEst(ii) - splittingStatistics.getWeightsEst(ii)*splittingStatistics.getWeightsEst(ii))) << "\t relVar = " << sqrt(std::abs(splittingStatistics.getWeights2ndMomentEst(ii) - splittingStatistics.getWeightsEst(ii)*splittingStatistics.getWeightsEst(ii))) / splittingStatistics.getWeightsEst(ii);
-        std::cout << "\t var2 = " << sqrt(splittingStatistics.getWeightsVarianceEst(ii)) << "\t relVar = " << sqrt(splittingStatistics.getWeightsVarianceEst(ii)) / splittingStatistics.getWeightsEst(ii) << std::endl;
-        
+        std::cout << "\t var = " << sqrt(std::abs(splittingStatistics.getWeights2ndMomentEst(ii) - splittingStatistics.getWeightsEst(ii) * splittingStatistics.getWeightsEst(ii)))
+                  << "\t relVar = "
+                  << sqrt(std::abs(splittingStatistics.getWeights2ndMomentEst(ii) - splittingStatistics.getWeightsEst(ii) * splittingStatistics.getWeightsEst(ii))) /
+                         splittingStatistics.getWeightsEst(ii);
+        std::cout << "\t var2 = " << sqrt(splittingStatistics.getWeightsVarianceEst(ii))
+                  << "\t relVar = " << sqrt(splittingStatistics.getWeightsVarianceEst(ii)) / splittingStatistics.getWeightsEst(ii) << std::endl;
+
         std::cout << std::endl;
     }
 
@@ -306,7 +310,102 @@ void AdaptiveSplitAndMergeFactoryV2<TVMMDistribution>::prepareSamples(SampleData
     WeightedEMFactory factory = WeightedEMFactory();
     factory.prepareSamples(samples, numSamples, sampleStatistics, cfg.weightedEMCfg);
 }
+#if 0
+template<class TVMMDistribution>
+void AdaptiveSplitAndMergeFactoryV2<TVMMDistribution>::fit(VMM &vmm, Statistics &stats, const SampleData* samples, const size_t numSamples, const Configuration &cfg, FittingStatistics &fitStats) const
+{
+    const size_t numComponents = cfg.weightedEMCfg.initK;
+    stats.clear(numComponents);
 
+    auto previousSufficientStatistics = stats.sufficientStatistics;
+    // intial fit
+    WeightedEMFactory factory = WeightedEMFactory();
+    typename WeightedEMFactory::FittingStatistics wemFitStats;
+    factory.fitMixture(vmm, stats.sufficientStatistics, samples, numSamples, cfg.weightedEMCfg, wemFitStats);
+    factory.initComponentDistances(vmm, stats.sufficientStatistics, samples, numSamples);
+    OPENPGL_ASSERT(vmm.isValid());
+    OPENPGL_ASSERT(vmm.getNumComponents() == stats.sufficientStatistics.getNumComponents());
+    OPENPGL_ASSERT(stats.isValid());
+/* */
+
+    float mcEstimate = stats.sufficientStatistics.getSumWeights() / stats.sufficientStatistics.getNumSamples();
+    Splitter splitter = Splitter();
+    splitter.CalculateSplitStatistics(vmm, stats.splittingStatistics, mcEstimate, samples, numSamples);
+    //Merger merger = Merger();
+    //merger.PerformMerging(vmm, cfg.mergingThreshold, cfg.splittingThreshold, false, stats.sufficientStatistics, stats.splittingStatistics);
+    //splitter.CalculateSplitStatistics(vmm, stats.splittingStatistics, mcEstimate, samples, numSamples);
+    //std::cout << "stats.fit: " << stats.sufficientStatistics.getNumSamples() << "\t" << stats.splittingStatistics.getNumSamples() << std::endl;
+    VMM vmmOld = vmm;
+    auto splitStatsBefore = stats.splittingStatistics;
+    //if (false)
+    if (cfg.useSplitAndMerge)
+    {
+
+        bool alreadySplitted[VMM::MaxComponents];
+        for (int i = 0; i < VMM::MaxComponents; i++)
+        {
+            alreadySplitted[i] = false;
+        }
+
+        // calculate the estimate of the integral of the function (e.g. radiance or importance) fitted by the VMM
+        //float mcEstimate = stats.sufficientStatistics.getSumWeights() / stats.sufficientStatistics.getNumSamples();
+
+        // split the fitted components of the inital fit to match
+        // the observed samples
+#ifdef OPENPGL_SHOW_PRINT_OUTS
+        std::cout << stats.sufficientStatistics.toString() << std::endl;
+#endif
+        bool split = true;
+        Splitter splitter = Splitter();
+        while (split && vmm.getNumComponents() < VMM::MaxComponents)
+        {
+            //size_t splitIdx = stats.splittingStatistics.getHighestValidChiSquareSplitComponent(vmm, alreadySplitted);
+            SplitCandidate splitCandidate = stats.splittingStatistics.getHighestValidChiSquareSplitComponent(vmm, vmmOld, splitStatsBefore, alreadySplitted, true);
+            size_t splitIdx = splitCandidate.componentIndex;
+            //std::cout << "splitIdx = " << splitIdx << "\t splitIdx2 = " << vmm.getNumComponents() << std::endl;
+            if (splitIdx < VMM::MaxComponents)
+            {
+                float chi2Est = stats.splittingStatistics.getChiSquareEst(splitIdx);
+                if(chi2Est > cfg.splittingThreshold)
+                {
+                    bool splitSuccess = splitter.SplitAndRefit(vmm, mcEstimate, splitIdx, stats.splittingStatistics, stats.sufficientStatistics, samples, numSamples, cfg.weightedEMCfg, true);
+                    if(!splitSuccess){
+                        alreadySplitted[splitIdx] = true;
+                    }
+                }
+                else{
+                    split = false;
+                }
+            } else {
+                split = false;
+            }
+            //split = false;
+        }
+        //std::cout << "stats.split: " << stats.sufficientStatistics.getNumSamples() << "\t" << stats.splittingStatistics.getNumSamples() << std::endl;
+        //splitter.PerformRecursiveSplitting(vmm, stats.sufficientStatistics, cfg.splittingThreshold, mcEstimate, samples, numSamples, cfg.weightedEMCfg);
+
+        //splitter.CalculateSplitStatistics(vmm, stats.splittingStatistics, mcEstimate, samples, numSamples);
+
+        OPENPGL_ASSERT(vmm.getNumComponents() == stats.getNumComponents());
+        OPENPGL_ASSERT(vmm.isValid());
+
+        Merger merger = Merger();
+        merger.PerformMerging(vmm, cfg.mergingThreshold, cfg.splittingThreshold, false, stats.sufficientStatistics, stats.splittingStatistics);
+        OPENPGL_ASSERT(vmm.isValid());
+        //splitter.CalculateSplitStatistics(vmm, stats.splittingStatistics, mcEstimate, samples, numSamples);
+    }
+
+    //splitter.CalculateSplitStatistics(vmm, stats.splittingStatistics, mcEstimate, samples, numSamples);
+
+    stats.numSamplesAfterLastSplit = 0.0f;
+    stats.numSamplesAfterLastMerge = 0.0f;
+
+    factory.initComponentDistances(vmm, stats.sufficientStatistics, samples, numSamples);
+    OPENPGL_ASSERT(stats.sufficientStatistics.isValid());
+    OPENPGL_ASSERT(vmm.isValid());
+}
+
+#else
 template <class TVMMDistribution>
 void AdaptiveSplitAndMergeFactoryV2<TVMMDistribution>::fit(VMM &vmm, Statistics &stats, const SampleData *samples, const size_t numSamples, const Configuration &cfg,
                                                            FittingStatistics &fitStats) const
@@ -322,7 +421,14 @@ void AdaptiveSplitAndMergeFactoryV2<TVMMDistribution>::fit(VMM &vmm, Statistics 
     OPENPGL_ASSERT(vmm.getNumComponents() == stats.sufficientStatistics.getNumComponents());
     OPENPGL_ASSERT(stats.isValid());
     /* */
+    /*
+        std::cout << vmm.toString()<< std::endl;
+        float mcEstimate = stats.sufficientStatistics.getSumWeights() / stats.sufficientStatistics.getNumSamples();
+        Splitter splitter = Splitter();
+        splitter.CalculateSplitStatistics(vmm, stats.splittingStatistics, mcEstimate, samples, numSamples);
 
+        std::cout << stats.splittingStatistics.toString()<< std::endl;
+    */
     if (cfg.useSplitAndMerge)
     {
         // calculate the estimate of the integral of the function (e.g. radiance or importance) fitted by the VMM
@@ -353,6 +459,7 @@ void AdaptiveSplitAndMergeFactoryV2<TVMMDistribution>::fit(VMM &vmm, Statistics 
     OPENPGL_ASSERT(stats.sufficientStatistics.isValid());
     OPENPGL_ASSERT(vmm.isValid());
 }
+#endif
 
 #if 1
 template <class TVMMDistribution>
@@ -394,20 +501,26 @@ void AdaptiveSplitAndMergeFactoryV2<TVMMDistribution>::update(VMM &vmm, Statisti
         OPENPGL_ASSERT(vmm._numComponents == stats.splittingStatistics.numComponents);
         Splitter splitter = Splitter();
         // OPENPGL_ASSERT(stats.splittingStatistics.isValid());
-        
+
         auto splitStatsBefore = stats.splittingStatistics;
-        splitter.UpdateSplitStatistics(vmm, stats.splittingStatistics, mcEstimate, samples, numSamples);
+        splitter.UpdateSplitStatistics(vmm, stats.splittingStatistics, mcEstimate, samples, numSamples, true, false);
         auto splitStatsAfter = stats.splittingStatistics;
-/*
-        for (int ii = 0; ii < vmm.getNumComponents(); ii++)
-        {
-            //std::cout << "chi2Est0 = " << splitStatsBefore.getChiSquareEst(i) << "\t chi22nd = " << splitStatsBefore.getChiSquare2ndMomentEst(i) << "\t var = " << sqrt(splitStatsBefore.getChiSquare2ndMomentEst(i) - splitStatsBefore.getChiSquareEst(i)*splitStatsBefore.getChiSquareEst(i)) << std::endl;
-            //std::cout << "chi2Est1 = " << splitStatsAfter.getChiSquareEst(i) << "\t chi22nd = " << splitStatsAfter.getChiSquare2ndMomentEst(i) << "\t var = " << sqrt(splitStatsAfter.getChiSquare2ndMomentEst(i) - splitStatsAfter.getChiSquareEst(i)*splitStatsAfter.getChiSquareEst(i)) << std::endl;
-            std::cout << "weightsEst0 = " << splitStatsBefore.getWeightsEst(ii) << "\t weightsEst2nd0 = " << splitStatsBefore.getWeights2ndMomentEst(ii) << "\t var = " << sqrt(splitStatsBefore.getWeights2ndMomentEst(ii) - splitStatsBefore.getWeightsEst(ii)*splitStatsBefore.getWeightsEst(ii)) << "\t relVar = " << sqrt(splitStatsBefore.getWeights2ndMomentEst(ii) - splitStatsBefore.getWeightsEst(ii)*splitStatsBefore.getWeightsEst(ii)) / splitStatsBefore.getWeightsEst(ii)<< std::endl;
-            std::cout << "weightsEst1 = " << splitStatsAfter.getWeightsEst(ii) << "\t weightsEst2nd1 = " << splitStatsAfter.getWeights2ndMomentEst(ii) << "\t var = " << sqrt(splitStatsAfter.getWeights2ndMomentEst(ii) - splitStatsAfter.getWeightsEst(ii)*splitStatsAfter.getWeightsEst(ii)) << "\t relVar = " << sqrt(splitStatsAfter.getWeights2ndMomentEst(ii) - splitStatsAfter.getWeightsEst(ii)*splitStatsAfter.getWeightsEst(ii)) / splitStatsAfter.getWeightsEst(ii) << std::endl;
-            std::cout << std::endl;
-        }
-*/
+        /*
+                for (int ii = 0; ii < vmm.getNumComponents(); ii++)
+                {
+                    //std::cout << "chi2Est0 = " << splitStatsBefore.getChiSquareEst(i) << "\t chi22nd = " << splitStatsBefore.getChiSquare2ndMomentEst(i) << "\t var = " <<
+           sqrt(splitStatsBefore.getChiSquare2ndMomentEst(i) - splitStatsBefore.getChiSquareEst(i)*splitStatsBefore.getChiSquareEst(i)) << std::endl;
+                    //std::cout << "chi2Est1 = " << splitStatsAfter.getChiSquareEst(i) << "\t chi22nd = " << splitStatsAfter.getChiSquare2ndMomentEst(i) << "\t var = " <<
+           sqrt(splitStatsAfter.getChiSquare2ndMomentEst(i) - splitStatsAfter.getChiSquareEst(i)*splitStatsAfter.getChiSquareEst(i)) << std::endl; std::cout << "weightsEst0 = " <<
+           splitStatsBefore.getWeightsEst(ii) << "\t weightsEst2nd0 = " << splitStatsBefore.getWeights2ndMomentEst(ii) << "\t var = " <<
+           sqrt(splitStatsBefore.getWeights2ndMomentEst(ii) - splitStatsBefore.getWeightsEst(ii)*splitStatsBefore.getWeightsEst(ii)) << "\t relVar = " <<
+           sqrt(splitStatsBefore.getWeights2ndMomentEst(ii) - splitStatsBefore.getWeightsEst(ii)*splitStatsBefore.getWeightsEst(ii)) / splitStatsBefore.getWeightsEst(ii)<<
+           std::endl; std::cout << "weightsEst1 = " << splitStatsAfter.getWeightsEst(ii) << "\t weightsEst2nd1 = " << splitStatsAfter.getWeights2ndMomentEst(ii) << "\t var = " <<
+           sqrt(splitStatsAfter.getWeights2ndMomentEst(ii) - splitStatsAfter.getWeightsEst(ii)*splitStatsAfter.getWeightsEst(ii)) << "\t relVar = " <<
+           sqrt(splitStatsAfter.getWeights2ndMomentEst(ii) - splitStatsAfter.getWeightsEst(ii)*splitStatsAfter.getWeightsEst(ii)) / splitStatsAfter.getWeightsEst(ii) << std::endl;
+                    std::cout << std::endl;
+                }
+        */
         OPENPGL_ASSERT(stats.splittingStatistics.isValid());
         // NEW
         bool alreadySplitted[VMM::MaxComponents];
@@ -415,8 +528,8 @@ void AdaptiveSplitAndMergeFactoryV2<TVMMDistribution>::update(VMM &vmm, Statisti
         {
             alreadySplitted[i] = false;
         }
-        //if(false)
-        // if (stats.numSamplesAfterLastSplit >= 1000/8)
+        // if(false)
+        //  if (stats.numSamplesAfterLastSplit >= 1000/8)
         {
             bool split = true;
             // Splitter splitter = Splitter();
@@ -424,7 +537,7 @@ void AdaptiveSplitAndMergeFactoryV2<TVMMDistribution>::update(VMM &vmm, Statisti
             {
                 OPENPGL_ASSERT(vmm._numComponents == stats.splittingStatistics.numComponents);
                 bool splitSuccess = false;
-                SplitCandidate splitCandidate = stats.splittingStatistics.getHighestValidChiSquareIdx(vmm, vmmOld, splitStatsBefore, alreadySplitted, true);
+                SplitCandidate splitCandidate = stats.splittingStatistics.getHighestValidChiSquareSplitComponent(vmm, vmmOld, splitStatsBefore, alreadySplitted, true);
 
                 //            float weightOld = vmmOld.getComponentWeight(splitIdx);
                 //            float weightNew = vmm.getComponentWeight(splitIdx);
@@ -434,7 +547,7 @@ void AdaptiveSplitAndMergeFactoryV2<TVMMDistribution>::update(VMM &vmm, Statisti
                 {
                     // alreadySplitted[splitIdx] = true;
                     // alreadySplitted[vmm.getNumComponents()] = true;
-                    //auto splitStatsBefore = stats.splittingStatistics;
+                    // auto splitStatsBefore = stats.splittingStatistics;
                     float chi2Est = stats.splittingStatistics.getChiSquareEst(splitCandidate.componentIndex);
                     // std::cout << "splitIdx = " << splitIdx << "\t splitIdx2 = " << vmm.getNumComponents() << "\t chi2Est = " << chi2Est << std::endl;
                     if (chi2Est > cfg.splittingThreshold)
@@ -442,30 +555,35 @@ void AdaptiveSplitAndMergeFactoryV2<TVMMDistribution>::update(VMM &vmm, Statisti
                         splitSuccess = splitter.SplitAndUpdate(vmm, mcEstimate, splitCandidate, stats.splittingStatistics, stats.sufficientStatistics, samples, numSamples,
                                                                cfg.weightedEMCfg, true);
                     }
-                    auto splitStatsAfter = stats.splittingStatistics;
-/*
-                    int ii = splitCandidate.componentIndex;
-                    //for (int ii = 0; ii < vmm.getNumComponents(); ii++)
-                    {
-                        std::cout << "weightsEst0 = " << splitStatsBefore.getWeightsEst(ii) << "\t weightsEst2nd0 = " << splitStatsBefore.getWeights2ndMomentEst(ii) << "\t var = " << sqrt(splitStatsBefore.getWeights2ndMomentEst(ii) - splitStatsBefore.getWeightsEst(ii)*splitStatsBefore.getWeightsEst(ii)) << "\t relVar = " << sqrt(splitStatsBefore.getWeights2ndMomentEst(ii) - splitStatsBefore.getWeightsEst(ii)*splitStatsBefore.getWeightsEst(ii)) / splitStatsBefore.getWeightsEst(ii)<< std::endl;
-                        std::cout << "weightsEst1 = " << splitStatsAfter.getWeightsEst(ii) << "\t weightsEst2nd1 = " << splitStatsAfter.getWeights2ndMomentEst(ii) << "\t var = " << sqrt(splitStatsAfter.getWeights2ndMomentEst(ii) - splitStatsAfter.getWeightsEst(ii)*splitStatsAfter.getWeightsEst(ii)) << "\t relVar = " << sqrt(splitStatsAfter.getWeights2ndMomentEst(ii) - splitStatsAfter.getWeightsEst(ii)*splitStatsAfter.getWeightsEst(ii)) / splitStatsAfter.getWeightsEst(ii) << std::endl;
-                        std::cout << std::endl;
-                    }
-*/
+                    /*
+                                        auto splitStatsAfter = stats.splittingStatistics;
+                                        int ii = splitCandidate.componentIndex;
+                                        //for (int ii = 0; ii < vmm.getNumComponents(); ii++)
+                                        {
+                                        std::cout << "weightsEst0 = " << splitStatsBefore.getWeightsEst(ii) << "\t weightsEst2nd0 = " <<
+                                        splitStatsBefore.getWeights2ndMomentEst(ii) << "\t var = " << sqrt(splitStatsBefore.getWeights2ndMomentEst(ii) -
+                                        splitStatsBefore.getWeightsEst(ii)*splitStatsBefore.getWeightsEst(ii)) << "\t relVar = " << sqrt(splitStatsBefore.getWeights2ndMomentEst(ii)
+                       - splitStatsBefore.getWeightsEst(ii)*splitStatsBefore.getWeightsEst(ii)) / splitStatsBefore.getWeightsEst(ii)<< std::endl; std::cout << "weightsEst1 = " <<
+                                        splitStatsAfter.getWeightsEst(ii) << "\t weightsEst2nd1 = " << splitStatsAfter.getWeights2ndMomentEst(ii) << "\t var = " <<
+                                        sqrt(splitStatsAfter.getWeights2ndMomentEst(ii) - splitStatsAfter.getWeightsEst(ii)*splitStatsAfter.getWeightsEst(ii)) << "\t relVar = " <<
+                                        sqrt(splitStatsAfter.getWeights2ndMomentEst(ii) - splitStatsAfter.getWeightsEst(ii)*splitStatsAfter.getWeightsEst(ii)) /
+                       splitStatsAfter.getWeightsEst(ii) << std::endl; std::cout << std::endl;
+                                                            }
+                    */
+                    // wether or not the split was succesfull we mark the component as splitted to a void
+                    // splitting it again
                     alreadySplitted[splitCandidate.componentIndex] = true;
+                    // if the split was succesfull avoid splitting the new component recursivly
                     if (splitSuccess)
-                        alreadySplitted[vmm.getNumComponents() - 1] = true;
-                    else
                     {
-// STEP ONE FIX
-                        split = false;
+                        alreadySplitted[vmm.getNumComponents() - 1] = true;
                     }
                 }
                 else
                 {
+                    // We stop the splitting process, if we did not find a split candidate or if the number of VMM components reached its limit
                     split = false;
                 }
-                // split = false;
                 OPENPGL_ASSERT(vmm._numComponents == stats.splittingStatistics.numComponents);
             }
             stats.numSamplesAfterLastSplit = 0.0f;
@@ -477,7 +595,7 @@ void AdaptiveSplitAndMergeFactoryV2<TVMMDistribution>::update(VMM &vmm, Statisti
 
         // if (stats.numSamplesAfterLastMerge >= cfg.minSamplesForMerging)
         if (stats.numSamplesAfterLastMerge >= 1000 / 4)
-        //if (false)
+        // if (false)
         {
             Merger merger = Merger();
             size_t numMerges = merger.PerformMerging(vmm, cfg.mergingThreshold, cfg.splittingThreshold, true, stats.sufficientStatistics, stats.splittingStatistics);

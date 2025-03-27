@@ -103,7 +103,8 @@ struct Device : public IDevice
             gFieldSettings.settings.deterministic = args.deterministic;
             gFieldSettings.debugSettings.fitRegions = args.debugArguments.fitRegions;
             gFieldSettings.debugSettings.dumpCacheCellData = args.debugArguments.dumpCacheCellData;
-            gFieldSettings.debugSettings.dumpCacheCellPosition = Point3(args.debugArguments.dumpCacheCellPosition.x, args.debugArguments.dumpCacheCellPosition.y, args.debugArguments.dumpCacheCellPosition.z);
+            gFieldSettings.debugSettings.dumpCacheCellPosition =
+                Point3(args.debugArguments.dumpCacheCellPosition.x, args.debugArguments.dumpCacheCellPosition.y, args.debugArguments.dumpCacheCellPosition.z);
             gFieldSettings.debugSettings.dumpCacheCellLocation = args.debugArguments.dumpCacheCellLocation;
             gFieldSettings.debugSettings.dumpUpdateDistributionData = args.debugArguments.dumpUpdateDistributionData;
 
@@ -157,7 +158,8 @@ struct Device : public IDevice
             gFieldSettings.settings.deterministic = args.deterministic;
             gFieldSettings.debugSettings.fitRegions = args.debugArguments.fitRegions;
             gFieldSettings.debugSettings.dumpCacheCellData = args.debugArguments.dumpCacheCellData;
-            gFieldSettings.debugSettings.dumpCacheCellPosition = Point3(args.debugArguments.dumpCacheCellPosition.x, args.debugArguments.dumpCacheCellPosition.y, args.debugArguments.dumpCacheCellPosition.z);
+            gFieldSettings.debugSettings.dumpCacheCellPosition =
+                Point3(args.debugArguments.dumpCacheCellPosition.x, args.debugArguments.dumpCacheCellPosition.y, args.debugArguments.dumpCacheCellPosition.z);
             gFieldSettings.debugSettings.dumpCacheCellLocation = args.debugArguments.dumpCacheCellLocation;
 
             PGLKDTreeArguments *spatialSturctureArguments = (PGLKDTreeArguments *)args.spatialSturctureArguments;
@@ -209,7 +211,8 @@ struct Device : public IDevice
             gFieldSettings.settings.deterministic = args.deterministic;
             gFieldSettings.debugSettings.fitRegions = args.debugArguments.fitRegions;
             gFieldSettings.debugSettings.dumpCacheCellData = args.debugArguments.dumpCacheCellData;
-            gFieldSettings.debugSettings.dumpCacheCellPosition = Point3(args.debugArguments.dumpCacheCellPosition.x, args.debugArguments.dumpCacheCellPosition.y, args.debugArguments.dumpCacheCellPosition.z);
+            gFieldSettings.debugSettings.dumpCacheCellPosition =
+                Point3(args.debugArguments.dumpCacheCellPosition.x, args.debugArguments.dumpCacheCellPosition.y, args.debugArguments.dumpCacheCellPosition.z);
             gFieldSettings.debugSettings.dumpCacheCellLocation = args.debugArguments.dumpCacheCellLocation;
 
             PGLKDTreeArguments *spatialSturctureArguments = (PGLKDTreeArguments *)args.spatialSturctureArguments;
@@ -261,7 +264,8 @@ struct Device : public IDevice
             gFieldSettings.settings.deterministic = args.deterministic;
             gFieldSettings.debugSettings.fitRegions = args.debugArguments.fitRegions;
             gFieldSettings.debugSettings.dumpCacheCellData = args.debugArguments.dumpCacheCellData;
-            gFieldSettings.debugSettings.dumpCacheCellPosition = Point3(args.debugArguments.dumpCacheCellPosition.x, args.debugArguments.dumpCacheCellPosition.y, args.debugArguments.dumpCacheCellPosition.z);
+            gFieldSettings.debugSettings.dumpCacheCellPosition =
+                Point3(args.debugArguments.dumpCacheCellPosition.x, args.debugArguments.dumpCacheCellPosition.y, args.debugArguments.dumpCacheCellPosition.z);
             gFieldSettings.debugSettings.dumpCacheCellLocation = args.debugArguments.dumpCacheCellLocation;
 
             PGLKDTreeArguments *spatialSturctureArguments = (PGLKDTreeArguments *)args.spatialSturctureArguments;
