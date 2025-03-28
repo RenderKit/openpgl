@@ -1191,11 +1191,11 @@ bool VonMisesFisherChiSquareComponentSplitterV2<TVMMFactory>::SplitComponent(VMM
             splitStats.sumAssignedSamples[tmpK.quot][tmpK.rem] = 0.0f;
             splitStats.numSamples[tmpK.quot][tmpK.rem] = 0.0f;
             splitStats.sumWeights[tmpK.quot][tmpK.rem] = 0.0f;
-            splitStats.splitMeans[tmpK.quot][tmpK.rem] = 0.0f;
-            splitStats.splitMeans[tmpK.quot][tmpK.rem] = 0.0f;
-            splitStats.splitWeightedSampleCovariances[tmpK.quot][tmpK.rem] = 0.0f;
-            splitStats.splitWeightedSampleCovariances[tmpK.quot][tmpK.rem] = 0.0f;
-            splitStats.splitWeightedSampleCovariances[tmpK.quot][tmpK.rem] = 0.0f;
+            splitStats.splitMeans[tmpK.quot].x[tmpK.rem] = 0.0f;
+            splitStats.splitMeans[tmpK.quot].y[tmpK.rem] = 0.0f;
+            splitStats.splitWeightedSampleCovariances[tmpK.quot].x[tmpK.rem] = 0.0f;
+            splitStats.splitWeightedSampleCovariances[tmpK.quot].y[tmpK.rem] = 0.0f;
+            splitStats.splitWeightedSampleCovariances[tmpK.quot].z[tmpK.rem] = 0.0f;
             return false;
         }
     }
