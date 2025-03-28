@@ -585,10 +585,10 @@ void VonMisesFisherChiSquareComponentSplitterV2<TVMMFactory>::PerformRecursiveSp
 #ifndef OPENPGL_USE_THREE_SPLIT
                 const div_t tmpK = div(splitComps[k].componentIndex, static_cast<int>(VMM::VectorSize));
                 SplitType splitType = (SplitType)splitStatistics.splitType[tmpK.quot][tmpK.rem];
-                //std::cout << "splitIdx = " << splitComps[k].componentIndex << "\t splitType = " << (splitType == EFirefly ? "FireFly" : "MultiModal") << std::endl;
+                // std::cout << "splitIdx = " << splitComps[k].componentIndex << "\t splitType = " << (splitType == EFirefly ? "FireFly" : "MultiModal") << std::endl;
                 bool splitSucess = true;
                 if (splitType == EFirefly)
-                //if (false)
+                // if (false)
                 {
                     splitSucess = SplitComponentFireFly(vmm, splitStatistics, suffStatistics, splitComps[k].componentIndex, factoryCfg);
                 }
@@ -755,7 +755,8 @@ void VonMisesFisherChiSquareComponentSplitterV2<TVMMFactory>::CalucalteWeightsEs
 
 template <class TVMMFactory>
 void VonMisesFisherChiSquareComponentSplitterV2<TVMMFactory>::UpdateSplitStatistics(const VMM &vmm, ComponentSplitStatistics &splitStats, const float &mcEstimate,
-                                                                                    const SampleData *data, const size_t &numData, bool updateWeightsEstimates, bool onlyConsiderFireflySamples) const
+                                                                                    const SampleData *data, const size_t &numData, bool updateWeightsEstimates,
+                                                                                    bool onlyConsiderFireflySamples) const
 {
     // std::cout << "UpdateSplitStatistics" << std::endl;
 
@@ -807,9 +808,9 @@ void VonMisesFisherChiSquareComponentSplitterV2<TVMMFactory>::UpdateSplitStatist
                 // Checking based on the assigned mean and std if the current sample is a firefly or not
                 // We use different splitting methods if a split is triggered by a firefly and not by a multi modal distribution
                 splitStats.splitType[k] = select((assignedWeight > weightMean + 3.f * weightStd), stFF, splitStats.splitType[k]);
-                
+
                 embree::vfloat<VMM::VectorSize> assignedWeightTmp = assignedWeight;
-                if(onlyConsiderFireflySamples)
+                if (onlyConsiderFireflySamples)
                     assignedWeightTmp = select((assignedWeight > weightMean + 3.f * weightStd), assignedWeight, zeros);
                 splitStats.weights[k] += assignedWeightTmp;
                 splitStats.weightedMeans[k].x += assignedWeightTmp * direction.x;

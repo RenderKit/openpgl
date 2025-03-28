@@ -42,13 +42,6 @@ struct AdaptiveSplitAndMergeFactoryV2
 
         bool useSplitAndMerge{true};
 
-        bool partialReFit{false};
-        int maxSplitItr{1};
-
-        int minSamplesForSplitting{0};
-        int minSamplesForPartialRefitting{0};
-        int minSamplesForMerging{0};
-
         void serialize(std::ostream &stream) const;
 
         void deserialize(std::istream &stream);
@@ -58,9 +51,8 @@ struct AdaptiveSplitAndMergeFactoryV2
         bool operator==(const Configuration &b) const
         {
             bool equal = true;
-            if (splittingThreshold != b.splittingThreshold || mergingThreshold != b.mergingThreshold || useSplitAndMerge != b.useSplitAndMerge || partialReFit != b.partialReFit ||
-                maxSplitItr != b.maxSplitItr || minSamplesForSplitting != b.minSamplesForSplitting || minSamplesForPartialRefitting != b.minSamplesForPartialRefitting ||
-                minSamplesForMerging != b.minSamplesForMerging || !weightedEMCfg.operator==(b.weightedEMCfg))
+            if (splittingThreshold != b.splittingThreshold || mergingThreshold != b.mergingThreshold || useSplitAndMerge != b.useSplitAndMerge ||
+                !weightedEMCfg.operator==(b.weightedEMCfg))
             {
                 equal = false;
             }
@@ -73,9 +65,8 @@ struct AdaptiveSplitAndMergeFactoryV2
         typename WeightedEMFactory::SufficientStatistics sufficientStatistics;
         typename Splitter::ComponentSplitStatistics splittingStatistics;
 
-        // size_t numComponents {0};
-
-        size_t numSamplesAfterLastSplit{0};
+        // Count the sumber of samples processed after the last merge pass happend
+        // the goal is to get rid of this parameter at some point
         size_t numSamplesAfterLastMerge{0};
 
         Statistics() = default;
@@ -141,9 +132,6 @@ void AdaptiveSplitAndMergeFactoryV2<TVMMDistribution>::Statistics::serialize(std
 {
     sufficientStatistics.serialize(stream);
     splittingStatistics.serialize(stream);
-
-    // stream.write(reinterpret_cast<const char*>(&numComponents), sizeof(size_t));
-    stream.write(reinterpret_cast<const char *>(&numSamplesAfterLastSplit), sizeof(size_t));
     stream.write(reinterpret_cast<const char *>(&numSamplesAfterLastMerge), sizeof(size_t));
 }
 
@@ -152,9 +140,6 @@ void AdaptiveSplitAndMergeFactoryV2<TVMMDistribution>::Statistics::deserialize(s
 {
     sufficientStatistics.deserialize(stream);
     splittingStatistics.deserialize(stream);
-
-    // stream.read(reinterpret_cast<char*>(&numComponents), sizeof(size_t));
-    stream.read(reinterpret_cast<char *>(&numSamplesAfterLastSplit), sizeof(size_t));
     stream.read(reinterpret_cast<char *>(&numSamplesAfterLastMerge), sizeof(size_t));
 }
 
@@ -173,8 +158,6 @@ bool AdaptiveSplitAndMergeFactoryV2<TVMMDistribution>::Statistics::isValid() con
     OPENPGL_ASSERT(valid);
     valid = valid && splittingStatistics.isValid();
     OPENPGL_ASSERT(valid);
-    valid = valid && embree::isvalid(numSamplesAfterLastSplit);
-    OPENPGL_ASSERT(valid);
     valid = valid && embree::isvalid(numSamplesAfterLastMerge);
     OPENPGL_ASSERT(valid);
 
@@ -186,10 +169,6 @@ std::string AdaptiveSplitAndMergeFactoryV2<TVMMDistribution>::Statistics::toStri
 {
     std::stringstream ss;
     ss << "Statistics:" << std::endl;
-    // ss << "\tsufficientStatistics:" << sufficientStatistics.toString() << std::endl;
-    // ss << "\tsplittingStatistics:" << splittingStatistics.toString() << std::endl;
-    // ss << "\tnumSamplesAfterLastSplit = " << numSamplesAfterLastSplit << std::endl;
-    // ss << "\tnumSamplesAfterLastMerge = " << numSamplesAfterLastMerge << std::endl;
 
     for (int ii = 0; ii < splittingStatistics.numComponents; ii++)
     {
@@ -227,8 +206,6 @@ void AdaptiveSplitAndMergeFactoryV2<TVMMDistribution>::Statistics::clear(const s
     sufficientStatistics.clear(_numComponents);
     splittingStatistics.clear(_numComponents);
 
-    // numComponents = _numComponents;
-    numSamplesAfterLastSplit = 0;
     numSamplesAfterLastMerge = 0;
 }
 
@@ -242,7 +219,7 @@ template <class TVMMDistribution>
 bool AdaptiveSplitAndMergeFactoryV2<TVMMDistribution>::Statistics::operator==(const Statistics &b) const
 {
     bool equal = true;
-    if (numSamplesAfterLastSplit != b.numSamplesAfterLastSplit || numSamplesAfterLastMerge != b.numSamplesAfterLastMerge)
+    if (numSamplesAfterLastMerge != b.numSamplesAfterLastMerge)
     {
         equal = false;
     }
@@ -261,13 +238,6 @@ void AdaptiveSplitAndMergeFactoryV2<TVMMDistribution>::Configuration::serialize(
 
     stream.write(reinterpret_cast<const char *>(&splittingThreshold), sizeof(float));
     stream.write(reinterpret_cast<const char *>(&mergingThreshold), sizeof(float));
-
-    stream.write(reinterpret_cast<const char *>(&partialReFit), sizeof(bool));
-    stream.write(reinterpret_cast<const char *>(&maxSplitItr), sizeof(int));
-
-    stream.write(reinterpret_cast<const char *>(&minSamplesForSplitting), sizeof(int));
-    stream.write(reinterpret_cast<const char *>(&minSamplesForMerging), sizeof(int));
-    stream.write(reinterpret_cast<const char *>(&minSamplesForPartialRefitting), sizeof(int));
 }
 
 template <class TVMMDistribution>
@@ -277,13 +247,6 @@ void AdaptiveSplitAndMergeFactoryV2<TVMMDistribution>::Configuration::deserializ
 
     stream.read(reinterpret_cast<char *>(&splittingThreshold), sizeof(float));
     stream.read(reinterpret_cast<char *>(&mergingThreshold), sizeof(float));
-
-    stream.read(reinterpret_cast<char *>(&partialReFit), sizeof(bool));
-    stream.read(reinterpret_cast<char *>(&maxSplitItr), sizeof(int));
-
-    stream.read(reinterpret_cast<char *>(&minSamplesForSplitting), sizeof(int));
-    stream.read(reinterpret_cast<char *>(&minSamplesForMerging), sizeof(int));
-    stream.read(reinterpret_cast<char *>(&minSamplesForPartialRefitting), sizeof(int));
 }
 
 template <class TVMMDistribution>
@@ -295,11 +258,6 @@ std::string AdaptiveSplitAndMergeFactoryV2<TVMMDistribution>::Configuration::toS
     ss << "\tsplittingThreshold = " << splittingThreshold << std::endl;
     ss << "\tmergingThreshold = " << mergingThreshold << std::endl;
     ss << "\tuseSplitAndMerge = " << useSplitAndMerge << std::endl;
-    ss << "\tpartialReFit = " << partialReFit << std::endl;
-    ss << "\tmaxSplitItr = " << maxSplitItr << std::endl;
-    ss << "\tminSamplesForSplitting = " << minSamplesForSplitting << std::endl;
-    ss << "\tminSamplesForPartialRefitting = " << minSamplesForPartialRefitting << std::endl;
-    ss << "\tminSamplesForMerging = " << minSamplesForMerging << std::endl;
     return ss.str();
 }
 
@@ -452,7 +410,6 @@ void AdaptiveSplitAndMergeFactoryV2<TVMMDistribution>::fit(VMM &vmm, Statistics 
         OPENPGL_ASSERT(vmm.isValid());
     }
 
-    stats.numSamplesAfterLastSplit = 0.0f;
     stats.numSamplesAfterLastMerge = 0.0f;
 
     factory.initComponentDistances(vmm, stats.sufficientStatistics, samples, numSamples);
@@ -495,7 +452,6 @@ void AdaptiveSplitAndMergeFactoryV2<TVMMDistribution>::update(VMM &vmm, Statisti
         fitStats.numSamples = numSamples;
         fitStats.numUpdateWEMIterations = wemFitStats.numIterations;
 
-        stats.numSamplesAfterLastSplit += numSamples;
         stats.numSamplesAfterLastMerge += numSamples;
 
         OPENPGL_ASSERT(vmm._numComponents == stats.splittingStatistics.numComponents);
@@ -586,7 +542,7 @@ void AdaptiveSplitAndMergeFactoryV2<TVMMDistribution>::update(VMM &vmm, Statisti
                 }
                 OPENPGL_ASSERT(vmm._numComponents == stats.splittingStatistics.numComponents);
             }
-            stats.numSamplesAfterLastSplit = 0.0f;
+            //stats.numSamplesAfterLastSplit = 0.0f;
         }
         // OLD NEW
         OPENPGL_ASSERT(vmm.isValid());
