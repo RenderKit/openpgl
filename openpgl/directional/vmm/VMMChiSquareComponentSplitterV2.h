@@ -158,22 +158,8 @@ struct VonMisesFisherChiSquareComponentSplitterV2
         bool operator==(const ComponentSplitStatistics &b) const;
     };
 
-    void PerformSplitting(VMM &vmm, const float &splitThreshold, const float &mcEstimate, const SampleData *data, const size_t &numData,
-                          const typename VMMFactory::Configuration factoryCfg, const bool &doPartialRefit, const int &maxSplittingItr = -1) const;
-
-    bool SplitAndRefit(VMM &vmm, const float &mcEstimate, const size_t idx, ComponentSplitStatistics &splitStatistics, SufficientStatistics &suffStatistics, const SampleData *data,
-                       const size_t &numData, const typename VMMFactory::Configuration factoryCfg, const bool &doPartialRefit) const;
-
     bool SplitAndUpdate(VMM &vmm, const float &mcEstimate, const SplitCandidate &candidate, ComponentSplitStatistics &splitStatistics, SufficientStatistics &suffStatistics,
                         const SampleData *data, const size_t &numData, const typename VMMFactory::Configuration factoryCfg, const bool &doPartialRefit) const;
-
-    void SplitAndRefitNext(VMM &vmm, const float &mcEstimate, ComponentSplitStatistics &splitStatistics, SufficientStatistics &suffStatistics, const SampleData *data,
-                           const size_t &numData, const typename VMMFactory::Configuration factoryCfg, const bool &doPartialRefit) const;
-
-    void PerformRecursiveSplitting(VMM &vmm, typename VMMFactory::SufficientStatistics &suffStats, const float &splitThreshold, const float &mcEstimate, const SampleData *data,
-                                   const size_t &numData, const typename VMMFactory::Configuration factoryCfg) const;
-
-    void PerformSplittingIteration(VMM &vmm, const float &splitThreshold) const;
 
     void CalucalteWeightsEstimates(const VMM &vmm, ComponentSplitStatistics &splitStats, const SampleData *data, const size_t &numData) const;
 
@@ -284,123 +270,6 @@ void VonMisesFisherChiSquareComponentSplitterV2<TVMMFactory>::PartialCalculateSp
 }
 
 template <class TVMMFactory>
-bool VonMisesFisherChiSquareComponentSplitterV2<TVMMFactory>::SplitAndRefit(VMM &vmm, const float &mcEstimate, const size_t idx, ComponentSplitStatistics &splitStatistics,
-                                                                            SufficientStatistics &suffStatistics, const SampleData *data, const size_t &numData,
-                                                                            const typename VMMFactory::Configuration factoryCfg, const bool &doPartialRefit) const
-{
-    // std::cout << "SplitAndRefit: " << idx << std::endl;
-    PartialFittingMask mask;
-    PartialFittingMask previousAsPriorMask;
-
-    bool stopSplitting = false;
-
-    size_t splitItr = 0;
-
-    VMMFactory vmmFactory;
-    typename VMMFactory::FittingStatistics vmmFitStats;
-
-    this->CalculateSplitStatistics(vmm, splitStatistics, mcEstimate, data, numData);
-    bool splitSucess = false;
-#ifndef OPENPGL_USE_THREE_SPLIT
-    if (vmm._numComponents < VMM::MaxComponents)
-#else
-    if (vmm._numComponents < VMM::MaxComponents - 1)
-#endif
-    {
-        previousAsPriorMask.resetToFalse();
-        mask.resetToFalse();
-#ifndef OPENPGL_USE_THREE_SPLIT
-        splitSucess = SplitComponent(vmm, splitStatistics, suffStatistics, idx);
-        mask.setToTrue(idx);
-        mask.setToTrue(vmm._numComponents - 1);
-#else
-        splitSucess = SplitComponentIntoThree(vmm, splitStatistics, suffStatistics, idx);
-        mask.setToTrue(idx);
-        mask.setToTrue(vmm._numComponents - 2);
-        mask.setToTrue(vmm._numComponents - 1);
-#endif
-        if (splitSucess)
-        {
-            if (doPartialRefit)
-            {
-                //            vmmFactory.partialFitMixture(vmm, mask, suffStatistics, data, numData, factoryCfg, vmmFitStats);
-                vmmFactory.partialUpdateMixtureV2(vmm, mask, previousAsPriorMask, suffStatistics, data, numData, factoryCfg, vmmFitStats);
-                //            vmmFactory.partialUpdateMixture(vmm, mask, suffStatistics, data, numData, factoryCfg, vmmFitStats);
-            }
-            splitStatistics.clearAll();
-            this->CalculateSplitStatistics(vmm, splitStatistics, mcEstimate, data, numData);
-        }
-    }
-    return splitSucess;
-}
-
-template <class TVMMFactory>
-void VonMisesFisherChiSquareComponentSplitterV2<TVMMFactory>::SplitAndRefitNext(VMM &vmm, const float &mcEstimate, ComponentSplitStatistics &splitStatistics,
-                                                                                SufficientStatistics &suffStatistics, const SampleData *data, const size_t &numData,
-                                                                                const typename VMMFactory::Configuration factoryCfg, const bool &doPartialRefit) const
-{
-    // std::cout << "SplitAndRefit: " << idx << std::endl;
-    PartialFittingMask mask;
-
-    bool success = false;
-
-    size_t splitItr = 0;
-
-    VMMFactory vmmFactory;
-    typename VMMFactory::FittingStatistics vmmFitStats;
-
-    this->CalculateSplitStatistics(vmm, splitStatistics, mcEstimate, data, numData);
-
-#ifndef OPENPGL_USE_THREE_SPLIT
-    if (vmm._numComponents < VMM::MaxComponents)
-#else
-    if (vmm._numComponents < VMM::MaxComponents - 1)
-#endif
-    {
-        std::vector<SplitCandidate> splitComps = splitStatistics.getSplitCandidates();
-
-        mask.resetToFalse();
-#ifndef OPENPGL_USE_THREE_SPLIT
-        int k = 0;
-        while (!SplitComponent(vmm, splitStatistics, suffStatistics, splitComps[k].componentIndex) && k < vmm._numComponents)
-        {
-            k++;
-        }
-        // bool splitSucess = SplitComponent(vmm, splitStatistics, suffStatistics, idx);
-        if (k < vmm._numComponents)
-            success = true;
-
-        if (success)
-        {
-            mask.setToTrue(splitComps[k].componentIndex);
-            mask.setToTrue(vmm._numComponents - 1);
-#else
-        bool splitSucess = SplitComponentIntoThree(vmm, splitStatistics, suffStatistics, idx);
-        mask.setToTrue(idx);
-        mask.setToTrue(vmm._numComponents - 2);
-        mask.setToTrue(vmm._numComponents - 1);
-#endif
-
-            //            std::cout << "SplitComponent: idx = " << splitComps[k].componentIndex << "\t sucess = " << success << std::endl;
-            suffStatistics.clear(vmm._numComponents);
-            // std::cout << "mask: " << mask.toString() << std::endl;
-            // std::cout << "vmmSplit: " << vmm.toString() << std::endl;
-            // std::cout << "factoryCfg: " << factoryCfg.toString() << std::endl;
-            // std::cout << "suffStatistics: " << suffStatistics.toString() << std::endl;
-            if (doPartialRefit)
-            {
-                vmmFactory.partialUpdateMixture(vmm, mask, suffStatistics, data, numData, factoryCfg, vmmFitStats);
-                // std::cout << "vmmpartialUpdate: " << vmm.toString() << std::endl;
-                // splitItr++;
-            }
-
-            splitStatistics.clearAll();
-            this->CalculateSplitStatistics(vmm, splitStatistics, mcEstimate, data, numData);
-        }
-    }
-}
-
-template <class TVMMFactory>
 bool VonMisesFisherChiSquareComponentSplitterV2<TVMMFactory>::SplitAndUpdate(VMM &vmm, const float &mcEstimate, const SplitCandidate &candidate,
                                                                              ComponentSplitStatistics &splitStatistics, SufficientStatistics &suffStatistics,
                                                                              const SampleData *data, const size_t &numData, const typename VMMFactory::Configuration factoryCfg,
@@ -411,14 +280,8 @@ bool VonMisesFisherChiSquareComponentSplitterV2<TVMMFactory>::SplitAndUpdate(VMM
     PartialFittingMask mask;
     PartialFittingMask previousAsPriorMask;
 
-    bool stopSplitting = false;
-
-    size_t splitItr = 0;
-
     VMMFactory vmmFactory;
     typename VMMFactory::FittingStatistics vmmFitStats;
-
-    // this->CalculateSplitStatistics(vmm, splitStatistics, mcEstimate, data, numData);
     bool splitSucess = false;
 #ifndef OPENPGL_USE_THREE_SPLIT
     if (vmm._numComponents < VMM::MaxComponents)
@@ -426,7 +289,6 @@ bool VonMisesFisherChiSquareComponentSplitterV2<TVMMFactory>::SplitAndUpdate(VMM
     if (vmm._numComponents < VMM::MaxComponents - 1)
 #endif
     {
-        // std::vector<SplitCandidate> splitComps = splitStatistics.getSplitCandidates();
         previousAsPriorMask.resetToTrue();
         mask.resetToFalse();
 #ifndef OPENPGL_USE_THREE_SPLIT
@@ -442,8 +304,6 @@ bool VonMisesFisherChiSquareComponentSplitterV2<TVMMFactory>::SplitAndUpdate(VMM
             splitSucess = SplitComponent(vmm, splitStatistics, suffStatistics, idx);
             previousAsPriorMask.setToTrue(idx);
             previousAsPriorMask.setToTrue(vmm._numComponents - 1);
-            // previousAsPriorMask.setToFalse(idx);
-            // previousAsPriorMask.setToFalse(vmm._numComponents - 1);
         }
 
         mask.setToTrue(idx);
@@ -465,169 +325,6 @@ bool VonMisesFisherChiSquareComponentSplitterV2<TVMMFactory>::SplitAndUpdate(VMM
         }
     }
     return splitSucess;
-}
-
-template <class TVMMFactory>
-void VonMisesFisherChiSquareComponentSplitterV2<TVMMFactory>::PerformSplitting(VMM &vmm, const float &splitThreshold, const float &mcEstimate, const SampleData *data,
-                                                                               const size_t &numData, const typename VMMFactory::Configuration factoryCfg,
-                                                                               const bool &doPartialRefit, const int &maxSplittingItr) const
-{
-    PartialFittingMask mask;
-    ComponentSplitStatistics splitStatistics;
-    SufficientStatistics suffStatistics;
-
-    bool stopSplitting = false;
-
-    size_t splitItr = 0;
-
-    VMMFactory vmmFactory;
-    typename VMMFactory::FittingStatistics vmmFitStats;
-
-#ifndef OPENPGL_USE_THREE_SPLIT
-    while (vmm._numComponents < VMM::MaxComponents && !stopSplitting)
-#else
-    while (vmm._numComponents < VMM::MaxComponents - 1 && !stopSplitting)
-#endif
-    {
-        stopSplitting = true;
-        splitStatistics.clearAll();
-        this->CalculateSplitStatistics(vmm, splitStatistics, mcEstimate, data, numData);
-
-        std::vector<SplitCandidate> splitComps = splitStatistics.getSplitCandidates(splitThreshold);
-
-        mask.resetToFalse();
-        const size_t numComp = vmm._numComponents;
-        for (size_t k = 0; k < numComp; k++)
-        {
-            if (splitComps[k].chiSquareEst > splitThreshold && vmm._numComponents < VMM::MaxComponents)
-            {
-                // std::cout << "split[" << k << "]: idx:" << splitComps[k].componentIndex << "\t chi2: " << splitComps[k].chiSquareEst << std::endl;
-#ifndef OPENPGL_USE_THREE_SPLIT
-                bool splitSucess = SplitComponent(vmm, splitStatistics, suffStatistics, splitComps[k].componentIndex);
-                mask.setToTrue(splitComps[k].componentIndex);
-                mask.setToTrue(vmm._numComponents - 1);
-#else
-                bool splitSucess = SplitComponentIntoThree(vmm, splitStatistics, suffStatistics, splitComps[k].componentIndex);
-                mask.setToTrue(splitComps[k].componentIndex);
-                mask.setToTrue(vmm._numComponents - 2);
-                mask.setToTrue(vmm._numComponents - 1);
-#endif
-                if (splitSucess)
-                {
-                    stopSplitting = false;
-                }
-            }
-            else
-            {
-                continue;
-            }
-        }
-        suffStatistics.clear(vmm._numComponents);
-        // std::cout << "mask: " << mask.toString() << std::endl;
-        // std::cout << "vmmSplit: " << vmm.toString() << std::endl;
-        // std::cout << "factoryCfg: " << factoryCfg.toString() << std::endl;
-        // std::cout << "suffStatistics: " << suffStatistics.toString() << std::endl;
-        if (doPartialRefit)
-        {
-            vmmFactory.partialUpdateMixture(vmm, mask, suffStatistics, true, data, numData, factoryCfg, vmmFitStats);
-            // std::cout << "vmmpartialUpdate: " << vmm.toString() << std::endl;
-            splitItr++;
-        }
-        else
-        {
-            stopSplitting = true;
-        }
-
-        if (splitItr >= maxSplittingItr)
-        {
-            stopSplitting = true;
-        }
-    }
-}
-
-template <class TVMMFactory>
-void VonMisesFisherChiSquareComponentSplitterV2<TVMMFactory>::PerformRecursiveSplitting(VMM &vmm, typename VMMFactory::SufficientStatistics &suffStatistics,
-                                                                                        const float &splitThreshold, const float &mcEstimate, const SampleData *data,
-                                                                                        const size_t &numData, const typename VMMFactory::Configuration factoryCfg) const
-{
-    PartialFittingMask mask;
-    ComponentSplitStatistics splitStatistics;
-
-    // bool stopSplitting = false;
-    // size_t splitItr = 0;
-
-    VMMFactory vmmFactory;
-    typename VMMFactory::FittingStatistics vmmFitStats;
-    // std::cout << "vmm: " << vmm.toString() << std::endl;
-    int numSplits = -1;
-#ifndef OPENPGL_USE_THREE_SPLIT
-    while (vmm._numComponents < VMM::MaxComponents && numSplits != 0)
-#else
-
-#endif
-    // for (size_t j =0; j<1; j++)
-    {
-        numSplits = 0;
-        splitStatistics.clearAll();
-        this->CalculateSplitStatistics(vmm, splitStatistics, mcEstimate, data, numData);
-
-        std::vector<SplitCandidate> splitComps = splitStatistics.getSplitCandidates(splitThreshold, false);
-        // SplitCandidate splitComp = splitStatistics.getHighestValidChiSquareSplitComponent(splitThreshold, false);
-        // SplitCandidate splitCandidate = stats.splittingStatistics.getHighestValidChiSquareSplitComponent(vmm, vmmOld, splitStatsBefore, alreadySplitted, true);
-        mask.resetToFalse();
-        // const size_t numComp = vmm._numComponents;
-        for (size_t k = 0; k < splitComps.size(); k++)
-        // int k = 0;
-        // if(splitComps.size() > 0)
-        {
-            if (splitComps[k].chiSquareEst > splitThreshold && vmm._numComponents < VMM::MaxComponents)
-            {
-#ifndef OPENPGL_USE_THREE_SPLIT
-                const div_t tmpK = div(splitComps[k].componentIndex, static_cast<int>(VMM::VectorSize));
-                SplitType splitType = (SplitType)splitStatistics.splitType[tmpK.quot][tmpK.rem];
-                // std::cout << "splitIdx = " << splitComps[k].componentIndex << "\t splitType = " << (splitType == EFirefly ? "FireFly" : "MultiModal") << std::endl;
-                bool splitSucess = true;
-                if (splitType == EFirefly)
-                // if (false)
-                {
-                    splitSucess = SplitComponentFireFly(vmm, splitStatistics, suffStatistics, splitComps[k].componentIndex, factoryCfg);
-                }
-                else
-                {
-                    splitSucess = SplitComponent(vmm, splitStatistics, suffStatistics, splitComps[k].componentIndex);
-                }
-                mask.setToTrue(splitComps[k].componentIndex);
-                if (splitSucess)
-                {
-                    mask.setToTrue(vmm._numComponents - 1);
-                }
-                // std::cout << "sucessfull split: " << (splitSucess ? "True" : "False") << std::endl;
-#else
-                bool splitSucess = SplitComponentIntoThree(vmm, splitStatistics, suffStatistics, splitComps[k].componentIndex);
-                mask.setToTrue(splitComps[k].componentIndex);
-                if (splitSucess)
-                {
-                    mask.setToTrue(vmm._numComponents - 1);
-                    mask.setToTrue(vmm._numComponents - 2);
-                }
-#endif
-                if (splitSucess)
-                {
-                    numSplits++;
-                }
-            }
-            else
-            {
-                continue;
-            }
-        }
-        if (numSplits > 0)
-        {
-            vmmFactory.partialUpdateMixture(vmm, mask, suffStatistics, false, data, numData, factoryCfg, vmmFitStats);
-        }
-        // std::cout << "vmmpartialUpdate: " << vmm.toString() << std::endl;
-        // splitItr++;
-    }
 }
 
 template <class TVMMFactory>
@@ -2015,7 +1712,9 @@ VonMisesFisherChiSquareComponentSplitterV2<TVMMFactory>::ComponentSplitStatistic
             */
             SplitCandidate sc;
             sc.chiSquareEst = chiSquareMCEstimates[tmp.quot][tmp.rem];
+            // sc.chiSquareVar = chi
             sc.componentIndex = k;
+            sc.splitType = (SplitType)splitType[tmp.quot][tmp.rem];
             splitCandidates.push_back(sc);
         }
     }
