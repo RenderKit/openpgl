@@ -343,18 +343,19 @@ void AdaptiveSplitAndMergeFactoryV2<TVMMDistribution>::fit(VMM &vmm, Statistics 
                     {
                         splitSucess = splitter.SplitComponent(vmm, stats.splittingStatistics, stats.sufficientStatistics, splitComps[k].componentIndex);
                     }
-                    // TODO: if the split was not sucessfull we should not need to set the mask
-                    mask.setToTrue(splitComps[k].componentIndex);
+                    
                     if (splitSucess)
                     {
+                        mask.setToTrue(splitComps[k].componentIndex);
                         mask.setToTrue(vmm._numComponents - 1);
                     }
                     // std::cout << "sucessfull split: " << (splitSucess ? "True" : "False") << std::endl;
 #else
                     bool splitSucess = splitter.SplitComponentIntoThree(vmm, stats.splittingStatistics, stats.sufficientStatistics, splitComps[k].componentIndex);
-                    mask.setToTrue(splitComps[k].componentIndex);
+                    
                     if (splitSucess)
                     {
+                        mask.setToTrue(splitComps[k].componentIndex);
                         mask.setToTrue(vmm._numComponents - 1);
                         mask.setToTrue(vmm._numComponents - 2);
                     }
