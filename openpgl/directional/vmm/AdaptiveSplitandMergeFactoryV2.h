@@ -409,13 +409,11 @@ void AdaptiveSplitAndMergeFactoryV2<TVMMDistribution>::update(VMM &vmm, Statisti
     OPENPGL_ASSERT(vmm.getNumComponents() == stats.getNumComponents());
     OPENPGL_ASSERT(stats.isValid());
 
-    VMM vmmOld = vmm;
-
     // Update the mixture using standard weighted EM
     WeightedEMFactory factory = WeightedEMFactory();
     typename WeightedEMFactory::FittingStatistics wemFitStats;
     const size_t previousNumberOfComponents = vmm._numComponents;
-    factory.updateMixtureV2(vmm, stats.sufficientStatistics, samples, numSamples, cfg.weightedEMCfg, wemFitStats);
+    factory.updateMixture(vmm, stats.sufficientStatistics, samples, numSamples, cfg.weightedEMCfg, wemFitStats);
     OPENPGL_ASSERT(vmm.isValid());
     fitStats.numSamples = numSamples;
     fitStats.numUpdateWEMIterations = wemFitStats.numIterations;
