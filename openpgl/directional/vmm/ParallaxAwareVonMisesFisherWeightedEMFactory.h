@@ -18,10 +18,6 @@
 
 #define USE_HARMONIC_MEAN
 
-#define USE_FIT_V2
-// #define VALIDATE_V1_V2
-//  #define WEIGHTED_STATS_MERGE
-
 #define MC_ESTIMATE_INCOMING_RADIANCE
 // using namespace embree;
 
@@ -213,30 +209,13 @@ struct ParallaxAwareVonMisesFisherWeightedEMFactory
     void fitMixture(VMM &vmm, SufficientStatistics &stats, const SampleData *samples, const size_t numSamples, const Configuration &cfg, FittingStatistics &fitStats) const;
 
     void updateMixture(VMM &vmm, SufficientStatistics &previousStats, const SampleData *samples, const size_t numSamples, const Configuration &cfg,
-                       FittingStatistics &fitStats) const;
-
-    void updateMixtureV1(VMM &vmm, SufficientStatistics &previousStats, const SampleData *samples, const size_t numSamples, const Configuration &cfg,
                          FittingStatistics &fitStats) const;
 
-    void updateMixtureV2(VMM &vmm, SufficientStatistics &previousStats, const SampleData *samples, const size_t numSamples, const Configuration &cfg,
-                         FittingStatistics &fitStats) const;
-
-    // void partialUpdateMixture(VMM &vmm, PartialFittingMask &mask, SufficientStatistics &previousStats, const SampleData *samples, const size_t numSamples, const Configuration
-    // &cfg,
-    //                           FittingStatistics &fitStats) const;
     void partialUpdateMixture(VMM &vmm, PartialFittingMask &mask, SufficientStatistics &previousStats, bool usePreviousStatsAsPrior, const SampleData *samples,
-                              const size_t numSamples, const Configuration &cfg, FittingStatistics &fitStats) const;
-
-    void partialUpdateMixtureV1(VMM &vmm, PartialFittingMask &mask, SufficientStatistics &previousStats, bool usePreviousStatsAsPrior, const SampleData *samples,
-                                const size_t numSamples, const Configuration &cfg, FittingStatistics &fitStats) const;
-
-    void partialUpdateMixtureV2(VMM &vmm, PartialFittingMask &mask, SufficientStatistics &previousStats, bool usePreviousStatsAsPrior, const SampleData *samples,
                                 const size_t numSamples, const Configuration &cfg, FittingStatistics &fitStats) const;
 
     void partialUpdateMixtureV2(VMM &vmm, PartialFittingMask &mask, PartialFittingMask &previousAsPriorMask, SufficientStatistics &previousStats, const SampleData *samples,
                                 const size_t numSamples, const Configuration &cfg, FittingStatistics &fitStats) const;
-
-    void partialMergeSufficientStatistics(PartialFittingMask &mask, SufficientStatistics &currentStats, const SufficientStatistics &previousStats) const;
 
     void partialMergeSufficientStatisticsV2(PartialFittingMask &mask, SufficientStatistics &currentStats, const SufficientStatistics &previousStats,
                                             const bool usePreviousStatsAsPrior) const;
@@ -694,60 +673,7 @@ ParallaxAwareVonMisesFisherWeightedEMFactory<TVMMDistribution>::SufficientStatis
     this->inv_norm = this->sumWeights / this->numSamples;
     return *this;
 }
-/**/
-/*
-template <class TVMMDistribution>
-typename ParallaxAwareVonMisesFisherWeightedEMFactory<TVMMDistribution>::SufficientStatistics &
-ParallaxAwareVonMisesFisherWeightedEMFactory<TVMMDistribution>::SufficientStatistics::operator+=(
-    const typename ParallaxAwareVonMisesFisherWeightedEMFactory<TVMMDistribution>::SufficientStatistics &stats)
-{
-    OPENPGL_ASSERT(this->numComponents == stats.numComponents);
-    OPENPGL_ASSERT((this->overallNumSamples > 0.f && this->normalized) || (this->overallNumSamples == 0.f));
-    OPENPGL_ASSERT((stats.overallNumSamples > 0.f && stats.normalized) || (stats.overallNumSamples == 0.f));
-    // TODO: check for normalization
-    if ((this->overallNumSamples > 0.f && !this->normalized) || (stats.overallNumSamples > 0.f && !stats.normalized))
-        std::cout << "ERROR: normalization" << std::endl;
 
-    if (stats.sumWeights <= 0.f || stats.numSamples <= 0.f)
-    {
-        return *this;
-    }
-
-    if (this->sumWeights <= 0.f || this->numSamples <= 0.f)
-    {
-        *this = stats;
-        return *this;
-    }
-
-    const int cnt = (numComponents + VMM::VectorSize - 1) / VMM::VectorSize;
-
-    this->sumWeights += stats.sumWeights;
-    this->numSamples += stats.numSamples;
-    this->overallNumSamples += stats.overallNumSamples;
-
-    this->norm = this->numSamples / this->sumWeights;
-#ifndef WEIGHTED_STATS_MERGE
-    embree::vfloat<VMM::VectorSize> compA(1.0f);
-    embree::vfloat<VMM::VectorSize> compB(1.0f);
-#else
-    const embree::vfloat<VMM::VectorSize> compA = inv_norm * norm;
-    const embree::vfloat<VMM::VectorSize> compB = stats.inv_norm * norm;
-#endif
-    for (int k = 0; k < cnt; k++)
-    {
-        this->sumOfWeightedDirections[k] *= compA;
-        this->sumOfWeightedDirections[k] += stats.sumOfWeightedDirections[k] * compB;
-
-        this->sumOfWeightedStats[k] *= compA;
-        this->sumOfWeightedStats[k] += stats.sumOfWeightedStats[k] * compB;
-
-        this->sumOfDistanceWeightes[k] *= compA;
-        this->sumOfDistanceWeightes[k] += stats.sumOfDistanceWeightes[k] * compB;
-    }
-    this->inv_norm = this->sumWeights / this->numSamples;
-    return *this;
-}
-*/
 template <class TVMMDistribution>
 bool ParallaxAwareVonMisesFisherWeightedEMFactory<TVMMDistribution>::SufficientStatistics::operator==(const SufficientStatistics &b) const
 {
@@ -903,90 +829,6 @@ void ParallaxAwareVonMisesFisherWeightedEMFactory<TVMMDistribution>::handleUnass
 
 template <class TVMMDistribution>
 void ParallaxAwareVonMisesFisherWeightedEMFactory<TVMMDistribution>::updateMixture(VMM &vmm, SufficientStatistics &previousStats, const SampleData *samples,
-                                                                                   const size_t numSamples, const Configuration &cfg, FittingStatistics &fitStats) const
-{
-#ifndef USE_FIT_V2
-#ifdef VALIDATE_V1_V2
-    VMM vmmNew = vmm;
-    SufficientStatistics previousStatsNew = previousStats;
-#endif
-    updateMixtureV1(vmm, previousStats, samples, numSamples, cfg, fitStats);
-#ifdef VALIDATE_V1_V2
-    updateMixtureV2(vmmNew, previousStatsNew, samples, numSamples, cfg, fitStats);
-    if (!(previousStats == previousStatsNew))
-    {
-        std::cout << "previousStats" << std::endl;
-        std::cout << previousStats.toString() << std::endl;
-
-        std::cout << "previousStatsNew" << std::endl;
-        std::cout << previousStatsNew.toString() << std::endl;
-        int i = 6;
-    }
-
-    if (!(vmm == vmmNew))
-    {
-        std::cout << "vmm" << std::endl;
-        std::cout << vmm.toString() << std::endl;
-
-        std::cout << "vmmNew" << std::endl;
-        std::cout << vmmNew.toString() << std::endl;
-        int i = 6;
-    }
-#endif
-#else
-    updateMixtureV2(vmm, previousStats, samples, numSamples, cfg, fitStats);
-#endif
-}
-
-template <class TVMMDistribution>
-void ParallaxAwareVonMisesFisherWeightedEMFactory<TVMMDistribution>::updateMixtureV1(VMM &vmm, SufficientStatistics &previousStats, const SampleData *samples,
-                                                                                     const size_t numSamples, const Configuration &cfg, FittingStatistics &fitStats) const
-{
-    SufficientStatistics currentStats;
-    // initially clear all stats
-    currentStats.clearAll();
-
-    size_t currentEMIteration = 0;
-    bool converged = false;
-    float previousLogLikelihood = 0.0f;
-    float inv_previousLogLikelihood = 1.0f;
-    UnassignedSamplesStatistics unassignedStats;
-    while (!converged && currentEMIteration < cfg.maxEMIterrations)
-    {
-        float logLikelihood = weightedExpectationStep(vmm, currentStats, unassignedStats, samples, numSamples);
-        if (unassignedStats.sumOfUnassignedWeights > 0.0f && currentStats.numComponents < TVMMDistribution::MaxComponents)
-        {
-            handleUnassignedSampleStats(unassignedStats, vmm, currentStats, previousStats);
-        }
-
-        OPENPGL_ASSERT(!currentStats.isNormalized());
-        currentStats.normalize(currentStats.numSamples);
-        OPENPGL_ASSERT(currentStats.isValid());
-        weightedMaximumAPosteriorStep(vmm, currentStats, previousStats, cfg);
-        currentEMIteration++;
-
-        if (currentEMIteration > 1)
-        {
-            float relLogLikelihoodDifference = std::fabs(logLikelihood - previousLogLikelihood) * inv_previousLogLikelihood;
-            if (relLogLikelihoodDifference < cfg.convergenceThreshold)
-            {
-                converged = true;
-            }
-            // std::cout << "logLikelihood:" <<  logLikelihood << "\t previousLogLikelihood: "<< previousLogLikelihood  << "\t relLogLikelihoodDifference: " <<
-            // relLogLikelihoodDifference << std::endl;
-            previousLogLikelihood = logLikelihood;
-            inv_previousLogLikelihood = 1.0f / std::fabs(logLikelihood);
-        }
-    }
-    previousStats += currentStats;
-
-    fitStats.numSamples = numSamples;
-    fitStats.numIterations = currentEMIteration;
-    fitStats.summedWeightedLogLikelihood = previousLogLikelihood;
-}
-
-template <class TVMMDistribution>
-void ParallaxAwareVonMisesFisherWeightedEMFactory<TVMMDistribution>::updateMixtureV2(VMM &vmm, SufficientStatistics &previousStats, const SampleData *samples,
                                                                                      const size_t numSamples, const Configuration &cfg, FittingStatistics &fitStats) const
 {
     SufficientStatistics currentStats;
@@ -1031,61 +873,6 @@ void ParallaxAwareVonMisesFisherWeightedEMFactory<TVMMDistribution>::updateMixtu
     fitStats.numSamples = numSamples;
     fitStats.numIterations = currentEMIteration;
     fitStats.summedWeightedLogLikelihood = previousLogLikelihood;
-}
-
-template <class TVMMDistribution>
-void ParallaxAwareVonMisesFisherWeightedEMFactory<TVMMDistribution>::partialMergeSufficientStatistics(PartialFittingMask &mask, SufficientStatistics &currentStats,
-                                                                                                      const SufficientStatistics &previousStats) const
-{
-    const embree::vfloat<VMM::VectorSize> zeros = 0.f;
-
-    // the sum of the current weights of the changed components
-    embree::vfloat<VMM::VectorSize> currentWeightsVec = 0.f;
-    // the sum of the previous weights of the unchanged components
-    embree::vfloat<VMM::VectorSize> previousWeightsVec = 0.f;
-    // the overall sum of all previous weights
-    embree::vfloat<VMM::VectorSize> sumPreviousWeightsVec = 0.f;
-    // embree::vfloat<VMM::VectorSize> sumCurrentWeightsVec = 0.f;
-
-    const int cnt = (previousStats.numComponents + VMM::VectorSize - 1) / VMM::VectorSize;
-    for (int k = 0; k < cnt; k++)
-    {
-        sumPreviousWeightsVec += previousStats.sumOfWeightedStats[k];
-        // sumCurrentWeightsVec += currentStats.sumOfWeightedStats[k];
-        currentStats.sumOfWeightedDirections[k].x = select(mask.mask[k], currentStats.sumOfWeightedDirections[k].x, previousStats.sumOfWeightedDirections[k].x);
-        currentStats.sumOfWeightedDirections[k].y = select(mask.mask[k], currentStats.sumOfWeightedDirections[k].y, previousStats.sumOfWeightedDirections[k].y);
-        currentStats.sumOfWeightedDirections[k].z = select(mask.mask[k], currentStats.sumOfWeightedDirections[k].z, previousStats.sumOfWeightedDirections[k].z);
-
-        currentStats.sumOfWeightedStats[k] = select(mask.mask[k], currentStats.sumOfWeightedStats[k], previousStats.sumOfWeightedStats[k]);
-        currentStats.sumOfDistanceWeightes[k] = select(mask.mask[k], currentStats.sumOfDistanceWeightes[k], previousStats.sumOfDistanceWeightes[k]);
-
-        currentWeightsVec += select(mask.mask[k], currentStats.sumOfWeightedStats[k], zeros);
-        previousWeightsVec += select(mask.mask[k], zeros, currentStats.sumOfWeightedStats[k]);
-    }
-
-    float currentWeights = embree::reduce_add(currentWeightsVec);
-    float previousWeights = embree::reduce_add(previousWeightsVec);
-    float sumPreviousWeights = embree::reduce_add(sumPreviousWeightsVec);
-
-    embree::vfloat<VMM::VectorSize> sumTmpVec = 0.f;
-    // calcualting the normalization factor for the weights of the updated components
-    float inv_currentWeights = (sumPreviousWeights - previousWeights) / currentWeights;
-    for (int k = 0; k < cnt; k++)
-    {
-        currentStats.sumOfWeightedStats[k] = select(mask.mask[k], currentStats.sumOfWeightedStats[k] * inv_currentWeights, currentStats.sumOfWeightedStats[k]);
-        currentStats.sumOfWeightedDirections[k].x = select(mask.mask[k], currentStats.sumOfWeightedDirections[k].x * inv_currentWeights, currentStats.sumOfWeightedDirections[k].x);
-        currentStats.sumOfWeightedDirections[k].y = select(mask.mask[k], currentStats.sumOfWeightedDirections[k].y * inv_currentWeights, currentStats.sumOfWeightedDirections[k].y);
-        currentStats.sumOfWeightedDirections[k].z = select(mask.mask[k], currentStats.sumOfWeightedDirections[k].z * inv_currentWeights, currentStats.sumOfWeightedDirections[k].z);
-        sumTmpVec += currentStats.sumOfWeightedStats[k];
-    }
-
-    // since only some partial components are updated
-    // the overall stats are the same as the previous stats
-    currentStats.sumWeights = previousStats.sumWeights;
-    currentStats.numSamples = previousStats.numSamples;
-    currentStats.overallNumSamples = previousStats.overallNumSamples;
-    currentStats.norm = previousStats.norm;
-    currentStats.inv_norm = previousStats.inv_norm;
 }
 
 template <class TVMMDistribution>
@@ -1340,95 +1127,9 @@ void ParallaxAwareVonMisesFisherWeightedEMFactory<TVMMDistribution>::partialMerg
     currentStats.inv_norm = previousStats.inv_norm;
 }
 #endif
+
 template <class TVMMDistribution>
 void ParallaxAwareVonMisesFisherWeightedEMFactory<TVMMDistribution>::partialUpdateMixture(VMM &vmm, PartialFittingMask &mask, SufficientStatistics &previousStats,
-                                                                                          bool usePreviousStatsAsPrior, const SampleData *samples, const size_t numSamples,
-                                                                                          const Configuration &cfg, FittingStatistics &fitStats) const
-{
-#ifndef USE_FIT_V2
-#ifdef VALIDATE_V1_V2
-    VMM vmmNew = vmm;
-    SufficientStatistics previousStatsNew = previousStats;
-#endif
-    partialUpdateMixtureV1(vmm, mask, previousStats, usePreviousStatsAsPrior, samples, numSamples, cfg, fitStats);
-#ifdef VALIDATE_V1_V2
-    // Note: the reason why these two do not always match is the way how the mixture weights are calculated, replaced and reweighted
-    // the waits of the two mixture do not match to 100% which influences the prior strenght of the kappa vaule
-    partialUpdateMixtureV2(vmmNew, mask, previousStatsNew, usePreviousStatsAsPrior, samples, numSamples, cfg, fitStats);
-    if (!(previousStats == previousStatsNew))
-    {
-        int i = 0;
-    }
-
-    if (!(vmm == previousStatsNew))
-    {
-        int i = 0;
-    }
-#endif
-
-#else
-    partialUpdateMixtureV2(vmm, mask, previousStats, usePreviousStatsAsPrior, samples, numSamples, cfg, fitStats);
-#endif
-}
-
-template <class TVMMDistribution>
-void ParallaxAwareVonMisesFisherWeightedEMFactory<TVMMDistribution>::partialUpdateMixtureV1(VMM &vmm, PartialFittingMask &mask, SufficientStatistics &previousStats,
-                                                                                            bool usePreviousStatsAsPrior, const SampleData *samples, const size_t numSamples,
-                                                                                            const Configuration &cfg, FittingStatistics &fitStats) const
-// void ParallaxAwareVonMisesFisherWeightedEMFactory<TVMMDistribution>::partialUpdateMixtureV1(VMM &vmm, PartialFittingMask &mask, SufficientStatistics &previousStats,
-//                                                                                           const SampleData *samples, const size_t numSamples, const Configuration &cfg,
-//                                                                                           FittingStatistics &fitStats) const
-{
-    SufficientStatistics currentStats;
-    // initially clear all stats
-    currentStats.clearAll();
-
-    size_t currentEMIteration = 0;
-    bool converged = false;
-    float previousLogLikelihood = 0.0f;
-    float inv_previousLogLikelihood = 1.0f;
-
-    UnassignedSamplesStatistics unassignedStats;
-    while (!converged && currentEMIteration < cfg.maxEMIterrations)
-    {
-        float logLikelihood = weightedExpectationStep(vmm, currentStats, unassignedStats, samples, numSamples);
-        if (unassignedStats.sumOfUnassignedWeights > 0.0f && currentStats.numComponents < TVMMDistribution::MaxComponents)
-        {
-            handleUnassignedSampleStats(unassignedStats, vmm, currentStats, previousStats);
-            mask.setToTrue(vmm._numComponents - 1);
-        }
-
-        OPENPGL_ASSERT(currentStats.isValid());
-        OPENPGL_ASSERT(!currentStats.isNormalized());
-        currentStats.normalize(currentStats.numSamples);
-        OPENPGL_ASSERT(currentStats.isValid());
-        reweightPartialStats(mask, currentStats, previousStats);
-        partialWeightedMaximumAPosteriorStep(vmm, mask, currentStats, previousStats, usePreviousStatsAsPrior, cfg);
-        currentEMIteration++;
-        // TODO: Add convergence check
-        if (currentEMIteration > 1)
-        {
-            float relLogLikelihoodDifference = std::fabs(logLikelihood - previousLogLikelihood) * inv_previousLogLikelihood;
-            if (relLogLikelihoodDifference < cfg.convergenceThreshold)
-            {
-                converged = true;
-            }
-            // std::cout << "logLikelihood:" <<  logLikelihood << "\t previousLogLikelihood: "<< previousLogLikelihood  << "\t relLogLikelihoodDifference: " <<
-            // relLogLikelihoodDifference << std::endl;
-            previousLogLikelihood = logLikelihood;
-            inv_previousLogLikelihood = 1.0f / std::fabs(logLikelihood);
-        }
-    }
-    previousStats.maskedReplace(mask, currentStats);
-
-    fitStats.numSamples = numSamples;
-    fitStats.numIterations = currentEMIteration;
-    fitStats.summedWeightedLogLikelihood = previousLogLikelihood;
-    // std::cout << "converged:" <<  currentEMIteration << std::endl;
-}
-/* */
-template <class TVMMDistribution>
-void ParallaxAwareVonMisesFisherWeightedEMFactory<TVMMDistribution>::partialUpdateMixtureV2(VMM &vmm, PartialFittingMask &mask, SufficientStatistics &previousStats,
                                                                                             bool usePreviousStatsAsPrior, const SampleData *samples, const size_t numSamples,
                                                                                             const Configuration &cfg, FittingStatistics &fitStats) const
 {
