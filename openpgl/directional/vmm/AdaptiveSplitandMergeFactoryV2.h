@@ -327,41 +327,37 @@ void AdaptiveSplitAndMergeFactoryV2<TVMMDistribution>::fit(VMM &vmm, Statistics 
                 if (splitComps[k].chiSquareEst > cfg.splittingThreshold && vmm._numComponents < VMM::MaxComponents)
                 {
 #ifndef OPENPGL_USE_THREE_SPLIT
-                    // const div_t tmpK = div(splitComps[k].componentIndex, static_cast<int>(VMM::VectorSize));
-                    // typename Splitter::SplitType splitType = (typename Splitter::SplitType)stats.splittingStatistics.splitType[tmpK.quot][tmpK.rem];
-                    // typename Splitter::SplitType splitType = stats.splittingStatistics.getSplitType(splitComps[k].componentIndex);
                     typename Splitter::SplitType splitType = splitComps[k].splitType;
-                    // std::cout << "splitIdx = " << splitComps[k].componentIndex << "\t splitType = " << (splitType == EFirefly ? "FireFly" : "MultiModal") << std::endl;
-                    // If a proposed split was sucessful or not. A split might not be sucessfull when the concentration limit of the component is reached or proposed
+                    // If a proposed split was successful or not. A split might not be successfull when the concentration limit of the component is reached or proposed
                     // new split mean directions are at the current mean (i.e., split stats have an eigen value close to zero).
-                    bool splitSucess = true;
+                    bool splitSuccess = true;
                     if (splitType == Splitter::EFirefly)
                     {
-                        splitSucess = splitter.SplitComponentFireFly(vmm, stats.splittingStatistics, stats.sufficientStatistics, splitComps[k].componentIndex, cfg.weightedEMCfg);
+                        splitSuccess = splitter.SplitComponentFireFly(vmm, stats.splittingStatistics, stats.sufficientStatistics, splitComps[k].componentIndex, cfg.weightedEMCfg);
                     }
                     else
                     {
-                        splitSucess = splitter.SplitComponent(vmm, stats.splittingStatistics, stats.sufficientStatistics, splitComps[k].componentIndex);
+                        splitSuccess = splitter.SplitComponent(vmm, stats.splittingStatistics, stats.sufficientStatistics, splitComps[k].componentIndex);
                     }
-                    
-                    if (splitSucess)
+
+                    if (splitSuccess)
                     {
                         mask.setToTrue(splitComps[k].componentIndex);
                         mask.setToTrue(vmm._numComponents - 1);
                     }
-                    // std::cout << "sucessfull split: " << (splitSucess ? "True" : "False") << std::endl;
+                    // std::cout << "successfull split: " << (splitSuccess ? "True" : "False") << std::endl;
 #else
-                    bool splitSucess = splitter.SplitComponentIntoThree(vmm, stats.splittingStatistics, stats.sufficientStatistics, splitComps[k].componentIndex);
-                    
-                    if (splitSucess)
+                    bool splitSuccess = splitter.SplitComponentIntoThree(vmm, stats.splittingStatistics, stats.sufficientStatistics, splitComps[k].componentIndex);
+
+                    if (splitSuccess)
                     {
                         mask.setToTrue(splitComps[k].componentIndex);
                         mask.setToTrue(vmm._numComponents - 1);
                         mask.setToTrue(vmm._numComponents - 2);
                     }
 #endif
-                    // Increase the number of perfromed splits if the split was sucessfull
-                    if (splitSucess)
+                    // Increase the number of performed splits if the split was successfull
+                    if (splitSuccess)
                     {
                         numSplits++;
                     }
@@ -384,6 +380,11 @@ void AdaptiveSplitAndMergeFactoryV2<TVMMDistribution>::fit(VMM &vmm, Statistics 
 
         OPENPGL_ASSERT(vmm.getNumComponents() == stats.getNumComponents());
         OPENPGL_ASSERT(vmm.isValid());
+
+        if (vmm.getNumComponents() == VMM::MaxComponents)
+        {
+            std::cout << "SaM: Reach Component Limit" << std::endl;
+        }
 
         //////////////////////////////////////////////////////
         // Merging
@@ -428,7 +429,6 @@ void AdaptiveSplitAndMergeFactoryV2<TVMMDistribution>::update(VMM &vmm, Statisti
     OPENPGL_ASSERT(stats.sufficientStatistics.isValid());
 
     // We use split and merge to optimize the fitting/update of the mixture to better reflect the observed data.
-    //
     if (cfg.useSplitAndMerge)
     {
         // Calculate the estimate of the integral of the function (e.g. radiance or importance) represented by the VMM
@@ -440,34 +440,31 @@ void AdaptiveSplitAndMergeFactoryV2<TVMMDistribution>::update(VMM &vmm, Statisti
         Splitter splitter = Splitter();
 
         auto splitStatsBefore = stats.splittingStatistics;
+        // Updating split statistics
         splitter.UpdateSplitStatistics(vmm, stats.splittingStatistics, mcEstimate, samples, numSamples, true, false);
         auto splitStatsAfter = stats.splittingStatistics;
 
         OPENPGL_ASSERT(stats.splittingStatistics.isValid());
-        // NEW
+        // Array of flags if a mixture component was already split or not. During the update procedure we only split a component once.
         bool alreadySplitted[VMM::MaxComponents];
         for (int i = 0; i < VMM::MaxComponents; i++)
         {
             alreadySplitted[i] = false;
         }
 
-        bool split = true;
-        while (split && vmm.getNumComponents() < VMM::MaxComponents)
+        bool continueSplitting = true;
+        // Continue splitting until no valid split candidate (e.g., candidate is bellow the split threshold) is found or the maximun number of mixture components is reached.
+        while (continueSplitting && vmm.getNumComponents() < VMM::MaxComponents)
         {
             OPENPGL_ASSERT(vmm._numComponents == stats.splittingStatistics.numComponents);
             bool splitSuccess = false;
-            SplitCandidate splitCandidate = stats.splittingStatistics.getHighestValidChiSquareSplitComponent(vmm, vmmOld, splitStatsBefore, alreadySplitted, true);
-
-            if (splitCandidate.componentIndex < VMM::MaxComponents)
+            SplitCandidate splitCandidate;
+            if (stats.splittingStatistics.getHighestValidSplitComponent(splitCandidate, cfg.splittingThreshold, vmm, alreadySplitted, true))
             {
-                float chi2Est = stats.splittingStatistics.getChiSquareEst(splitCandidate.componentIndex);
-                if (chi2Est > cfg.splittingThreshold)
-                {
-                    splitSuccess = splitter.SplitAndUpdate(vmm, mcEstimate, splitCandidate, stats.splittingStatistics, stats.sufficientStatistics, samples, numSamples,
-                                                           cfg.weightedEMCfg, true);
-                }
-
-                // wether or not the split was succesfull we mark the component as splitted to a void
+                // Split the component of the split candidate and do a partial re-fit of the resulting split components.
+                splitSuccess =
+                    splitter.SplitAndUpdate(vmm, mcEstimate, splitCandidate, stats.splittingStatistics, stats.sufficientStatistics, samples, numSamples, cfg.weightedEMCfg, true);
+                // Wether or not the split was succesfull we mark the component as splitted to a void
                 // splitting it again
                 alreadySplitted[splitCandidate.componentIndex] = true;
                 // if the split was succesfull avoid splitting the new component recursivly
@@ -479,7 +476,7 @@ void AdaptiveSplitAndMergeFactoryV2<TVMMDistribution>::update(VMM &vmm, Statisti
             else
             {
                 // We stop the splitting process, if we did not find a split candidate or if the number of VMM components reached its limit
-                split = false;
+                continueSplitting = false;
             }
             OPENPGL_ASSERT(vmm._numComponents == stats.splittingStatistics.numComponents);
         }
@@ -490,6 +487,14 @@ void AdaptiveSplitAndMergeFactoryV2<TVMMDistribution>::update(VMM &vmm, Statisti
         OPENPGL_ASSERT(vmm.getNumComponents() == stats.getNumComponents());
         OPENPGL_ASSERT(stats.isValid());
 
+        if (vmm.getNumComponents() == VMM::MaxComponents)
+        {
+            std::cout << "SaM: Reach Component Limit" << std::endl;
+        }
+
+        //////////////////////////////////////////////////////
+        // Merging
+        //////////////////////////////////////////////////////
         if (stats.numSamplesAfterLastMerge >= cfg.minSamplesForMerging)
         {
             Merger merger = Merger();
