@@ -37,7 +37,7 @@ struct KDTreePartitionBuilder
 
     typedef KDTree SpatialStructure;
 
-#ifdef USE_EMBREE_PARALLEL
+#ifdef USE_PARALLEL_PIVOT_SPLIT
     static const size_t PARALLEL_THRESHOLD = 4 * 1024;
     static const size_t PARALLEL_PARTITION_BLOCK_SIZE = 4 * 1024;
 #endif
@@ -92,7 +92,7 @@ struct KDTreePartitionBuilder
 
         if (root.isLeaf())
         {
-#ifdef USE_EMBREE_PARALLEL
+#ifdef USE_PARALLEL_PIVOT_SPLIT
             IntegerSampleStatistics iSampleStats = embree::parallel_reduce(
                 size_t(0), samples.size(), IntegerSampleStatistics(bounds),
                 [&](const embree::range<size_t> &r) -> IntegerSampleStatistics {
@@ -168,7 +168,7 @@ struct KDTreePartitionBuilder
         return std::partition(begin, end, pivotSplitPredicate);
     }
 
-#ifdef USE_EMBREE_PARALLEL
+#ifdef USE_PARALLEL_PIVOT_SPLIT
     template <class DataType>
     inline size_t pivotSplitSamplesParallel(DataType *samples, const size_t begin, const size_t end, uint8_t splitDimension, float pivot) const
     {
@@ -352,7 +352,7 @@ struct KDTreePartitionBuilder
         bondsLeftRight[0].upper[splitDim] = splitPos;
         bondsLeftRight[1].lower[splitDim] = splitPos;
 
-#ifdef USE_EMBREE_PARALLEL
+#ifdef USE_PARALLEL_PIVOT_SPLIT
         size_t rPivotItr = 0;
 #else
         typename TSamplesContainer::iterator rPivotItr(nullptr);
@@ -361,7 +361,7 @@ struct KDTreePartitionBuilder
         if (kdTree->getNode(nodeIdsLeftRight[0]).isLeaf() || kdTree->getNode(nodeIdsLeftRight[1]).isLeaf())
         {
             // splitStats = true;
-#ifdef USE_EMBREE_PARALLEL
+#ifdef USE_PARALLEL_PIVOT_SPLIT
 #ifndef USE_INTEGER_ARITHMETIC_STATS
             rPivotItr =
                 pivotSplitSamplesWithStatsParallel(samples.data(), sampleRange.m_begin, sampleRange.m_end, splitDim, splitPos, sampleStatsLeftRight[0], sampleStatsLeftRight[1]);
@@ -375,14 +375,14 @@ struct KDTreePartitionBuilder
         }
         else
         {
-#ifdef USE_EMBREE_PARALLEL
+#ifdef USE_PARALLEL_PIVOT_SPLIT
             rPivotItr = pivotSplitSamplesParallel<typename TSamplesContainer::value_type>(samples.data(), sampleRange.m_begin, sampleRange.m_end, splitDim, splitPos);
 #else
             rPivotItr = pivotSplitSamples<TSamplesContainer>(begin, end, splitDim, splitPos);
 #endif
         }
 
-#ifdef USE_EMBREE_PARALLEL
+#ifdef USE_PARALLEL_PIVOT_SPLIT
         sampleRangeLeftRight[0] = Range(sampleRange.m_begin, rPivotItr);
         sampleRangeLeftRight[1] = Range(rPivotItr, sampleRange.m_end);
 #else
@@ -436,19 +436,19 @@ struct KDTreePartitionBuilder
         OPENPGL_ASSERT(!node.isLeaf());
         OPENPGL_ASSERT(sampleRange.size() > 0);
 
-#ifdef USE_EMBREE_PARALLEL
+#ifdef USE_PARALLEL_PIVOT_SPLIT
         size_t rPivotItr = 0;
 #else
         typename TZeroValueSamplesContainer::iterator rPivotItr;
         auto begin = samples.begin() + sampleRange.m_begin, end = samples.begin() + sampleRange.m_end;
 #endif
-#ifdef USE_EMBREE_PARALLEL
+#ifdef USE_PARALLEL_PIVOT_SPLIT
         rPivotItr = pivotSplitSamplesParallel<typename TZeroValueSamplesContainer::value_type>(samples.data(), sampleRange.m_begin, sampleRange.m_end, splitDim, splitPos);
 #else
         rPivotItr = pivotSplitSamples<TZeroValueSamplesContainer>(begin, end, splitDim, splitPos);
 #endif
 
-#ifdef USE_EMBREE_PARALLEL
+#ifdef USE_PARALLEL_PIVOT_SPLIT
         sampleRangeLeftRight[0] = Range(sampleRange.m_begin, rPivotItr);
         sampleRangeLeftRight[1] = Range(rPivotItr, sampleRange.m_end);
 #else
