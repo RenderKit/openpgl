@@ -110,6 +110,11 @@ struct SampleStatistics
 
     void merge(const SampleStatistics &b)
     {
+        if(numSamples + b.numSamples == 0)
+        {
+            return;
+        }
+        
         const Point3 meanA = mean;
         const Point3 meanB = b.mean;
 
@@ -294,6 +299,10 @@ struct IntegerSampleStatistics
 
     void merge(const IntegerSampleStatistics &b)
     {
+        if(numSamples + b.numSamples == 0)
+        {
+            return;
+        }
         mean += b.mean;
         variance += b.variance;
         numSamples += b.numSamples;
@@ -303,6 +312,10 @@ struct IntegerSampleStatistics
 
     static IntegerSampleStatistics merge(const IntegerSampleStatistics &a, const IntegerSampleStatistics &b)
     {
+        if(a.numSamples + b.numSamples == 0)
+        {
+            return a;
+        }
         IntegerSampleStatistics stats = a;
         stats.mean += b.mean;
         stats.variance += b.variance;
