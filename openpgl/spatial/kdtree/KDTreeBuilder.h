@@ -168,6 +168,34 @@ struct KDTreePartitionBuilder
         return std::partition(begin, end, pivotSplitPredicate);
     }
 
+    inline typename TSamplesContainer::iterator pivotSplitSamplesWithIntegerStats(const BBox &bounds, typename TSamplesContainer::iterator begin,
+                                                                                  typename TSamplesContainer::iterator end, uint8_t splitDimension, float pivot,
+                                                                                  SampleStatistics &statsLeft, SampleStatistics &statsRight) const
+    {
+        typename TSamplesContainer::iterator center;
+        IntegerSampleStatistics iStatsLeft(bounds);
+        IntegerSampleStatistics iStatsRight(bounds);
+
+        std::function<bool(typename TSamplesContainer::value_type)> pivotSplitPredicate = [splitDimension, pivot, &iStatsLeft,
+                                                                                           &iStatsRight](typename TSamplesContainer::value_type sample) -> bool {
+            const Vector3 samplePosition(sample.position.x, sample.position.y, sample.position.z);
+            bool left = samplePosition[splitDimension] < pivot;
+            if (left)
+            {
+                iStatsLeft.addSample(samplePosition);
+            }
+            else
+            {
+                iStatsRight.addSample(samplePosition);
+            }
+            return left;
+        };
+        center = std::partition(begin, end, pivotSplitPredicate);
+        statsLeft = iStatsLeft.getSampleStatistics();
+        statsRight = iStatsRight.getSampleStatistics();
+        return center;
+    }
+
 #ifdef USE_PARALLEL_PIVOT_SPLIT
     template <class DataType>
     inline size_t pivotSplitSamplesParallel(DataType *samples, const size_t begin, const size_t end, uint8_t splitDimension, float pivot) const
@@ -370,7 +398,11 @@ struct KDTreePartitionBuilder
                                                                   sampleStatsLeftRight[1], parallel);
 #endif
 #else
+#ifndef USE_INTEGER_ARITHMETIC_STATS
             rPivotItr = pivotSplitSamplesWithStats(begin, end, splitDim, splitPos, sampleStatsLeftRight[0], sampleStatsLeftRight[1]);
+#else
+            rPivotItr = pivotSplitSamplesWithIntegerStats(tmpBounds, begin, end, splitDim, splitPos, sampleStatsLeftRight[0], sampleStatsLeftRight[1]);
+#endif
 #endif
         }
         else
