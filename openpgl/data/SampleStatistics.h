@@ -29,7 +29,7 @@ struct SampleStatistics
     inline void addSample(const Point3 sample)
     {
         numSamples++;
-        float incWeight = embree::rcp(float(numSamples));
+        float incWeight = 1.f / float(numSamples);
         OPENPGL_ASSERT(numSamples > 0.0f);
         OPENPGL_ASSERT(embree::isvalid(incWeight));
         OPENPGL_ASSERT(incWeight >= 0.0f);
@@ -37,18 +37,32 @@ struct SampleStatistics
         const Point3 oldMean = mean;
         mean += (sample - oldMean) * incWeight;
 
+        OPENPGL_ASSERT(embree::isvalid(mean.x));
+        OPENPGL_ASSERT(embree::isvalid(mean.y));
+        OPENPGL_ASSERT(embree::isvalid(mean.z));
+
         sampleVariance += ((sample - oldMean) * (sample - mean));
         sampleBounds.extend(sample);
     }
 
     inline Point3 getMean() const
     {
+        OPENPGL_ASSERT(embree::isvalid(mean.x));
+        OPENPGL_ASSERT(embree::isvalid(mean.y));
+        OPENPGL_ASSERT(embree::isvalid(mean.z));
         return mean;
     }
 
     inline Vector3 getVariance() const
     {
+        if (numSamples == 0.f)
+        {
+            return Vector3(0.f);
+        }
         OPENPGL_ASSERT(numSamples > 0.f);
+        OPENPGL_ASSERT(embree::isvalid(sampleVariance.x / float(numSamples)));
+        OPENPGL_ASSERT(embree::isvalid(sampleVariance.y / float(numSamples)));
+        OPENPGL_ASSERT(embree::isvalid(sampleVariance.z / float(numSamples)));
         return sampleVariance / float(numSamples);
     }
 
@@ -110,11 +124,11 @@ struct SampleStatistics
 
     void merge(const SampleStatistics &b)
     {
-        if(numSamples + b.numSamples == 0)
+        if (numSamples + b.numSamples == 0)
         {
             return;
         }
-        
+
         const Point3 meanA = mean;
         const Point3 meanB = b.mean;
 
@@ -124,9 +138,10 @@ struct SampleStatistics
         const float numSamplesA = numSamples;
         const float numSamplesB = b.numSamples;
 
-        mean = meanA * (float)numSamplesA + meanB * (float)numSamplesB;
+        const float weightA = numSamplesA / (numSamplesA + numSamplesB);
+        const float weightB = 1.0f - weightA;
+        mean = meanA * weightA + meanB * weightB;
         numSamples += numSamplesB;
-        mean /= float(numSamples);
 
         sampleVariance = (sampleVarianceA + numSamplesA * meanA * meanA + sampleVarianceB + numSamplesB * meanB * meanB) - numSamples * mean * mean;
         sampleBounds.extend(b.sampleBounds);
@@ -139,14 +154,16 @@ struct SampleStatistics
         bool valid = true;
         valid = valid && numSamples >= 0.0f;
         valid = valid && numZeroValueSamples >= 0.0f;
-
+        OPENPGL_ASSERT(valid);
         valid = valid && embree::isvalid(mean.x);
         valid = valid && embree::isvalid(mean.y);
         valid = valid && embree::isvalid(mean.z);
+        OPENPGL_ASSERT(valid);
 
         valid = valid && embree::isvalid(sampleVariance.x);
         valid = valid && embree::isvalid(sampleVariance.y);
         valid = valid && embree::isvalid(sampleVariance.z);
+        OPENPGL_ASSERT(valid);
 
         return valid;
     }
@@ -205,7 +222,8 @@ struct SampleStatistics
     }
 };
 
-#define INTEGER_BINS 4096.f
+// 2^18 number of bins
+#define INTEGER_BINS float(1 << 20)
 #define INTEGER_SAMPLE_STATS_BOUND_SCALE (1.0f + 2.f / INTEGER_BINS)
 
 struct IntegerSampleStatistics
@@ -259,27 +277,10 @@ struct IntegerSampleStatistics
         sampleBoundsMin = scaledBounds.lower;
         sampleBoundsMax = scaledBounds.upper;
         sampleBoundsExtend = scaledBounds.upper - scaledBounds.lower;
-        invSampleBoundsExtend = embree::rcp(sampleBoundsExtend);
+        invSampleBoundsExtend = 1.0f / sampleBoundsExtend;
         sampleBoundsHalfExtend = sampleBoundsExtend * 0.5f;
-        invSampleBoundsHalfExtend = embree::rcp(sampleBoundsHalfExtend);
+        invSampleBoundsHalfExtend = 1.0f / sampleBoundsHalfExtend;
         sampleBoundsCenter = sampleBoundsMin + sampleBoundsHalfExtend;
-    }
-
-    void clear()
-    {
-        mean = Point3i(0);
-        variance = Vector3i(0);
-        numSamples = 0;
-
-        intSampleBounds = BBoxi(openpgl::Vector3i(std::numeric_limits<int>::max()), openpgl::Vector3i(-std::numeric_limits<int>::max()));
-        sampleBounds = BBox(openpgl::Vector3(std::numeric_limits<float>::max()), openpgl::Vector3(std::numeric_limits<float>::min()));
-        sampleBoundsMin = Vector3(0);
-        sampleBoundsMax = Vector3(0);
-        sampleBoundsExtend = Vector3(0);
-        invSampleBoundsExtend = Vector3(0);
-        sampleBoundsCenter = Vector3(0);
-        sampleBoundsHalfExtend = Vector3(0);
-        invSampleBoundsHalfExtend = Vector3(0);
     }
 
     inline void addSample(const Point3 sample)
@@ -299,7 +300,7 @@ struct IntegerSampleStatistics
 
     void merge(const IntegerSampleStatistics &b)
     {
-        if(numSamples + b.numSamples == 0)
+        if (numSamples + b.numSamples == 0)
         {
             return;
         }
@@ -312,7 +313,7 @@ struct IntegerSampleStatistics
 
     static IntegerSampleStatistics merge(const IntegerSampleStatistics &a, const IntegerSampleStatistics &b)
     {
-        if(a.numSamples + b.numSamples == 0)
+        if (a.numSamples + b.numSamples == 0)
         {
             return a;
         }
