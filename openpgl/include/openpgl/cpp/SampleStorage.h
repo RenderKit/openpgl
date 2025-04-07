@@ -139,6 +139,8 @@ struct SampleStorage
     /// Checks if the samples (SampleData) stored in the SampleStorage are valid (i.e., all attributes are in valid ranges).
     bool Validate() const;
 
+    void Merge(const SampleStorage &sampleStroage);
+
     /// Checks if the samples contained in another SampleStorage are the same as in the SampleStorage.
     bool operator==(const SampleStorage &b) const;
 
@@ -278,6 +280,12 @@ OPENPGL_INLINE bool SampleStorage::Validate() const
 {
     OPENPGL_ASSERT(m_sampleStorageHandle);
     return pglSampleStorageValidate(m_sampleStorageHandle);
+}
+
+OPENPGL_INLINE void SampleStorage::Merge(const SampleStorage &sampleStorage)
+{
+    OPENPGL_ASSERT(m_sampleStorageHandle);
+    pglSampleStorageMerge(m_sampleStorageHandle, sampleStorage.m_sampleStorageHandle);
 }
 
 OPENPGL_INLINE bool SampleStorage::operator==(const SampleStorage &b) const

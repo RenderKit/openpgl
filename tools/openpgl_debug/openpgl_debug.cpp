@@ -20,6 +20,7 @@ enum DebugType
     COMPARE_SAMPLES,
     COMPARE_FIELDS,
     UPDATE_COMPARE_FIELDS,
+    MERGE_SAMPLES,
     NONE
 };
 
@@ -38,6 +39,7 @@ struct DebugParams
     // std::string samples_file_name{""};
     std::vector<std::string> samples_file_names;
     std::string samples_file_name_comp{""};
+    std::string samples_out_file_name{""};
     std::string dump_file_name{""};
     std::string obj_out_file_name{""};
 
@@ -105,6 +107,25 @@ struct DebugParams
                 }
                 break;
 
+            case MERGE_SAMPLES:
+                if(samples_file_names.size() == 0 /*|| 
+                    !file_exists(samples_file_name)*/)
+                {
+                    std::cout << "ERROR: Samples file not set" << std::endl;
+                    valid = false;
+                }
+                else
+                {
+                    for (int i = 0; i < samples_file_names.size(); i++)
+                    {
+                        if (!file_exists(samples_file_names[i]))
+                        {
+                            std::cout << "ERROR: Samples file does not exists: " << samples_file_names[i] << std::endl;
+                            valid = false;
+                        }
+                    }
+                }
+                break;
             case VALIDATE_FIELD:
                 if (field_file_name == "" || !file_exists(field_file_name))
                 {
@@ -251,6 +272,10 @@ bool parseCommandLine(std::list<std::string> &args, DebugParams &debugParams)
                 {
                     debugParams.type = DebugType::UPDATE_COMPARE_FIELDS;
                 }
+                else if (str_type == "mergeSamples")
+                {
+                    debugParams.type = DebugType::MERGE_SAMPLES;
+                }
                 else
                 {
                     std::cout << "ERROR: Unknown type: " << str_type << std::endl;
@@ -326,6 +351,20 @@ bool parseCommandLine(std::list<std::string> &args, DebugParams &debugParams)
             {
                 const std::string str_samples = *it;
                 debugParams.samples_file_name_comp = str_samples;
+            }
+            else
+            {
+                return false;
+            }
+        }
+        else if (arg == "-samplesOut")
+        {
+            collectSamples = false;
+            ++it;
+            if (it != args.end())
+            {
+                const std::string str_samples = *it;
+                debugParams.samples_out_file_name = str_samples;
             }
             else
             {
@@ -503,6 +542,25 @@ void update_field(DebugParams &debugParams)
     }
 }
 
+void merge_samples(DebugParams &debugParams)
+{
+    openpgl::cpp::SampleStorage mergeSamples;
+
+    for (int i = 0; i < debugParams.samples_file_names.size(); i++)
+    {
+        std::cout << "Validate Samples[" << i << "]:" << std::endl;
+        openpgl::cpp::SampleStorage sampleStorage(debugParams.samples_file_names[i]);
+        bool samplesValidate = sampleStorage.Validate();
+        std::cout << "  -samples: " << debugParams.samples_file_names[i] << " is " << (samplesValidate ? "valid" : "NOT valid") << std::endl;
+
+        mergeSamples.Merge(sampleStorage);
+    }
+
+    if (debugParams.samples_out_file_name != "")
+    {
+        mergeSamples.Store(debugParams.samples_out_file_name);
+    }
+}
 void validate_field(DebugParams &debugParams)
 {
     openpgl::cpp::Device device(debugParams.device_type);
@@ -694,6 +752,9 @@ int main(int argc, char *argv[])
                 break;
             case UPDATE_COMPARE_FIELDS:
                 update_compare_fields(debugParams);
+                break;
+            case MERGE_SAMPLES:
+                merge_samples(debugParams);
                 break;
             default:
                 print_help();

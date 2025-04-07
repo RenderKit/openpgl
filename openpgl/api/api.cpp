@@ -407,6 +407,13 @@ extern "C" OPENPGL_DLLEXPORT bool pglSampleStorageValidate(PGLSampleStorage samp
     return gSampleStorage->validate();
 }
 
+extern "C" OPENPGL_DLLEXPORT void pglSampleStorageMerge(PGLSampleStorage sampleStorageA, PGLSampleStorage sampleStorageB)
+{
+    auto *gSampleStorageA = (openpgl::SampleDataStorage *)sampleStorageA;
+    auto *gSampleStorageB = (openpgl::SampleDataStorage *)sampleStorageB;
+    return gSampleStorageA->merge(*gSampleStorageB);
+}
+
 extern "C" OPENPGL_DLLEXPORT bool pglSampleStorageCompare(PGLSampleStorage sampleStorageA, PGLSampleStorage sampleStorageB)
 {
     auto *gSampleStorageA = (openpgl::SampleDataStorage *)sampleStorageA;

@@ -73,6 +73,8 @@ typedef ManagedObject Region;
 
     OPENPGL_CORE_INTERFACE bool pglSampleStorageValidate(PGLSampleStorage sampleStorage);
 
+    OPENPGL_CORE_INTERFACE void pglSampleStorageMerge(PGLSampleStorage sampleStorageA, PGLSampleStorage sampleStorageB);
+
     OPENPGL_CORE_INTERFACE bool pglSampleStorageCompare(PGLSampleStorage sampleStorageA, PGLSampleStorage sampleStorageB);
 
 #ifdef __cplusplus

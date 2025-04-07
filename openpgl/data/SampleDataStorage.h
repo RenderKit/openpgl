@@ -363,6 +363,29 @@ struct SampleDataStorage
         return valid;
     }
 
+    void merge(const SampleDataStorage &b)
+    {
+        for (int i = 0; i < b.m_surfaceContainer.samples.size(); i++)
+        {
+            m_surfaceContainer.samples.push_back(b.m_surfaceContainer.samples[i]);
+        }
+
+        for (int i = 0; i < b.m_volumeContainer.samples.size(); i++)
+        {
+            m_volumeContainer.samples.push_back(b.m_volumeContainer.samples[i]);
+        }
+
+        for (int i = 0; i < b.m_surfaceContainer.zeroValueSamples.size(); i++)
+        {
+            m_surfaceContainer.zeroValueSamples.push_back(b.m_surfaceContainer.zeroValueSamples[i]);
+        }
+
+        for (int i = 0; i < b.m_volumeContainer.zeroValueSamples.size(); i++)
+        {
+            m_volumeContainer.zeroValueSamples.push_back(b.m_volumeContainer.zeroValueSamples[i]);
+        }
+    }
+
     bool operator==(const SampleDataStorage &b) const
     {
         std::vector<SampleData> surfaceSampleDataA;
