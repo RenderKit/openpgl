@@ -118,7 +118,7 @@ struct KDTreePartitionBuilder
 #endif
             sampleStats = iSampleStats.getSampleStatistics();
         }
-        updateTreeNode(&kdTree, root, depth, bounds, samples, sampleRange, sampleStats, &dataStorage, buildSettings);
+        updateTreeNode(&kdTree, root, 0, depth, bounds, samples, sampleRange, sampleStats, &dataStorage, buildSettings);
         kdTree.finalize();
     }
 
@@ -287,19 +287,40 @@ struct KDTreePartitionBuilder
 
     inline void getSplitDimensionAndPosition(const SampleStatistics &sampleStats, uint8_t &splitDim, float &splitPos) const
     {
-        const Vector3 sampleVariance = sampleStats.getVariance();
-        const Point3 sampleMean = sampleStats.getMean();
-
         auto maxDimension = [](const Vector3 &v) -> uint8_t {
             return v[v[1] > v[0]] > v[2] ? v[1] > v[0] : 2;
         };
 
-        splitDim = maxDimension(sampleVariance);
-        splitPos = sampleMean[splitDim];
+        const Vector3 sampleVariance = sampleStats.getVariance();
+        const Point3 sampleMean = sampleStats.getMean();
+        const Vector3 sampleBoundExtend = sampleStats.getSampleBoundsExtend();
+
+        // Spliting the tree node on the axis with the highes sample position variance.
+        // In case all three variance dimensions are the same (e.g., [0,0,0]) we perform a split based ont the
+        // sample bound extend or in a round robin fashion
+        if (sampleVariance[0] == sampleVariance[1] && sampleVariance[1] == sampleVariance[2])
+        {
+            if (sampleBoundExtend[0] == sampleBoundExtend[1] && sampleBoundExtend[1] == sampleBoundExtend[2])
+            {
+                splitDim = (splitDim + 1) % 3;
+                splitPos = sampleMean[splitDim];
+            }
+            else
+            {
+                splitDim = maxDimension(sampleBoundExtend);
+                splitPos = sampleMean[splitDim];
+            }
+        }
+        else
+        {
+            splitDim = maxDimension(sampleVariance);
+            splitPos = sampleMean[splitDim];
+        }
     }
 
-    void updateTreeNode(KDTree *kdTree, KDNode &node, size_t depth, const BBox bounds, TSamplesContainer &samples, const Range sampleRange, const SampleStatistics &sampleStats,
-                        tbb::concurrent_vector<std::pair<TRegion, Range> > *dataStorage, const Settings &buildSettings, bool parallel = true) const
+    void updateTreeNode(KDTree *kdTree, KDNode &node, const uint8_t parentSplitDim, size_t depth, const BBox bounds, TSamplesContainer &samples, const Range sampleRange,
+                        const SampleStatistics &sampleStats, tbb::concurrent_vector<std::pair<TRegion, Range> > *dataStorage, const Settings &buildSettings,
+                        bool parallel = true) const
     {
         if (sampleRange.size() <= 0)
         {
@@ -315,25 +336,32 @@ struct KDTreePartitionBuilder
         BBox bondsLeftRight[2];
         // sample bounds for the splitting of a leaf node
         BBox tmpBounds = bounds;
+        bool nodeSplit = false;
 
         if (node.isLeaf())
         {
             uint32_t dataIdx = node.getDataIdx();
             std::pair<TRegion, Range> &regionAndRangeData = dataStorage->operator[](dataIdx);
-            if (depth < buildSettings.maxDepth && regionAndRangeData.first.sampleStatistics.numSamples + sampleRange.size() > buildSettings.maxSamples)
+            SampleStatistics mergedSampleStats = regionAndRangeData.first.sampleStatistics;
+            mergedSampleStats.merge(sampleStats);
+            bool validBoundRange = mergedSampleStats.hasValidBoundRange();
+            if (validBoundRange && depth < buildSettings.maxDepth && regionAndRangeData.first.sampleStatistics.getNumSamples() + sampleRange.size() > buildSettings.maxSamples)
             {
-                SampleStatistics mergedSampleStats = regionAndRangeData.first.sampleStatistics;
-                mergedSampleStats.merge(sampleStats);
+                nodeSplit = true;
+                splitDim = parentSplitDim;
                 getSplitDimensionAndPosition(mergedSampleStats, splitDim, splitPos);
                 // update the sample bound to the measured sampled bound of the current and previous leaf node samples
-                tmpBounds = mergedSampleStats.sampleBounds;
+                tmpBounds = mergedSampleStats.getSampleBounds();
 
                 // regionAndRangeData.first.onSplit();
                 auto regionAndRangeDataRight = regionAndRangeData;
 
                 // merge split handling
-                regionAndRangeData.first.sampleStatistics.split(splitDim, splitPos, 0.25f, false);
-                regionAndRangeDataRight.first.sampleStatistics.split(splitDim, splitPos, 0.25f, true);
+                // regionAndRangeData.first.sampleStatistics.split(splitDim, splitPos, 0.25f, false);
+                // regionAndRangeDataRight.first.sampleStatistics.split(splitDim, splitPos, 0.25f, true);
+
+                regionAndRangeData.first.sampleStatistics.clear();
+                regionAndRangeDataRight.first.sampleStatistics.clear();
 
                 regionAndRangeData.first.splitFlag = true;
                 regionAndRangeDataRight.first.splitFlag = true;
@@ -357,7 +385,7 @@ struct KDTreePartitionBuilder
             }
             else
             {
-                regionAndRangeData.first.sampleStatistics.merge(sampleStats);
+                regionAndRangeData.first.sampleStatistics = mergedSampleStats;
                 regionAndRangeData.second = sampleRange;
                 return;
             }
@@ -423,12 +451,12 @@ struct KDTreePartitionBuilder
 #endif
         tbb::parallel_invoke(
             [&] {
-                updateTreeNode(kdTree, kdTree->getNode(nodeIdsLeftRight[0]), depth + 1, bondsLeftRight[0], samples, sampleRangeLeftRight[0], sampleStatsLeftRight[0], dataStorage,
-                               buildSettings, true);
+                updateTreeNode(kdTree, kdTree->getNode(nodeIdsLeftRight[0]), splitDim, depth + 1, bondsLeftRight[0], samples, sampleRangeLeftRight[0], sampleStatsLeftRight[0],
+                               dataStorage, buildSettings, true);
             },
             [&] {
-                updateTreeNode(kdTree, kdTree->getNode(nodeIdsLeftRight[1]), depth + 1, bondsLeftRight[1], samples, sampleRangeLeftRight[1], sampleStatsLeftRight[1], dataStorage,
-                               buildSettings, true);
+                updateTreeNode(kdTree, kdTree->getNode(nodeIdsLeftRight[1]), splitDim, depth + 1, bondsLeftRight[1], samples, sampleRangeLeftRight[1], sampleStatsLeftRight[1],
+                               dataStorage, buildSettings, true);
             });
     }
 

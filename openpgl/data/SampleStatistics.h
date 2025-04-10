@@ -61,6 +61,17 @@ struct SampleStatistics
         return sampleBounds.upper - sampleBounds.lower;
     }
 
+    inline bool hasValidBoundRange() const
+    {
+        bool validBoundRange = false;
+        Vector3 boundExtend = sampleBounds.upper - sampleBounds.lower;
+        if (boundExtend.x + boundExtend.y + boundExtend.z > 0.f)
+        {
+            validBoundRange = true;
+        }
+        return validBoundRange;
+    }
+
     inline void decay(const float &a)
     {
         OPENPGL_ASSERT(a >= 0.f);
@@ -399,7 +410,7 @@ struct IntegerSampleStatistics
             // sampleVariance = Vector3(std::fabs(sampleVariance.x), std::fabs(sampleVariance.y), std::fabs(sampleVariance.z));
 
             sampleVariance = sampleVariance * (sampleBoundsHalfExtend * sampleBoundsHalfExtend);
-            // Ensuring that the estimated variance is in the right bounds. 
+            // Ensuring that the estimated variance is in the right bounds.
             sampleVariance.x = std::min(collectedSampleBoundExtend.x * collectedSampleBoundExtend.x, sampleVariance.x);
             sampleVariance.y = std::min(collectedSampleBoundExtend.y * collectedSampleBoundExtend.y, sampleVariance.y);
             sampleVariance.z = std::min(collectedSampleBoundExtend.z * collectedSampleBoundExtend.z, sampleVariance.z);
