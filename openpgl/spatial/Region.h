@@ -19,6 +19,7 @@ struct Region : public IRegion
     BBox regionBounds;
     TTrainingStatistics trainingStatistics;
     SampleStatistics sampleStatistics;
+    Vector3 regionPivot;
     size_t numZeroValueSamples{0};
     bool splitFlag{false};
 #ifdef OPENPGL_RADIANCE_CACHES
@@ -79,6 +80,7 @@ struct Region : public IRegion
         stream.write(reinterpret_cast<const char *>(&initialized), sizeof(initialized));
         distribution.serialize(stream);
         stream.write(reinterpret_cast<const char *>(&regionBounds), sizeof(regionBounds));
+        stream.write(reinterpret_cast<const char *>(&regionPivot), sizeof(regionPivot));
         trainingStatistics.serialize(stream);
         sampleStatistics.serialize(stream);
 #ifdef OPENPGL_RADIANCE_CACHES
@@ -94,6 +96,7 @@ struct Region : public IRegion
         stream.read(reinterpret_cast<char *>(&initialized), sizeof(initialized));
         distribution.deserialize(stream);
         stream.read(reinterpret_cast<char *>(&regionBounds), sizeof(regionBounds));
+        stream.read(reinterpret_cast<char *>(&regionPivot), sizeof(regionPivot));
         trainingStatistics.deserialize(stream);
         sampleStatistics.deserialize(stream);
 #ifdef OPENPGL_RADIANCE_CACHES

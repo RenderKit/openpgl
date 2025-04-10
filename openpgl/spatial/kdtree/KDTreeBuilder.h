@@ -386,6 +386,7 @@ struct KDTreePartitionBuilder
             else
             {
                 regionAndRangeData.first.sampleStatistics = mergedSampleStats;
+                regionAndRangeData.first.regionPivot = mergedSampleStats.getMean();
                 regionAndRangeData.second = sampleRange;
                 return;
             }

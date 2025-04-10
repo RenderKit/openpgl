@@ -438,7 +438,8 @@ struct Field
 #endif
             {
                 RegionStorageType &regionStorage = m_regionStorageContainer[n];
-                openpgl::Point3 sampleMean = regionStorage.first.sampleStatistics.mean;
+                // TODO: replace with the region pivot for consistency
+                openpgl::Point3 sampleMean = regionStorage.first.sampleStatistics.getMean();
                 if (regionStorage.second.size() > 0)
                 {
                     if (m_deterministic)
@@ -470,8 +471,8 @@ struct Field
                                       << std::endl;
 #endif
                         regionStorage.first.splitFlag = false;
+                        regionStorage.first.initialized = true;
                     }
-                    regionStorage.first.initialized = true;
                 }
                 else
                 {
@@ -512,7 +513,8 @@ struct Field
                     regionStorage.first.splitFlag = false;
                 }
 
-                openpgl::Point3 sampleMean = regionStorage.first.sampleStatistics.mean;
+                // TODO: replace with the region pivot for consistency
+                openpgl::Point3 sampleMean = regionStorage.first.sampleStatistics.getMean();
                 if (regionStorage.second.size() > 0)
                 {
 #ifdef OPENPGL_DEBUG_MODE
