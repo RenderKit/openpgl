@@ -51,6 +51,16 @@ struct SampleStatistics
         return variance;
     }
 
+    inline BBox getSampleBounds() const
+    {
+        return sampleBounds;
+    }
+
+    inline Vector3 getSampleBoundsExtend() const
+    {
+        return sampleBounds.upper - sampleBounds.lower;
+    }
+
     inline void decay(const float &a)
     {
         OPENPGL_ASSERT(a >= 0.f);
@@ -221,7 +231,7 @@ struct SampleStatistics
 };
 
 // 2^18 number of bins
-#define INTEGER_BINS float(1 << 20)
+#define INTEGER_BINS float(1 << 18)
 #define INTEGER_SAMPLE_STATS_BOUND_SCALE (1.0f + 2.f / INTEGER_BINS)
 
 struct IntegerSampleStatistics
@@ -235,8 +245,7 @@ struct IntegerSampleStatistics
     BBox sampleBounds{openpgl::Vector3(std::numeric_limits<float>::max()), openpgl::Vector3(-std::numeric_limits<float>::max())};
     Vector3 sampleBoundsMin{0};
     Vector3 sampleBoundsMax{0};
-    Vector3 sampleBoundsExtend{0};
-    Vector3 invSampleBoundsExtend{0};
+
     // sample bound stats to center the collected samples before discretization
     Vector3 sampleBoundsCenter{0};
     Vector3 sampleBoundsHalfExtend{0};
@@ -251,8 +260,6 @@ struct IntegerSampleStatistics
         sampleBounds = BBox(openpgl::Vector3(std::numeric_limits<float>::max()), openpgl::Vector3(-std::numeric_limits<float>::max()));
         sampleBoundsMin = Vector3(0);
         sampleBoundsMax = Vector3(0);
-        sampleBoundsExtend = Vector3(0);
-        invSampleBoundsExtend = Vector3(0);
         sampleBoundsCenter = Vector3(0);
         sampleBoundsHalfExtend = Vector3(0);
         invSampleBoundsHalfExtend = Vector3(0);
@@ -274,11 +281,17 @@ struct IntegerSampleStatistics
 
         sampleBoundsMin = scaledBounds.lower;
         sampleBoundsMax = scaledBounds.upper;
-        sampleBoundsExtend = scaledBounds.upper - scaledBounds.lower;
-        invSampleBoundsExtend = 1.0f / sampleBoundsExtend;
-        sampleBoundsHalfExtend = sampleBoundsExtend * 0.5f;
-        invSampleBoundsHalfExtend = 1.0f / sampleBoundsHalfExtend;
+        sampleBoundsHalfExtend = (scaledBounds.upper - scaledBounds.lower) * 0.5f;
+
+        // Checking and compenstaing for sampled bounds with dimensions of zero extend (e.g. plane)
+        invSampleBoundsHalfExtend.x = sampleBoundsHalfExtend.x > 0.f ? 1.0f / sampleBoundsHalfExtend.x : 0.f;
+        invSampleBoundsHalfExtend.y = sampleBoundsHalfExtend.y > 0.f ? 1.0f / sampleBoundsHalfExtend.y : 0.f;
+        invSampleBoundsHalfExtend.z = sampleBoundsHalfExtend.z > 0.f ? 1.0f / sampleBoundsHalfExtend.z : 0.f;
         sampleBoundsCenter = sampleBoundsMin + sampleBoundsHalfExtend;
+
+        OPENPGL_ASSERT(embree::isvalid(invSampleBoundsHalfExtend.x));
+        OPENPGL_ASSERT(embree::isvalid(invSampleBoundsHalfExtend.y));
+        OPENPGL_ASSERT(embree::isvalid(invSampleBoundsHalfExtend.z));
     }
 
     inline void addSample(const Point3 sample)
@@ -288,12 +301,17 @@ struct IntegerSampleStatistics
         Vector3 tmpVariance = (tmpSample * tmpSample) * INTEGER_BINS;
         tmpSample *= INTEGER_BINS;
 
+        OPENPGL_ASSERT(embree::isvalid(tmpSample.x));
+        OPENPGL_ASSERT(embree::isvalid(tmpSample.y));
+        OPENPGL_ASSERT(embree::isvalid(tmpSample.z));
+
         Point3i iSample(tmpSample.x, tmpSample.y, tmpSample.z);
         mean += iSample;
         variance += Vector3i(tmpVariance.x, tmpVariance.y, tmpVariance.z);
 
         intSampleBounds.extend(iSample);
         sampleBounds.extend(Vector3(sample.x, sample.y, sample.z));
+        OPENPGL_ASSERT(isValid());
     }
 
     void merge(const IntegerSampleStatistics &b)
@@ -307,6 +325,7 @@ struct IntegerSampleStatistics
         numSamples += b.numSamples;
         intSampleBounds.extend(b.intSampleBounds);
         sampleBounds.extend(b.sampleBounds);
+        OPENPGL_ASSERT(isValid());
     }
 
     static IntegerSampleStatistics merge(const IntegerSampleStatistics &a, const IntegerSampleStatistics &b)
@@ -321,7 +340,31 @@ struct IntegerSampleStatistics
         stats.numSamples += b.numSamples;
         stats.intSampleBounds.extend(b.intSampleBounds);
         stats.sampleBounds.extend(b.sampleBounds);
+        OPENPGL_ASSERT(stats.isValid());
         return stats;
+    }
+
+    inline bool isValid() const
+    {
+        bool valid = true;
+        valid = valid && numSamples >= 0.0f;
+        OPENPGL_ASSERT(valid);
+        valid = valid && embree::isvalid(mean.x);
+        valid = valid && embree::isvalid(mean.y);
+        valid = valid && embree::isvalid(mean.z);
+        OPENPGL_ASSERT(valid);
+
+        valid = valid && embree::isvalid(variance.x);
+        valid = valid && embree::isvalid(variance.y);
+        valid = valid && embree::isvalid(variance.z);
+        OPENPGL_ASSERT(valid);
+
+        valid = valid && variance.x >= 0;
+        valid = valid && variance.y >= 0;
+        valid = valid && variance.z >= 0;
+        OPENPGL_ASSERT(valid);
+
+        return valid;
     }
 
     SampleStatistics getSampleStatistics() const
@@ -329,19 +372,41 @@ struct IntegerSampleStatistics
         SampleStatistics sampleStats;
         if (numSamples > 0)
         {
-            float invNumSamples = 1.f / float(numSamples);
-            Point3 sampleMean = (Point3(mean.x, mean.y, mean.z) / INTEGER_BINS) * invNumSamples;
-            Vector3 sampleVariance = (Vector3(variance.x, variance.y, variance.z) / (INTEGER_BINS)) * invNumSamples;
-            sampleVariance -= sampleMean * sampleMean;
-            sampleVariance = Vector3(std::fabs(sampleVariance.x), std::fabs(sampleVariance.y), std::fabs(sampleVariance.z));
+            Vector3 lowerCollectedSampleBound = sampleBounds.lower;
+            Vector3 upperCollectedSampleBound = sampleBounds.upper;
+            Vector3 collectedSampleBoundExtend = (upperCollectedSampleBound - lowerCollectedSampleBound);
+            Vector3 halfCollectedSampleBoundExtend = (upperCollectedSampleBound - lowerCollectedSampleBound) * 0.5f;
+            Vector3 halfBinSize = Vector3(0.5f / INTEGER_BINS) * sampleBoundsHalfExtend;
 
+            float invNumSamples = 1.f / float(numSamples);
+            Point3 sampleMean = (Point3(mean.x, mean.y, mean.z) * invNumSamples);
+            sampleMean /= INTEGER_BINS;
+            Point3 sampleMeanBin = sampleMean;
             sampleMean = sampleMean * sampleBoundsHalfExtend;
             sampleMean += sampleBoundsCenter;
+
+            // Ensuring that them sample mean position is inside the collected/measured sample bounds
+            sampleMean.x = sampleMean.x <= lowerCollectedSampleBound.x ? lowerCollectedSampleBound.x + std::min(halfCollectedSampleBoundExtend.x, halfBinSize.x) : sampleMean.x;
+            sampleMean.y = sampleMean.y <= lowerCollectedSampleBound.y ? lowerCollectedSampleBound.y + std::min(halfCollectedSampleBoundExtend.y, halfBinSize.y) : sampleMean.y;
+            sampleMean.z = sampleMean.z <= lowerCollectedSampleBound.z ? lowerCollectedSampleBound.z + std::min(halfCollectedSampleBoundExtend.z, halfBinSize.z) : sampleMean.z;
+            sampleMean.x = sampleMean.x >= upperCollectedSampleBound.x ? upperCollectedSampleBound.x - std::min(halfCollectedSampleBoundExtend.x, halfBinSize.x) : sampleMean.x;
+            sampleMean.y = sampleMean.y >= upperCollectedSampleBound.y ? upperCollectedSampleBound.y - std::min(halfCollectedSampleBoundExtend.y, halfBinSize.y) : sampleMean.y;
+            sampleMean.z = sampleMean.z >= upperCollectedSampleBound.z ? upperCollectedSampleBound.z - std::min(halfCollectedSampleBoundExtend.z, halfBinSize.z) : sampleMean.z;
+
+            Vector3 sampleVariance = (Vector3(variance.x, variance.y, variance.z) / (INTEGER_BINS)) * invNumSamples;
+            sampleVariance -= sampleMeanBin * sampleMeanBin;
+            sampleVariance = Vector3(std::max(0.f, sampleVariance.x), std::max(0.f, sampleVariance.y), std::max(0.f, sampleVariance.z));
+            // sampleVariance = Vector3(std::fabs(sampleVariance.x), std::fabs(sampleVariance.y), std::fabs(sampleVariance.z));
+
             sampleVariance = sampleVariance * (sampleBoundsHalfExtend * sampleBoundsHalfExtend);
+            // Ensuring that the estimated variance is in the right bounds. 
+            sampleVariance.x = std::min(collectedSampleBoundExtend.x * collectedSampleBoundExtend.x, sampleVariance.x);
+            sampleVariance.y = std::min(collectedSampleBoundExtend.y * collectedSampleBoundExtend.y, sampleVariance.y);
+            sampleVariance.z = std::min(collectedSampleBoundExtend.z * collectedSampleBoundExtend.z, sampleVariance.z);
 
             sampleStats.mean = sampleMean;
             sampleStats.numSamples = numSamples;
-            sampleStats.variance = sampleVariance * float(numSamples);
+            sampleStats.variance = sampleVariance;
 
             // setting the variance to zero if the measured integer sample bound is zero
             sampleStats.variance.x = intSampleBounds.upper.x - intSampleBounds.lower.x <= 0 ? 0.f : sampleStats.variance.x;
@@ -351,6 +416,7 @@ struct IntegerSampleStatistics
             // using the real (float) measured sample bound and not a transformed version of the integer sample bound for accuracy reasons
             sampleStats.sampleBounds = sampleBounds;
         }
+        OPENPGL_ASSERT(sampleStats.isValid());
         return sampleStats;
     }
 };
