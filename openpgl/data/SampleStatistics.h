@@ -234,7 +234,7 @@ struct IntegerSampleStatistics
     // measured sample bound in the discretized integer domain
     BBoxi intSampleBounds{openpgl::Vector3i(std::numeric_limits<int>::max()), openpgl::Vector3i(-std::numeric_limits<int>::max())};
     // actual measured sample bound (float)
-    BBox sampleBounds{openpgl::Vector3(std::numeric_limits<float>::max()), openpgl::Vector3(std::numeric_limits<float>::min())};
+    BBox sampleBounds{openpgl::Vector3(std::numeric_limits<float>::max()), openpgl::Vector3(-std::numeric_limits<float>::max())};
     Vector3 sampleBoundsMin{0};
     Vector3 sampleBoundsMax{0};
     Vector3 sampleBoundsExtend{0};
@@ -250,7 +250,7 @@ struct IntegerSampleStatistics
         variance = Vector3i(0);
         numSamples = 0;
         intSampleBounds = BBoxi(openpgl::Vector3i(std::numeric_limits<int>::max()), openpgl::Vector3i(-std::numeric_limits<int>::max()));
-        sampleBounds = BBox(openpgl::Vector3(std::numeric_limits<float>::max()), openpgl::Vector3(std::numeric_limits<float>::min()));
+        sampleBounds = BBox(openpgl::Vector3(std::numeric_limits<float>::max()), openpgl::Vector3(-std::numeric_limits<float>::max()));
         sampleBoundsMin = Vector3(0);
         sampleBoundsMax = Vector3(0);
         sampleBoundsExtend = Vector3(0);
@@ -266,7 +266,7 @@ struct IntegerSampleStatistics
         variance = Vector3i(0);
         numSamples = 0;
         intSampleBounds = BBoxi(openpgl::Vector3i(std::numeric_limits<int>::max()), openpgl::Vector3i(-std::numeric_limits<int>::max()));
-        sampleBounds = BBox(openpgl::Vector3(std::numeric_limits<float>::max()), openpgl::Vector3(std::numeric_limits<float>::min()));
+        sampleBounds = BBox(openpgl::Vector3(std::numeric_limits<float>::max()), openpgl::Vector3(-std::numeric_limits<float>::max()));
 
         // scaling the boundary of the samples to avoid discretization problems at the boundaries
         BBox scaledBounds = bounds;
