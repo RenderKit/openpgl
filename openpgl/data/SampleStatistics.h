@@ -10,7 +10,7 @@ namespace openpgl
 struct SampleStatistics
 {
     Point3 mean{0.0f};
-    Vector3 sampleVariance{0.0f};
+    Vector3 variance{0.0f};
     float numSamples{0};
     float numZeroValueSamples{0.0f};
 
@@ -19,7 +19,7 @@ struct SampleStatistics
     inline void clear()
     {
         mean = Point3(0.0f);
-        sampleVariance = Vector3(0.0f);
+        variance = Vector3(0.0f);
         numSamples = 0.0f;
         numZeroValueSamples = 0.0f;
         sampleBounds.lower = openpgl::Vector3(std::numeric_limits<float>::max());
@@ -36,40 +36,25 @@ struct SampleStatistics
 
         const Point3 oldMean = mean;
         mean += (sample - oldMean) * incWeight;
-
-        OPENPGL_ASSERT(embree::isvalid(mean.x));
-        OPENPGL_ASSERT(embree::isvalid(mean.y));
-        OPENPGL_ASSERT(embree::isvalid(mean.z));
-
-        sampleVariance += ((sample - oldMean) * (sample - mean));
+        variance += (((sample - oldMean) * (sample - mean)) - variance) * incWeight;
         sampleBounds.extend(sample);
+        OPENPGL_ASSERT(isValid());
     }
 
     inline Point3 getMean() const
     {
-        OPENPGL_ASSERT(embree::isvalid(mean.x));
-        OPENPGL_ASSERT(embree::isvalid(mean.y));
-        OPENPGL_ASSERT(embree::isvalid(mean.z));
         return mean;
     }
 
     inline Vector3 getVariance() const
     {
-        if (numSamples == 0.f)
-        {
-            return Vector3(0.f);
-        }
-        OPENPGL_ASSERT(numSamples > 0.f);
-        OPENPGL_ASSERT(embree::isvalid(sampleVariance.x / float(numSamples)));
-        OPENPGL_ASSERT(embree::isvalid(sampleVariance.y / float(numSamples)));
-        OPENPGL_ASSERT(embree::isvalid(sampleVariance.z / float(numSamples)));
-        return sampleVariance / float(numSamples);
+        return variance;
     }
 
     inline void decay(const float &a)
     {
+        OPENPGL_ASSERT(a >= 0.f);
         numSamples *= a;
-        sampleVariance *= a;
         numZeroValueSamples *= a;
     }
 
@@ -94,11 +79,11 @@ struct SampleStatistics
 
         if (numSamples > 0.f)
         {
-            const float variance = sampleVariance[splitDim] / numSamples;
-            const float stdDerivation = std::sqrt(variance);
+            float newVariance = variance[splitDim];
+            const float stdDerivation = newVariance > 0.f ? std::sqrt(newVariance) : 0.f;
 
-            float const newVariance = variance - variance / 4.0f;
-            sampleVariance[splitDim] = newVariance * numSamples;
+            newVariance = newVariance - newVariance / 4.0f;
+            variance[splitDim] = newVariance;
             if (splitLower)
             {
                 sampleBounds.lower[splitDim] = std::max(splitPos, sampleBounds.lower[splitDim]);
@@ -118,7 +103,6 @@ struct SampleStatistics
 
             numSamples *= decay;
             numZeroValueSamples *= decay;
-            sampleVariance *= decay;
         }
     }
 
@@ -132,8 +116,8 @@ struct SampleStatistics
         const Point3 meanA = mean;
         const Point3 meanB = b.mean;
 
-        const Vector3 sampleVarianceA = sampleVariance;
-        const Vector3 sampleVarianceB = b.sampleVariance;
+        const Vector3 varianceA = variance;
+        const Vector3 varianceB = b.variance;
 
         const float numSamplesA = numSamples;
         const float numSamplesB = b.numSamples;
@@ -143,10 +127,20 @@ struct SampleStatistics
         mean = meanA * weightA + meanB * weightB;
         numSamples += numSamplesB;
 
-        sampleVariance = (sampleVarianceA + numSamplesA * meanA * meanA + sampleVarianceB + numSamplesB * meanB * meanB) - numSamples * mean * mean;
+        // Simple version to calculate the variance of two merged distributions
+        // variance = (weightA * (varianceA + meanA * meanA) + weightB * (varianceB + meanB * meanB)) - (mean * mean);
+        // Numerical more stable version to calculate the variance of two merged distributions
+        const Point3 meanDiffA = meanA - mean;
+        const Point3 meanDiffB = meanB - mean;
+        variance = (weightA * varianceA + weightB * varianceB) + (weightA * (meanDiffA * meanDiffA) + weightB * (meanDiffB * meanDiffB));
+        variance.x = variance.x >= 0.f ? variance.x : 0.f;
+        variance.y = variance.y >= 0.f ? variance.y : 0.f;
+        variance.z = variance.z >= 0.f ? variance.z : 0.f;
         sampleBounds.extend(b.sampleBounds);
 
         numZeroValueSamples += b.numZeroValueSamples;
+
+        OPENPGL_ASSERT(isValid());
     }
 
     inline bool isValid() const
@@ -160,9 +154,14 @@ struct SampleStatistics
         valid = valid && embree::isvalid(mean.z);
         OPENPGL_ASSERT(valid);
 
-        valid = valid && embree::isvalid(sampleVariance.x);
-        valid = valid && embree::isvalid(sampleVariance.y);
-        valid = valid && embree::isvalid(sampleVariance.z);
+        valid = valid && std::isfinite(variance.x);
+        valid = valid && std::isfinite(variance.y);
+        valid = valid && std::isfinite(variance.z);
+        OPENPGL_ASSERT(valid);
+
+        valid = valid && variance.x >= 0.f;
+        valid = valid && variance.y >= 0.f;
+        valid = valid && variance.z >= 0.f;
         OPENPGL_ASSERT(valid);
 
         return valid;
@@ -177,7 +176,6 @@ struct SampleStatistics
 
     std::string toString() const
     {
-        Vector3 variance = getVariance();
         std::stringstream ss;
         ss.precision(5);
         ss << "SampleStatistics:" << std::endl;
@@ -193,7 +191,7 @@ struct SampleStatistics
     void serialize(std::ostream &stream) const
     {
         stream.write(reinterpret_cast<const char *>(&mean), sizeof(Point3));
-        stream.write(reinterpret_cast<const char *>(&sampleVariance), sizeof(Vector3));
+        stream.write(reinterpret_cast<const char *>(&variance), sizeof(Vector3));
         stream.write(reinterpret_cast<const char *>(&numSamples), sizeof(float));
         stream.write(reinterpret_cast<const char *>(&numZeroValueSamples), sizeof(float));
         stream.write(reinterpret_cast<const char *>(&sampleBounds), sizeof(BBox));
@@ -202,7 +200,7 @@ struct SampleStatistics
     void deserialize(std::istream &stream)
     {
         stream.read(reinterpret_cast<char *>(&mean), sizeof(Point3));
-        stream.read(reinterpret_cast<char *>(&sampleVariance), sizeof(Vector3));
+        stream.read(reinterpret_cast<char *>(&variance), sizeof(Vector3));
         stream.read(reinterpret_cast<char *>(&numSamples), sizeof(float));
         stream.read(reinterpret_cast<char *>(&numZeroValueSamples), sizeof(float));
         stream.read(reinterpret_cast<char *>(&sampleBounds), sizeof(BBox));
@@ -211,10 +209,10 @@ struct SampleStatistics
     bool operator==(const SampleStatistics &b) const
     {
         bool equal = true;
-        if (mean.x != b.mean.x || mean.y != b.mean.y || mean.z != b.mean.z || sampleVariance.x != b.sampleVariance.x || sampleVariance.y != b.sampleVariance.y ||
-            sampleVariance.z != b.sampleVariance.z || numSamples != b.numSamples || sampleBounds.lower.x != b.sampleBounds.lower.x ||
-            sampleBounds.lower.y != b.sampleBounds.lower.y || sampleBounds.lower.z != b.sampleBounds.lower.z || sampleBounds.upper.x != b.sampleBounds.upper.x ||
-            sampleBounds.upper.y != b.sampleBounds.upper.y || sampleBounds.upper.z != b.sampleBounds.upper.z)
+        if (mean.x != b.mean.x || mean.y != b.mean.y || mean.z != b.mean.z || variance.x != b.variance.x || variance.y != b.variance.y || variance.z != b.variance.z ||
+            numSamples != b.numSamples || sampleBounds.lower.x != b.sampleBounds.lower.x || sampleBounds.lower.y != b.sampleBounds.lower.y ||
+            sampleBounds.lower.z != b.sampleBounds.lower.z || sampleBounds.upper.x != b.sampleBounds.upper.x || sampleBounds.upper.y != b.sampleBounds.upper.y ||
+            sampleBounds.upper.z != b.sampleBounds.upper.z)
         {
             equal = false;
         }
@@ -343,12 +341,12 @@ struct IntegerSampleStatistics
 
             sampleStats.mean = sampleMean;
             sampleStats.numSamples = numSamples;
-            sampleStats.sampleVariance = sampleVariance * float(numSamples);
+            sampleStats.variance = sampleVariance * float(numSamples);
 
             // setting the variance to zero if the measured integer sample bound is zero
-            sampleStats.sampleVariance.x = intSampleBounds.upper.x - intSampleBounds.lower.x <= 0 ? 0.f : sampleStats.sampleVariance.x;
-            sampleStats.sampleVariance.y = intSampleBounds.upper.y - intSampleBounds.lower.y <= 0 ? 0.f : sampleStats.sampleVariance.y;
-            sampleStats.sampleVariance.z = intSampleBounds.upper.z - intSampleBounds.lower.z <= 0 ? 0.f : sampleStats.sampleVariance.z;
+            sampleStats.variance.x = intSampleBounds.upper.x - intSampleBounds.lower.x <= 0 ? 0.f : sampleStats.variance.x;
+            sampleStats.variance.y = intSampleBounds.upper.y - intSampleBounds.lower.y <= 0 ? 0.f : sampleStats.variance.y;
+            sampleStats.variance.z = intSampleBounds.upper.z - intSampleBounds.lower.z <= 0 ? 0.f : sampleStats.variance.z;
 
             // using the real (float) measured sample bound and not a transformed version of the integer sample bound for accuracy reasons
             sampleStats.sampleBounds = sampleBounds;
