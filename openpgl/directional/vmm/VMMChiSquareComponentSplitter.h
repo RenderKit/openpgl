@@ -161,13 +161,18 @@ inline Vec2Type Map3DTo2D(const Vec3Type &vec3D)
 {
     Vec2Type vec2D(0.0f);
 
-    // OPENPGL_ASSERT((vec3D.z <= 1.0f &&  vec3D.z >= -1.0f));
-    ScalarType alpha = embree::fastapprox::acos(vec3D.z);
-    ScalarType inv_sinc = alpha / embree::fastapprox::sin(alpha);
-    // TODO: Needs to be implmented
+    float cosTheta = std::max(-1.0f, std::min(1.0f, vec3D.z));
+    ScalarType alpha = embree::fastapprox::acos(cosTheta);
+    OPENPGL_ASSERT(embree::isvalid(alpha));
+    ScalarType sinAlpha = embree::fastapprox::sin(alpha);
+    OPENPGL_ASSERT(embree::isvalid(sinAlpha));
+    ScalarType inv_sinc = sinAlpha != 0.f ? alpha / sinAlpha : 0.f;
+    OPENPGL_ASSERT(embree::isvalid(inv_sinc));
 
     vec2D.x = embree::select(alpha > 0.0f, vec3D.x * inv_sinc, vec2D.x);
     vec2D.y = embree::select(alpha > 0.0f, vec3D.y * inv_sinc, vec2D.y);
+    OPENPGL_ASSERT(embree::isvalid(vec2D.x));
+    OPENPGL_ASSERT(embree::isvalid(vec2D.y));
     return vec2D;
 }
 
@@ -176,9 +181,10 @@ template <typename Vec3Type, typename Vec2Type, typename ScalarType>
 inline Vec3Type Map2DTo3D(const Vec2Type &vec2D)
 {
     Vec3Type vec3D = Vec3Type(0.0f);
-    ScalarType length = embree::sqrt(vec2D.x * vec2D.x + vec2D.y * vec2D.y);
+    ScalarType norm2 = vec2D.x * vec2D.x + vec2D.y * vec2D.y;
+    ScalarType length = norm2 > 0.f ? embree::sqrt(norm2) : 0.f;
     OPENPGL_ASSERT(length < M_PI_F);
-    ScalarType sinc = embree::fastapprox::sin(length) / length;
+    ScalarType sinc = length > FLT_EPSILON ? embree::fastapprox::sin(length) / length : 0.f;
 
     vec3D.x = embree::select(length > 0.0f, vec2D.x * sinc, vec3D.x);
     vec3D.y = embree::select(length > 0.0f, vec2D.y * sinc, vec3D.y);
@@ -325,13 +331,19 @@ void VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::PerformRecursiveSpli
             {
 #ifndef OPENPGL_USE_THREE_SPLIT
                 bool splitSucess = SplitComponent(vmm, splitStatistics, tempSuffStatistics, splitComps[k].componentIndex);
-                mask.setToTrue(splitComps[k].componentIndex);
-                mask.setToTrue(vmm._numComponents - 1);
+                if (splitSucess)
+                {
+                    mask.setToTrue(splitComps[k].componentIndex);
+                    mask.setToTrue(vmm._numComponents - 1);
+                }
 #else
                 bool splitSucess = SplitComponentIntoThree(vmm, splitStatistics, tempSuffStatistics, splitComps[k].componentIndex);
-                mask.setToTrue(splitComps[k].componentIndex);
-                mask.setToTrue(vmm._numComponents - 1);
-                mask.setToTrue(vmm._numComponents - 2);
+                if (splitSucess)
+                {
+                    mask.setToTrue(splitComps[k].componentIndex);
+                    mask.setToTrue(vmm._numComponents - 1);
+                    mask.setToTrue(vmm._numComponents - 2);
+                }
 #endif
                 if (splitSucess)
                 {
@@ -430,8 +442,12 @@ ComponentSplitinfo VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::GetPro
     splitInfo.eigenVector1.x = splitInfo.covariance.z;
     splitInfo.eigenVector1.y = splitInfo.covariance.x - splitInfo.eigenValue1;
 
-    splitInfo.eigenVector0 /= embree::sqrt(splitInfo.eigenVector0.x * splitInfo.eigenVector0.x + splitInfo.eigenVector0.y * splitInfo.eigenVector0.y);
-    splitInfo.eigenVector1 /= embree::sqrt(splitInfo.eigenVector1.x * splitInfo.eigenVector1.x + splitInfo.eigenVector1.y * splitInfo.eigenVector1.y);
+    float norm0 = splitInfo.eigenVector0.x * splitInfo.eigenVector0.x + splitInfo.eigenVector0.y * splitInfo.eigenVector0.y;
+    float norm1 = splitInfo.eigenVector1.x * splitInfo.eigenVector1.x + splitInfo.eigenVector1.y * splitInfo.eigenVector1.y;
+    norm0 = norm0 > FLT_EPSILON ? embree::rsqrt(norm0) : 1.f;
+    norm1 = norm1 > FLT_EPSILON ? embree::rsqrt(norm1) : 1.f;
+    splitInfo.eigenVector0 *= norm0;
+    splitInfo.eigenVector1 *= norm1;
 #ifdef OPENPGL_SHOW_PRINT_OUTS
     std::cout << "split: " << "\tmean: " << splitInfo.mean.x << ", \t " << splitInfo.mean.y << "\t covariance: " << splitInfo.covariance.x << ", \t " << splitInfo.covariance.y
               << ", \t " << splitInfo.covariance.z << std::endl;
@@ -565,8 +581,18 @@ bool VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::SplitComponent(VMM &
     splitInfo.eigenVector1.x = splitInfo.covariance.z;
     splitInfo.eigenVector1.y = splitInfo.covariance.x - splitInfo.eigenValue1;
 
-    splitInfo.eigenVector0 /= embree::sqrt(splitInfo.eigenVector0.x * splitInfo.eigenVector0.x + splitInfo.eigenVector0.y * splitInfo.eigenVector0.y);
-    splitInfo.eigenVector1 /= embree::sqrt(splitInfo.eigenVector1.x * splitInfo.eigenVector1.x + splitInfo.eigenVector1.y * splitInfo.eigenVector1.y);
+    float norm0 = splitInfo.eigenVector0.x * splitInfo.eigenVector0.x + splitInfo.eigenVector0.y * splitInfo.eigenVector0.y;
+    float norm1 = splitInfo.eigenVector1.x * splitInfo.eigenVector1.x + splitInfo.eigenVector1.y * splitInfo.eigenVector1.y;
+    norm0 = norm0 > FLT_EPSILON ? embree::rsqrt(norm0) : 1.f;
+    norm1 = norm1 > FLT_EPSILON ? embree::rsqrt(norm1) : 1.f;
+    splitInfo.eigenVector0 *= norm0;
+    splitInfo.eigenVector1 *= norm1;
+
+    OPENPGL_ASSERT(embree::isvalid(splitInfo.eigenVector0.x));
+    OPENPGL_ASSERT(embree::isvalid(splitInfo.eigenVector0.y));
+    OPENPGL_ASSERT(embree::isvalid(splitInfo.eigenVector1.x));
+    OPENPGL_ASSERT(embree::isvalid(splitInfo.eigenVector1.y));
+
     /* */
     // std::cout << "D: " << D << std::endl;
     // std::cout << "sumWeights: " << splitStats.sumWeights[tmpK.quot][tmpK.rem] << "\t inSumWeights: " << inv_sumWeights << std::endl;
@@ -640,10 +666,7 @@ bool VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::SplitComponent(VMM &
         std::cout << "sumWeights: " << splitStats.sumWeights[tmpK.quot][tmpK.rem] << std::endl;
         std::cout << "weight: " << weight << "\t meanCosine: " << meanCosine << std::endl;
 #endif
-        if (numAssignedSamples < 2.0f)
-        {
-            return false;
-        }
+        return false;
     }
     size_t K = vmm._numComponents;
 
@@ -710,8 +733,12 @@ bool VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::SplitComponentIntoTh
     splitInfo.eigenVector1.x = splitInfo.covariance.z;
     splitInfo.eigenVector1.y = splitInfo.covariance.x - splitInfo.eigenValue1;
 
-    splitInfo.eigenVector0 /= embree::sqrt(splitInfo.eigenVector0.x * splitInfo.eigenVector0.x + splitInfo.eigenVector0.y * splitInfo.eigenVector0.y);
-    splitInfo.eigenVector1 /= embree::sqrt(splitInfo.eigenVector1.x * splitInfo.eigenVector1.x + splitInfo.eigenVector1.y * splitInfo.eigenVector1.y);
+    float norm0 = splitInfo.eigenVector0.x * splitInfo.eigenVector0.x + splitInfo.eigenVector0.y * splitInfo.eigenVector0.y;
+    float norm1 = splitInfo.eigenVector1.x * splitInfo.eigenVector1.x + splitInfo.eigenVector1.y * splitInfo.eigenVector1.y;
+    norm0 = norm0 > FLT_EPSILON ? embree::rsqrt(norm0) : 1.f;
+    norm1 = norm1 > FLT_EPSILON ? embree::rsqrt(norm1) : 1.f;
+    splitInfo.eigenVector0 *= norm0;
+    splitInfo.eigenVector1 *= norm1;
     /* */
     // std::cout << "D: " << D << std::endl;
     // std::cout << "sumWeights: " << splitStats.sumWeights[tmpK.quot][tmpK.rem] << "\t inSumWeights: " << inv_sumWeights << std::endl;
