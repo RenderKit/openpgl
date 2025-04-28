@@ -306,7 +306,8 @@ void AdaptiveSplitAndMergeFactoryV2<TVMMDistribution>::fit(VMM &vmm, Statistics 
 
         // the bit mask for the componets that are split and needs to be refitted
         typename Splitter::PartialFittingMask mask;
-        // typename Splitter::ComponentSplitStatistics splitStatistics;
+        typename Splitter::PartialFittingMask previousAsPriorMask;
+        previousAsPriorMask.resetToFalse();
         typename WeightedEMFactory::FittingStatistics partialWEMFitStats;
         int numSplits = -1;
         // We perform recursive splitting until we do not find a valid split candidate or we run out of mixture components
@@ -345,7 +346,6 @@ void AdaptiveSplitAndMergeFactoryV2<TVMMDistribution>::fit(VMM &vmm, Statistics 
                         mask.setToTrue(splitComps[k].componentIndex);
                         mask.setToTrue(vmm._numComponents - 1);
                     }
-                    // std::cout << "successfull split: " << (splitSuccess ? "True" : "False") << std::endl;
 #else
                     bool splitSuccess = splitter.SplitComponentIntoThree(vmm, stats.splittingStatistics, stats.sufficientStatistics, splitComps[k].componentIndex);
 
@@ -371,7 +371,7 @@ void AdaptiveSplitAndMergeFactoryV2<TVMMDistribution>::fit(VMM &vmm, Statistics 
             // priors.
             if (numSplits > 0)
             {
-                factory.partialUpdateMixture(vmm, mask, stats.sufficientStatistics, false, samples, numSamples, cfg.weightedEMCfg, partialWEMFitStats);
+                factory.partialUpdateMixture(vmm, mask, false, previousAsPriorMask, stats.sufficientStatistics, samples, numSamples, cfg.weightedEMCfg, partialWEMFitStats);
             }
         }
 

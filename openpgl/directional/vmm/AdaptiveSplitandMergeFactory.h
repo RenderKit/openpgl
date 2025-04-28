@@ -385,6 +385,8 @@ void AdaptiveSplitAndMergeFactory<TVMMDistribution>::update(VMM &vmm, Statistics
         {
             typename WeightedEMFactory::PartialFittingMask mask;
             mask.resetToFalse();
+            typename WeightedEMFactory::PartialFittingMask previousAsPriorMask;
+            previousAsPriorMask.resetToFalse();
 
             std::vector<typename Splitter::SplitCandidate> splitComps = stats.splittingStatistics.getSplitCandidates();
             int totalSplitCount = 0;
@@ -407,7 +409,7 @@ void AdaptiveSplitAndMergeFactory<TVMMDistribution>::update(VMM &vmm, Statistics
 
             if (totalSplitCount > 0 && cfg.partialReFit && numSamples >= cfg.minSamplesForPartialRefitting)
             {
-                factory.partialUpdateMixture(vmm, mask, stats.sufficientStatistics, false, samples, numSamples, cfg.weightedEMCfg, wemFitStats);
+                factory.partialUpdateMixture(vmm, mask, false, previousAsPriorMask, stats.sufficientStatistics, samples, numSamples, cfg.weightedEMCfg, wemFitStats);
                 // update number of components for the splitStats to
                 // account for additionaly added componetes based on not covered samples.
                 stats.splittingStatistics.setNumComponents(vmm._numComponents);

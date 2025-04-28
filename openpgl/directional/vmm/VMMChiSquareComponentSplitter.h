@@ -294,6 +294,8 @@ void VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::PerformRecursiveSpli
                                                                                       const size_t &numData, const typename VMMFactory::Configuration factoryCfg) const
 {
     PartialFittingMask mask;
+    PartialFittingMask previousAsPriorMask;
+    previousAsPriorMask.resetToFalse();
     ComponentSplitStatistics splitStatistics;
 
     // bool stopSplitting = false;
@@ -344,7 +346,7 @@ void VonMisesFisherChiSquareComponentSplitter<TVMMFactory>::PerformRecursiveSpli
         }
         if (numSplits > 0)
         {
-            vmmFactory.partialUpdateMixture(vmm, mask, suffStatistics, false, data, numData, factoryCfg, vmmFitStats);
+            vmmFactory.partialUpdateMixture(vmm, mask, false, previousAsPriorMask, suffStatistics, data, numData, factoryCfg, vmmFitStats);
         }
         // std::cout << "vmmpartialUpdate: " << vmm.toString() << std::endl;
         // splitItr++;
