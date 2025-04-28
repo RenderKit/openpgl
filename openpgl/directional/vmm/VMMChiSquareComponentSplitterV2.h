@@ -318,7 +318,7 @@ bool VonMisesFisherChiSquareComponentSplitterV2<TVMMFactory>::SplitAndUpdate(VMM
         if (true && splitSuccess)
         {
             OPENPGL_ASSERT(vmm.isValid());
-            vmmFactory.partialUpdateMixtureV2(vmm, mask, previousAsPriorMask, suffStatistics, data, numData, factoryCfg, vmmFitStats);
+            vmmFactory.partialUpdateMixture(vmm, mask, true, previousAsPriorMask, suffStatistics, data, numData, factoryCfg, vmmFitStats);
             OPENPGL_ASSERT(vmm.isValid());
             this->PartialCalculateSplitStatistics(vmm, mask, splitStatistics, mcEstimate, data, numData);
             OPENPGL_ASSERT(vmm.isValid());
@@ -1848,7 +1848,8 @@ bool VonMisesFisherChiSquareComponentSplitterV2<TVMMFactory>::ComponentSplitStat
     {
         const div_t tmp = div(k, static_cast<int>(VMM::VectorSize));
         const float componentChiSquareEst = chiSquareMCEstimates[tmp.quot][tmp.rem];
-        if (!alreadySplitted[k] && componentChiSquareEst > splitChiSquareThreshold && componentChiSquareEst > maxChiSquareValue && vmm._kappas[tmp.quot][tmp.rem] < OPENPGL_MAX_KAPPA * 0.9)
+        if (!alreadySplitted[k] && componentChiSquareEst > splitChiSquareThreshold && componentChiSquareEst > maxChiSquareValue &&
+            vmm._kappas[tmp.quot][tmp.rem] < OPENPGL_MAX_KAPPA * 0.9)
         {
             /*
             if (useConfidence)
