@@ -329,6 +329,14 @@ void AdaptiveSplitAndMergeFactory<TVMMDistribution>::fit(VMM &vmm, Statistics &s
         OPENPGL_ASSERT(vmm.getNumComponents() == stats.getNumComponents());
         OPENPGL_ASSERT(vmm.isValid());
 
+        if (vmm.getNumComponents() == VMM::MaxComponents)
+        {
+            std::cout << "SaM: Reach Component Limit" << std::endl;
+        }
+
+        //////////////////////////////////////////////////////
+        // Merging
+        //////////////////////////////////////////////////////
         Merger merger = Merger();
         merger.PerformMerging(vmm, cfg.mergingThreshold, cfg.splittingThreshold, false, stats.sufficientStatistics, stats.splittingStatistics);
         OPENPGL_ASSERT(vmm.isValid());
@@ -431,6 +439,14 @@ void AdaptiveSplitAndMergeFactory<TVMMDistribution>::update(VMM &vmm, Statistics
         OPENPGL_ASSERT(vmm.getNumComponents() == stats.getNumComponents());
         OPENPGL_ASSERT(stats.isValid());
 
+        if (vmm.getNumComponents() == VMM::MaxComponents)
+        {
+            std::cout << "SaM: Reach Component Limit" << std::endl;
+        }
+
+        //////////////////////////////////////////////////////
+        // Merging
+        //////////////////////////////////////////////////////
         if (stats.numSamplesAfterLastMerge >= cfg.minSamplesForMerging)
         {
             Merger merger = Merger();

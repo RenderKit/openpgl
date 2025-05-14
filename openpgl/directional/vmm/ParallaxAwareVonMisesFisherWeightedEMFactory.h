@@ -144,6 +144,8 @@ struct ParallaxAwareVonMisesFisherWeightedEMFactory
         void splitComponentsStats(const size_t &idx0, const size_t &idx1, const Vector3 &meanDirection0, const Vector3 &meanDirection1, const float &meanCosine0,
                                   const float &meanCosine1);
 
+        void splitFireFlyComponentsStats(const size_t &idx0, const size_t &idx1, const float fireFlyFrac, const Vector3 &fireFlyMeanDirection, const float &fireFlyMeanCosine);
+
         void swapComponentStats(const size_t &idx0, const size_t &idx1);
 
         void maskedReplace(const PartialFittingMask &mask, const SufficientStatistics &stats);
@@ -568,6 +570,35 @@ void ParallaxAwareVonMisesFisherWeightedEMFactory<TVMMDistribution>::SufficientS
     float tmp = sumOfDistanceWeightes[tmpI.quot][tmpI.rem] * 0.5f;
     sumOfDistanceWeightes[tmpI.quot][tmpI.rem] = tmp;
     sumOfDistanceWeightes[tmpJ.quot][tmpJ.rem] = tmp;
+
+    numComponents += 1;
+
+    OPENPGL_ASSERT(!std::isnan(sumOfWeightedDirections[tmpI.quot].x[tmpI.rem]) && std::isfinite(sumOfWeightedDirections[tmpI.quot].x[tmpI.rem]));
+    OPENPGL_ASSERT(!std::isnan(sumOfWeightedDirections[tmpI.quot].y[tmpI.rem]) && std::isfinite(sumOfWeightedDirections[tmpI.quot].y[tmpI.rem]));
+    OPENPGL_ASSERT(!std::isnan(sumOfWeightedDirections[tmpI.quot].z[tmpI.rem]) && std::isfinite(sumOfWeightedDirections[tmpI.quot].z[tmpI.rem]));
+}
+
+template <class TVMMDistribution>
+void ParallaxAwareVonMisesFisherWeightedEMFactory<TVMMDistribution>::SufficientStatistics::splitFireFlyComponentsStats(const size_t &idx0, const size_t &idx1,
+                                                                                                                       const float fireFlyFrac, const Vector3 &fireFlyMeanDirection,
+                                                                                                                       const float &fireFlyMeanCosine)
+{
+    const div_t tmpI = div(idx0, static_cast<int>(VMM::VectorSize));
+    const div_t tmpJ = div(idx1, static_cast<int>(VMM::VectorSize));
+
+    sumOfWeightedStats[tmpJ.quot][tmpJ.rem] = sumOfWeightedStats[tmpI.quot][tmpI.rem];
+    sumOfWeightedStats[tmpI.quot][tmpI.rem] *= 1.f - fireFlyFrac;
+    sumOfWeightedStats[tmpJ.quot][tmpJ.rem] *= fireFlyFrac;
+
+    sumOfWeightedDirections[tmpI.quot].x[tmpI.rem] *= 1.f - fireFlyFrac;
+    sumOfWeightedDirections[tmpI.quot].y[tmpI.rem] *= 1.f - fireFlyFrac;
+    sumOfWeightedDirections[tmpI.quot].z[tmpI.rem] *= 1.f - fireFlyFrac;
+
+    Vector3 newMeanDirection = fireFlyMeanDirection;
+    newMeanDirection *= fireFlyMeanCosine * sumOfWeightedStats[tmpJ.quot][tmpJ.rem];
+    sumOfWeightedDirections[tmpJ.quot].x[tmpJ.rem] = newMeanDirection.x;
+    sumOfWeightedDirections[tmpJ.quot].y[tmpJ.rem] = newMeanDirection.y;
+    sumOfWeightedDirections[tmpJ.quot].z[tmpJ.rem] = newMeanDirection.z;
 
     numComponents += 1;
 

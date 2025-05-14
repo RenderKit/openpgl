@@ -109,6 +109,8 @@ struct ParallaxAwareVonMisesFisherMixture
     void splitComponent(const size_t &idx0, const size_t &idx1, const float &weight0, const float &weight1, const Vector3 &meanDirection0, const Vector3 &meanDirection1,
                         const float &meanCosine0, const float &meanCosine1);
 
+    void splitFireFlyComponent(const size_t &idx0, const size_t &idx1, const float &fireFlyFrac, const Vector3 &fireFlyMeanDirection, const float &fireFlyMeanCosine);
+
     void performRelativeParallaxShift(const Vector3 &shiftDirection);
 
 #ifdef OPENPGL_RADIANCE_CACHES
@@ -330,6 +332,30 @@ void ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents, UseParallaxCompe
     _fluenceRGBWeights[tmpIdx0.quot].z[tmpIdx0.rem] *= nWeight0;
 #endif
 
+    if (idx1 == _numComponents)
+    {
+        _numComponents++;
+    }
+    _calculateNormalization();
+}
+
+template <int VecSize, int maxComponents, bool UseParallaxCompensation>
+void ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents, UseParallaxCompensation>::splitFireFlyComponent(const size_t &idx0, const size_t &idx1, const float &fireFlyFrac,
+                                                                                                                const Vector3 &fireFlyMeanDirection, const float &fireFlyMeanCosine)
+{
+    const div_t tmpIdx0 = div(idx0, static_cast<int>(VectorSize));
+    const div_t tmpIdx1 = div(idx1, static_cast<int>(VectorSize));
+
+    const float weight = _weights[tmpIdx0.quot][tmpIdx0.rem];
+    _weights[tmpIdx0.quot][tmpIdx0.rem] *= (1.f - fireFlyFrac);
+
+    _weights[tmpIdx1.quot][tmpIdx1.rem] = weight * fireFlyFrac;
+    _meanDirections[tmpIdx1.quot].x[tmpIdx1.rem] = fireFlyMeanDirection.x;
+    _meanDirections[tmpIdx1.quot].y[tmpIdx1.rem] = fireFlyMeanDirection.y;
+    _meanDirections[tmpIdx1.quot].z[tmpIdx1.rem] = fireFlyMeanDirection.z;
+    _meanCosines[tmpIdx1.quot][tmpIdx1.rem] = fireFlyMeanCosine;
+    _kappas[tmpIdx1.quot][tmpIdx1.rem] = MeanCosineToKappa<float>(fireFlyMeanCosine);
+    _distances[tmpIdx1.quot][tmpIdx1.rem] = _distances[tmpIdx0.quot][tmpIdx0.rem];
     if (idx1 == _numComponents)
     {
         _numComponents++;

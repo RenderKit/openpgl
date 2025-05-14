@@ -5,6 +5,8 @@
 
 #include "include/openpgl/common.h"
 
+#define OPENPGL_DEBUG_SAM
+
 #define USE_EMBREE_PARALLEL
 #define USE_INTEGER_ARITHMETIC_STATS
 #define USE_PARALLEL_PIVOT_SPLIT
