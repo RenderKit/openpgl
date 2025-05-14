@@ -304,7 +304,7 @@ void AdaptiveSplitAndMergeFactoryV2<TVMMDistribution>::fit(VMM &vmm, Statistics 
         //////////////////////////////////////////////////////
         Splitter splitter = Splitter();
 
-        // the bit mask for the componets that are split and needs to be refitted
+        // The bit mask for the componets that are split and needs to be refitted
         typename Splitter::PartialFittingMask mask;
         typename Splitter::PartialFittingMask previousAsPriorMask;
         previousAsPriorMask.resetToFalse();
@@ -338,7 +338,7 @@ void AdaptiveSplitAndMergeFactoryV2<TVMMDistribution>::fit(VMM &vmm, Statistics 
                     }
                     else
                     {
-                        splitSuccess = splitter.SplitComponent(vmm, stats.splittingStatistics, stats.sufficientStatistics, splitComps[k].componentIndex);
+                        splitSuccess = splitter.SplitComponentMultiModal(vmm, stats.splittingStatistics, stats.sufficientStatistics, splitComps[k].componentIndex);
                     }
 
                     if (splitSuccess)
@@ -380,12 +380,12 @@ void AdaptiveSplitAndMergeFactoryV2<TVMMDistribution>::fit(VMM &vmm, Statistics 
 
         OPENPGL_ASSERT(vmm.getNumComponents() == stats.getNumComponents());
         OPENPGL_ASSERT(vmm.isValid());
-
+#ifdef OPENPGL_DEBUG_SAM
         if (vmm.getNumComponents() == VMM::MaxComponents)
         {
             std::cout << "SaM: Reach Component Limit" << std::endl;
         }
-
+#endif
         //////////////////////////////////////////////////////
         // Merging
         //////////////////////////////////////////////////////
@@ -419,7 +419,7 @@ void AdaptiveSplitAndMergeFactoryV2<TVMMDistribution>::update(VMM &vmm, Statisti
     fitStats.numUpdateWEMIterations = wemFitStats.numIterations;
 
     // Check if the update step added a new component.
-    // This happnes if samples are not covered by any existing component and we need to extend the splittingStats.
+    // This happens if samples are not covered by any existing component and we need to extend the splittingStats.
     if (previousNumberOfComponents < vmm._numComponents)
     {
         stats.splittingStatistics.setNumComponents(vmm._numComponents);
@@ -484,12 +484,12 @@ void AdaptiveSplitAndMergeFactoryV2<TVMMDistribution>::update(VMM &vmm, Statisti
         OPENPGL_ASSERT(vmm.isValid());
         OPENPGL_ASSERT(vmm.getNumComponents() == stats.getNumComponents());
         OPENPGL_ASSERT(stats.isValid());
-
+#ifdef OPENPGL_DEBUG_SAM
         if (vmm.getNumComponents() == VMM::MaxComponents)
         {
             std::cout << "SaM: Reach Component Limit" << std::endl;
         }
-
+#endif
         //////////////////////////////////////////////////////
         // Merging
         //////////////////////////////////////////////////////
