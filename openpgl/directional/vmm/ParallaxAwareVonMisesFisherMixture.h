@@ -1091,6 +1091,11 @@ void ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents, UseParallaxCompe
     const embree::vfloat<VecSize> ones(1.0f);
     const embree::vfloat<VecSize> zeros(0.0f);
 
+    if (embree::length(shiftDirection) < FLT_EPSILON)
+    {
+        return;
+    }
+
     const int cnt = (this->_numComponents + VectorSize - 1) / VectorSize;
     // const int rem = this->_numComponents % VectorSize;
 
@@ -1102,9 +1107,12 @@ void ParallaxAwareVonMisesFisherMixture<VecSize, maxComponents, UseParallaxCompe
         parallaxCorrectedMeanDirections = this->_meanDirections[k] * _distances[k] + shiftDirectionVec;
         lengths = embree::length(parallaxCorrectedMeanDirections);
         parallaxCorrectedMeanDirections /= lengths;
-        this->_meanDirections[k].x = select((_distances[k] > 0.0f) & embree::isfinite<VectorSize>(_distances[k]), parallaxCorrectedMeanDirections.x, this->_meanDirections[k].x);
-        this->_meanDirections[k].y = select((_distances[k] > 0.0f) & embree::isfinite<VectorSize>(_distances[k]), parallaxCorrectedMeanDirections.y, this->_meanDirections[k].y);
-        this->_meanDirections[k].z = select((_distances[k] > 0.0f) & embree::isfinite<VectorSize>(_distances[k]), parallaxCorrectedMeanDirections.z, this->_meanDirections[k].z);
+        this->_meanDirections[k].x =
+            select((_distances[k] > 0.0f) & (lengths > FLT_EPSILON) & embree::isfinite<VectorSize>(_distances[k]), parallaxCorrectedMeanDirections.x, this->_meanDirections[k].x);
+        this->_meanDirections[k].y =
+            select((_distances[k] > 0.0f) & (lengths > FLT_EPSILON) & embree::isfinite<VectorSize>(_distances[k]), parallaxCorrectedMeanDirections.y, this->_meanDirections[k].y);
+        this->_meanDirections[k].z =
+            select((_distances[k] > 0.0f) & (lengths > FLT_EPSILON) & embree::isfinite<VectorSize>(_distances[k]), parallaxCorrectedMeanDirections.z, this->_meanDirections[k].z);
         _distances[k] = select(_distances[k] > 0.0f, lengths, zeros);
     }
 

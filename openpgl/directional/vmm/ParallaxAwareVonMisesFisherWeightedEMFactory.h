@@ -263,6 +263,11 @@ bool ParallaxAwareVonMisesFisherWeightedEMFactory<TVMMDistribution>::UnassignedS
 template <class TVMMDistribution>
 void ParallaxAwareVonMisesFisherWeightedEMFactory<TVMMDistribution>::SufficientStatistics::applyParallaxShift(const VMM &vmm, const Vector3 shift)
 {
+    if (embree::length(shift) < FLT_EPSILON)
+    {
+        return;
+    }
+
     const int cnt = (vmm._numComponents + VMM::VectorSize - 1) / VMM::VectorSize;
     // const int rem = vmm._numComponents % VMM::VectorSize;
 
@@ -273,11 +278,10 @@ void ParallaxAwareVonMisesFisherWeightedEMFactory<TVMMDistribution>::SufficientS
         suffDirections /= suffMeanCosines;
         suffDirections *= vmm._distances[k];
         suffDirections += embree::Vec3<embree::vfloat<VMM::VectorSize> >(shift);
-
-        suffDirections /= embree::length(suffDirections);
+        const embree::vfloat<VMM::VectorSize> length = embree::length(suffDirections);
+        suffDirections /= length;
         suffDirections *= suffMeanCosines;
-        suffDirections = select(suffMeanCosines > 0.0f, suffDirections, sumOfWeightedDirections[k]);
-        sumOfWeightedDirections[k] = select(vmm._distances[k] > 0.0f, suffDirections, sumOfWeightedDirections[k]);
+        sumOfWeightedDirections[k] = select((vmm._distances[k] > 0.0f) & (suffMeanCosines > 0.0f) & (length > FLT_EPSILON), suffDirections, sumOfWeightedDirections[k]);
     }
 }
 
@@ -1140,12 +1144,11 @@ void ParallaxAwareVonMisesFisherWeightedEMFactory<TVMMDistribution>::reprojectSa
     const openpgl::Point3 originPosition = samplePosition + sampleDirection * distance;
     openpgl::Vector3 newDirection = originPosition - pivotPoint;
     const float newDistance = embree::length(newDirection);
-    newDirection = newDirection / newDistance;
-
     sample.position.x = pivotPoint[0];
     sample.position.y = pivotPoint[1];
     sample.position.z = pivotPoint[2];
-    sample.distance = newDistance;
+    newDirection = newDistance > FLT_EPSILON ? newDirection / newDistance : sampleDirection;
+    sample.distance = newDistance > FLT_EPSILON ? newDistance : distance;
     pgl_vec3f qdirection = {newDirection[0], newDirection[1], newDirection[2]};
     sample.direction = qdirection;
 }
