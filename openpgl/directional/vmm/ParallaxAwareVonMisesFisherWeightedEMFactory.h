@@ -86,6 +86,7 @@ struct ParallaxAwareVonMisesFisherWeightedEMFactory
         void resetToTrue(const size_t &numComponents);
         void setToTrue(const size_t &idx);
         void setToFalse(const size_t &idx);
+        bool get(const size_t &idx) const;
         std::string toString() const;
     };
 
@@ -548,7 +549,7 @@ void ParallaxAwareVonMisesFisherWeightedEMFactory<TVMMDistribution>::SufficientS
         sumWeightedStatsVec += sumOfWeightedStats[k];
     }
     sumWeights = reduce_add(sumWeightedStatsVec);
-    embree::vfloat<VMM::VectorSize> norm(_numSamples / sumWeights);
+    embree::vfloat<VMM::VectorSize> norm(sumWeights > FLT_EPSILON ? _numSamples / sumWeights : 1.0f);
 
     for (int k = 0; k < cnt; k++)
     {
@@ -1156,11 +1157,15 @@ void ParallaxAwareVonMisesFisherWeightedEMFactory<TVMMDistribution>::prepareSamp
     if (TVMMDistribution::ParallaxCompensation)
     {
         openpgl::Vector3 sampleVariance = sampleStatistics.getVariance();
-        float minDistance = length(sampleVariance);
+        float norm = sampleVariance.x * sampleVariance.x + sampleVariance.y * sampleVariance.y + sampleVariance.z * sampleVariance.z;
+        norm = std::max(FLT_EPSILON, norm);
+        float minDistance = std::sqrt(norm);
         minDistance = 3.f * 3.f * sqrt(minDistance);
+        OPENPGL_ASSERT(embree::isvalid(sampleVariance));
+        OPENPGL_ASSERT(embree::isvalid(minDistance));
         for (size_t n = 0; n < numSamples; n++)
         {
-            reprojectSample(samples[n], sampleStatistics.mean, minDistance);
+            reprojectSample(samples[n], sampleStatistics.getMean(), minDistance);
         }
     }
 }
@@ -1201,9 +1206,13 @@ void ParallaxAwareVonMisesFisherWeightedEMFactory<TVMMDistribution>::initCompone
         {
             for (size_t k = 0; k < cnt; k++)
             {
-                weights = samples[n].weight * softAssign.assignments[k] * ((softAssign.assignments[k] * softAssign.pdf) / vmm._weights[k]);
+                weights =
+                    select(vmm._weights[k] > FLT_EPSILON, samples[n].weight * softAssign.assignments[k] * ((softAssign.assignments[k] * softAssign.pdf) / vmm._weights[k]), zeros);
                 batchDistances[k] += weights * sampleDistance;
                 batchSumWeights[k] += weights;
+                OPENPGL_ASSERT(embree::isvalid(weights));
+                OPENPGL_ASSERT(embree::isvalid(batchDistances[k]));
+                OPENPGL_ASSERT(embree::isvalid(batchSumWeights[k]));
             }
         }
     }
@@ -1212,7 +1221,7 @@ void ParallaxAwareVonMisesFisherWeightedEMFactory<TVMMDistribution>::initCompone
     {
 #ifdef USE_HARMONIC_MEAN
         sufficientStats.sumOfDistanceWeightes[k] = batchSumWeights[k];
-        vmm._distances[k] = sufficientStats.sumOfDistanceWeightes[k] / batchDistances[k];
+        vmm._distances[k] = select(batchDistances[k] > FLT_EPSILON, sufficientStats.sumOfDistanceWeightes[k] / batchDistances[k], zeros);
 #else
         sufficientStats.sumOfDistanceWeightes[k] = batchSumWeights[k];
         vmm._distances[k] = batchDistances[k] / sufficientStats.sumOfDistanceWeightes[k];
@@ -1573,14 +1582,21 @@ template <class TVMMDistribution>
 void ParallaxAwareVonMisesFisherWeightedEMFactory<TVMMDistribution>::PartialFittingMask::setToTrue(const size_t &idx)
 {
     const div_t tmp = div(idx, VMM::VectorSize);
-    set(mask[tmp.quot], tmp.rem);
+    embree::set(mask[tmp.quot], tmp.rem);
 }
 
 template <class TVMMDistribution>
 void ParallaxAwareVonMisesFisherWeightedEMFactory<TVMMDistribution>::PartialFittingMask::setToFalse(const size_t &idx)
 {
     const div_t tmp = div(idx, VMM::VectorSize);
-    clear(mask[tmp.quot], tmp.rem);
+    embree::clear(mask[tmp.quot], tmp.rem);
+}
+
+template <class TVMMDistribution>
+bool ParallaxAwareVonMisesFisherWeightedEMFactory<TVMMDistribution>::PartialFittingMask::get(const size_t &idx) const
+{
+    const div_t tmp = div(idx, VMM::VectorSize);
+    return embree::get(mask[tmp.quot], tmp.rem);
 }
 
 template <class TVMMDistribution>
