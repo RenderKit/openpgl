@@ -295,7 +295,9 @@ struct PathSegmentDataStorage
                         {
                             if (contribution[0] > 0.f || contribution[1] > 0.f || contribution[2] > 0.f)
                             {
+#ifdef OPENPGL_SHOW_PRINT_OUTS
                                 std::cout << "scateredContribution" << std::endl;
+#endif
                             }
                             else
                             {
