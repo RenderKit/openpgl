@@ -193,7 +193,7 @@ jobs:
     with:
       image: rockylinux:8.7
       cmd: |
-        export OPENPGL_RELEASE_PACKAGE_VERSION=0.7.0
+        export OPENPGL_RELEASE_PACKAGE_VERSION=0.7.1
         scripts/release/linux.sh
       artifact-out: release-linux
       artifact-path: ./openpgl*.gz
@@ -207,8 +207,8 @@ jobs:
       artifact-out: release-windows
       artifact-path: ./openpgl*.zip
       cmd: |
-        $env:OPENPGL_RELEASE_PACKAGE_VERSION="0.7.0"
-        $OPENPGL_RELEASE_PACKAGE_VERSION="0.7.0"
+        $env:OPENPGL_RELEASE_PACKAGE_VERSION="0.7.1"
+        $OPENPGL_RELEASE_PACKAGE_VERSION="0.7.1"
         scripts/release/windows.ps1 "Visual Studio 15 2017 Win64" "v141"
 
   release-macos:
@@ -220,7 +220,7 @@ jobs:
       artifact-out: release-macos
       artifact-path: ./*.zip
       cmd: |
-        export OPENPGL_RELEASE_PACKAGE_VERSION="0.7.0"
+        export OPENPGL_RELEASE_PACKAGE_VERSION="0.7.1"
         scripts/release/macos.sh
 
   #release-macos-arm:
@@ -232,7 +232,7 @@ jobs:
   #    artifact-out: release-macos-arm
   #    artifact-path: ./*.zip
   #    cmd: |
-  #      export OPENPGL_RELEASE_PACKAGE_VERSION="0.7.0"
+  #      export OPENPGL_RELEASE_PACKAGE_VERSION="0.7.1"
   #      scripts/release/macos.sh -DBUILD_TBB_FROM_SOURCE=ON
 
   ## Binary Scan Jobs ##
