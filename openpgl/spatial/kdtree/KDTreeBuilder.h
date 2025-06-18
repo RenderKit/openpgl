@@ -357,6 +357,8 @@ struct KDTreePartitionBuilder
                 auto regionAndRangeDataRight = regionAndRangeData;
 
                 // merge split handling
+                // Note: Commented this out after redesigning the build process: Keeping it for now to remember that we disabled it
+                // can be removed in the next code cleanup.
                 // regionAndRangeData.first.sampleStatistics.split(splitDim, splitPos, 0.25f, false);
                 // regionAndRangeDataRight.first.sampleStatistics.split(splitDim, splitPos, 0.25f, true);
 
