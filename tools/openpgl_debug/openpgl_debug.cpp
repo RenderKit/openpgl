@@ -12,6 +12,7 @@
 enum DebugType
 {
     HELP = 0,
+    FIT_FIELD,
     UPDATE_FIELD,
     VALIDATE_FIELD,
     VALIDATE_SAMPLES,
@@ -35,7 +36,7 @@ struct DebugParams
     std::string field_file_name{""};
     std::string field_file_name_comp{""};
     std::string field_file_name_out{""};
-    std::string samples_file_name{""};
+    std::vector<std::string> samples_file_names;
     std::string samples_file_name_comp{""};
     std::string dump_file_name{""};
     std::string obj_out_file_name{""};
@@ -50,16 +51,52 @@ struct DebugParams
             case HELP:
                 break;
 
+            case FIT_FIELD:
+                if(samples_file_names.size() == 0 /*|| 
+                    !file_exists(samples_file_name)*/)
+                {
+                    std::cout << "ERROR: Samples file not set" << std::endl;
+                    valid = false;
+                }
+                else
+                {
+                    for (int i = 0; i < samples_file_names.size(); i++)
+                    {
+                        if (!file_exists(samples_file_names[i]))
+                        {
+                            std::cout << "ERROR: Samples file does not exists: " << samples_file_names[i] << std::endl;
+                            valid = false;
+                        }
+                    }
+                }
+                if (device_type == PGL_DEVICE_TYPE_NONE)
+                {
+                    std::cout << "ERROR: Device type not set." << std::endl;
+                    valid = false;
+                }
+                break;
             case UPDATE_FIELD:
                 if (field_file_name == "" || !file_exists(field_file_name))
                 {
                     std::cout << "ERROR: Field file not set or does not exists: " << field_file_name << std::endl;
                     valid = false;
                 }
-                if (samples_file_name == "" || !file_exists(samples_file_name))
+                if(samples_file_names.size() == 0 /*|| 
+                    !file_exists(samples_file_name)*/)
                 {
-                    std::cout << "ERROR: Samples file not set or does not exists: " << samples_file_name << std::endl;
+                    std::cout << "ERROR: Samples file not set" << std::endl;
                     valid = false;
+                }
+                else
+                {
+                    for (int i = 0; i < samples_file_names.size(); i++)
+                    {
+                        if (!file_exists(samples_file_names[i]))
+                        {
+                            std::cout << "ERROR: Samples file does not exists: " << samples_file_names[i] << std::endl;
+                            valid = false;
+                        }
+                    }
                 }
                 if (device_type == PGL_DEVICE_TYPE_NONE)
                 {
@@ -82,16 +119,16 @@ struct DebugParams
                 break;
 
             case VALIDATE_SAMPLES:
-                if (samples_file_name == "" || !file_exists(samples_file_name))
+                if (samples_file_names[0] == "" || !file_exists(samples_file_names[0]))
                 {
-                    std::cout << "ERROR: Samples file not set or does not exists: " << samples_file_name << std::endl;
+                    std::cout << "ERROR: Samples file not set or does not exists: " << samples_file_names[0] << std::endl;
                     valid = false;
                 }
                 break;
             case EXPORT_SAMPLES:
-                if (samples_file_name == "" || !file_exists(samples_file_name))
+                if (samples_file_names[0] == "" || !file_exists(samples_file_names[0]))
                 {
-                    std::cout << "ERROR: Samples file not set or does not exists: " << samples_file_name << std::endl;
+                    std::cout << "ERROR: Samples file not set or does not exists: " << samples_file_names[0] << std::endl;
                     valid = false;
                 }
                 if (obj_out_file_name == "")
@@ -101,9 +138,9 @@ struct DebugParams
                 }
                 break;
             case COMPARE_SAMPLES:
-                if (samples_file_name == "" || !file_exists(samples_file_name))
+                if (samples_file_names[0] == "" || !file_exists(samples_file_names[0]))
                 {
-                    std::cout << "ERROR: Samples file not set or does not exists: " << samples_file_name << std::endl;
+                    std::cout << "ERROR: Samples file not set or does not exists: " << samples_file_names[0] << std::endl;
                     valid = false;
                 }
                 if (samples_file_name_comp == "" || !file_exists(samples_file_name_comp))
@@ -135,9 +172,9 @@ struct DebugParams
                     std::cout << "ERROR: Field file not set or does not exists: " << field_file_name << std::endl;
                     valid = false;
                 }
-                if (samples_file_name == "" || !file_exists(samples_file_name))
+                if (samples_file_names[0] == "" || !file_exists(samples_file_names[0]))
                 {
-                    std::cout << "ERROR: Samples file not set or does not exists: " << samples_file_name << std::endl;
+                    std::cout << "ERROR: Samples file not set or does not exists: " << samples_file_names[0] << std::endl;
                     valid = false;
                 }
                 if (field_file_name_comp == "" || !file_exists(field_file_name_comp))
@@ -182,21 +219,28 @@ struct DebugParams
 
 bool parseCommandLine(std::list<std::string> &args, DebugParams &debugParams)
 {
+    bool collectSamples = false;
     for (auto it = args.begin(); it != args.end();)
     {
         const std::string arg = *it;
 
         if (arg == "-help")
         {
+            collectSamples = false;
             debugParams.type = DebugType::HELP;
         }
         else if (arg == "-type")
         {
+            collectSamples = false;
             ++it;
             if (it != args.end())
             {
                 const std::string str_type = *it;
-                if (str_type == "updateField")
+                if (str_type == "fitField")
+                {
+                    debugParams.type = DebugType::FIT_FIELD;
+                }
+                else if (str_type == "updateField")
                 {
                     debugParams.type = DebugType::UPDATE_FIELD;
                 }
@@ -242,6 +286,7 @@ bool parseCommandLine(std::list<std::string> &args, DebugParams &debugParams)
         }
         else if (arg == "-device")
         {
+            collectSamples = false;
             ++it;
             if (it != args.end())
             {
@@ -268,6 +313,7 @@ bool parseCommandLine(std::list<std::string> &args, DebugParams &debugParams)
         }
         else if (arg == "-field")
         {
+            collectSamples = false;
             ++it;
             if (it != args.end())
             {
@@ -281,11 +327,12 @@ bool parseCommandLine(std::list<std::string> &args, DebugParams &debugParams)
         }
         else if (arg == "-samples")
         {
+            collectSamples = true;
             ++it;
             if (it != args.end())
             {
                 const std::string str_samples = *it;
-                debugParams.samples_file_name = str_samples;
+                debugParams.samples_file_names.push_back(str_samples);
             }
             else
             {
@@ -294,6 +341,7 @@ bool parseCommandLine(std::list<std::string> &args, DebugParams &debugParams)
         }
         else if (arg == "-samplesComp")
         {
+            collectSamples = false;
             ++it;
             if (it != args.end())
             {
@@ -307,6 +355,7 @@ bool parseCommandLine(std::list<std::string> &args, DebugParams &debugParams)
         }
         else if (arg == "-fieldComp")
         {
+            collectSamples = false;
             ++it;
             if (it != args.end())
             {
@@ -320,6 +369,7 @@ bool parseCommandLine(std::list<std::string> &args, DebugParams &debugParams)
         }
         else if (arg == "-fieldOut")
         {
+            collectSamples = false;
             std::cout << "fieldOut" << std::endl;
             ++it;
             if (it != args.end())
@@ -334,6 +384,7 @@ bool parseCommandLine(std::list<std::string> &args, DebugParams &debugParams)
         }
         else if (arg == "-dump")
         {
+            collectSamples = false;
             ++it;
             if (it != args.end())
             {
@@ -347,6 +398,7 @@ bool parseCommandLine(std::list<std::string> &args, DebugParams &debugParams)
         }
         else if (arg == "-out")
         {
+            collectSamples = false;
             ++it;
             if (it != args.end())
             {
@@ -357,6 +409,11 @@ bool parseCommandLine(std::list<std::string> &args, DebugParams &debugParams)
             {
                 return false;
             }
+        }
+        else if (collectSamples)
+        {
+            const std::string str_samples = *it;
+            debugParams.samples_file_names.push_back(str_samples);
         }
         ++it;
     }
@@ -406,25 +463,55 @@ void print_help()
     std::cout << std::endl;
 }
 
+void fit_field(DebugParams &debugParams)
+{
+    openpgl::cpp::Device device(debugParams.device_type);
+    openpgl::cpp::FieldConfig fieldSettings;
+    fieldSettings.Init(PGL_SPATIAL_STRUCTURE_KDTREE, PGL_DIRECTIONAL_DISTRIBUTION_PARALLAX_AWARE_VMM, true, 32000);
+
+    fieldSettings.SetDebugArgFitRegions(true);
+    openpgl::cpp::Field field(&device, fieldSettings);
+
+    for (int i = 0; i < debugParams.samples_file_names.size(); i++)
+    {
+        std::cout << "Validate Samples[" << i << "]:" << std::endl;
+        openpgl::cpp::SampleStorage sampleStorage(debugParams.samples_file_names[i]);
+        bool samplesValidate = sampleStorage.Validate();
+        std::cout << "  -samples: " << debugParams.samples_file_names[i] << " is " << (samplesValidate ? "valid" : "NOT valid") << std::endl;
+
+        field.Update(sampleStorage);
+        std::cout << "Validate Updated Field[" << i << "]:" << std::endl;
+        bool fieldUpdatedValid = field.Validate();
+        std::cout << "  updated field[" << i << "]: is " << (fieldUpdatedValid ? "valid" : "NOT valid") << std::endl;
+    }
+    if (debugParams.field_file_name_out != "")
+    {
+        std::cout << "stroe field: " << debugParams.field_file_name_out << std::endl;
+        field.Store(debugParams.field_file_name_out);
+    }
+}
+
 void update_field(DebugParams &debugParams)
 {
-    openpgl::cpp::Device device(debugParams.device_type, 1);
+    openpgl::cpp::Device device(debugParams.device_type);
     openpgl::cpp::Field field(&device, debugParams.field_file_name);
-    openpgl::cpp::SampleStorage sampleStorage(debugParams.samples_file_name);
 
     std::cout << "Validate Field:" << std::endl;
     bool fieldValid = field.Validate();
     std::cout << "  -field: " << debugParams.field_file_name << " is " << (fieldValid ? "valid" : "NOT valid") << std::endl;
 
-    std::cout << "Validate Samples:" << std::endl;
-    bool samplesValidate = sampleStorage.Validate();
-    std::cout << "  -samples: " << debugParams.samples_file_name << " is " << (samplesValidate ? "valid" : "NOT valid") << std::endl;
+    for (int i = 0; i < debugParams.samples_file_names.size(); i++)
+    {
+        std::cout << "Validate Samples[" << i << "]:" << std::endl;
+        openpgl::cpp::SampleStorage sampleStorage(debugParams.samples_file_names[i]);
+        bool samplesValidate = sampleStorage.Validate();
+        std::cout << "  -samples: " << debugParams.samples_file_names[i] << " is " << (samplesValidate ? "valid" : "NOT valid") << std::endl;
 
-    field.Update(sampleStorage);
-    std::cout << "Validate Updated Field:" << std::endl;
-    bool fieldUpdatedValid = field.Validate();
-    std::cout << "  updated field: is " << (fieldUpdatedValid ? "valid" : "NOT valid") << std::endl;
-
+        field.Update(sampleStorage);
+        std::cout << "Validate Updated Field[" << i << "]:" << std::endl;
+        bool fieldUpdatedValid = field.Validate();
+        std::cout << "  updated field[" << i << "]: is " << (fieldUpdatedValid ? "valid" : "NOT valid") << std::endl;
+    }
     if (debugParams.field_file_name_out != "")
     {
         std::cout << "stroe field: " << debugParams.field_file_name_out << std::endl;
@@ -443,20 +530,23 @@ void validate_field(DebugParams &debugParams)
 
 void validate_samples(DebugParams &debugParams)
 {
-    openpgl::cpp::SampleStorage sampleStorage(debugParams.samples_file_name);
-    std::cout << "Validate Samples:" << std::endl;
-    bool samplesValid = sampleStorage.Validate();
-    std::cout << "  -samples: " << debugParams.samples_file_name << " is " << (samplesValid ? "valid" : "NOT valid") << std::endl;
+    for (int i = 0; i < debugParams.samples_file_names.size(); i++)
+    {
+        openpgl::cpp::SampleStorage sampleStorage(debugParams.samples_file_names[i]);
+        std::cout << "Validate Samples[" << i << "]:" << std::endl;
+        bool samplesValid = sampleStorage.Validate();
+        std::cout << "  -samples: " << debugParams.samples_file_names[i] << " is " << (samplesValid ? "valid" : "NOT valid") << std::endl;
+    }
 }
 
 void compare_samples(DebugParams &debugParams)
 {
-    openpgl::cpp::SampleStorage sampleStorage(debugParams.samples_file_name);
+    openpgl::cpp::SampleStorage sampleStorage(debugParams.samples_file_names[0]);
     openpgl::cpp::SampleStorage sampleStorageComp(debugParams.samples_file_name_comp);
 
     std::cout << "Validate Samples:" << std::endl;
     bool samplesValid = sampleStorage.Validate();
-    std::cout << "  -samples: " << debugParams.samples_file_name << " is " << (samplesValid ? "valid" : "NOT valid") << std::endl;
+    std::cout << "  -samples: " << debugParams.samples_file_names[0] << " is " << (samplesValid ? "valid" : "NOT valid") << std::endl;
 
     bool samplesCompValid = sampleStorageComp.Validate();
     std::cout << "  -samplesComp: " << debugParams.samples_file_name_comp << " is " << (samplesCompValid ? "valid" : "NOT valid") << std::endl;
@@ -488,7 +578,7 @@ void update_compare_fields(DebugParams &debugParams)
 {
     openpgl::cpp::Device device(debugParams.device_type);
     openpgl::cpp::Field field(&device, debugParams.field_file_name);
-    openpgl::cpp::SampleStorage sampleStorage(debugParams.samples_file_name);
+    openpgl::cpp::SampleStorage sampleStorage(debugParams.samples_file_names[0]);
     openpgl::cpp::Field fieldComp(&device, debugParams.field_file_name_comp);
 
     std::cout << "Validate Fields:" << std::endl;
@@ -500,7 +590,7 @@ void update_compare_fields(DebugParams &debugParams)
 
     std::cout << "Validate Samples:" << std::endl;
     bool samplesValidate = sampleStorage.Validate();
-    std::cout << "  -samples: " << debugParams.samples_file_name << " is " << (samplesValidate ? "valid" : "NOT valid") << std::endl;
+    std::cout << "  -samples: " << debugParams.samples_file_names[0] << " is " << (samplesValidate ? "valid" : "NOT valid") << std::endl;
 
     field.Update(sampleStorage);
     std::cout << "Validate Updated Field:" << std::endl;
@@ -527,12 +617,12 @@ void dump_update(DebugParams &debugParams)
 void export_samples(DebugParams &debugParams)
 {
     std::cout << "Export Samples as OBJ:" << std::endl;
-    std::cout << "  -samples " << debugParams.samples_file_name << std::endl;
+    std::cout << "  -samples " << debugParams.samples_file_names[0] << std::endl;
     std::cout << "  -out     " << debugParams.obj_out_file_name << std::endl;
     std::ofstream objFile;
     objFile.open(debugParams.obj_out_file_name.c_str());
 
-    openpgl::cpp::SampleStorage sampleStorage(debugParams.samples_file_name);
+    openpgl::cpp::SampleStorage sampleStorage(debugParams.samples_file_names[0]);
 
     bool pointsOnly = true;
     std::vector<openpgl::cpp::SampleData> subSampledData;
@@ -607,6 +697,9 @@ int main(int argc, char *argv[])
                 print_help();
                 break;
 
+            case FIT_FIELD:
+                fit_field(debugParams);
+                break;
             case UPDATE_FIELD:
                 update_field(debugParams);
                 break;
