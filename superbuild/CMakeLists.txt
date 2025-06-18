@@ -68,6 +68,7 @@ option(BUILD_TOOLS "Building Open PGL tools as well"  OFF)
 
 option(BUILD_TBB "Build Intel Threading Building Blocks or search in environment?" ON)
 option(BUILD_TBB_FROM_SOURCE "Build Intel Threading Building Blocks from source?" OFF)
+option(BUILD_TBB_SHARED "Build Intel Threading Building Blocks as shared library?" ON)
 
 option(BUILD_OIDN "Build OpenImageDenoise as a part of the superbuild." ON)
 option(BUILD_OIDN_FROM_SOURCE "Build OpenImageDenoise or use pre-built version?" ON)
