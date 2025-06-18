@@ -834,9 +834,11 @@ bool VonMisesFisherChiSquareComponentSplitterV2<TVMMFactory>::SplitComponentMult
         {
             //  STEP ONE FIX
 #ifdef OPENPGL_DEBUG_SAM
-            std::cout << "Unsuccessfull split" << std::endl;
+            std::cout << "Unsuccessfull split: " << "\t meanCosine = " << meanCosine << "\t D = " << D << "\t eigenValue0 = " << splitInfo.eigenValue0 << "\t eigenValue1 = " << splitInfo.eigenValue1 << std::endl;
 #endif
+            
             // TODO: add reset of the component
+            splitStats.reset(tmpK);
             return false;
         }
 #ifdef OPENPGL_SHOW_PRINT_OUTS
@@ -855,7 +857,7 @@ bool VonMisesFisherChiSquareComponentSplitterV2<TVMMFactory>::SplitComponentMult
         std::cout << "weight: " << weight << "\t meanCosine: " << meanCosine << std::endl;
 #endif
         // TODO: remove this check
-        if (numAssignedSamples < 2.0f)
+        //if (numAssignedSamples < 2.0f)
         {
             splitStats.reset(tmpK);
             return false;
