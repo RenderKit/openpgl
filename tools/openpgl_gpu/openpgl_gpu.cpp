@@ -391,7 +391,7 @@ void bench_sample_data_gen(BenchParams &benchParams)
         deviceGPU.wait();
         totalTimeElapsed += timerCollectSampleData.elapsed();
         std::cout << std::endl << "CollectSampleData: time(sec) = " << timerCollectSampleData.elapsed() * 1e-6 << std::endl;
-        std::cout << std::endl << "SampleStorage: numSurfaceSamples = " << sampleStorage.GetSizeSurface() << "\t numZeroSurfaceSamples = " << sampleStorage.GetSizeInvalidSurface() << " \t numVolumeSamples = " << sampleStorage.GetSizeVolume() << "\t numZeroVolumeSamples = " << sampleStorage.GetSizeInvalidVolume()  << std::endl;
+        std::cout << std::endl << "SampleStorage: numSurfaceSamples = " << sampleStorage.GetSizeSurface() << "\t numZeroSurfaceSamples = " << sampleStorage.GetSizeZeroValueSurface() << " \t numVolumeSamples = " << sampleStorage.GetSizeVolume() << "\t numZeroVolumeSamples = " << sampleStorage.GetSizeZeroValueVolume()  << std::endl;
 
     }
 /* */
