@@ -703,7 +703,7 @@ struct ImageSpaceGuidingBuffer
               }
             });                        
         }
-
+#endif
         m_ready = true;
     }
 
@@ -730,6 +730,7 @@ struct ImageSpaceGuidingBuffer
                 // calculating the alpha simulating we added zero samples for each volume sample as well 
                 float alpha = 1.f / (m_surfaceContributionEstimateBuffers->spp[pixelIdx] + m_volumeContributionEstimateBuffers->spp[pixelIdx]);
 #endif
+                pgl_vec3f quantity = m_cfg.vspType == EVariance ? sample.contribution * sample.contribution : sample.contribution;
                 m_surfaceContributionEstimateBuffers->contribution[pixelIdx] = (1.f - alpha) * m_surfaceContributionEstimateBuffers->contribution[pixelIdx] + alpha * quantity;
                 m_surfaceContributionEstimateBuffers->albedo[pixelIdx] = (1.f - alpha) * m_surfaceContributionEstimateBuffers->albedo[pixelIdx] + alpha * sample.albedo;
                 m_surfaceContributionEstimateBuffers->normal[pixelIdx] = (1.f - alpha) * m_surfaceContributionEstimateBuffers->normal[pixelIdx] + alpha * sample.normal;
