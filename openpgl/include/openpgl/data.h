@@ -25,7 +25,9 @@ struct PGLSampleData
         /// point does not represent any real scene intersection point
         EInsideVolume = 1 << 0,
         /// if the samples represents direct light from a light source
-        EDirectLight = 1 << 1
+        EDirectLight = 1 << 1,
+
+        ENextEventVolume = 1 << 2
     };
 
     /// the position of the sample (i.e., at which energy arrives)
@@ -75,7 +77,7 @@ struct PGLZeroValueSampleData
     pgl_direction directionOut;
 #endif
     /// if the position is inside a volume
-    bool volume;
+    uint32_t flags;
 };
 
 /**
@@ -163,7 +165,7 @@ struct PGLImageSpaceSample
     void SetSurfaceEvent(bool isSurfaceEvent)
     {
         if (isSurfaceEvent)
-            flags ^= EVolumeEvent;
+            flags &= ~EVolumeEvent;
         else
             flags |= EVolumeEvent;
     }
@@ -171,8 +173,30 @@ struct PGLImageSpaceSample
     /// @brief If the samples originates from a surface event.
     bool IsSurfaceEvent() const
     {
-        return flags ^ EVolumeEvent;
+        return !(flags & EVolumeEvent);
     }
+#endif
+};
+
+enum PGLContributionTypes {
+    EFirstMoment = 0,
+    ESecondMoment,
+};
+
+enum PGLVSPTypes
+{
+    EContribution = 0,
+    EVariance,
+};
+
+struct PGLImageSpaceGuidingBufferConfig {
+    pgl_point2i resolution {0, 0};
+    bool contributionEstimate {true};
+    PGLContributionTypes contributionType {PGLContributionTypes::EFirstMoment};
+    //float maxContributionValue {FLT_MAX}; //TODO
+#if defined(OPENPGL_VSP_GUIDING)
+    bool vspEstimate {false};
+    PGLVSPTypes vspType {PGLVSPTypes::EContribution};
 #endif
 };
 

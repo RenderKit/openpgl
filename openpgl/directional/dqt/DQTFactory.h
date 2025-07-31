@@ -154,6 +154,11 @@ class DirectionalQuadtreeFactory
             is.read(reinterpret_cast<char *>(nodes.data()), size * sizeof(nodes[0]));
         };
 
+        float getNumSamples() const
+        {
+            return numSamples;
+        };
+
         // TODO: Needs to be implmented
         bool operator==(const Statistics &b) const
         {
@@ -173,6 +178,10 @@ class DirectionalQuadtreeFactory
 
     void updateFluenceEstimate(Distribution &dist, const SampleData *samples, const size_t numSamples, const size_t numZeroValueSamples,
                                const SampleStatistics &sampleStatistics) const
+    {}
+
+    void updateVolumeScatterProbability(Distribution &dist, Statistics &stats, const SampleData *samples, const size_t numSamples, const ZeroValueSampleData *zeroValueSamples,
+                                        const size_t numZeroValueSamples, const bool varianceBased) const
     {}
 
     void fit(Distribution &dist, Statistics &stats, const SampleData *samples, const size_t numSamples, const Configuration &cfg, FittingStatistics &fitStats)

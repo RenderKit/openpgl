@@ -12,7 +12,7 @@ struct Range
     size_t m_begin{0};
     size_t m_end{0};
 
-#ifdef OPENPGL_RADIANCE_CACHES
+#if defined(OPENPGL_RADIANCE_CACHES) || defined(OPENPGL_VSP_GUIDING)
     size_t m_is_begin{0};
     size_t m_is_end{0};
 #endif
@@ -25,7 +25,7 @@ struct Range
         OPENPGL_ASSERT(int(m_end) - int(m_begin) >= 0);
         return m_end - m_begin;
     }
-#ifdef OPENPGL_RADIANCE_CACHES
+#if defined(OPENPGL_RADIANCE_CACHES) || defined(OPENPGL_VSP_GUIDING)
     inline size_t sizeZeroValueSamples() const
     {
         OPENPGL_ASSERT(int(m_is_end) - int(m_is_begin) >= 0);
@@ -36,7 +36,7 @@ struct Range
     {
         m_begin = 0;
         m_end = 0;
-#ifdef OPENPGL_RADIANCE_CACHES
+#if defined(OPENPGL_RADIANCE_CACHES) || defined(OPENPGL_VSP_GUIDING)
         m_is_begin = 0;
         m_is_end = 0;
 #endif
@@ -46,7 +46,7 @@ struct Range
     {
         os.write(reinterpret_cast<const char *>(&m_begin), sizeof(m_begin));
         os.write(reinterpret_cast<const char *>(&m_end), sizeof(m_end));
-#ifdef OPENPGL_RADIANCE_CACHES
+#if defined(OPENPGL_RADIANCE_CACHES) || defined(OPENPGL_VSP_GUIDING)
         os.write(reinterpret_cast<const char *>(&m_is_begin), sizeof(m_is_begin));
         os.write(reinterpret_cast<const char *>(&m_is_end), sizeof(m_is_end));
 #endif
@@ -56,7 +56,7 @@ struct Range
     {
         is.read(reinterpret_cast<char *>(&m_begin), sizeof(m_begin));
         is.read(reinterpret_cast<char *>(&m_end), sizeof(m_end));
-#ifdef OPENPGL_RADIANCE_CACHES
+#if defined(OPENPGL_RADIANCE_CACHES) || defined(OPENPGL_VSP_GUIDING)
         is.read(reinterpret_cast<char *>(&m_is_begin), sizeof(m_is_begin));
         is.read(reinterpret_cast<char *>(&m_is_end), sizeof(m_is_end));
 #endif
@@ -66,7 +66,7 @@ struct Range
     {
         bool equal = true;
         if (m_begin != b.m_begin || m_end != b.m_end
-#ifdef OPENPGL_RADIANCE_CACHES
+#if defined(OPENPGL_RADIANCE_CACHES) || defined(OPENPGL_VSP_GUIDING)
             || m_is_begin != b.m_is_begin || m_is_end != b.m_is_end
 #endif
         )

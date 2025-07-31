@@ -96,7 +96,12 @@ struct ParallaxAwareVonMisesFisherWeightedEMFactory
        public:
         embree::Vec3<embree::vfloat<VMM::VectorSize> > sumOfWeightedDirections[VMM::NumVectors];
         embree::vfloat<VMM::VectorSize> sumOfWeightedStats[VMM::NumVectors];
-
+#ifdef OPENPGL_VSP_GUIDING
+        embree::vfloat<VMM::VectorSize> volumeContributionWeights[VMM::NumVectors];
+        embree::vfloat<VMM::VectorSize> surfaceContributionWeights[VMM::NumVectors];
+        embree::vfloat<VMM::VectorSize> volumeSampleNumberWeights[VMM::NumVectors];
+        embree::vfloat<VMM::VectorSize> surfaceSampleNumberWeights[VMM::NumVectors];
+#endif
         float sumWeights{0.f};
         float numSamples{0.f};
         float overallNumSamples{0.f};
@@ -114,6 +119,8 @@ struct ParallaxAwareVonMisesFisherWeightedEMFactory
         void deserialize(std::istream &stream);
 
         void clear(size_t _numComponents);
+
+        void clearComponentStats(const size_t &idx);
 
         void clearAll();
 
@@ -202,6 +209,10 @@ struct ParallaxAwareVonMisesFisherWeightedEMFactory
 
     void updateComponentDistances(VMM &vmm, SufficientStatistics &sufficientStats, const SampleData *samples, const size_t numSamples) const;
 
+#ifdef OPENPGL_VSP_GUIDING
+    void updateVolumeScatterProbability(VMM &vmm, SufficientStatistics &sufficientStats, const SampleData *samples, const size_t numSamples,
+                                        const ZeroValueSampleData *zeroValueSamples, const size_t numZeroValueSamples, const bool varianceBased) const;
+#endif
    private:
     void _initUniformDirections();
 
@@ -312,6 +323,24 @@ bool ParallaxAwareVonMisesFisherWeightedEMFactory<TVMMDistribution>::SufficientS
         valid = valid && embree::isvalid(sumOfDistanceWeightes[tmpK.quot][tmpK.rem]);
         valid = valid && sumOfDistanceWeightes[tmpK.quot][tmpK.rem] >= 0.0f;
         OPENPGL_ASSERT(valid);
+
+#ifdef OPENPGL_VSP_GUIDING
+        valid = valid && embree::isvalid(volumeContributionWeights[tmpK.quot][tmpK.rem]);
+        valid = valid && volumeContributionWeights[tmpK.quot][tmpK.rem] >= 0.0f;
+        OPENPGL_ASSERT(valid);
+
+        valid = valid && embree::isvalid(surfaceContributionWeights[tmpK.quot][tmpK.rem]);
+        valid = valid && surfaceContributionWeights[tmpK.quot][tmpK.rem] >= 0.0f;
+        OPENPGL_ASSERT(valid);
+
+        valid = valid && embree::isvalid(volumeSampleNumberWeights[tmpK.quot][tmpK.rem]);
+        valid = valid && volumeSampleNumberWeights[tmpK.quot][tmpK.rem] >= 0.0f;
+        OPENPGL_ASSERT(valid);
+
+        valid = valid && embree::isvalid(surfaceSampleNumberWeights[tmpK.quot][tmpK.rem]);
+        valid = valid && surfaceSampleNumberWeights[tmpK.quot][tmpK.rem] >= 0.0f;
+        OPENPGL_ASSERT(valid);
+#endif
     }
 
     for (size_t k = numComponents; k < VMM::MaxComponents; k++)
@@ -332,6 +361,24 @@ bool ParallaxAwareVonMisesFisherWeightedEMFactory<TVMMDistribution>::SufficientS
         valid = valid && embree::isvalid(sumOfDistanceWeightes[tmpK.quot][tmpK.rem]);
         valid = valid && sumOfDistanceWeightes[tmpK.quot][tmpK.rem] == 0.0f;
         OPENPGL_ASSERT(valid);
+
+#ifdef OPENPGL_VSP_GUIDING
+        valid = valid && embree::isvalid(volumeContributionWeights[tmpK.quot][tmpK.rem]);
+        valid = valid && volumeContributionWeights[tmpK.quot][tmpK.rem] == 0.0f;
+        OPENPGL_ASSERT(valid);
+
+        valid = valid && embree::isvalid(surfaceContributionWeights[tmpK.quot][tmpK.rem]);
+        valid = valid && surfaceContributionWeights[tmpK.quot][tmpK.rem] == 0.0f;
+        OPENPGL_ASSERT(valid);
+
+        valid = valid && embree::isvalid(volumeSampleNumberWeights[tmpK.quot][tmpK.rem]);
+        valid = valid && volumeSampleNumberWeights[tmpK.quot][tmpK.rem] == 0.0f;
+        OPENPGL_ASSERT(valid);
+
+        valid = valid && embree::isvalid(surfaceSampleNumberWeights[tmpK.quot][tmpK.rem]);
+        valid = valid && surfaceSampleNumberWeights[tmpK.quot][tmpK.rem] == 0.0f;
+        OPENPGL_ASSERT(valid);
+#endif
     }
 
     valid = valid && embree::isvalid(numSamples);
@@ -356,6 +403,12 @@ void ParallaxAwareVonMisesFisherWeightedEMFactory<TVMMDistribution>::SufficientS
     stream.write(reinterpret_cast<const char *>(&overallNumSamples), sizeof(float));
     stream.write(reinterpret_cast<const char *>(&numComponents), sizeof(size_t));
     stream.write(reinterpret_cast<const char *>(&normalized), sizeof(bool));
+#ifdef OPENPGL_VSP_GUIDING
+    serializeFloatVectors<VMM::NumVectors, VMM::VectorSize>(stream, volumeContributionWeights);
+    serializeFloatVectors<VMM::NumVectors, VMM::VectorSize>(stream, surfaceContributionWeights);
+    serializeFloatVectors<VMM::NumVectors, VMM::VectorSize>(stream, volumeSampleNumberWeights);
+    serializeFloatVectors<VMM::NumVectors, VMM::VectorSize>(stream, surfaceSampleNumberWeights);
+#endif
 }
 
 template <class TVMMDistribution>
@@ -369,6 +422,12 @@ void ParallaxAwareVonMisesFisherWeightedEMFactory<TVMMDistribution>::SufficientS
     stream.read(reinterpret_cast<char *>(&overallNumSamples), sizeof(float));
     stream.read(reinterpret_cast<char *>(&numComponents), sizeof(size_t));
     stream.read(reinterpret_cast<char *>(&normalized), sizeof(bool));
+#ifdef OPENPGL_VSP_GUIDING
+    deserializeFloatVectors<VMM::NumVectors, VMM::VectorSize>(stream, volumeContributionWeights);
+    deserializeFloatVectors<VMM::NumVectors, VMM::VectorSize>(stream, surfaceContributionWeights);
+    deserializeFloatVectors<VMM::NumVectors, VMM::VectorSize>(stream, volumeSampleNumberWeights);
+    deserializeFloatVectors<VMM::NumVectors, VMM::VectorSize>(stream, surfaceSampleNumberWeights);
+#endif
 }
 
 template <class TVMMDistribution>
@@ -386,11 +445,36 @@ void ParallaxAwareVonMisesFisherWeightedEMFactory<TVMMDistribution>::SufficientS
         sumOfWeightedStats[k] = zeros;
 
         sumOfDistanceWeightes[k] = zeros;
+#ifdef OPENPGL_VSP_GUIDING
+        volumeContributionWeights[k] = 0.0f;
+        surfaceContributionWeights[k] = 0.0f;
+        volumeSampleNumberWeights[k] = 0.0f;
+        surfaceSampleNumberWeights[k] = 0.0f;
+#endif
     }
 
     sumWeights = 0.0f;
     numSamples = 0;
     normalized = false;
+}
+
+template <class TVMMDistribution>
+void ParallaxAwareVonMisesFisherWeightedEMFactory<TVMMDistribution>::SufficientStatistics::clearComponentStats(const size_t &idx)
+{
+    const div_t tmpIdx = div(idx, VMM::VectorSize);
+
+    sumOfWeightedDirections[tmpIdx.quot].x[tmpIdx.rem] = 0.f;
+    sumOfWeightedDirections[tmpIdx.quot].y[tmpIdx.rem] = 0.f;
+    sumOfWeightedDirections[tmpIdx.quot].z[tmpIdx.rem] = 0.f;
+    sumOfWeightedStats[tmpIdx.quot][tmpIdx.rem] = 0.f;
+
+    sumOfDistanceWeightes[tmpIdx.quot][tmpIdx.rem] = 0.f;
+#ifdef OPENPGL_VSP_GUIDING
+    volumeContributionWeights[tmpIdx.quot][tmpIdx.rem] = 0.f;
+    surfaceContributionWeights[tmpIdx.quot][tmpIdx.rem] = 0.f;
+    volumeSampleNumberWeights[tmpIdx.quot][tmpIdx.rem] = 0.f;
+    surfaceSampleNumberWeights[tmpIdx.quot][tmpIdx.rem] = 0.f;
+#endif
 }
 
 template <class TVMMDistribution>
@@ -410,6 +494,12 @@ void ParallaxAwareVonMisesFisherWeightedEMFactory<TVMMDistribution>::SufficientS
         sumOfWeightedStats[k] *= alpha;
 
         sumOfDistanceWeightes[k] *= alpha;
+#ifdef OPENPGL_VSP_GUIDING
+        volumeContributionWeights[k] *= alpha;
+        surfaceContributionWeights[k] *= alpha;
+        volumeSampleNumberWeights[k] *= alpha;
+        surfaceSampleNumberWeights[k] *= alpha;
+#endif
     }
 
     numSamples *= alpha;
@@ -471,6 +561,12 @@ void ParallaxAwareVonMisesFisherWeightedEMFactory<TVMMDistribution>::SufficientS
     std::swap(sumOfWeightedDirections[tmpIdx0.quot].z[tmpIdx0.rem], sumOfWeightedDirections[tmpIdx1.quot].z[tmpIdx1.rem]);
     std::swap(sumOfWeightedStats[tmpIdx0.quot][tmpIdx0.rem], sumOfWeightedStats[tmpIdx1.quot][tmpIdx1.rem]);
     std::swap(sumOfDistanceWeightes[tmpIdx0.quot][tmpIdx0.rem], sumOfDistanceWeightes[tmpIdx1.quot][tmpIdx1.rem]);
+#ifdef OPENPGL_VSP_GUIDING
+    std::swap(volumeContributionWeights[tmpIdx0.quot][tmpIdx0.rem], volumeContributionWeights[tmpIdx1.quot][tmpIdx1.rem]);
+    std::swap(surfaceContributionWeights[tmpIdx0.quot][tmpIdx0.rem], surfaceContributionWeights[tmpIdx1.quot][tmpIdx1.rem]);
+    std::swap(volumeSampleNumberWeights[tmpIdx0.quot][tmpIdx0.rem], volumeSampleNumberWeights[tmpIdx1.quot][tmpIdx1.rem]);
+    std::swap(surfaceSampleNumberWeights[tmpIdx0.quot][tmpIdx0.rem], surfaceSampleNumberWeights[tmpIdx1.quot][tmpIdx1.rem]);
+#endif
 }
 
 template <class TVMMDistribution>
@@ -478,7 +574,6 @@ void ParallaxAwareVonMisesFisherWeightedEMFactory<TVMMDistribution>::SufficientS
 {
     const div_t tmpIdx0 = div(idx0, VMM::VectorSize);
     const div_t tmpIdx1 = div(idx1, VMM::VectorSize);
-    const div_t tmpIdx2 = div(numComponents - 1, VMM::VectorSize);
 
     // merging the statistics of the component 0 and 1
     sumOfWeightedDirections[tmpIdx0.quot].x[tmpIdx0.rem] += sumOfWeightedDirections[tmpIdx1.quot].x[tmpIdx1.rem];
@@ -487,19 +582,14 @@ void ParallaxAwareVonMisesFisherWeightedEMFactory<TVMMDistribution>::SufficientS
     sumOfWeightedStats[tmpIdx0.quot][tmpIdx0.rem] += sumOfWeightedStats[tmpIdx1.quot][tmpIdx1.rem];
     sumOfDistanceWeightes[tmpIdx0.quot][tmpIdx0.rem] += sumOfDistanceWeightes[tmpIdx1.quot][tmpIdx1.rem];
 
-    // copying the statistics of the last component to the position of component 1
-    sumOfWeightedDirections[tmpIdx1.quot].x[tmpIdx1.rem] = sumOfWeightedDirections[tmpIdx2.quot].x[tmpIdx2.rem];
-    sumOfWeightedDirections[tmpIdx1.quot].y[tmpIdx1.rem] = sumOfWeightedDirections[tmpIdx2.quot].y[tmpIdx2.rem];
-    sumOfWeightedDirections[tmpIdx1.quot].z[tmpIdx1.rem] = sumOfWeightedDirections[tmpIdx2.quot].z[tmpIdx2.rem];
-    sumOfWeightedStats[tmpIdx1.quot][tmpIdx1.rem] = sumOfWeightedStats[tmpIdx2.quot][tmpIdx2.rem];
-    sumOfDistanceWeightes[tmpIdx1.quot][tmpIdx1.rem] = sumOfDistanceWeightes[tmpIdx2.quot][tmpIdx2.rem];
-
-    // reseting the statistics of the last component
-    sumOfWeightedDirections[tmpIdx2.quot].x[tmpIdx2.rem] = 0.0f;
-    sumOfWeightedDirections[tmpIdx2.quot].y[tmpIdx2.rem] = 0.0f;
-    sumOfWeightedDirections[tmpIdx2.quot].z[tmpIdx2.rem] = 0.0f;
-    sumOfWeightedStats[tmpIdx2.quot][tmpIdx2.rem] = 0.0f;
-    sumOfDistanceWeightes[tmpIdx2.quot][tmpIdx2.rem] = 0.0f;
+#ifdef OPENPGL_VSP_GUIDING
+    volumeContributionWeights[tmpIdx0.quot][tmpIdx0.rem] += volumeContributionWeights[tmpIdx1.quot][tmpIdx1.rem];
+    surfaceContributionWeights[tmpIdx0.quot][tmpIdx0.rem] += surfaceContributionWeights[tmpIdx1.quot][tmpIdx1.rem];
+    volumeSampleNumberWeights[tmpIdx0.quot][tmpIdx0.rem] += volumeSampleNumberWeights[tmpIdx1.quot][tmpIdx1.rem];
+    surfaceSampleNumberWeights[tmpIdx0.quot][tmpIdx0.rem] += surfaceSampleNumberWeights[tmpIdx1.quot][tmpIdx1.rem];
+#endif
+    swapComponentStats(idx1, numComponents - 1);
+    clearComponentStats(numComponents - 1);
 
     numComponents--;
 }
@@ -534,6 +624,18 @@ void ParallaxAwareVonMisesFisherWeightedEMFactory<TVMMDistribution>::SufficientS
     sumOfDistanceWeightes[tmpI.quot][tmpI.rem] = tmp;
     sumOfDistanceWeightes[tmpJ.quot][tmpJ.rem] = tmp;
 
+#ifdef OPENPGL_VSP_GUIDING
+    float weight0 = 0.5f;
+    float weight1 = 0.5f;
+    volumeContributionWeights[tmpJ.quot][tmpJ.rem] = weight1 * volumeContributionWeights[tmpI.quot][tmpI.rem];
+    volumeContributionWeights[tmpI.quot][tmpI.rem] *= weight0;
+    surfaceContributionWeights[tmpJ.quot][tmpJ.rem] = weight1 * surfaceContributionWeights[tmpI.quot][tmpI.rem];
+    surfaceContributionWeights[tmpI.quot][tmpI.rem] *= weight0;
+    volumeSampleNumberWeights[tmpJ.quot][tmpJ.rem] = weight1 * volumeSampleNumberWeights[tmpI.quot][tmpI.rem];
+    volumeSampleNumberWeights[tmpI.quot][tmpI.rem] *= weight0;
+    surfaceSampleNumberWeights[tmpJ.quot][tmpJ.rem] = weight1 * surfaceSampleNumberWeights[tmpI.quot][tmpI.rem];
+    surfaceSampleNumberWeights[tmpI.quot][tmpI.rem] *= weight0;
+#endif
     numComponents += 1;
 
     OPENPGL_ASSERT(!std::isnan(sumOfWeightedDirections[tmpI.quot].x[tmpI.rem]) && std::isfinite(sumOfWeightedDirections[tmpI.quot].x[tmpI.rem]));
@@ -1615,4 +1717,149 @@ std::string ParallaxAwareVonMisesFisherWeightedEMFactory<TVMMDistribution>::Part
     return ss.str();
 }
 
+#ifdef OPENPGL_VSP_GUIDING
+template <class TVMMDistribution>
+void ParallaxAwareVonMisesFisherWeightedEMFactory<TVMMDistribution>::updateVolumeScatterProbability(VMM &vmm, SufficientStatistics &sufficientStats, const SampleData *samples,
+                                                                                                    const size_t numSamples, const ZeroValueSampleData *zeroValueSamples,
+                                                                                                    const size_t numZeroValueSamples, const bool varianceBased) const
+{
+    // OPENPGL_ASSERT(vmm.isValid());
+
+    if (numSamples + numZeroValueSamples == 0)
+    {
+        return;
+    }
+
+    const int cnt = (vmm._numComponents + VMM::VectorSize - 1) / VMM::VectorSize;
+    const int rem = vmm._numComponents % VMM::VectorSize;
+
+    const embree::vfloat<VMM::VectorSize> zeros(0.0f);
+    const embree::vfloat<VMM::VectorSize> ones(1.0f);
+
+    typename VMM::SoftAssignment softAssign;
+
+    for (size_t n = 0; n < numSamples; n++)
+    {
+        const float weight = samples[n].weight;
+        pgl_vec3f direction = samples[n].direction;
+        const Vector3 sampleDirection(direction.x, direction.y, direction.z);
+
+        if (vmm.softAssignment(sampleDirection, softAssign))
+        {
+            for (size_t k = 0; k < cnt; k++)
+            {
+                if (isNextEventVolume(samples[n]))
+                {
+                    if (!varianceBased)
+                    {
+                        sufficientStats.volumeContributionWeights[k] += weight * softAssign.assignments[k];
+                        OPENPGL_ASSERT(embree::isvalid(sufficientStats.volumeContributionWeights[k]));
+                    }
+                    else
+                    {
+                        sufficientStats.volumeContributionWeights[k] += weight * weight * softAssign.assignments[k];
+                        OPENPGL_ASSERT(embree::isvalid(sufficientStats.volumeContributionWeights[k]));
+                    }
+                    sufficientStats.volumeSampleNumberWeights[k] += softAssign.assignments[k];
+                    OPENPGL_ASSERT(embree::isvalid(sufficientStats.volumeSampleNumberWeights[k]));
+                }
+                else
+                {
+                    if (!varianceBased)
+                    {
+                        sufficientStats.surfaceContributionWeights[k] += weight * softAssign.assignments[k];
+                        OPENPGL_ASSERT(embree::isvalid(sufficientStats.surfaceContributionWeights[k]));
+                    }
+                    else
+                    {
+                        sufficientStats.surfaceContributionWeights[k] += weight * weight * softAssign.assignments[k];
+                        OPENPGL_ASSERT(embree::isvalid(sufficientStats.surfaceContributionWeights[k]));
+                    }
+                    sufficientStats.surfaceSampleNumberWeights[k] += softAssign.assignments[k];
+                    OPENPGL_ASSERT(embree::isvalid(sufficientStats.surfaceSampleNumberWeights[k]));
+                }
+            }
+        }
+    }
+
+    for (size_t n = 0; n < numZeroValueSamples; n++)
+    {
+        pgl_vec3f direction = zeroValueSamples[n].direction;
+        const Vector3 sampleDirection(direction.x, direction.y, direction.z);
+
+        if (vmm.softAssignment(sampleDirection, softAssign))
+        {
+            for (size_t k = 0; k < cnt; k++)
+            {
+                if (isNextEventVolume(zeroValueSamples[n]))
+                {
+                    sufficientStats.volumeSampleNumberWeights[k] += softAssign.assignments[k];
+                    OPENPGL_ASSERT(embree::isvalid(sufficientStats.volumeSampleNumberWeights[k]));
+                }
+                else
+                {
+                    sufficientStats.surfaceSampleNumberWeights[k] += softAssign.assignments[k];
+                    OPENPGL_ASSERT(embree::isvalid(sufficientStats.surfaceSampleNumberWeights[k]));
+                }
+            }
+        }
+    }
+
+    if (rem > 0)
+    {
+        for (size_t i = rem; i < VMM::VectorSize; i++)
+        {
+            vmm._volumeScatterProbabilityWeights[cnt - 1][i] = 0.0f;
+            sufficientStats.volumeContributionWeights[cnt - 1][i] = 0.0f;
+            sufficientStats.surfaceContributionWeights[cnt - 1][i] = 0.0f;
+            sufficientStats.volumeSampleNumberWeights[cnt - 1][i] = 0.0f;
+            sufficientStats.surfaceSampleNumberWeights[cnt - 1][i] = 0.0f;
+        }
+    }
+
+    for (size_t k = 0; k < cnt; k++)
+    {
+        embree::vfloat<VMM::VectorSize> numVolSamples = sufficientStats.volumeSampleNumberWeights[k];
+        embree::vfloat<VMM::VectorSize> numSurfSamples = sufficientStats.surfaceSampleNumberWeights[k];
+        embree::vfloat<VMM::VectorSize> numSurfVolSamples = numVolSamples + numSurfSamples;
+        embree::vfloat<VMM::VectorSize> estPVol = select(numSurfVolSamples > FLT_EPSILON, numVolSamples / numSurfVolSamples, zeros);
+
+        if (!varianceBased)
+        {
+            embree::vfloat<VMM::VectorSize> volumeContributionWeight = select(numVolSamples > FLT_EPSILON, sufficientStats.volumeContributionWeights[k] / numVolSamples, zeros);
+            embree::vfloat<VMM::VectorSize> surfaceContributionWeight = select(numSurfSamples > FLT_EPSILON, sufficientStats.surfaceContributionWeights[k] / numSurfSamples, zeros);
+            embree::vfloat<VMM::VectorSize> sumContributionWeight = (surfaceContributionWeight * (ones - estPVol)) + (volumeContributionWeight * estPVol);
+            vmm._volumeScatterProbabilityWeights[k] = select(sumContributionWeight > FLT_EPSILON, (volumeContributionWeight * estPVol) / sumContributionWeight, zeros);
+        }
+        else
+        {
+            embree::vfloat<VMM::VectorSize> volumeContributionSecondMomentWeight =
+                select(numVolSamples > FLT_EPSILON, sufficientStats.volumeContributionWeights[k] / numVolSamples, zeros);
+            volumeContributionSecondMomentWeight *= (estPVol * estPVol);
+            volumeContributionSecondMomentWeight = select(volumeContributionSecondMomentWeight > FLT_EPSILON, embree::sqrt(volumeContributionSecondMomentWeight), zeros);
+
+            embree::vfloat<VMM::VectorSize> surfaceContributionSecondMomentWeight =
+                select(numSurfSamples > FLT_EPSILON, sufficientStats.surfaceContributionWeights[k] / numSurfSamples, zeros);
+            surfaceContributionSecondMomentWeight *= (ones - estPVol) * (ones - estPVol);
+            surfaceContributionSecondMomentWeight = select(surfaceContributionSecondMomentWeight > FLT_EPSILON, embree::sqrt(surfaceContributionSecondMomentWeight), zeros);
+
+            embree::vfloat<VMM::VectorSize> sumContributionSecondMomentWeight = surfaceContributionSecondMomentWeight + volumeContributionSecondMomentWeight;
+            vmm._volumeScatterProbabilityWeights[k] =
+                select(sumContributionSecondMomentWeight > FLT_EPSILON, volumeContributionSecondMomentWeight / sumContributionSecondMomentWeight, zeros);
+        }
+    }
+
+    if (rem > 0)
+    {
+        for (size_t i = rem; i < VMM::VectorSize; i++)
+        {
+            vmm._volumeScatterProbabilityWeights[cnt - 1][i] = 0.0f;
+            sufficientStats.volumeContributionWeights[cnt - 1][i] = 0.0f;
+            sufficientStats.surfaceContributionWeights[cnt - 1][i] = 0.0f;
+            sufficientStats.volumeSampleNumberWeights[cnt - 1][i] = 0.0f;
+            sufficientStats.surfaceSampleNumberWeights[cnt - 1][i] = 0.0f;
+        }
+    }
+}
+#endif
 }  // namespace openpgl

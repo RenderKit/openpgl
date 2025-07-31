@@ -51,6 +51,10 @@ typedef ManagedObject SurfaceSamplingDistribution;
     OPENPGL_CORE_INTERFACE pgl_vec3f pglSurfaceSamplingDistributionOutgoingRadiance(PGLSurfaceSamplingDistribution surfaceSamplingDistribution, pgl_vec3f direction);
 #endif
 
+#ifdef OPENPGL_VSP_GUIDING
+    OPENPGL_CORE_INTERFACE float pglSurfaceSamplingDistributionVolumeScatterProbability(PGLSurfaceSamplingDistribution surfaceSamplingDistribution, pgl_vec3f direction);
+#endif
+
 #ifdef __cplusplus
 }  // extern "C"
 #endif

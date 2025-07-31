@@ -22,7 +22,8 @@ typedef PGLSampleData SampleData;
 enum SampleData_Flags
 {
     EInsideVolume = 1 << 0,  // point does not represent any real scene intersection point
-    EDirectLight = 1 << 1    // if the samples represents direct light from a light source
+    EDirectLight = 1 << 1,   // if the samples represents direct light from a light source
+    ENextEventVolume = 1 << 2
 };
 
 inline bool isValid(const SampleData &dsd)
@@ -84,6 +85,11 @@ inline bool isInsideVolume(const SampleData &sd)
 inline bool isDirectLight(const SampleData &sd)
 {
     return (sd.flags & EDirectLight);
+}
+
+inline bool isNextEventVolume(const SampleData &sd)
+{
+    return (sd.flags & ENextEventVolume);
 }
 
 inline std::string toString(const SampleData &sd)
@@ -184,6 +190,16 @@ inline bool ZeroValueSampleDataLess(const PGLZeroValueSampleData &compA, const P
                 && compA.direction.compressed_direction < compB.direction.compressed_direction
 #endif
                     )))));
+}
+
+inline bool isInsideVolume(const PGLZeroValueSampleData &zvsd)
+{
+    return (zvsd.flags & EInsideVolume);
+}
+
+inline bool isNextEventVolume(const PGLZeroValueSampleData &zvsd)
+{
+    return (zvsd.flags & ENextEventVolume);
 }
 
 inline SampleData *LoadSampleData(const std::string fileName, size_t &numData)

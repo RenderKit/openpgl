@@ -95,6 +95,10 @@ struct AdaptiveSplitAndMergeFactory
             return sufficientStatistics.getNumComponents();
         }
 
+        inline float getNumSamples() const
+        {
+            return sufficientStatistics.getNumSamples();
+        };
         std::string toString() const;
 
         bool operator==(const Statistics &b) const;
@@ -121,6 +125,9 @@ struct AdaptiveSplitAndMergeFactory
     void update(VMM &vmm, Statistics &stats, const SampleData *samples, const size_t numSamples, const Configuration &cfg, FittingStatistics &fitStats) const;
 
     void updateFluenceEstimate(VMM &vmm, const SampleData *samples, const size_t numSamples, const size_t numZeroValueSamples, const SampleStatistics &sampleStatistics) const;
+
+    void updateVolumeScatterProbability(VMM &vmm, Statistics &stats, const SampleData *samples, const size_t numSamples, const ZeroValueSampleData *zeroValueSamples,
+                                        const size_t numZeroValueSamples, const bool varianceBased) const;
 
     std::string toString() const
     {
@@ -461,6 +468,15 @@ void AdaptiveSplitAndMergeFactory<TVMMDistribution>::updateFluenceEstimate(VMM &
 {
     WeightedEMFactory factory = WeightedEMFactory();
     factory.updateFluenceEstimate(vmm, samples, numSamples, numZeroValueSamples, sampleStatistics);
+}
+
+template <class TVMMDistribution>
+void AdaptiveSplitAndMergeFactory<TVMMDistribution>::updateVolumeScatterProbability(VMM &vmm, Statistics &stats, const SampleData *samples, const size_t numSamples,
+                                                                                    const ZeroValueSampleData *zeroValueSamples, const size_t numZeroValueSamples,
+                                                                                    const bool varianceBased) const
+{
+    WeightedEMFactory factory = WeightedEMFactory();
+    factory.updateVolumeScatterProbability(vmm, stats.sufficientStatistics, samples, numSamples, zeroValueSamples, numZeroValueSamples, varianceBased);
 }
 
 }  // namespace openpgl

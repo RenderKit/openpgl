@@ -87,6 +87,13 @@ struct DQTSurfaceSamplingDistribution : public ISurfaceSamplingDistribution
         m_region = region;
     }
 
+#ifdef OPENPGL_VSP_GUIDING
+    float volumeScatterProbability(Vector3 dir) const override
+    {
+        return 0.f;
+    }
+#endif
+
    private:
     TDirectionalQuadtree distribution;
     const IRegion *m_region{nullptr};

@@ -187,6 +187,13 @@ struct __aligned(TVMMDistribution::VectorSize * 4) VMMVolumeSamplingDistribution
     {
         m_region = region;
     }
+
+#ifdef OPENPGL_VSP_GUIDING
+    float volumeScatterProbability(Vector3 dir) const override
+    {
+        return m_liDistribution.volumeScatterProbability(dir);
+    }
+#endif
 };
 
 }  // namespace openpgl
