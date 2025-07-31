@@ -1,4 +1,4 @@
-## Open PGL 0.7.1
+## Open PGL 0.8.0
 
 - Bugfixes:
     - Fixing invalidation of the guiding field on initial creation if a cell contains no samples [#23](https://github.com/RenderKit/openpgl/issues/23).
