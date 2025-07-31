@@ -170,14 +170,12 @@ struct ImageSpaceGuidingBuffer
 #endif
             }
 
-            std::cout << "m_cfg.contributionEstimate = " << m_cfg.contributionEstimate << std::endl;
             if (m_cfg.contributionEstimate) {
                 m_contributionEstimateBuffers = new Buffers(m_resolution);
             }
 
             m_cfg.resolution = m_resolution;
 #if defined(OPENPGL_VSP_GUIDING)
-            std::cout << "m_cfg.vspEstimate = " << m_cfg.vspEstimate << std::endl;
             if(m_cfg.vspEstimate) {
                 m_surfaceContributionEstimateBuffers = new Buffers(m_resolution);
                 m_volumeContributionEstimateBuffers = new Buffers(m_resolution);
