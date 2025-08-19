@@ -179,24 +179,24 @@ struct PGLImageSpaceSample
 };
 
 enum PGLContributionTypes {
-    EFirstMoment = 0,
-    ESecondMoment,
+    EContribContribution = 0,
+    EContribVariance,
 };
 
 enum PGLVSPTypes
 {
-    EContribution = 0,
-    EVariance,
+    EVSPContribution = 0,
+    EVSPVariance,
 };
 
 struct PGLImageSpaceGuidingBufferConfig {
     pgl_point2i resolution {0, 0};
     bool contributionEstimate {true};
-    PGLContributionTypes contributionType {PGLContributionTypes::EFirstMoment};
+    PGLContributionTypes contributionType {PGLContributionTypes::EContribContribution};
     //float maxContributionValue {FLT_MAX}; //TODO
 #if defined(OPENPGL_VSP_GUIDING)
     bool vspEstimate {false};
-    PGLVSPTypes vspType {PGLVSPTypes::EContribution};
+    PGLVSPTypes vspType {PGLVSPTypes::EVSPContribution};
 #endif
 };
 

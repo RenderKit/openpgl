@@ -145,10 +145,10 @@ struct ImageSpaceGuidingBuffer
 
             // identify config based on the stored layers
             m_cfg.contributionEstimate = false;
-            m_cfg.contributionType = PGLContributionTypes::EFirstMoment;
+            m_cfg.contributionType = PGLContributionTypes::EContribContribution;
 #if defined(OPENPGL_VSP_GUIDING)
             m_cfg.vspEstimate = false;
-            m_cfg.vspType = PGLVSPTypes::EContribution;
+            m_cfg.vspType = PGLVSPTypes::EVSPContribution;
 #endif
             for (int i = 0; i < layer_names.size(); i++) {
                 std::string layerName = layer_names[i];
@@ -156,7 +156,7 @@ struct ImageSpaceGuidingBuffer
                 {
                     m_cfg.contributionEstimate = true;
                     if(layerName == "Contrib2nd") {
-                        m_cfg.contributionType = PGLContributionTypes::ESecondMoment;
+                        m_cfg.contributionType = PGLContributionTypes::EContribVariance;
                     }
                 }
 #if defined(OPENPGL_VSP_GUIDING)
@@ -164,7 +164,7 @@ struct ImageSpaceGuidingBuffer
                 {
                     m_cfg.vspEstimate = true;
                     if(layerName == "surfContrib2nd") {
-                        m_cfg.vspType = PGLVSPTypes::EVariance;
+                        m_cfg.vspType = PGLVSPTypes::EVSPVariance;
                     }
                 }
 #endif
@@ -371,7 +371,7 @@ struct ImageSpaceGuidingBuffer
         int cIdx = 0;
         if(m_cfg.contributionEstimate) {
             cIdx = layerChannels.size();
-            if (m_cfg.contributionType == PGLContributionTypes::EFirstMoment) {
+            if (m_cfg.contributionType == PGLContributionTypes::EContribContribution) {
                 layerChannels.emplace_back(cIdx, "Contrib");
             } else {
                 layerChannels.emplace_back(cIdx, "Contrib2nd");
@@ -385,7 +385,7 @@ struct ImageSpaceGuidingBuffer
             channelValues.emplace_back((const float *)m_contributionEstimateBuffers->spp);
 
             cIdx = layerChannels.size();
-            if (m_cfg.contributionType == PGLContributionTypes::EFirstMoment) {
+            if (m_cfg.contributionType == PGLContributionTypes::EContribContribution) {
                 layerChannels.emplace_back(cIdx, "ContribRaw");
             } else {
                 layerChannels.emplace_back(cIdx, "Contrib2ndRaw");
@@ -406,7 +406,7 @@ struct ImageSpaceGuidingBuffer
 #if defined(OPENPGL_VSP_GUIDING)
         if(m_cfg.vspEstimate) {
             cIdx = layerChannels.size();
-            if (m_cfg.vspType == PGLVSPTypes::EContribution) {
+            if (m_cfg.vspType == PGLVSPTypes::EVSPContribution) {
                 layerChannels.emplace_back(cIdx, "surfContrib");
             } else {
                 layerChannels.emplace_back(cIdx, "surfContrib2nd");
@@ -420,7 +420,7 @@ struct ImageSpaceGuidingBuffer
             channelValues.emplace_back((const float *)m_surfaceContributionEstimateBuffers->spp);
             
             cIdx = layerChannels.size();
-            if (m_cfg.vspType == PGLVSPTypes::EContribution) {
+            if (m_cfg.vspType == PGLVSPTypes::EVSPContribution) {
                 layerChannels.emplace_back(cIdx, "surfContribRaw");
             } else {
                 layerChannels.emplace_back(cIdx, "surfContrib2ndRaw");
@@ -439,7 +439,7 @@ struct ImageSpaceGuidingBuffer
             channelValues.emplace_back((const float *)m_surfaceContributionEstimateBuffers->normal);
             
             cIdx = layerChannels.size();
-            if (m_cfg.vspType == PGLVSPTypes::EContribution) {
+            if (m_cfg.vspType == PGLVSPTypes::EVSPContribution) {
                 layerChannels.emplace_back(cIdx, "volContrib");
             } else {
                 layerChannels.emplace_back(cIdx, "volContrib2nd");
@@ -453,7 +453,7 @@ struct ImageSpaceGuidingBuffer
             channelValues.emplace_back((const float *)m_volumeContributionEstimateBuffers->spp);
 
             cIdx = layerChannels.size();
-            if (m_cfg.vspType == PGLVSPTypes::EContribution) {
+            if (m_cfg.vspType == PGLVSPTypes::EVSPContribution) {
                 layerChannels.emplace_back(cIdx, "volContribRaw");
             } else {
                 layerChannels.emplace_back(cIdx, "volContrib2ndRaw");
@@ -678,7 +678,7 @@ struct ImageSpaceGuidingBuffer
                 // with pVolEst and not pVolEst°2
 
                 pgl_vec3f surfaceContribution, volumeContribution;
-                if (m_cfg.vspType == PGLVSPTypes::EContribution) {
+                if (m_cfg.vspType == PGLVSPTypes::EVSPContribution) {
                     surfaceContribution = (1.f - pVolEst) * m_surfaceContributionEstimateBuffers->filteredContribution[pIdx];
                     volumeContribution = pVolEst * m_volumeContributionEstimateBuffers->filteredContribution[pIdx];
                 }
@@ -712,7 +712,7 @@ struct ImageSpaceGuidingBuffer
             m_contributionEstimateBuffers->spp[pixelIdx] += 1;
             float alpha = 1.f / m_contributionEstimateBuffers->spp[pixelIdx];
 
-            const pgl_vec3f quantity = m_cfg.contributionType == PGLContributionTypes::EFirstMoment ? sample.contribution : sample.contribution*sample.contribution;
+            const pgl_vec3f quantity = m_cfg.contributionType == PGLContributionTypes::EContribContribution ? sample.contribution : sample.contribution*sample.contribution;
             m_contributionEstimateBuffers->contribution[pixelIdx] = (1.f - alpha) * m_contributionEstimateBuffers->contribution[pixelIdx] + alpha * sample.contribution;
             m_contributionEstimateBuffers->albedo[pixelIdx] = (1.f - alpha) * m_contributionEstimateBuffers->albedo[pixelIdx] + alpha * sample.albedo;
             m_contributionEstimateBuffers->normal[pixelIdx] = (1.f - alpha) * m_contributionEstimateBuffers->normal[pixelIdx] + alpha * sample.normal;
@@ -728,7 +728,7 @@ struct ImageSpaceGuidingBuffer
                 // calculating the alpha simulating we added zero samples for each volume sample as well 
                 float alpha = 1.f / (m_surfaceContributionEstimateBuffers->spp[pixelIdx] + m_volumeContributionEstimateBuffers->spp[pixelIdx]);
 #endif
-                pgl_vec3f quantity = m_cfg.vspType == EVariance ? sample.contribution * sample.contribution : sample.contribution;
+                pgl_vec3f quantity = m_cfg.vspType == EVSPVariance ? sample.contribution * sample.contribution : sample.contribution;
                 m_surfaceContributionEstimateBuffers->contribution[pixelIdx] = (1.f - alpha) * m_surfaceContributionEstimateBuffers->contribution[pixelIdx] + alpha * quantity;
                 m_surfaceContributionEstimateBuffers->albedo[pixelIdx] = (1.f - alpha) * m_surfaceContributionEstimateBuffers->albedo[pixelIdx] + alpha * sample.albedo;
                 m_surfaceContributionEstimateBuffers->normal[pixelIdx] = (1.f - alpha) * m_surfaceContributionEstimateBuffers->normal[pixelIdx] + alpha * sample.normal;
@@ -745,7 +745,7 @@ struct ImageSpaceGuidingBuffer
                 // calculating the alpha simulating we added zero samples for each surface sample as well 
                 float alpha = 1.f / (m_surfaceContributionEstimateBuffers->spp[pixelIdx] + m_volumeContributionEstimateBuffers->spp[pixelIdx]);
 #endif
-                pgl_vec3f quantity = m_cfg.vspType == EVariance ? sample.contribution * sample.contribution : sample.contribution;
+                pgl_vec3f quantity = m_cfg.vspType == EVSPVariance ? sample.contribution * sample.contribution : sample.contribution;
                 m_volumeContributionEstimateBuffers->contribution[pixelIdx] = (1.f - alpha) * m_volumeContributionEstimateBuffers->contribution[pixelIdx] + alpha * quantity;
                 m_volumeContributionEstimateBuffers->albedo[pixelIdx] = (1.f - alpha) * m_volumeContributionEstimateBuffers->albedo[pixelIdx] + alpha * sample.albedo;
                 m_volumeContributionEstimateBuffers->normal[pixelIdx] = (1.f - alpha) * m_volumeContributionEstimateBuffers->normal[pixelIdx] + alpha * sample.normal;
