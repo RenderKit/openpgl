@@ -59,9 +59,9 @@ struct FieldConfig
      * @param useKnnIsLookup if distance based importance sampling of the neighbors should be used
      */
     void SetUseKnnIsLookup(const bool useKnnIsLookup);
-
+#ifdef OPENPGL_VSP_GUIDING
     void SetVarianceBasedVSP(const bool varianceBasedVSP);
-
+#endif
     /**
      * @brief For debugging and benchmarking the update of the spatial structure this function can disable
      * the training of the directional distribution during the update iterations.
