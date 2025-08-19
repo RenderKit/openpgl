@@ -51,9 +51,9 @@ option(OPENPGL_BUILD_CHECK_TOOL "Build check tool application." OFF)
 
 try_compile(COMPILER_SUPPORTS_ARM_NEON "${CMAKE_BINARY_DIR}" "${PROJECT_SOURCE_DIR}/cmake/check_arm_neon.cpp")
 
-OPTION(OPENPGL_EF_RADIANCE_CACHES "Enables experimental feature (ir)radiance caches." ON)
-OPTION(OPENPGL_EF_VSP_GUIDING "Enables experimental feature volume scatter probability guiding." ON)
-OPTION(OPENPGL_EF_IMAGE_SPACE_GUIDING_BUFFER "Enables experimental feature ImageSpaceGuidignBuffer." ON)
+OPTION(OPENPGL_EF_RADIANCE_CACHES "Enables experimental feature (ir)radiance caches." OFF)
+OPTION(OPENPGL_EF_VSP_GUIDING "Enables experimental feature volume scatter probability guiding." OFF)
+OPTION(OPENPGL_EF_IMAGE_SPACE_GUIDING_BUFFER "Enables experimental feature ImageSpaceGuidignBuffer." OFF)
 
 OPTION(OPENPGL_DIRECTION_COMPRESSION "Using 32-Bit compression to represent directions." OFF)
 OPTION(OPENPGL_RADIANCE_COMPRESSION "Using RGBE 32-Bit compression to represent radiance data (linear RGB)." OFF)
