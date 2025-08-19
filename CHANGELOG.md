@@ -1,5 +1,80 @@
 # Version History
 
+## Open PGL 0.8.0
+
+- New (**Experimental**) Feature:
+  - Volume Scatter Probability Guiding (VSPG):
+    - This feature allows guiding the optimal volume scattering
+      probability (VSP) and is based on Xu et al. work “Volume Scatter
+      Probability Guiding”. This **experimental** feature can be enabled
+      by setting the CMake variable `OPENPGL_EF_VSP_GUIDING=ON`. The
+      volume scattering probability for a given direction can be queried
+      using the `VolumeScatterProbability` function of the
+      `SurfaceSamplingDistribution` and `VolumeSamplingDistribution`
+      classes.
+- API changes:
+  - `SampleData`:
+  - New enum `ENextEventVolume` flag that identifies if the radiance
+    stored in this sample comes from a volume or surface scatting event
+    (e.g., if the next event is inside a volume or on a surface).
+- API changes (`OPENPGL_EF_VSP_GUIDING=ON`):
+  - `FieldConfig`:
+    - `SetVarianceBasedVSP` when set to `true` the VSP value is
+      calculated based on the `variance` and not the `contribution` of
+      the nested volume and surface estimators. The default is `false`
+      (i.e., `contribution`).
+  - `VolumeScatterProbability` and `SurfaceSamplingDistribution`:
+    - `VolumeScatterProbability` this function returns the optimal VSP
+      probability for a given direction. Based on the type the VSP value
+      is either calculated based on the `contribution` or the `variance`
+      of the nested (surface and volume) estimators.
+- API changes (`OPENPGL_EF_IMAGE_SPACE_GUIDING_BUFFER=ON`):
+  - `ImageSpaceGuidingBuffer`: Moving to a config-based initialization
+    system and adding support to query the VSP for each pixel (i.e.,
+    primary ray) of the image-space guiding buffer. The
+    `ImageSpaceGuidingBuffer` constructor now takes a
+    `ImageSpaceGuidingBuffer::Config` instead of a `Point2i` parameter.
+
+  - The function to query the estimate of a pixel’s contribution got
+    renamed from `ContributionEstimate` to `GetContributionEstimate`.
+
+  - `ImageSpaceGuidingBuffer::Config`: Class for setting up the
+    `ImageSpaceGuidingBuffer` (e.g., resolution, enabling contribution,
+    or VSP buffers).
+
+    - The `Config` constructor initializes the config class. It takes a
+      `Point2i` defining the resolution of the desired
+      `ImageSpaceGuidingBuffer`.
+    - The resolution of the desired `ImageSpaceGuidingBuffer` can be
+      queried using `GetResolution`.
+    - Estimating the image contribution can be enabled or disables using
+      `EnableContributionEstimate`.
+    - If the estimation of the image contribution is enabled can be
+      checked using `ContributionEstimate`.
+    - The type of the estimated image contribution is defined via
+      `SetContributionType`. The type is defined via the
+      `PGLContributionTypes` enum and can be based on the contribution
+      (`EContribContribution`) or variance (`EContribVariance`).
+    - The type of the image contribution can be queried using
+      `GetContributionType`.
+- API changes (`OPENPGL_EF_IMAGE_SPACE_GUIDING_BUFFER=ON` and
+  `OPENPGL_EF_VSP_GUIDING=ON`):
+  - `ImageSpaceGuidingBuffer`: Adding the possibility to query the VSP
+    value.
+    - The VSP for a given pixel (i.e., primary ray) can be queried using
+      the `GetVolumeScatterProbabilityEstimate` function.
+  - `ImageSpaceGuidingBuffer::Config`:
+    - Estimating the image space VSP values can be activated and
+      deactivated using `EnableVolumeScatterProbabilityEstimate)`.
+    - If estimating of the image-space VSP values is enabled can be
+      checked using `VolumeScatterProbabilityEstimate`.
+    - The type of the estimated image-space VSP values is defined via
+      `SetVolumeScatterProbabilityType`. The type is defined via the
+      `PGLVSPTypes` enum and can be based on the contribution
+      (`EVSPContribution`) or variance (`EVSPVariance`).
+    - The type of the image-space VSP values can be queried using
+      `GetVolumeScatterProbabilityType`.
+
 ## Open PGL 0.7.1
 
 - Bugfixes:
@@ -8,7 +83,7 @@
     [\#23](https://github.com/RenderKit/openpgl/issues/23).
   - Fixing noisy stdout printouts
     [\#19](https://github.com/RenderKit/openpgl/issues/19).
-  - Improving robustness of the integer arithmetric used during the
+  - Improving robustness of the integer arithmetic used during the
     deterministic multi-threaded building of the spatial subdivision
     structure.
   - Improving numerical stability of fitting process of the VMM-based
@@ -55,7 +130,7 @@
   - `pgl_direction`: A new **wrapper** type for directional data. When
     using C++ `pgl_direction` can directly be assigned by and to
     `pgl_vec3f`.
-  - `pgl_spectrum`: A new **wrapper** type for spetral (i.e., linear
+  - `pgl_spectrum`: A new **wrapper** type for spectral (i.e., linear
     RGB) data. When using C++ `pgl_spectrum` can directly be assigned by
     and to `pgl_vec3f`.
   - `SampleData`:
@@ -130,7 +205,7 @@
       at progression `2^0`,`2^1`,…,`2^N`).
     - `IsReady`: If the ISGB is ready (i.e., at least one `Update` step
       was performed).
-    - `GetPixelContributionEstimate`: Returns the pixel contibution
+    - `GetPixelContributionEstimate`: Returns the pixel contribution
       estimate for a given pixel, which can be used, for example, for
       guided RR.
     - `Reset`: Resets the ISGB.
@@ -141,7 +216,7 @@
     - `albedo`: The albedo of the surface or the volume at the first
       scattering event (type `pgl_vec3f`).
     - `normal`: The normal at the first surface scattering event or the
-      ray dairection towards the camers if the first event is a volume
+      ray direction towards the cameras if the first event is a volume
       event (type `pgl_vec3f`).
     - `flags`: Bit encoded information about the sample (e.g., if the
       first scattering event is a volume event `Sample::EVolumeEvent`).
@@ -150,7 +225,7 @@
 
   - Compression for spectral and directional: To reduce the size of the
     `SampleData` and `ZeroValueSampleData` data types it is possible to
-    enable 32-Bit compression, which is mainly adviced when enabling the
+    enable 32-Bit compression, which is mainly advised when enabling the
     RC feature via `OPENPGL_EF_RADIANCE_CACHES=ON`.
     - `OPENPGL_DIRECTION_COMPRESSION`: Enables 32-Bit compression for
       `pgl_direction`.
@@ -179,7 +254,7 @@
     count this count is also used by `Open PGL`.
   - `SurfaceSamplingDistribution` and `VolumeSamplingDistribution`:
     - Added `GetId` function to return the unique id of the spatial
-      structure used to query the sampling distriubtion.
+      structure used to query the sampling distribution.
   - `Field` and `SampleStorage`, added `Compare` function to check if
     the data stored in different instances (e.g., generated by two
     separate runs) are similar (i.e., same spatial subdivisions and

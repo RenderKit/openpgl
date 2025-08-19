@@ -101,6 +101,8 @@ Configure the Open PGL build using:
 
     - `OPENPGL_EF_IMAGE_SPACE_GUIDING_BUFFER`: Enables the **experimental** image-space guiding buffer feature (default `OFF`).
 
+    - `OPENPGL_EF_VSP_GUIDING`: Enables the **experimental** volume scatter probability guiding feature (default `OFF`).
+
     - `OPENPGL_DIRECTION_COMPRESSION`: Enables the 32Bit compression for directional data stored in `pgl_direction` (default `OFF`).
 
     - `OPENPGL_RADIANCE_COMPRESSION`: Enables the 32Bit compression for RGB data stored in `pgl_spectrum` (default `OFF`).
