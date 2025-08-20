@@ -49,6 +49,8 @@ option(OPENPGL_BUILD_STATIC "Build OpenPGL as static library." OFF)
 option(OPENPGL_BUILD_TOOLS "Build tool applications." OFF)
 option(OPENPGL_BUILD_CHECK_TOOL "Build check tool application." OFF)
 
+option(OPENPGL_BUILD_PYTHON "Build tool applications." ON)
+
 try_compile(COMPILER_SUPPORTS_ARM_NEON "${CMAKE_BINARY_DIR}" "${PROJECT_SOURCE_DIR}/cmake/check_arm_neon.cpp")
 
 OPTION(OPENPGL_EF_RADIANCE_CACHES "Enables experimental feature (ir)radiance caches." OFF)
@@ -108,6 +110,10 @@ endif(WIN32)
 add_subdirectory(openpgl)
 
 add_subdirectory(tools)
+
+if(OPENPGL_BUILD_PYTHON)
+  add_subdirectory(python)
+endif()
 
 ## Configure CMake find_package() config files ##
 
