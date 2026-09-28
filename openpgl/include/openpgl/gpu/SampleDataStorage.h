@@ -2,7 +2,7 @@
 #include "../cpp/SampleData.h"
 
 
-//#define USE_RAW_SAMPLE_DATA
+#define USE_RAW_SAMPLE_DATA
 
 class Timer
 {
@@ -154,9 +154,10 @@ public:
 #ifndef USE_RAW_SAMPLE_DATA
             SampleData sd = {flags, position, direction, ((contribution[0] + contribution[1] + contribution[2]) / 3.f)/pdf, pdf, distance};
 #else
+            // TODO: Need to identify why this is not working
             //SampleData sd = {{position[0], position[1], position[2]}, {direction[0], direction[1], direction[2]}, ((contribution[0] + contribution[1] + contribution[2]) / 3.f)/pdf, pdf, distance, flags};
             SampleData sd;
-            sd.position = {{position[0], position[1], position[2]};
+            sd.position = {position[0], position[1], position[2]};
             sd.direction = {direction[0], direction[1], direction[2]};
             sd.weight = ((contribution[0] + contribution[1] + contribution[2]) / 3.f)/pdf;
             sd.pdf = pdf;
@@ -179,7 +180,13 @@ public:
 #ifndef USE_RAW_SAMPLE_DATA
             ZeroValueSampleData zvSD = {volume, position, direction};
 #else
-            ZeroValueSampleData zvSD = {{position[0], position[1], position[2]}, {direction[0], direction[1], direction[2]}, volume};
+            // TODO: Need to identify why this is not working
+            //ZeroValueSampleData zvSD = {{position[0], position[1], position[2]}, {direction[0], direction[1], direction[2]}, volume};
+            ZeroValueSampleData zvSD;
+            zvSD.position = {position[0], position[1], position[2]};
+            zvSD.direction = {direction[0], direction[1], direction[2]};
+            zvSD.volume = volume;
+
 #endif
             zvSamples[idx][pixelIndex] = zvSD;
             nZVSamples[pixelIndex] = nZVSample + 1;
