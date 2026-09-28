@@ -2,7 +2,7 @@
 #include "../cpp/SampleData.h"
 
 
-#define USE_RAW_SAMPLE_DATA
+//#define USE_RAW_SAMPLE_DATA
 
 class Timer
 {
@@ -154,7 +154,15 @@ public:
 #ifndef USE_RAW_SAMPLE_DATA
             SampleData sd = {flags, position, direction, ((contribution[0] + contribution[1] + contribution[2]) / 3.f)/pdf, pdf, distance};
 #else
-            SampleData sd = {{position[0], position[1], position[2]}, {direction[0], direction[1], direction[2]}, ((contribution[0] + contribution[1] + contribution[2]) / 3.f)/pdf, pdf, distance, flags};
+            //SampleData sd = {{position[0], position[1], position[2]}, {direction[0], direction[1], direction[2]}, ((contribution[0] + contribution[1] + contribution[2]) / 3.f)/pdf, pdf, distance, flags};
+            SampleData sd;
+            sd.position = {{position[0], position[1], position[2]};
+            sd.direction = {direction[0], direction[1], direction[2]};
+            sd.weight = ((contribution[0] + contribution[1] + contribution[2]) / 3.f)/pdf;
+            sd.pdf = pdf;
+            sd.distance = distance;
+            sd.flags = flags;
+
 #endif
             samples[idx][pixelIndex] = sd;
             nSamples[pixelIndex] = nSample + 1;
@@ -199,6 +207,8 @@ public:
     void CollectSampleData(openpgl::cpp::SampleStorage& sampleStorage){
         int maxQueueSize = this->nAlloc;
         Timer timerCopy;
+        std::cout << "managed: " << int(this->managed) << std::endl;
+        std::cout << "sizeof = " << sizeof(SampleData) << "\t"<< sizeof(openpgl::cpp::SampleData) << std::endl; 
         if (!this->managed) {
             device->memcpyArrayFromGPU<uint32_t>(nSamples, host_nSamples, maxQueueSize);
             //device->wait();
@@ -230,6 +240,8 @@ public:
             #pragma omp for schedule(static,1024)
             for (size_t pixelIndex = 0; pixelIndex < maxQueueSize; pixelIndex++) {
 #endif
+
+//        for (size_t pixelIndex = 0; pixelIndex < maxQueueSize; pixelIndex++) {
                 uint32_t nSamples = !managed ? host_nSamples[pixelIndex] : this->nSamples[pixelIndex];
                 //if (nSamples > 0)
                 //    std::cout << "nSamples = " << nSamples << std::endl;
@@ -244,9 +256,13 @@ public:
                     pg_sd.pdf = sd.pdf;
                     pg_sd.distance = sd.distance;
                     pg_sd.flags = sd.flags;
-                    
+                    //if(!isValid(pg_sd))
+                    //    std::cout << "pg_s["<< n << "]: " << "p=[" << pg_sd.position.x << ", " << pg_sd.position.y << ", " << pg_sd.position.z << "]\td=[" << pg_sd.direction.x << ", " << pg_sd.direction.y << ", " << pg_sd.direction.z << "]\t w= "<< pg_sd.weight << "\tpdf= "<< pg_sd.pdf << "\td= "<< pg_sd.distance << "\tflags="<< pg_sd.flags<< std::endl;
+
                     sampleStorage.AddSample(pg_sd);
+                    
 #else
+                    //std::cout << "s["<< n << "]: " << "p=[" << sd.position.x << ", " << sd.position.y << ", " << sd.position.z << "]\td=[" << sd.direction.x << ", " << sd.direction.y << ", " << sd.direction.z << "]\t w= "<< sd.weight << "\tpdf= "<< sd.pdf << "\td= "<< sd.distance << "\tflags="<< sd.flags<< std::endl;
                     sampleStorage.AddSample(sd);
 #endif
                 }
@@ -264,6 +280,8 @@ public:
                 }
 */
             }
+
+
 #if !defined(__CUDACC__)
         }
         );
