@@ -214,8 +214,8 @@ public:
     void CollectSampleData(openpgl::cpp::SampleStorage& sampleStorage){
         int maxQueueSize = this->nAlloc;
         Timer timerCopy;
-        std::cout << "managed: " << int(this->managed) << std::endl;
-        std::cout << "sizeof = " << sizeof(SampleData) << "\t"<< sizeof(openpgl::cpp::SampleData) << std::endl; 
+        //std::cout << "managed: " << int(this->managed) << std::endl;
+        //std::cout << "sizeof = " << sizeof(SampleData) << "\t"<< sizeof(openpgl::cpp::SampleData) << std::endl; 
         if (!this->managed) {
             device->memcpyArrayFromGPU<uint32_t>(nSamples, host_nSamples, maxQueueSize);
             //device->wait();
@@ -229,12 +229,11 @@ public:
                 //device->wait();  
             }
             device->wait();
-            std::cout << std::endl << "Copy: time =" << timerCopy.elapsed() * 1e-6 << " sec" << std::endl;
+            //std::cout << std::endl << "Copy: time =" << timerCopy.elapsed() * 1e-6 << " sec" << std::endl;
         }
     
         
         Timer timerPropagate;
-        //ParallelFor(0, maxQueueSize, [&](int pixelIndex)
 #if !defined(__CUDACC__)
         tbb::parallel_for(tbb::blocked_range<int>(0, maxQueueSize), [&](tbb::blocked_range<int> r)
         {
@@ -295,7 +294,7 @@ public:
 #else
         }
 #endif
-        std::cout << std::endl << "CollectSampleData: time(sec) = " << timerPropagate.elapsed() * 1e-6 << std::endl;
+        //std::cout << std::endl << "CollectSampleData: time(sec) = " << timerPropagate.elapsed() * 1e-6 << std::endl;
     }
 
     void Reset() {
