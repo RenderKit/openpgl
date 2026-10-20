@@ -726,7 +726,6 @@ void ParallaxAwareVonMisesFisherWeightedEMFactory<TVMMDistribution>::SufficientS
         sumOfWeightedStats[k] *= normVec;
     }
     normalized = true;
-    // TODO: check this seems to be wrong
     overallNumSamples = numSamples;
 }
 /* */
@@ -1024,7 +1023,6 @@ void ParallaxAwareVonMisesFisherWeightedEMFactory<TVMMDistribution>::partialUpda
     fitStats.summedWeightedLogLikelihood = previousLogLikelihood;
 }
 
-#if 1
 template <class TVMMDistribution>
 void ParallaxAwareVonMisesFisherWeightedEMFactory<TVMMDistribution>::partialMergeSufficientStatisticsWithPriors(PartialFittingMask &mask, SufficientStatistics &currentStats,
                                                                                                                 const bool usePreviousStatsAsPrior,
@@ -1033,6 +1031,8 @@ void ParallaxAwareVonMisesFisherWeightedEMFactory<TVMMDistribution>::partialMerg
 {
     const embree::vfloat<VMM::VectorSize> zeros = 0.f;
 
+    // The old (previous) and new (current) sum of weights for the partial updated components.
+    // In the end the weights of the partial updated components must be similar 
     embree::vfloat<VMM::VectorSize> sumPreviousPartialWeightsVec = 0.f;
     embree::vfloat<VMM::VectorSize> sumCurrentPartialWeightsVec = 0.f;
 
@@ -1044,6 +1044,7 @@ void ParallaxAwareVonMisesFisherWeightedEMFactory<TVMMDistribution>::partialMerg
         // First, check if the previous stats should be applied as prior to the current stats
         if (usePreviousStatsAsPrior)
         {
+            // Merge the current and the previous stats if allowed by the previousAsPriorMask.
             currentStats.sumOfWeightedDirections[k].x =
                 select(previousAsPriorMask.mask[k], currentStats.sumOfWeightedDirections[k].x + previousStats.sumOfWeightedDirections[k].x * decay,
                        currentStats.sumOfWeightedDirections[k].x);
@@ -1058,24 +1059,28 @@ void ParallaxAwareVonMisesFisherWeightedEMFactory<TVMMDistribution>::partialMerg
                 select(previousAsPriorMask.mask[k], currentStats.sumOfWeightedStats[k] + previousStats.sumOfWeightedStats[k] * decay, currentStats.sumOfWeightedStats[k]);
             currentStats.sumOfDistanceWeightes[k] = select(previousAsPriorMask.mask[k], previousStats.sumOfDistanceWeightes[k] * decay, zeros);
         }
-        // Second, reset the partial stats which sould not be updated to the prvious stats
+        // Second, reset the stats that should not be updated by the partial fit. 
+        // These stats are reseted to the ones from the previous stats.
         currentStats.sumOfWeightedDirections[k].x = select(mask.mask[k], currentStats.sumOfWeightedDirections[k].x, previousStats.sumOfWeightedDirections[k].x);
         currentStats.sumOfWeightedDirections[k].y = select(mask.mask[k], currentStats.sumOfWeightedDirections[k].y, previousStats.sumOfWeightedDirections[k].y);
         currentStats.sumOfWeightedDirections[k].z = select(mask.mask[k], currentStats.sumOfWeightedDirections[k].z, previousStats.sumOfWeightedDirections[k].z);
 
+        // Update the sum of weights and wieghted distances for the partial updated components.
         currentStats.sumOfWeightedStats[k] = select(mask.mask[k], currentStats.sumOfWeightedStats[k], previousStats.sumOfWeightedStats[k]);
         currentStats.sumOfDistanceWeightes[k] = select(mask.mask[k], currentStats.sumOfDistanceWeightes[k], previousStats.sumOfDistanceWeightes[k]);
 
+        // Calculate the previous and current sum of weights and distances for the partial updated components.
         sumPreviousPartialWeightsVec += select(mask.mask[k], previousStats.sumOfWeightedStats[k], zeros);
         sumCurrentPartialWeightsVec += select(mask.mask[k], currentStats.sumOfWeightedStats[k], zeros);
     }
 
     embree::vfloat<VMM::VectorSize> sumTmpVec = 0.f;
-    // calcualting the normalization factor for the weights of the updated components
+    // Calcualting the normalization factor for the weights of the updated components
     float inv_currentWeights = 1.0f;
     const float sumCurrentPartialWeights = embree::reduce_add(sumCurrentPartialWeightsVec);
     if (sumCurrentPartialWeights > 0.f)
     {
+        // Correction factor so that the sum of weights for the updated components stays the same as before.
         inv_currentWeights = embree::reduce_add(sumPreviousPartialWeightsVec) / sumCurrentPartialWeights;
         for (int k = 0; k < cnt; k++)
         {
@@ -1092,8 +1097,8 @@ void ParallaxAwareVonMisesFisherWeightedEMFactory<TVMMDistribution>::partialMerg
     }
     OPENPGL_ASSERT(embree::isvalid(sumTmpVec));
     float sumWTmp = embree::reduce_add(sumTmpVec);
-    // since only some partial components are updated
-    // the overall stats are the same as the previous stats
+    // Since only some partial components are updated the overall stats for numSamples, sumWeights, ..., 
+    // should not change. Nevertheless, due to some numerical differences we recalculate the stats.
     if (currentStats.normalized)
     {
         currentStats.sumWeights = previousStats.sumWeights;
@@ -1105,8 +1110,10 @@ void ParallaxAwareVonMisesFisherWeightedEMFactory<TVMMDistribution>::partialMerg
         currentStats.numSamples = previousStats.numSamples;
     }
 
+    // The overall number of samples stays the same.
     currentStats.overallNumSamples = previousStats.overallNumSamples;
 
+    // Updating/Recalculating the weights to num samples normalization factor and its inverse. 
     currentStats.norm = 1.f;
     currentStats.inv_norm = 1.f;
     if (currentStats.sumWeights > 0.f && currentStats.numSamples > 0.f)
@@ -1118,88 +1125,6 @@ void ParallaxAwareVonMisesFisherWeightedEMFactory<TVMMDistribution>::partialMerg
     OPENPGL_ASSERT(embree::isvalid(currentStats.norm));
     OPENPGL_ASSERT(embree::isvalid(currentStats.inv_norm));
 }
-#else
-template <class TVMMDistribution>
-void ParallaxAwareVonMisesFisherWeightedEMFactory<TVMMDistribution>::partialMergeSufficientStatisticsWithPriors(PartialFittingMask &mask, SufficientStatistics &currentStats,
-                                                                                                                const bool usePreviousStatsAsPrior,
-                                                                                                                const PartialFittingMask &previousAsPriorMask,
-                                                                                                                const SufficientStatistics &previousStats) const
-{
-    const embree::vfloat<VMM::VectorSize> zeros = 0.f;
-
-    // the sum of the current weights of the changed components
-    embree::vfloat<VMM::VectorSize> currentWeightsVec = 0.f;
-    // the sum of the previous weights of the unchanged components
-    embree::vfloat<VMM::VectorSize> previousWeightsVec = 0.f;
-    // the overall sum of all previous weights
-    embree::vfloat<VMM::VectorSize> sumPreviousWeightsVec = 0.f;
-    // embree::vfloat<VMM::VectorSize> sumCurrentWeightsVec = 0.f;
-
-    const int cnt = (previousStats.numComponents + VMM::VectorSize - 1) / VMM::VectorSize;
-    for (int k = 0; k < cnt; k++)
-    {
-        sumPreviousWeightsVec += previousStats.sumOfWeightedStats[k];
-        // sumCurrentWeightsVec += currentStats.sumOfWeightedStats[k];
-
-        // First, check if the prior from the previous training iterations should be applied
-        currentStats.sumOfWeightedDirections[k].x =
-            select(previousAsPriorMask.mask[k], currentStats.sumOfWeightedDirections[k].x + previousStats.sumOfWeightedDirections[k].x, currentStats.sumOfWeightedDirections[k].x);
-        currentStats.sumOfWeightedDirections[k].y =
-            select(previousAsPriorMask.mask[k], currentStats.sumOfWeightedDirections[k].y + previousStats.sumOfWeightedDirections[k].y, currentStats.sumOfWeightedDirections[k].y);
-        currentStats.sumOfWeightedDirections[k].z =
-            select(previousAsPriorMask.mask[k], currentStats.sumOfWeightedDirections[k].z + previousStats.sumOfWeightedDirections[k].z, currentStats.sumOfWeightedDirections[k].z);
-
-        currentStats.sumOfWeightedStats[k] =
-            select(previousAsPriorMask.mask[k], currentStats.sumOfWeightedStats[k] + previousStats.sumOfWeightedStats[k], currentStats.sumOfWeightedStats[k]);
-        currentStats.sumOfDistanceWeightes[k] = select(previousAsPriorMask.mask[k], previousStats.sumOfDistanceWeightes[k], zeros);
-
-        // Second, check if the prior from the previous training iterations should be applied
-        currentStats.sumOfWeightedDirections[k].x = select(mask.mask[k], currentStats.sumOfWeightedDirections[k].x, previousStats.sumOfWeightedDirections[k].x);
-        currentStats.sumOfWeightedDirections[k].y = select(mask.mask[k], currentStats.sumOfWeightedDirections[k].y, previousStats.sumOfWeightedDirections[k].y);
-        currentStats.sumOfWeightedDirections[k].z = select(mask.mask[k], currentStats.sumOfWeightedDirections[k].z, previousStats.sumOfWeightedDirections[k].z);
-
-        currentStats.sumOfWeightedStats[k] = select(mask.mask[k], currentStats.sumOfWeightedStats[k], previousStats.sumOfWeightedStats[k]);
-        currentStats.sumOfDistanceWeightes[k] = select(mask.mask[k], currentStats.sumOfDistanceWeightes[k], previousStats.sumOfDistanceWeightes[k]);
-
-        currentWeightsVec += select(mask.mask[k], currentStats.sumOfWeightedStats[k], zeros);
-        previousWeightsVec += select(mask.mask[k], zeros, currentStats.sumOfWeightedStats[k]);
-    }
-
-    float currentWeights = embree::reduce_add(currentWeightsVec);
-    float previousWeights = embree::reduce_add(previousWeightsVec);
-    float sumPreviousWeights = embree::reduce_add(sumPreviousWeightsVec);
-    // float sumCurrentWeights = embree::reduce_add(sumCurrentWeightsVec);
-    // std::cout << "sumCurrentWeights = "<< sumCurrentWeights << "\t currentStats.sumWeights = "<< currentStats.sumWeights << std::endl;
-    // std::cout << "sumPreviousWeights = " << sumPreviousWeights << "\t previousStats.sumWeights = "<< previousStats.sumWeights << std::endl;
-
-    embree::vfloat<VMM::VectorSize> sumTmpVec = 0.f;
-    // calcualting the normalization factor for the weights of the updated components
-    float inv_currentWeights = (sumPreviousWeights - previousWeights) / currentWeights;
-    // std::cout << "sumPreviousWeights = " << sumPreviousWeights << "\t previousWeights = "<< previousWeights << "\t currentWeights = "<< currentWeights << "\t inv_currentWeights
-    // = "<< inv_currentWeights << std::endl;
-    for (int k = 0; k < cnt; k++)
-    {
-        currentStats.sumOfWeightedStats[k] = select(mask.mask[k], currentStats.sumOfWeightedStats[k] * inv_currentWeights, currentStats.sumOfWeightedStats[k]);
-        currentStats.sumOfWeightedDirections[k].x = select(mask.mask[k], currentStats.sumOfWeightedDirections[k].x * inv_currentWeights, currentStats.sumOfWeightedDirections[k].x);
-        currentStats.sumOfWeightedDirections[k].y = select(mask.mask[k], currentStats.sumOfWeightedDirections[k].y * inv_currentWeights, currentStats.sumOfWeightedDirections[k].y);
-        currentStats.sumOfWeightedDirections[k].z = select(mask.mask[k], currentStats.sumOfWeightedDirections[k].z * inv_currentWeights, currentStats.sumOfWeightedDirections[k].z);
-        sumTmpVec += currentStats.sumOfWeightedStats[k];
-
-        OPENPGL_ASSERT(embree::isvalid(currentStats.sumOfWeightedStats[k]));
-        OPENPGL_ASSERT(embree::isvalid(currentStats.sumOfWeightedDirections[k].x));
-        OPENPGL_ASSERT(embree::isvalid(currentStats.sumOfWeightedDirections[k].y));
-        OPENPGL_ASSERT(embree::isvalid(currentStats.sumOfWeightedDirections[k].z));
-    }
-
-    // since only some partial components are updated
-    // the overall stats are the same as the previous stats
-    currentStats.sumWeights = previousStats.sumWeights;
-    currentStats.numSamples = previousStats.numSamples;
-    currentStats.overallNumSamples = previousStats.overallNumSamples;
-    currentStats.norm = previousStats.norm;
-    currentStats.inv_norm = previousStats.inv_norm;
-}
-#endif
 
 template <class TVMMDistribution>
 float ParallaxAwareVonMisesFisherWeightedEMFactory<TVMMDistribution>::weightedExpectationStep(VMM &vmm, SufficientStatistics &stats, UnassignedSamplesStatistics &unassignedStats,
