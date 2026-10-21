@@ -79,7 +79,7 @@ struct DirectionalQuadtree
         return pdf;
     }
 
-    void performRelativeParallaxShift(const Vector3 &shiftDirection) {};
+    void performRelativeParallaxShift([[maybe_unused]] const Vector3 &shiftDirection) {};
 
     const std::string toString() const
     {
@@ -110,7 +110,7 @@ struct DirectionalQuadtree
         is.read(reinterpret_cast<char *>(nodes.data()), size * sizeof(nodes[0]));
     };
 
-    void decay(const float alpha) {};
+    void decay([[maybe_unused]] const float alpha) {};
 
     size_t getNumComponents() const
     {
@@ -118,7 +118,7 @@ struct DirectionalQuadtree
     }
 
     // TODO: Needs to be implmented
-    bool operator==(const DirectionalQuadtree &b) const
+    bool operator==([[maybe_unused]] const DirectionalQuadtree &b) const
     {
         return true;
     }

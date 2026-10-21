@@ -13,12 +13,12 @@ struct DQTSurfaceSamplingDistribution : public ISurfaceSamplingDistribution
 
     virtual ~DQTSurfaceSamplingDistribution() override{};
 
-    virtual void init(const void *distribution, Point3 samplePosition) override
+    virtual void init(const void *distribution, [[maybe_unused]] Point3 samplePosition) override
     {
         this->distribution = *(TDirectionalQuadtree *)distribution;
     };
 
-    inline void applyCosineProduct(const Vector3 &normal) override
+    inline void applyCosineProduct([[maybe_unused]] const Vector3 &normal) override
     {
         // not supported by quadtree
         return;

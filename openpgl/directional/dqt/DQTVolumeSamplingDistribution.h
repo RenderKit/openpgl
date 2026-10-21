@@ -13,7 +13,7 @@ struct DQTVolumeSamplingDistribution : public IVolumeSamplingDistribution
 
     virtual ~DQTVolumeSamplingDistribution() override{};
 
-    virtual void init(const void *distribution, Point3 samplePosition) override
+    virtual void init(const void *distribution, [[maybe_unused]] Point3 samplePosition) override
     {
         this->distribution = *(TDirectionalQuadtree *)distribution;
     };
@@ -67,7 +67,7 @@ struct DQTVolumeSamplingDistribution : public IVolumeSamplingDistribution
 
     inline void clear() override {};
 
-    inline void applySingleLobeHenyeyGreensteinProduct(const Vector3 &dir, const float meanCosine) override
+    inline void applySingleLobeHenyeyGreensteinProduct([[maybe_unused]] const Vector3 &dir, [[maybe_unused]] const float meanCosine) override
     {
         // not supported by quadtree
         return;
