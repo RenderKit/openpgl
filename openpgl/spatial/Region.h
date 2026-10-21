@@ -56,7 +56,7 @@ struct Region : public IRegion
     }
     */
 
-    const TDistribution *getDistribution(Point3 samplePosition) const
+    const TDistribution *getDistribution([[maybe_unused]] Point3 samplePosition) const
     {
         return &distribution;
     }
