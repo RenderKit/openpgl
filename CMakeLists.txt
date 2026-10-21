@@ -3,7 +3,7 @@
 
 ## Global CMake options ##
 
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.10)
 
 set(CMAKE_C_STANDARD 99)
 set(CMAKE_C_STANDARD_REQUIRED ON)
@@ -17,8 +17,6 @@ set(CMAKE_DISABLE_SOURCE_CHANGES ON)
 set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
-include(GNUInstallDirs)
-
 ## Establish project ##
 
 project(openpgl VERSION 0.8.0 LANGUAGES C CXX)
@@ -26,6 +24,7 @@ enable_language(CXX)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/cmake)
 include(openpgl_macros)
 
+include(GNUInstallDirs)
 
 ##############################################################
 # Platform detection and defaults
@@ -80,6 +79,7 @@ SET(OPENPGL_TBB_COMPONENT "tbb" CACHE STRING "The TBB component/library name.")
 
 
 if (NOT ${OPENPGL_TBB_ROOT} STREQUAL "")
+    cmake_policy(SET CMP0074 OLD)
     set(TBB_FIND_PACKAGE_OPTION "NO_DEFAULT_PATH")
     set(TBB_ROOT ${OPENPGL_TBB_ROOT})
     list(APPEND CMAKE_PREFIX_PATH ${OPENPGL_TBB_ROOT})
