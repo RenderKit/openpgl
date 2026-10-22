@@ -22,7 +22,7 @@ jobs:
     steps:
       - name: Install packages (rocky 8)
         run: |
-          yum -y install gcc-c++ clang tar git-lfs make tbb-devel python3
+          yum -y install gcc-c++ clang tar git-lfs make python3
           yum -y install cmake
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -31,20 +31,36 @@ jobs:
 
       - name: Build and Run
         run: |
-          scripts/build.sh
+          scripts/build_small.sh
 
-
-  ubuntu-22_04:
+  rocky-9:
     runs-on: ubuntu-latest
     container:
-      image: ubuntu:22.04
+      image: rockylinux:9
     steps:
-      - name: Install packages (ubuntu 22.04)
+      - name: Install packages (rocky 9)
+        run: |
+          yum -y install gcc-c++ clang tar git-lfs make python3
+          yum -y install cmake
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Build and Run
+        run: |
+          scripts/build_small.sh
+
+  ubuntu-24_04:
+    runs-on: ubuntu-latest
+    container:
+      image: ubuntu:24.04
+    steps:
+      - name: Install packages (ubuntu 24.04)
         run: |
           apt-get update
-          apt-get -y upgrade
-          apt-get -y install g++ clang git-lfs libtbb-dev python3 pip
-          pip install --upgrade cmake
+          apt-get -y install g++ clang git-lfs libtbb-dev python3
+          apt-get -y install cmake
           cmake --version
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -53,4 +69,63 @@ jobs:
 
       - name: Build and Run
         run: |
-          scripts/build.sh
+          scripts/build_small.sh
+
+  ubuntu-26_04:
+    runs-on: ubuntu-latest
+    container:
+      image: ubuntu:26.04
+    steps:
+      - name: Install packages (ubuntu 26.04)
+        run: |
+          apt-get update
+          apt-get -y install g++ clang git-lfs python3
+          apt-get -y install cmake
+          cmake --version
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Build and Run
+        run: |
+          scripts/build_small.sh
+
+  windows:
+    runs-on: windows-latest
+    steps:
+      - name: Install packages (Windows)
+        shell: pwsh
+        run: |
+          # CMake, Git, Python and MSVC are preinstalled on the image.
+          # Clang/LLVM is usually there too; install it if you need a specific version:
+          # vcpkg install tbb:x64-windows
+          cmake --version
+
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Build and Run
+        shell: bash
+        run: |
+          scripts/build_small.sh
+
+  macos:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Install packages (macOS)
+        run: |
+          # Apple Clang, Git, Python 3 and CMake come preinstalled.
+          # brew install tbb git-lfs
+          cmake --version
+
+      - name: Build and Run
+        run: |
+          scripts/build_small.sh
