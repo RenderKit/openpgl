@@ -491,6 +491,7 @@ struct Field
                         regionStorage.first.numSplits = 0;
                         regionStorage.first.initialized = true;
                     }
+                    regionStorage.first.initialized = true;
                 }
                 else
                 {
